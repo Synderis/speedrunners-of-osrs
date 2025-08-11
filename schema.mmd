@@ -1,0 +1,112 @@
+erDiagram
+    MONSTERS {
+        BIGINT id PK
+        VARCHAR name
+        INT combat_level
+        INT hitpoints
+        INT max_hit
+        INT attack_speed
+        INT slayer_level
+        FLOAT slayer_xp
+        INT attack_level
+        INT strength_level
+        INT defence_level
+        INT magic_level
+        INT ranged_level
+        INT defence_stab
+        INT defence_slash
+        INT defence_crush
+        INT defence_magic
+        INT defence_ranged
+        DATE last_updated
+        DATE release_date
+        TEXT examine
+        VARCHAR wiki_name
+        TEXT wiki_url
+        JSONB attack_type
+        JSONB attributes
+        JSONB category
+        JSONB slayer_masters
+    }
+
+    ITEMS {
+        BIGINT id PK
+        VARCHAR name
+        BIGINT cost
+        FLOAT weight
+        BOOLEAN equipable
+        BOOLEAN equipable_weapon
+        BOOLEAN tradeable
+        DATE release_date
+        TEXT examine
+        TEXT icon
+        VARCHAR wiki_name
+        TEXT wiki_url
+        DATE last_updated
+        JSONB equipment
+        JSONB weapon
+    }
+
+    WEAPON {
+        SERIAL id PK
+        BIGINT item_id FK
+        TEXT weapon_name
+        INT attack_stab
+        INT attack_slash
+        INT attack_crush
+        INT attack_magic
+        INT attack_ranged
+        INT defence_stab
+        INT defence_slash
+        INT defence_crush
+        INT defence_magic
+        INT defence_ranged
+        INT melee_strength
+        INT ranged_strength
+        INT magic_damage
+        INT prayer
+        TEXT slot
+        TEXT icon
+        JSONB weapon_data
+    }
+
+    WEAPON_STATS {
+        SERIAL id PK
+        BIGINT item_id FK
+        TEXT weapon_name
+        TEXT weapon_type
+        INT attack_speed
+        INT attack_bonus
+        TEXT combat_style
+        TEXT attack_type
+        TEXT attack_style
+        TEXT experience
+        TEXT boosts
+        TEXT icon
+    }
+
+    ARMOR {
+        SERIAL id PK
+        BIGINT item_id FK
+        TEXT armor_name
+        INT attack_stab
+        INT attack_slash
+        INT attack_crush
+        INT attack_magic
+        INT attack_ranged
+        INT defence_stab
+        INT defence_slash
+        INT defence_crush
+        INT defence_magic
+        INT defence_ranged
+        INT melee_strength
+        INT ranged_strength
+        INT magic_damage
+        INT prayer
+        TEXT slot
+        TEXT icon
+    }
+
+    ITEMS ||--o{ WEAPON : "has"
+    ITEMS ||--o{ ARMOR : "has"
+    WEAPON ||--o{ WEAPON_STATS : "has"

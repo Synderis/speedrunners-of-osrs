@@ -1,0 +1,3 @@
+.venv
+.history
+supabase_temp_credentials.py
