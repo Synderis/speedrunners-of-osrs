@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import GearSelection from './components/GearSelection';
+import RoomSelection from './components/RoomSelection';
 import PlotSection from './components/PlotSection';
 import FloatingBackground from './components/FloatingBackground';
 import { ThemeProvider } from './context/ThemeContext';
@@ -40,10 +41,19 @@ function App() {
 
     window.addEventListener('scroll', handleScroll);
     
+    // Add room selection to the fade-in system
+    const timer = setTimeout(() => {
+      const elements = document.querySelectorAll('.room-selection');
+      elements.forEach(el => {
+        el.classList.add('fade-in');
+      });
+    }, 300);
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
       cancelAnimationFrame(rafId);
       timeouts.forEach(timeout => clearTimeout(timeout));
+      clearTimeout(timer);
     };
   }, []);
 
@@ -58,6 +68,7 @@ function App() {
         <Header />
         <main className="main-content">
           <GearSelection />
+          <RoomSelection />
           <PlotSection />
         </main>
       </div>

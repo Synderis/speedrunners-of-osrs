@@ -46,6 +46,7 @@ const Header: React.FC = () => {
 
           <nav className={`nav ${isMobileMenuOpen ? 'nav-open' : ''}`}>
             <a href="#gear" className="nav-link" onClick={(e) => scrollToSection('gear', e)}>Gear Selection</a>
+            <a href="#rooms" className="nav-link" onClick={(e) => scrollToSection('rooms', e)}>Room Selection</a>
             <a href="#plots" className="nav-link" onClick={(e) => scrollToSection('plots', e)}>Statistics</a>
           </nav>
 
