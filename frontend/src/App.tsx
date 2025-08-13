@@ -6,10 +6,33 @@ import RoomSelection from './components/RoomSelection';
 import PlotSection from './components/PlotSection';
 import FloatingBackground from './components/FloatingBackground';
 import { ThemeProvider } from './context/ThemeContext';
+import type { Monster } from './data/monsterStats';
+import type { GearSets, CombatStats, GearSetType } from './types/gear';
 import './App.css';
 
 function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
+  
+  // Shared state for gear and monsters
+  const [gearSets, setGearSets] = useState<GearSets>({
+    melee: [],
+    mage: [],
+    ranged: []
+  });
+  const [combatStats, setCombatStats] = useState<CombatStats>({
+    attack: 99,
+    strength: 99,
+    defense: 99,
+    ranged: 99,
+    magic: 99,
+    hitpoints: 99,
+    prayer: 99,
+    woodcutting: 99,
+    mining: 99,
+    thieving: 99
+  });
+  const [selectedMonsters, setSelectedMonsters] = useState<Monster[]>([]);
+  const [activeGearTab, setActiveGearTab] = useState<GearSetType>('melee');
 
   useEffect(() => {
     // Prevent browser from restoring scroll position
@@ -76,9 +99,23 @@ function App() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <GearSelection />
-          <RoomSelection />
-          <PlotSection />
+          <GearSelection 
+            gearSets={gearSets}
+            setGearSets={setGearSets}
+            combatStats={combatStats}
+            setCombatStats={setCombatStats}
+            activeGearTab={activeGearTab}
+            setActiveGearTab={setActiveGearTab}
+          />
+          <RoomSelection 
+            setSelectedMonsters={setSelectedMonsters}
+          />
+          <PlotSection 
+            gearSets={gearSets}
+            combatStats={combatStats}
+            selectedMonsters={selectedMonsters}
+            activeGearTab={activeGearTab}
+          />
         </motion.main>
       </div>
     </ThemeProvider>

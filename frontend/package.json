@@ -6,10 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:wasm": "cd wasm-lib && wasm-pack build --target web --out-dir ../src/wasm --out-name osrs_dps_wasm",
+    "prebuild": "npm run build:wasm",
+    "predev": "npm run build:wasm",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.864.0",
     "framer-motion": "^12.23.12",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

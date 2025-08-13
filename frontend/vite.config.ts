@@ -10,6 +10,12 @@ export default defineConfig({
     global: 'globalThis',
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'buffer']
+    include: ['react', 'react-dom', 'buffer'],
+    exclude: ['osrs_markov_wasm']
+  },
+  server: {
+    fs: {
+      allow: ['..']
+    }
   }
 })

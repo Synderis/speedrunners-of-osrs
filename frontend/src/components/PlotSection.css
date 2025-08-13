@@ -134,6 +134,22 @@
   border-color: var(--accent-primary);
 }
 
+.control-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: inherit;
+  width: 80px;
+}
+
+.control-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
 .plot-header {
   display: flex;
   justify-content: space-between;

@@ -40,11 +40,11 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-areas: 
-    ". helmet ."
+    ". head ."
     "cape neck ammo"
-    "weapon body offhand"
+    "weapon body shield"
     ". legs ."
-    "gloves boots ring";
+    "hands feet ring";
   gap: 1.2rem; /* 1.5rem * 0.8 */
   justify-items: center;
   max-width: 480px; /* 600px * 0.8 */
@@ -59,8 +59,8 @@
   padding: 17px;
 }
 
-.gear-slot[data-slot="helmet"] {
-  grid-area: helmet;
+.gear-slot[data-slot="head"] {
+  grid-area: head;
 }
 
 .gear-slot[data-slot="cape"] {
@@ -83,20 +83,20 @@
   grid-area: body;
 }
 
-.gear-slot[data-slot="offhand"] {
-  grid-area: offhand;
+.gear-slot[data-slot="shield"] {
+  grid-area: shield;
 }
 
 .gear-slot[data-slot="legs"] {
   grid-area: legs;
 }
 
-.gear-slot[data-slot="gloves"] {
-  grid-area: gloves;
+.gear-slot[data-slot="hands"] {
+  grid-area: hands;
 }
 
-.gear-slot[data-slot="boots"] {
-  grid-area: boots;
+.gear-slot[data-slot="feet"] {
+  grid-area: feet;
 }
 
 .gear-slot[data-slot="ring"] {
@@ -200,11 +200,11 @@
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
   grid-template-areas: 
-    ". helmet ."
+    ". head ."
     "cape neck ammo"
-    "weapon body offhand"
+    "weapon body shield"
     ". legs ."
-    "gloves boots ring";
+    "hands feet ring";
   gap: 9.6px; /* 12px * 0.8 */
   padding: 16px; /* 20px * 0.8 */
   align-items: center;
@@ -246,11 +246,11 @@
 .equipped-shield {
   left: -20px;
   top: 50%;
-  transform: translateY(-50%);
+  /* transform: translateY(-50%); */
 }
 
-.equipped-helmet {
-  grid-area: helmet;
+.equipped-head {
+  grid-area: head;
 }
 
 .equipped-cape {
@@ -273,20 +273,20 @@
   grid-area: body;
 }
 
-.equipped-offhand {
-  grid-area: offhand;
+.equipped-shield {
+  grid-area: shield;
 }
 
 .equipped-legs {
   grid-area: legs;
 }
 
-.equipped-gloves {
-  grid-area: gloves;
+.equipped-hands {
+  grid-area: hands;
 }
 
-.equipped-boots {
-  grid-area: boots;
+.equipped-feet {
+  grid-area: feet;
 }
 
 .equipped-ring {

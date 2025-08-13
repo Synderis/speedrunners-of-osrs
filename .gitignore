@@ -2,3 +2,5 @@
 .history
 supabase_temp_credentials.py
 target/
+.env
+__pycache__/

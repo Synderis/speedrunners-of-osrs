@@ -1,323 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { fetchGearFromSupabase, groupGearBySlot } from '../services/gearService';
+import { presetsByType, type GearSetType } from '../data/gearTemplates';
+import type { GearItem, GearSlot, GearSets, CombatStats } from '../types/gear';
+import { defaultSlotImages, statImages } from '../data/constants';
 import './GearSelection.css';
 
-interface GearItem {
-  id: string;
-  name: string;
-  image: string;
+interface GearSelectionProps {
+  gearSets: GearSets;
+  setGearSets: React.Dispatch<React.SetStateAction<GearSets>>;
+  combatStats: CombatStats;
+  setCombatStats: React.Dispatch<React.SetStateAction<CombatStats>>;
+  activeGearTab: GearSetType;
+  setActiveGearTab: React.Dispatch<React.SetStateAction<GearSetType>>;
 }
 
-interface GearSlot {
-  slot: string;
-  items: GearItem[];
-  selected?: GearItem;
-}
-
-interface GearPreset {
-  id: string;
-  name: string;
-  description: string;
-  gearIds: Record<string, string>;
-}
-
-type GearSetType = 'melee' | 'mage' | 'ranged';
-
-const GearSelection: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<GearSetType>('melee');
+const GearSelection: React.FC<GearSelectionProps> = ({
+  gearSets,
+  setGearSets,
+  combatStats,
+  setCombatStats,
+  activeGearTab,
+  setActiveGearTab
+}) => {
+  const [isLoadingGear, setIsLoadingGear] = useState(true);
+  const [gearData, setGearData] = useState<Record<string, GearItem[]>>({});
 
   // Single shared gear slots template
-  const createBaseGearSlots = (): GearSlot[] => [
-    {
-      slot: 'Weapon',
-      items: [
-        { id: 'abyssal_whip', name: 'Abyssal Whip', image: '/gear/130px-Abyssal_whip_detail.webp' },
-        { id: 'dragon_scimitar', name: 'Dragon Scimitar', image: '/gear/130px-Dragon_scimitar_detail.webp' },
-        { id: 'granite_maul', name: 'Granite Maul', image: '/gear/130px-Granite_maul_detail.webp' }
-      ]
-    },
-    {
-      slot: 'Offhand',
-      items: [
-        { id: 'dragon_defender', name: 'Dragon Defender', image: '/gear/150px-Dragon_defender_detail.webp' },
-        { id: 'rune_kiteshield', name: 'Rune Kiteshield', image: '/gear/150px-Rune_kiteshield_detail.webp' }
-      ]
-    },
-    {
-      slot: 'Helmet',
-      items: [
-        { id: 'berserker_helm', name: 'Berserker Helm', image: '/gear/150px-Berserker_helm_detail.webp' },
-        { id: 'rune_full_helm', name: 'Rune Full Helm', image: '/gear/120px-Rune_full_helm_detail.webp' }
-      ]
-    },
-    {
-      slot: 'Cape',
-      items: [
-        { id: 'fire_cape', name: 'Fire Cape', image: '/gear/150px-Fire_cape_detail.webp' },
-        { id: 'obsidian_cape', name: 'Obsidian Cape', image: '/gear/150px-Obsidian_cape_detail.webp' },
-        { id: 'legends_cape', name: 'Legends Cape', image: '/gear/150px-Legends_cape_detail.webp' }
-      ]
-    },
-    {
-      slot: 'Neck',
-      items: [
-        { id: 'amulet_of_fury', name: 'Amulet of Fury', image: '/gear/130px-Amulet_of_fury_detail.webp' },
-        { id: 'amulet_of_glory', name: 'Amulet of Glory', image: '/gear/130px-Amulet_of_glory_detail.webp' },
-        { id: 'amulet_of_strength', name: 'Amulet of Strength', image: '/gear/130px-Amulet_of_strength_detail.webp' }
-      ]
-    },
-    {
-      slot: 'Ammo',
-      items: [
-        { id: 'dragon_arrows', name: 'Dragon Arrows', image: '/gear/120px-Dragon_arrow_detail.webp' },
-        { id: 'rune_arrows', name: 'Rune Arrows', image: '/gear/130px-Rune_arrows_detail.webp' },
-        { id: 'adamant_arrows', name: 'Adamant Arrows', image: '/gear/130px-Adamant_arrows_detail.webp' }
-      ]
-    },
-    {
-      slot: 'Body',
-      items: [
-        { id: 'fighter_torso', name: 'Fighter Torso', image: '/gear/130px-Fighter_torso_detail.webp' },
-        { id: 'rune_platebody', name: 'Rune Platebody', image: '/gear/130px-Rune_platebody_detail.webp' }
-      ]
-    },
-    {
-      slot: 'Legs',
-      items: [
-        { id: 'dragon_platelegs', name: 'Dragon Platelegs', image: '/gear/90px-Dragon_platelegs_detail.webp' },
-        { id: 'rune_platelegs', name: 'Rune Platelegs', image: 'https://via.placeholder.com/64x64/6b7280/ffffff?text=RPL' },
-        { id: 'obsidian_platelegs', name: 'Obsidian Platelegs', image: 'https://via.placeholder.com/64x64/3b82f6/ffffff?text=OPL' }
-      ]
-    },
-    {
-      slot: 'Gloves',
-      items: [
-        { id: 'barrows_gloves', name: 'Barrows Gloves', image: '/gear/150px-Barrows_gloves_detail.webp' },
-        { id: 'dragon_gloves', name: 'Dragon Gloves', image: '/gear/150px-Dragon_gloves_detail.webp' },
-        { id: 'rune_gloves', name: 'Rune Gloves', image: '/gear/150px-Rune_gloves_detail.webp' }
-      ]
-    },
-    {
-      slot: 'Boots',
-      items: [
-        { id: 'dragon_boots', name: 'Dragon Boots', image: '/gear/150px-Dragon_boots_detail.webp' },
-        { id: 'rune_boots', name: 'Rune Boots', image: '/gear/150px-Rune_boots_detail.webp' },
-        { id: 'climbing_boots', name: 'Climbing Boots', image: '/gear/150px-Climbing_boots_detail.webp' }
-      ]
-    },
-    {
-      slot: 'Ring',
-      items: [
-        { id: 'berserker_ring', name: 'Berserker Ring', image: '/gear/150px-Berserker_ring_detail.webp' },
-        { id: 'warrior_ring', name: 'Warrior Ring', image: '/gear/150px-Warrior_ring_detail.webp' },
-        { id: 'ring_of_wealth', name: 'Ring of Wealth', image: '/gear/150px-Ring_of_wealth_detail.webp' }
-      ]
+  const createBaseGearSlots = (): GearSlot[] => {
+    const slotMapping = {
+      'head': 'Head',
+      'neck': 'Neck', 
+      'cape': 'Cape',
+      'shield': 'Shield',
+      'body': 'Body',
+      'legs': 'Legs',
+      'hands': 'Hands',
+      'feet': 'Feet',
+      'ring': 'Ring',
+      'ammo': 'Ammo'
+    };
+
+    // Combine weapon and 2h items into a single Weapon slot
+    const weaponItems = [
+      ...(gearData['weapon'] || []),
+      ...(gearData['2h'] || [])
+    ];
+
+    const slots = Object.entries(slotMapping).map(([csvSlot, displaySlot]) => ({
+      slot: displaySlot,
+      items: gearData[csvSlot] || []
+    })).filter(slot => slot.items.length > 0);
+
+    // Add weapon slot if there are weapon items
+    if (weaponItems.length > 0) {
+      slots.unshift({
+        slot: 'Weapon',
+        items: weaponItems
+      });
     }
-  ];
 
-  const [gearSets, setGearSets] = useState({
-    melee: createBaseGearSlots(),
-    mage: createBaseGearSlots(),
-    ranged: createBaseGearSlots()
-  });
-
-  const [presetsByType] = useState<Record<GearSetType, GearPreset[]>>({
-    melee: [
-      {
-        id: 'strength_training',
-        name: 'Strength Training',
-        description: 'Optimal setup for strength training',
-        gearIds: {
-          weapon: 'abyssal_whip',
-          offhand: 'dragon_defender',
-          helmet: 'berserker_helm',
-          cape: 'fire_cape',
-          neck: 'amulet_of_fury',
-          ammo: 'dragon_arrows',
-          body: 'fighter_torso',
-          legs: 'dragon_platelegs',
-          gloves: 'barrows_gloves',
-          boots: 'dragon_boots',
-          ring: 'berserker_ring'
-        }
-      },
-      {
-        id: 'budget_melee',
-        name: 'Budget Melee',
-        description: 'Affordable melee setup',
-        gearIds: {
-          weapon: 'dragon_scimitar',
-          offhand: 'rune_kiteshield',
-          helmet: 'rune_full_helm',
-          cape: 'legends_cape',
-          neck: 'amulet_of_strength',
-          body: 'rune_platebody',
-          legs: 'rune_platelegs',
-          gloves: 'rune_gloves',
-          boots: 'rune_boots',
-          ring: 'ring_of_wealth'
-        }
-      },
-      {
-        id: 'obsidian_setup',
-        name: 'Obsidian Tank',
-        description: 'High defence obsidian setup',
-        gearIds: {
-          weapon: 'granite_maul',
-          helmet: 'berserker_helm',
-          cape: 'obsidian_cape',
-          neck: 'amulet_of_glory',
-          legs: 'obsidian_platelegs',
-          gloves: 'dragon_gloves',
-          boots: 'climbing_boots',
-          ring: 'warrior_ring'
-        }
-      }
-    ],
-    mage: [
-      {
-        id: 'magic_training',
-        name: 'Magic Training',
-        description: 'Optimal setup for magic training',
-        gearIds: {
-          weapon: 'abyssal_whip',
-          offhand: 'dragon_defender',
-          helmet: 'berserker_helm',
-          cape: 'fire_cape',
-          neck: 'amulet_of_fury',
-          ammo: 'dragon_arrows',
-          body: 'fighter_torso',
-          legs: 'dragon_platelegs',
-          gloves: 'barrows_gloves',
-          boots: 'dragon_boots',
-          ring: 'berserker_ring'
-        }
-      },
-      {
-        id: 'budget_magic',
-        name: 'Budget Magic',
-        description: 'Affordable magic setup',
-        gearIds: {
-          weapon: 'dragon_scimitar',
-          offhand: 'rune_kiteshield',
-          helmet: 'rune_full_helm',
-          cape: 'legends_cape',
-          neck: 'amulet_of_strength',
-          body: 'rune_platebody',
-          legs: 'rune_platelegs',
-          gloves: 'rune_gloves',
-          boots: 'rune_boots',
-          ring: 'ring_of_wealth'
-        }
-      },
-      {
-        id: 'obsidian_setup',
-        name: 'Obsidian Tank',
-        description: 'High defence obsidian setup',
-        gearIds: {
-          weapon: 'granite_maul',
-          helmet: 'berserker_helm',
-          cape: 'obsidian_cape',
-          neck: 'amulet_of_glory',
-          legs: 'obsidian_platelegs',
-          gloves: 'dragon_gloves',
-          boots: 'climbing_boots',
-          ring: 'warrior_ring'
-        }
-      }
-    ],
-    ranged: [
-      {
-        id: 'ranged_training',
-        name: 'Ranged Training',
-        description: 'Optimal setup for ranged training',
-        gearIds: {
-          weapon: 'abyssal_whip',
-          offhand: 'dragon_defender',
-          helmet: 'berserker_helm',
-          cape: 'fire_cape',
-          neck: 'amulet_of_fury',
-          ammo: 'dragon_arrows',
-          body: 'fighter_torso',
-          legs: 'dragon_platelegs',
-          gloves: 'barrows_gloves',
-          boots: 'dragon_boots',
-          ring: 'berserker_ring'
-        }
-      },
-      {
-        id: 'budget_ranged',
-        name: 'Budget Ranged',
-        description: 'Affordable ranged setup',
-        gearIds: {
-          weapon: 'dragon_scimitar',
-          offhand: 'rune_kiteshield',
-          helmet: 'rune_full_helm',
-          cape: 'legends_cape',
-          neck: 'amulet_of_strength',
-          body: 'rune_platebody',
-          legs: 'rune_platelegs',
-          gloves: 'rune_gloves',
-          boots: 'rune_boots',
-          ring: 'ring_of_wealth'
-        }
-      },
-      {
-        id: 'obsidian_setup',
-        name: 'Obsidian Tank',
-        description: 'High defence obsidian setup',
-        gearIds: {
-          weapon: 'granite_maul',
-          helmet: 'berserker_helm',
-          cape: 'obsidian_cape',
-          neck: 'amulet_of_glory',
-          legs: 'obsidian_platelegs',
-          gloves: 'dragon_gloves',
-          boots: 'climbing_boots',
-          ring: 'warrior_ring'
-        }
-      }
-    ]
-  });
-
-  const defaultSlotImages = {
-    weapon: '/gear/weapon.webp',
-    offhand: '/gear/offhand.webp', 
-    helmet: '/gear/helmet.webp',
-    cape: '/gear/cape.webp',
-    neck: '/gear/neck.webp',
-    ammo: '/gear/ammo.webp',
-    body: '/gear/body.webp',
-    legs: '/gear/legs.webp',
-    gloves: '/gear/gloves.webp',
-    boots: '/gear/boots.webp',
-    ring: '/gear/ring.webp'
-  };
-
-  const [combatStats, setCombatStats] = useState({
-    attack: 99,
-    strength: 99,
-    defense: 99,
-    ranged: 99,
-    magic: 99,
-    hitpoints: 99,
-    prayer: 99,
-    woodcutting: 99,
-    mining: 99,
-    thieving: 99
-  });
-
-  const statImages = {
-    attack: '/gear/attack.webp',
-    strength: '/gear/strength.webp',
-    defense: '/gear/defence.webp',
-    ranged: '/gear/ranged.webp',
-    hitpoints: '/gear/hitpoints.webp',
-    magic: '/gear/magic.webp',
-    prayer: '/gear/prayer.webp',
-    mining: '/gear/mining.webp',
-    woodcutting: '/gear/woodcutting.webp',
-    thieving: '/gear/thieving.webp'
+    return slots;
   };
 
   const [selectedPresets, setSelectedPresets] = useState({
@@ -326,10 +69,43 @@ const GearSelection: React.FC = () => {
     ranged: ''
   });
 
+  // Load gear data from Supabase on component mount
+  useEffect(() => {
+    const loadGearData = async () => {
+      try {
+        setIsLoadingGear(true);
+        const gearItems = await fetchGearFromSupabase();
+        const groupedGear = groupGearBySlot(gearItems);
+        setGearData(groupedGear);
+        
+        console.log('Loaded gear data:', groupedGear);
+      } catch (error) {
+        console.error('Failed to load gear data, using empty state:', error);
+        setGearData({}); // Set empty data instead of keeping old state
+      } finally {
+        setIsLoadingGear(false);
+      }
+    };
+
+    loadGearData();
+  }, []); // Remove gearData dependency to avoid infinite loop
+
+  // Update gear sets when gearData changes
+  useEffect(() => {
+    if (Object.keys(gearData).length > 0) {
+      const newGearSlots = createBaseGearSlots();
+      setGearSets({
+        melee: newGearSlots,
+        mage: newGearSlots,
+        ranged: newGearSlots
+      });
+    }
+  }, [gearData]);
+
   const handleGearSelect = (slotIndex: number, item: GearItem) => {
     setGearSets(prev => ({
       ...prev,
-      [activeTab]: prev[activeTab].map((slot, index) => 
+      [activeGearTab]: prev[activeGearTab].map((slot, index) => 
         index === slotIndex ? { ...slot, selected: item } : slot
       )
     }));
@@ -338,19 +114,19 @@ const GearSelection: React.FC = () => {
   const handlePresetSelect = (presetId: string) => {
     setSelectedPresets(prev => ({
       ...prev,
-      [activeTab]: presetId
+      [activeGearTab]: presetId
     }));
 
     if (!presetId) return;
     
-    const preset = presetsByType[activeTab].find(p => p.id === presetId);
+    const preset = presetsByType[activeGearTab].find(p => p.id === presetId);
     if (!preset) return;
 
     // Batch the state update to avoid multiple re-renders
     requestAnimationFrame(() => {
       setGearSets(prev => ({
         ...prev,
-        [activeTab]: prev[activeTab].map(slot => {
+        [activeGearTab]: prev[activeGearTab].map(slot => {
           const slotKey = slot.slot.toLowerCase().replace('-', '');
           const gearId = preset.gearIds[slotKey];
           
@@ -396,6 +172,19 @@ const GearSelection: React.FC = () => {
     }));
   };
 
+  if (isLoadingGear) {
+    return (
+      <section id="gear" className="section">
+        <div className="container">
+          <div className="loading-state">
+            <div className="loading-spinner" />
+            <p>Loading gear data...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section id="gear" className="section">
       <div className="container">
@@ -410,10 +199,10 @@ const GearSelection: React.FC = () => {
             <select 
               className="preset-dropdown"
               onChange={(e) => handlePresetSelect(e.target.value)}
-              value={selectedPresets[activeTab]}
+              value={selectedPresets[activeGearTab]}
             >
               <option value="">Choose a preset...</option>
-              {presetsByType[activeTab].map(preset => (
+              {presetsByType[activeGearTab].map(preset => (
                 <option key={preset.id} value={preset.id}>
                   {preset.name} - {preset.description}
                 </option>
@@ -424,8 +213,8 @@ const GearSelection: React.FC = () => {
             {(['melee', 'mage', 'ranged'] as GearSetType[]).map(tabType => (
               <button
                 key={tabType}
-                className={`tab-button ${activeTab === tabType ? 'active' : ''}`}
-                onClick={() => setActiveTab(tabType)}
+                className={`tab-button ${activeGearTab === tabType ? 'active' : ''}`}
+                onClick={() => setActiveGearTab(tabType)}
               >
                 {tabType.charAt(0).toUpperCase() + tabType.slice(1)}
               </button>
@@ -482,10 +271,10 @@ const GearSelection: React.FC = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <AnimatePresence mode="wait">
-              {gearSets[activeTab].map((slot, index) => (
+            <AnimatePresence mode="popLayout">
+              {gearSets[activeGearTab].map((slot, index) => (
                 <motion.div 
-                  key={`${activeTab}-${slot.slot}`}
+                  key={`${activeGearTab}-${slot.slot}-${index}`}
                   className="gear-slot card" 
                   data-slot={slot.slot.toLowerCase().replace('-', '')}
                   initial={{ opacity: 0, y: 20 }}
@@ -505,7 +294,7 @@ const GearSelection: React.FC = () => {
                         // Clear the selection when default option is chosen
                         setGearSets(prev => ({
                           ...prev,
-                          [activeTab]: prev[activeTab].map((slot, idx) => 
+                          [activeGearTab]: prev[activeGearTab].map((slot, idx) => 
                             idx === index ? { ...slot, selected: undefined } : slot
                           )
                         }));
@@ -548,15 +337,15 @@ const GearSelection: React.FC = () => {
               >
                 <motion.h3 
                   style={{
-                    background: activeTab === gearType 
+                    background: activeGearTab === gearType 
                       ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))'
                       : 'none',
-                    WebkitBackgroundClip: activeTab === gearType ? 'text' : 'unset',
-                    WebkitTextFillColor: activeTab === gearType ? 'transparent' : 'var(--text-primary)',
-                    backgroundClip: activeTab === gearType ? 'text' : 'unset'
+                    WebkitBackgroundClip: activeGearTab === gearType ? 'text' : 'unset',
+                    WebkitTextFillColor: activeGearTab === gearType ? 'transparent' : 'var(--text-primary)',
+                    backgroundClip: activeGearTab === gearType ? 'text' : 'unset'
                   }}
                   animate={{
-                    scale: activeTab === gearType ? 1.05 : 1
+                    scale: activeGearTab === gearType ? 1.05 : 1
                   }}
                   transition={{ duration: 0.3 }}
                 >
@@ -565,13 +354,13 @@ const GearSelection: React.FC = () => {
                 <div className="model-container">
                   <div className="character-silhouette">
                     <AnimatePresence>
-                      {gearSets[gearType].map(slot => {
+                      {gearSets[gearType].map((slot, slotIndex) => {
                         const slotKey = slot.slot.toLowerCase().replace('-', '') as keyof typeof defaultSlotImages;
                         const defaultImage = defaultSlotImages[slotKey];
                         
                         return (
                           <div 
-                            key={slot.slot} 
+                            key={`${gearType}-${slot.slot}-${slotIndex}`}
                             className={`equipped-${slotKey}`}
                           >
                             <img 
