@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Header from './components/Header';
 import GearSelection from './components/GearSelection';
 import RoomSelection from './components/RoomSelection';
@@ -60,17 +61,25 @@ function App() {
   return (
     <ThemeProvider>
       <div className="app">
-        <div 
+        <motion.div 
           className="scroll-progress" 
           style={{ width: `${scrollProgress}%` }}
+          initial={{ width: 0 }}
+          animate={{ width: `${scrollProgress}%` }}
+          transition={{ duration: 0.1, ease: "easeOut" }}
         />
         <FloatingBackground />
         <Header />
-        <main className="main-content">
+        <motion.main 
+          className="main-content"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
           <GearSelection />
           <RoomSelection />
           <PlotSection />
-        </main>
+        </motion.main>
       </div>
     </ThemeProvider>
   );

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import './GearSelection.css';
 
 interface GearItem {
@@ -395,24 +396,15 @@ const GearSelection: React.FC = () => {
     }));
   };
 
-  useEffect(() => {
-    // Simple fade-in without intersection observer to avoid performance issues
-    const timer = setTimeout(() => {
-      const elements = document.querySelectorAll('.gear-slot, .preset-controls, .stats-bar, .character-model');
-      elements.forEach((el, index) => {
-        setTimeout(() => {
-          el.classList.add('fade-in');
-        }, index * 50);
-      });
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <section id="gear" className="section">
       <div className="container">
-        <div className="preset-controls">
+        <motion.div 
+          className="preset-controls"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
           <div className="preset-dropdown-container">
             <label className="preset-label">Load Preset:</label>
             <select 
@@ -453,9 +445,14 @@ const GearSelection: React.FC = () => {
               Clear All
             </button>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="stats-bar card">
+        <motion.div 
+          className="stats-bar card"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
             <h3>Combat Stats</h3>
             <div className="stats-list">
               {Object.entries(combatStats).map(([stat, value]) => (
@@ -476,55 +473,80 @@ const GearSelection: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
 
         <div className="gear-content">
-          <div className="gear-slots">
-            {gearSets[activeTab].map((slot, index) => (
-              <div 
-                key={slot.slot} 
-                className="gear-slot card" 
-                data-slot={slot.slot.toLowerCase().replace('-', '')}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <label className="gear-label">{slot.slot}</label>
-                <select 
-                  className="gear-dropdown"
-                  onChange={(e) => {
-                    if (e.target.value === '') {
-                      // Clear the selection when default option is chosen
-                      setGearSets(prev => ({
-                        ...prev,
-                        [activeTab]: prev[activeTab].map((slot, idx) => 
-                          idx === index ? { ...slot, selected: undefined } : slot
-                        )
-                      }));
-                    } else {
-                      const selectedItem = slot.items.find(item => item.id === e.target.value);
-                      if (selectedItem) handleGearSelect(index, selectedItem);
-                    }
+          <motion.div 
+            className="gear-slots"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <AnimatePresence mode="wait">
+              {gearSets[activeTab].map((slot, index) => (
+                <motion.div 
+                  key={`${activeTab}-${slot.slot}`}
+                  className="gear-slot card" 
+                  data-slot={slot.slot.toLowerCase().replace('-', '')}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  layout
+                  whileHover={{ 
+                    y: -4,
+                    transition: { duration: 0.2 }
                   }}
-                  value={slot.selected?.id || ''}
                 >
-                  <option value="">Select {slot.slot}</option>
-                  {slot.items.map(item => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </div>
+                  <label className="gear-label">{slot.slot}</label>
+                  <select 
+                    className="gear-dropdown"
+                    onChange={(e) => {
+                      if (e.target.value === '') {
+                        // Clear the selection when default option is chosen
+                        setGearSets(prev => ({
+                          ...prev,
+                          [activeTab]: prev[activeTab].map((slot, idx) => 
+                            idx === index ? { ...slot, selected: undefined } : slot
+                          )
+                        }));
+                      } else {
+                        const selectedItem = slot.items.find(item => item.id === e.target.value);
+                        if (selectedItem) handleGearSelect(index, selectedItem);
+                      }
+                    }}
+                    value={slot.selected?.id || ''}
+                  >
+                    <option value="">Select {slot.slot}</option>
+                    {slot.items.map(item => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
 
-          <div className="character-models">
+          <motion.div 
+            className="character-models"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
             {(['melee', 'mage', 'ranged'] as GearSetType[]).map((gearType, index) => (
-              <div 
+              <motion.div 
                 key={gearType} 
                 className="character-model card"
-                style={{ animationDelay: `${index * 0.2}s` }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
+                whileHover={{ 
+                  y: -6,
+                  transition: { duration: 0.2 }
+                }}
               >
-                <h3 
+                <motion.h3 
                   style={{
                     background: activeTab === gearType 
                       ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))'
@@ -533,30 +555,39 @@ const GearSelection: React.FC = () => {
                     WebkitTextFillColor: activeTab === gearType ? 'transparent' : 'var(--text-primary)',
                     backgroundClip: activeTab === gearType ? 'text' : 'unset'
                   }}
+                  animate={{
+                    scale: activeTab === gearType ? 1.05 : 1
+                  }}
+                  transition={{ duration: 0.3 }}
                 >
                   {gearType.charAt(0).toUpperCase() + gearType.slice(1)} Setup
-                </h3>
+                </motion.h3>
                 <div className="model-container">
                   <div className="character-silhouette">
-                    {gearSets[gearType].map(slot => {
-                      const slotKey = slot.slot.toLowerCase().replace('-', '') as keyof typeof defaultSlotImages;
-                      const defaultImage = defaultSlotImages[slotKey];
-                      
-                      return (
-                        <div key={slot.slot} className={`equipped-${slotKey}`}>
-                          <img 
-                            src={slot.selected?.image || defaultImage}
-                            alt={slot.selected?.name || `Empty ${slot.slot}`}
-                            className="equipped-item"
-                          />
-                        </div>
-                      );
-                    })}
+                    <AnimatePresence>
+                      {gearSets[gearType].map(slot => {
+                        const slotKey = slot.slot.toLowerCase().replace('-', '') as keyof typeof defaultSlotImages;
+                        const defaultImage = defaultSlotImages[slotKey];
+                        
+                        return (
+                          <div 
+                            key={slot.slot} 
+                            className={`equipped-${slotKey}`}
+                          >
+                            <img 
+                              src={slot.selected?.image || defaultImage}
+                              alt={slot.selected?.name || `Empty ${slot.slot}`}
+                              className="equipped-item"
+                            />
+                          </div>
+                        );
+                      })}
+                    </AnimatePresence>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
