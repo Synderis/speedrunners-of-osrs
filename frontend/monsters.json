@@ -1,0 +1,1566 @@
+[
+  {
+    "id": 415,
+    "name": "Abyssal demon",
+    "version": "Standard",
+    "image": "Abyssal demon.png",
+    "size": 1,
+    "speed": 4,
+    "style": "stab",
+    "skills": {
+      "atk": 97,
+      "def": 135,
+      "hp": 150,
+      "magic": 1,
+      "ranged": 1,
+      "str": 67
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 20,
+      "slash": 20,
+      "crush": 20,
+      "magic": 0,
+      "light": 20,
+      "standard": 20,
+      "heavy": 20
+    },
+    "attributes": [
+      "demon"
+    ],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 150,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      }
+    }
+  },
+  {
+    "id": -1,
+    "name": "Custom monster",
+    "version": "",
+    "image": "",
+    "size": 1,
+    "speed": 4,
+    "style": "stab",
+    "skills": {
+      "atk": 0,
+      "def": 0,
+      "hp": 150,
+      "magic": 0,
+      "ranged": 0,
+      "str": 0
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 0,
+      "slash": 0,
+      "crush": 0,
+      "magic": 0,
+      "light": 0,
+      "standard": 0,
+      "heavy": 0
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 150,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      }
+    }
+  },
+  {
+    "id": 3477,
+    "name": "A Doubt",
+    "version": "",
+    "image": "A Doubt.png",
+    "size": 1,
+    "speed": 6,
+    "style": "crush",
+    "skills": {
+      "atk": 72,
+      "def": 85,
+      "hp": 59,
+      "magic": 1,
+      "ranged": 1,
+      "str": 58
+    },
+    "offensive": {
+      "atk": 18,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 16
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 0,
+      "slash": 0,
+      "crush": 0,
+      "magic": 0,
+      "light": 0,
+      "standard": 0,
+      "heavy": 0
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 59,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      }
+    },
+    "maxHit": 8
+  },
+  {
+    "id": 2,
+    "name": "Aberrant spectre",
+    "version": "",
+    "image": "Aberrant spectre.png",
+    "size": 2,
+    "speed": 4,
+    "style": "magic",
+    "skills": {
+      "atk": 1,
+      "def": 90,
+      "hp": 90,
+      "magic": 105,
+      "ranged": 1,
+      "str": 1
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 20,
+      "slash": 20,
+      "crush": 20,
+      "magic": 0,
+      "light": 15,
+      "standard": -15,
+      "heavy": 15
+    },
+    "attributes": [
+      "spectral",
+      "undead"
+    ],
+    "weakness": {
+      "element": "air",
+      "severity": 50
+    },
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 90,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      }
+    },
+    "maxHit": 14
+  },
+  {
+    "id": 7402,
+    "name": "Abhorrent spectre",
+    "version": "",
+    "image": "Abhorrent spectre.png",
+    "size": 3,
+    "speed": 4,
+    "style": "magic",
+    "skills": {
+      "atk": 1,
+      "def": 180,
+      "hp": 250,
+      "magic": 300,
+      "ranged": 1,
+      "str": 1
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 40,
+      "slash": 40,
+      "crush": 40,
+      "magic": 0,
+      "light": 30,
+      "standard": 30,
+      "heavy": 30
+    },
+    "attributes": [
+      "spectral",
+      "undead"
+    ],
+    "weakness": {
+      "element": "air",
+      "severity": 50
+    },
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 250,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      }
+    },
+    "maxHit": 31
+  },
+  {
+    "id": 8260,
+    "name": "Abomination",
+    "version": "",
+    "image": "Abomination.png",
+    "size": 2,
+    "speed": 5,
+    "style": null,
+    "skills": {
+      "atk": 110,
+      "def": 110,
+      "hp": 200,
+      "magic": 110,
+      "ranged": 110,
+      "str": 110
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 80,
+      "slash": 80,
+      "crush": 80,
+      "magic": 20,
+      "light": 180,
+      "standard": 180,
+      "heavy": 180
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 200,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      }
+    },
+    "maxHit": 23
+  },
+  {
+    "id": 5886,
+    "name": "Abyssal Sire",
+    "version": "Phase 1",
+    "image": "Abyssal Sire (phase 1).png",
+    "size": 6,
+    "speed": 7,
+    "style": null,
+    "skills": {
+      "atk": 180,
+      "def": 250,
+      "hp": 425,
+      "magic": 200,
+      "ranged": 1,
+      "str": 136
+    },
+    "offensive": {
+      "atk": 65,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 40,
+      "slash": 60,
+      "crush": 50,
+      "magic": 20,
+      "light": 60,
+      "standard": 60,
+      "heavy": 60
+    },
+    "attributes": [
+      "demon"
+    ],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 425,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 66
+  },
+  {
+    "id": 5889,
+    "name": "Abyssal Sire",
+    "version": "Phase 2",
+    "image": "Abyssal Sire.png",
+    "size": 6,
+    "speed": 7,
+    "style": null,
+    "skills": {
+      "atk": 180,
+      "def": 250,
+      "hp": 425,
+      "magic": 200,
+      "ranged": 1,
+      "str": 136
+    },
+    "offensive": {
+      "atk": 65,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 40,
+      "slash": 60,
+      "crush": 50,
+      "magic": 20,
+      "light": 60,
+      "standard": 60,
+      "heavy": 60
+    },
+    "attributes": [
+      "demon"
+    ],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 425,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 66
+  },
+  {
+    "id": 7241,
+    "name": "Abyssal demon",
+    "version": "Catacombs of Kourend",
+    "image": "Abyssal demon (Catacombs of Kourend).png",
+    "size": 1,
+    "speed": 4,
+    "style": "stab",
+    "skills": {
+      "atk": 97,
+      "def": 135,
+      "hp": 150,
+      "magic": 1,
+      "ranged": 1,
+      "str": 67
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 20,
+      "slash": 20,
+      "crush": 20,
+      "magic": 0,
+      "light": 20,
+      "standard": 20,
+      "heavy": 20
+    },
+    "attributes": [
+      "demon"
+    ],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 150,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 8
+  },
+  {
+    "id": 11239,
+    "name": "Abyssal demon",
+    "version": "Wilderness Slayer Cave",
+    "image": "Abyssal demon.png",
+    "size": 1,
+    "speed": 4,
+    "style": "stab",
+    "skills": {
+      "atk": 97,
+      "def": 135,
+      "hp": 150,
+      "magic": 1,
+      "ranged": 1,
+      "str": 67
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 20,
+      "slash": 20,
+      "crush": 20,
+      "magic": 0,
+      "light": 20,
+      "standard": 20,
+      "heavy": 20
+    },
+    "attributes": [
+      "demon"
+    ],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 150,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 8
+  },
+  {
+    "id": 2585,
+    "name": "Abyssal guardian",
+    "version": "",
+    "image": "Abyssal guardian.png",
+    "size": 1,
+    "speed": 4,
+    "style": null,
+    "skills": {
+      "atk": 30,
+      "def": 30,
+      "hp": 50,
+      "magic": 1,
+      "ranged": 1,
+      "str": 90
+    },
+    "offensive": {
+      "atk": 15,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 5
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 70,
+      "slash": 70,
+      "crush": 70,
+      "magic": 150,
+      "light": 70,
+      "standard": 70,
+      "heavy": 70
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 50,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 11
+  },
+  {
+    "id": 2584,
+    "name": "Abyssal leech",
+    "version": "",
+    "image": "Abyssal leech.png",
+    "size": 1,
+    "speed": 2,
+    "style": "slash",
+    "skills": {
+      "atk": 95,
+      "def": 25,
+      "hp": 10,
+      "magic": 1,
+      "ranged": 1,
+      "str": 5
+    },
+    "offensive": {
+      "atk": 100,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 10
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 50,
+      "slash": 50,
+      "crush": 100,
+      "magic": 50,
+      "light": 10,
+      "standard": 10,
+      "heavy": 10
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 10,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 2
+  },
+  {
+    "id": 12393,
+    "name": "Abyssal leech (The Scar)",
+    "version": "Level 32",
+    "image": "Abyssal leech (The Scar).png",
+    "size": 1,
+    "speed": 2,
+    "style": "slash",
+    "skills": {
+      "atk": 50,
+      "def": 1,
+      "hp": 50,
+      "magic": 1,
+      "ranged": 1,
+      "str": 10
+    },
+    "offensive": {
+      "atk": 5,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 10
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 50,
+      "slash": 50,
+      "crush": 10,
+      "magic": 50,
+      "light": 10,
+      "standard": 10,
+      "heavy": 10
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 50,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 2
+  },
+  {
+    "id": 12366,
+    "name": "Abyssal leech (The Scar)",
+    "version": "Level 46",
+    "image": "Abyssal leech (The Scar, lv 46).png",
+    "size": 1,
+    "speed": 2,
+    "style": "crush",
+    "skills": {
+      "atk": 1,
+      "def": 1,
+      "hp": 30,
+      "magic": 1,
+      "ranged": 1,
+      "str": 1
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 0,
+      "slash": 0,
+      "crush": 0,
+      "magic": 0,
+      "light": 0,
+      "standard": 0,
+      "heavy": 0
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 30,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 1
+  },
+  {
+    "id": 12392,
+    "name": "Abyssal walker (The Scar)",
+    "version": "Level 109",
+    "image": "Abyssal walker (The Scar).png",
+    "size": 1,
+    "speed": 5,
+    "style": "crush",
+    "skills": {
+      "atk": 20,
+      "def": 95,
+      "hp": 120,
+      "magic": 1,
+      "ranged": 1,
+      "str": 150
+    },
+    "offensive": {
+      "atk": 5,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 10
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 75,
+      "slash": 75,
+      "crush": 10,
+      "magic": 75,
+      "light": 75,
+      "standard": 75,
+      "heavy": 75
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 120,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 18
+  },
+  {
+    "id": 12394,
+    "name": "Abyssal walker (The Scar)",
+    "version": "Level 90",
+    "image": "Abyssal walker (The Scar).png",
+    "size": 1,
+    "speed": 5,
+    "style": "crush",
+    "skills": {
+      "atk": 20,
+      "def": 20,
+      "hp": 120,
+      "magic": 1,
+      "ranged": 1,
+      "str": 150
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 10
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 75,
+      "slash": 75,
+      "crush": 10,
+      "magic": 75,
+      "light": 75,
+      "standard": 75,
+      "heavy": 75
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 120,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 18
+  },
+  {
+    "id": 13675,
+    "name": "Acidic Araxyte",
+    "version": "",
+    "image": "Egg (Acidic Araxyte).png",
+    "size": 2,
+    "speed": 6,
+    "style": "ranged",
+    "skills": {
+      "atk": 150,
+      "def": 50,
+      "hp": 58,
+      "magic": 1,
+      "ranged": 60,
+      "str": 120
+    },
+    "offensive": {
+      "atk": 180,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 450,
+      "ranged_str": 0,
+      "str": 12
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 25,
+      "slash": 25,
+      "crush": 25,
+      "magic": -10,
+      "light": 25,
+      "standard": 25,
+      "heavy": 25
+    },
+    "attributes": [],
+    "weakness": {
+      "element": "fire",
+      "severity": 50
+    },
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 58,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 15
+  },
+  {
+    "id": 9573,
+    "name": "Acidic Bloodveld",
+    "version": "",
+    "image": "Acidic Bloodveld.png",
+    "size": 1,
+    "speed": 4,
+    "style": "magic",
+    "skills": {
+      "atk": 80,
+      "def": 2,
+      "hp": 5,
+      "magic": 1,
+      "ranged": 1,
+      "str": 46
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": -100,
+      "slash": -100,
+      "crush": -100,
+      "magic": -100,
+      "light": -100,
+      "standard": -100,
+      "heavy": -100
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 5,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 50
+  },
+  {
+    "id": 13823,
+    "name": "Adala",
+    "version": "",
+    "image": "Adala.png",
+    "size": 1,
+    "speed": 4,
+    "style": "crush",
+    "skills": {
+      "atk": 50,
+      "def": 10,
+      "hp": 60,
+      "magic": 5,
+      "ranged": 1,
+      "str": 30
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 0,
+      "slash": 0,
+      "crush": 0,
+      "magic": 0,
+      "light": 0,
+      "standard": 0,
+      "heavy": 0
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 60,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 4
+  },
+  {
+    "id": 8030,
+    "name": "Adamant dragon",
+    "version": "",
+    "image": "Adamant dragon.png",
+    "size": 5,
+    "speed": 4,
+    "style": null,
+    "skills": {
+      "atk": 280,
+      "def": 272,
+      "hp": 295,
+      "magic": 186,
+      "ranged": 186,
+      "str": 280
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 20,
+      "slash": 110,
+      "crush": 85,
+      "magic": 30,
+      "light": 95,
+      "standard": 95,
+      "heavy": 65
+    },
+    "attributes": [
+      "dragon",
+      "fiery"
+    ],
+    "weakness": {
+      "element": "earth",
+      "severity": 50
+    },
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 295,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 50
+  },
+  {
+    "id": 1298,
+    "name": "Afflicted",
+    "version": "Level 30",
+    "image": "Afflicted (level 30).png",
+    "size": 1,
+    "speed": 4,
+    "style": "crush",
+    "skills": {
+      "atk": 24,
+      "def": 34,
+      "hp": 24,
+      "magic": 1,
+      "ranged": 1,
+      "str": 24
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 0,
+      "slash": 0,
+      "crush": 0,
+      "magic": 0,
+      "light": 0,
+      "standard": 0,
+      "heavy": 0
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 24,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 3
+  },
+  {
+    "id": 1297,
+    "name": "Afflicted",
+    "version": "Level 32",
+    "image": "Afflicted (level 32).png",
+    "size": 1,
+    "speed": 4,
+    "style": "crush",
+    "skills": {
+      "atk": 26,
+      "def": 36,
+      "hp": 26,
+      "magic": 1,
+      "ranged": 1,
+      "str": 26
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 0,
+      "slash": 0,
+      "crush": 0,
+      "magic": 0,
+      "light": 0,
+      "standard": 0,
+      "heavy": 0
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 26,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 4
+  },
+  {
+    "id": 13483,
+    "name": "Agile Warrior",
+    "version": "",
+    "image": "Agile Warrior.png",
+    "size": 1,
+    "speed": 4,
+    "style": "crush",
+    "skills": {
+      "atk": 25,
+      "def": 80,
+      "hp": 30,
+      "magic": 1,
+      "ranged": 80,
+      "str": 25
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 0,
+      "slash": 0,
+      "crush": 0,
+      "magic": 0,
+      "light": 0,
+      "standard": 0,
+      "heavy": 0
+    },
+    "attributes": [],
+    "weakness": null,
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 30,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 3
+  },
+  {
+    "id": 911,
+    "name": "Agrith Naar",
+    "version": "",
+    "image": "Agrith Naar.png",
+    "size": 3,
+    "speed": 4,
+    "style": null,
+    "skills": {
+      "atk": 83,
+      "def": 82,
+      "hp": 95,
+      "magic": 100,
+      "ranged": 100,
+      "str": 90
+    },
+    "offensive": {
+      "atk": 0,
+      "magic": 0,
+      "magic_str": 0,
+      "ranged": 0,
+      "ranged_str": 0,
+      "str": 0
+    },
+    "defensive": {
+      "flat_armour": 0,
+      "stab": 0,
+      "slash": 0,
+      "crush": 0,
+      "magic": 0,
+      "light": 0,
+      "standard": 0,
+      "heavy": 0
+    },
+    "attributes": [
+      "demon"
+    ],
+    "weakness": {
+      "element": "water",
+      "severity": 25
+    },
+    "immunities": {
+      "burn": null
+    },
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 95,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      },
+      "phase": "Standard"
+    },
+    "maxHit": 10
+  }
+]
