@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { fadeInOut } from '../utils/animations';
-import { calculateDPSWithObjects } from '../utils/wasmLoader';
-import type { PlotDataPoint } from '../utils/wasmLoader';
+import { calculateDPSWithObjectsTekton } from '../loaders/tektonWasm';
+import type { PlotDataPoint } from '../loaders/tektonWasm';
 import type { Monster } from '../data/monsterStats';
 import { fetchWeaponStatsFromS3, getWeaponStatsByItemId, type WeaponStat } from '../services/weaponStatsService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
@@ -59,6 +59,11 @@ const calculateGearStatsForSet = async (
   return totalStats;
 };
 
+const wasmModelLoaders: Record<string, (player: any, monster: any) => Promise<any>> = {
+  tekton: calculateDPSWithObjectsTekton,
+  // vasa: calculateDPSWithObjectsVasa,
+};
+
 // --- Main Component ---
 const PlotSection: React.FC<PlotSectionProps> = ({
   gearSets = {
@@ -92,9 +97,9 @@ const PlotSection: React.FC<PlotSectionProps> = ({
 
   // --- State ---
   const [isLoading, setIsLoading] = useState(false);
-  const [plotData, setPlotData] = useState<PlotDataPoint[]>([]);
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [activeTab, setActiveTab] = useState<string>('melee');
   const [stats, setStats] = useState({
     maxDPS: 0,
     avgDPS: 0,
@@ -108,6 +113,8 @@ const PlotSection: React.FC<PlotSectionProps> = ({
       return acc;
     }, {} as Record<typeof GEAR_TYPES[number], typeof DEFAULT_GEAR_STATS>)
   );
+  const [plotDataDict, setPlotDataDict] = useState<Record<string, PlotDataPoint[]>>({});
+  const [statsDict, setStatsDict] = useState<Record<string, typeof stats>>({});
 
   // --- Refs ---
   const titleRef = useRef(null);
@@ -172,7 +179,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
       const targetMonster = selectedMonsters[0];
       if (!targetMonster) {
         console.warn('No monster selected, using default values');
-        const { calculateDPS } = await import('../utils/wasmLoader');
+        const { calculateDPS } = await import('../loaders/tektonWasm');
         const result = await calculateDPS(450, 70, 0.7);
         setPlotData(result.tickData);
         setStats({
@@ -228,7 +235,10 @@ const PlotSection: React.FC<PlotSectionProps> = ({
       console.log('Sending all gear sets to WASM:', playerData);
 
       // Call WASM function
-      const result = await calculateDPSWithObjects(playerData, monsterData);
+      const model = targetMonster?.name || 'tekton'; // fallback if needed
+      const loader = wasmModelLoaders[model];
+      if (!loader) throw new Error(`No WASM loader for model: ${model}`);
+      const result = await loader(playerData, monsterData);
 
       setPlotData(result.tickData);
       setStats({
@@ -237,6 +247,17 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         accuracy: result.summary.accuracy,
         timeToKill: result.summary.timeToKill
       });
+      const key = model; // or use room id, e.g., targetMonster?.id
+      setPlotDataDict(prev => ({ ...prev, [key]: result.tickData }));
+      setStatsDict(prev => ({
+        ...prev,
+        [key]: {
+          maxDPS: result.summary.maxDPS,
+          avgDPS: result.summary.avgDPS,
+          accuracy: result.summary.accuracy,
+          timeToKill: result.summary.timeToKill
+        }
+      }));
 
     } catch (error) {
       console.error('WASM calculation failed:', error);
@@ -308,6 +329,14 @@ const PlotSection: React.FC<PlotSectionProps> = ({
 
   // --- Current Monster ---
   const currentMonster = selectedMonsters[0];
+  const plotData = plotDataDict[activeTab] || [];
+  const defaultStats = {
+    maxDPS: 0,
+    avgDPS: 0,
+    accuracy: 0,
+    timeToKill: 0
+  };
+  const stats = statsDict[activeTab] || defaultStats;
 
   // --- Render ---
   return (
