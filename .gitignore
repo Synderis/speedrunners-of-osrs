@@ -4,3 +4,4 @@ supabase_temp_credentials.py
 target/
 .env
 __pycache__/
+node_modules/

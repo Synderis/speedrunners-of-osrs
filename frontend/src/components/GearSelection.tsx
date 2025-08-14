@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchGearFromSupabase, groupGearBySlot } from '../services/gearService';
 import { presetsByType, type GearSetType } from '../data/gearTemplates';
@@ -28,6 +29,8 @@ const GearSelection: React.FC<GearSelectionProps> = ({
   setIsGearLoading,
   isGearLoading
 }) => {
+  // Track search terms for each slot index
+  // const [gearSearchTerms, setGearSearchTerms] = useState<Record<number, string>>({});
   // const [isLoadingGear, setIsLoadingGear] = useState(true);
   const [gearData, setGearData] = useState<Record<string, GearItem[]>>({});
 
@@ -267,47 +270,75 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
                 <AnimatePresence mode="popLayout">
-                  {gearSets[activeGearTab].map((slot, index) => (
-                    <motion.div
-                      key={`${activeGearTab}-${slot.slot}-${index}`}
-                      className="gear-slot card"
-                      data-slot={slot.slot.toLowerCase().replace('-', '')}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      layout
-                      whileHover={{
-                        y: -4,
-                        transition: { duration: 0.2 }
-                      }}
-                    >
-                      <label className="gear-label">{slot.slot}</label>
-                      <select
-                        className="gear-dropdown"
-                        onChange={(e) => {
-                          if (e.target.value === '') {
-                            setGearSets(prev => ({
-                              ...prev,
-                              [activeGearTab]: prev[activeGearTab].map((slot, idx) =>
-                                idx === index ? { ...slot, selected: undefined } : slot
-                              )
-                            }));
-                          } else {
-                            const selectedItem = slot.items.find(item => item.id === e.target.value);
-                            if (selectedItem) handleGearSelect(index, selectedItem);
-                          }
+                  {gearSets[activeGearTab].map((slot, index) => {
+                    // Define the option type to allow item: GearItem | undefined
+                    type GearOption = { value: string; label: string; item?: GearItem };
+                    const options: GearOption[] = [
+                      { value: '', label: 'Clear item' },
+                      ...slot.items.map(item => ({
+                        value: item.id,
+                        label: item.name,
+                        item
+                      }))
+                    ];
+                    // Compute value as GearOption | null
+                    const selectedValue: GearOption | null = slot.selected
+                      ? { value: slot.selected.id, label: slot.selected.name, item: slot.selected }
+                      : null;
+                    return (
+                      <motion.div
+                        key={`${activeGearTab}-${slot.slot}-${index}`}
+                        className="gear-slot card"
+                        data-slot={slot.slot.toLowerCase().replace('-', '')}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        layout
+                        whileHover={{
+                          y: -4,
+                          transition: { duration: 0.2 }
                         }}
-                        value={slot.selected?.id || ''}
                       >
-                        <option value="">Select {slot.slot}</option>
-                        {slot.items.map(item => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </select>
-                    </motion.div>
-                  ))}
+                        <label className="gear-label">{slot.slot}</label>
+                        <Select
+                          classNamePrefix="gear-dropdown"
+                          className="gear-dropdown"
+                          options={options}
+                          placeholder={`${slot.slot}`}
+                          isClearable={false}
+                          value={selectedValue}
+                          onChange={option => {
+                            const opt = option as GearOption | null;
+                            if (!opt || !opt.item) {
+                              setGearSets(prev => ({
+                                ...prev,
+                                [activeGearTab]: prev[activeGearTab].map((slot, idx) =>
+                                  idx === index ? { ...slot, selected: undefined } : slot
+                                )
+                              }));
+                            } else {
+                              handleGearSelect(index, opt.item);
+                            }
+                          }}
+                          formatOptionLabel={option => (
+                            option && option.item ? (
+                              <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <img src={option.item.image} alt={option.label} style={{ width: 24, height: 24, marginRight: 8 }} />
+                                {option.label}
+                              </div>
+                            ) : (
+                              <span style={{ color: 'var(--text-secondary)' }}>{option.label}</span>
+                            )
+                          )}
+                          menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                          styles={{
+                            menuPortal: base => ({ ...base, zIndex: 9999 }),
+                            menu: base => ({ ...base, zIndex: 9999 })
+                          }}
+                        />
+                      </motion.div>
+                    );
+                  })}
                 </AnimatePresence>
               </motion.div>
               <div className="character-models-container">
@@ -330,14 +361,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                       }}
                     >
                       <motion.h3
-                        style={{
-                          background: activeGearTab === gearType
-                            ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))'
-                            : 'none',
-                          WebkitBackgroundClip: activeGearTab === gearType ? 'text' : 'unset',
-                          WebkitTextFillColor: activeGearTab === gearType ? 'transparent' : 'var(--text-primary)',
-                          backgroundClip: activeGearTab === gearType ? 'text' : 'unset'
-                        }}
+                        className={activeGearTab === gearType ? 'gear-tab-gradient' : ''}
                         animate={{
                           scale: activeGearTab === gearType ? 1.05 : 1
                         }}
