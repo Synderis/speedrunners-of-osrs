@@ -12,7 +12,8 @@ import './App.css';
 
 function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
-  
+  const [isGearLoading, setIsGearLoading] = useState(true);
+
   // Shared state for gear and monsters
   const [gearSets, setGearSets] = useState<GearSets>({
     melee: [],
@@ -48,12 +49,12 @@ function App() {
     };
 
     forceScrollToTop();
-    
+
     // Use requestAnimationFrame for better timing
     const rafId = requestAnimationFrame(forceScrollToTop);
-    
+
     // Also use timeouts as backup
-    const timeouts = [10, 50, 100, 200, 500].map(delay => 
+    const timeouts = [10, 50, 100, 200, 500].map(delay =>
       setTimeout(forceScrollToTop, delay)
     );
 
@@ -64,7 +65,7 @@ function App() {
     };
 
     window.addEventListener('scroll', handleScroll);
-    
+
     // Add room selection to the fade-in system
     const timer = setTimeout(() => {
       const elements = document.querySelectorAll('.room-selection');
@@ -84,8 +85,8 @@ function App() {
   return (
     <ThemeProvider>
       <div className="app">
-        <motion.div 
-          className="scroll-progress" 
+        <motion.div
+          className="scroll-progress"
           style={{ width: `${scrollProgress}%` }}
           initial={{ width: 0 }}
           animate={{ width: `${scrollProgress}%` }}
@@ -93,29 +94,32 @@ function App() {
         />
         <FloatingBackground />
         <Header />
-        <motion.main 
+        <motion.main
           className="main-content"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <GearSelection 
+          <GearSelection
             gearSets={gearSets}
             setGearSets={setGearSets}
             combatStats={combatStats}
             setCombatStats={setCombatStats}
             activeGearTab={activeGearTab}
             setActiveGearTab={setActiveGearTab}
+            setIsGearLoading={setIsGearLoading}
+            isGearLoading={isGearLoading}
           />
-          <RoomSelection 
-            setSelectedMonsters={setSelectedMonsters}
-          />
-          <PlotSection 
-            gearSets={gearSets}
-            combatStats={combatStats}
-            selectedMonsters={selectedMonsters}
-            activeGearTab={activeGearTab}
-          />
+          {!isGearLoading && (
+            <>
+              <RoomSelection setSelectedMonsters={setSelectedMonsters} />
+              <PlotSection
+                gearSets={gearSets}
+                combatStats={combatStats}
+                selectedMonsters={selectedMonsters}
+              />
+            </>
+          )}
         </motion.main>
       </div>
     </ThemeProvider>

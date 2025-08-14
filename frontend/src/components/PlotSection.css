@@ -198,6 +198,39 @@
   height: 400px;
 }
 
+.bonus-breakdown {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.bonus-type {
+  padding: 4px 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.9em;
+  transition: all 0.2s ease;
+}
+
+.bonus-type.best {
+  background: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.config-item {
+  margin-bottom: 12px;
+}
+
+.config-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive design for smaller screens */
 @media (max-width: 768px) {
   .stats-cards {
     grid-template-columns: repeat(2, 1fr);
@@ -215,5 +248,14 @@
 
   .control-group label {
     min-width: auto;
+  }
+
+  .bonus-breakdown {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .bonus-type {
+    text-align: center;
   }
 }

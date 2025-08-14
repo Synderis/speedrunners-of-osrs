@@ -9,7 +9,7 @@ let wasmInitialized = false;
 
 export const initWasm = async () => {
   if (!wasmInitialized) {
-    await init(wasmUrl);
+    await init({ module_or_path: wasmUrl });
     wasmInitialized = true;
   }
 };
@@ -37,19 +37,26 @@ export interface CalculationSummary {
   maxDefenceRoll: number;
 }
 
-// New function that accepts player and monster objects
+// New function that accepts a single payload object
 export const calculateDPSWithObjects = async (player: any, monster: any, cap: number = 0.99) => {
   await initWasm();
   
-  console.log('Sending to WASM:', { player, monster });
+  // Package everything into a single payload object
+  const payload = {
+    player,
+    monster,
+    config: {
+      cap
+    }
+  };
+  
+  console.log('Sending payload to WASM:', payload);
   
   try {
     console.log('✅ Using calculate_dps_with_objects function');
     
     const result = calculate_dps_with_objects(
-      JSON.stringify(player),
-      JSON.stringify(monster),
-      cap
+      JSON.stringify(payload)  // Pass single JSON string
     );
     
     console.log('WASM result:', result);
@@ -91,8 +98,6 @@ export const calculateDPSWithObjects = async (player: any, monster: any, cap: nu
     console.error('Make sure to run: npm run build:wasm');
     
     // Fallback to legacy calculation with estimated values
-    // Extract basic values for fallback
-    const monster = player; // This is incorrect but prevents crash
     const maxHit = 50; // Estimate
     const accuracy = 0.8; // Estimate
     

@@ -10,14 +10,57 @@ import { useTheme } from '../hooks/useTheme';
 import type { GearSets, CombatStats } from '../types/gear';
 import './PlotSection.css';
 
+// --- Constants & Types ---
+const GEAR_TYPES = ['melee', 'mage', 'ranged'] as const;
+
+const DEFAULT_GEAR_STATS = {
+  attack_stab: 0,
+  attack_slash: 0,
+  attack_crush: 0,
+  attack_magic: 0,
+  attack_ranged: 0,
+  defence_stab: 0,
+  defence_slash: 0,
+  defence_crush: 0,
+  defence_magic: 0,
+  defence_ranged: 0,
+  melee_strength: 0,
+  ranged_strength: 0,
+  magic_damage: 0,
+  prayer: 0
+};
+
 interface PlotSectionProps {
   gearSets?: GearSets;
   combatStats?: CombatStats;
   selectedMonsters?: Monster[];
-  activeGearTab?: 'melee' | 'mage' | 'ranged';
 }
 
-const PlotSection: React.FC<PlotSectionProps> = ({ 
+// --- Helper Functions ---
+const calculateGearStatsForSet = async (
+  gearType: typeof GEAR_TYPES[number],
+  gearSets: GearSets,
+  weaponStatsCache: WeaponStat[]
+) => {
+  if (!gearSets || !gearSets[gearType]) return { ...DEFAULT_GEAR_STATS };
+
+  const totalStats = { ...DEFAULT_GEAR_STATS };
+  for (const slot of gearSets[gearType]) {
+    if (slot.selected?.stats) {
+      Object.keys(totalStats).forEach(stat => {
+        totalStats[stat as keyof typeof totalStats] += slot.selected!.stats[stat as keyof typeof slot.selected.stats];
+      });
+      if (slot.slot === 'Weapon' && weaponStatsCache.length > 0) {
+        const weaponStats = getWeaponStatsByItemId(weaponStatsCache, slot.selected.id);
+        if (weaponStats.length > 0) slot.selected.weaponStats = weaponStats;
+      }
+    }
+  }
+  return totalStats;
+};
+
+// --- Main Component ---
+const PlotSection: React.FC<PlotSectionProps> = ({
   gearSets = {
     melee: [],
     mage: [],
@@ -35,10 +78,19 @@ const PlotSection: React.FC<PlotSectionProps> = ({
     mining: 99,
     thieving: 99
   },
-  selectedMonsters = [],
-  activeGearTab = 'melee'
+  selectedMonsters = []
 }) => {
+  // --- Theme & Chart Colors ---
   const { theme } = useTheme();
+  const chartColors = {
+    primary: '#3b82f6',
+    secondary: '#6366f1',
+    grid: theme === 'light' ? '#e9ecef' : '#333333',
+    text: theme === 'light' ? '#0a0a0a' : '#ffffff',
+    background: 'transparent'
+  };
+
+  // --- State ---
   const [isLoading, setIsLoading] = useState(false);
   const [plotData, setPlotData] = useState<PlotDataPoint[]>([]);
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
@@ -50,34 +102,27 @@ const PlotSection: React.FC<PlotSectionProps> = ({
     timeToKill: 0
   });
   const [weaponStatsCache, setWeaponStatsCache] = useState<WeaponStat[]>([]);
-  const [currentGearStats, setCurrentGearStats] = useState({
-    attack_stab: 0,
-    attack_slash: 0,
-    attack_crush: 0,
-    attack_magic: 0,
-    attack_ranged: 0,
-    defence_stab: 0,
-    defence_slash: 0,
-    defence_crush: 0,
-    defence_magic: 0,
-    defence_ranged: 0,
-    melee_strength: 0,
-    ranged_strength: 0,
-    magic_damage: 0,
-    prayer: 0
-  });
+  const [allGearStats, setAllGearStats] = useState(() =>
+    GEAR_TYPES.reduce((acc, type) => {
+      acc[type] = { ...DEFAULT_GEAR_STATS };
+      return acc;
+    }, {} as Record<typeof GEAR_TYPES[number], typeof DEFAULT_GEAR_STATS>)
+  );
 
+  // --- Refs ---
   const titleRef = useRef(null);
   const statsRef = useRef(null);
   const chartRef = useRef(null);
   const controlsRef = useRef(null);
 
+  // --- InView Hooks ---
   const titleInView = useInView(titleRef, { once: true, amount: 0.8 });
   const statsInView = useInView(statsRef, { once: true, amount: isMobile ? 0.1 : 0.3 });
   const chartInView = useInView(chartRef, { once: true, amount: isMobile ? 0.1 : 0.2 });
   const controlsInView = useInView(controlsRef, { once: true, amount: 0.5 });
 
-  // Load weapon stats on component mount
+  // --- Effects ---
+  // Load weapon stats on mount
   useEffect(() => {
     const loadWeaponStats = async () => {
       console.log('🎯 PlotSection: Starting weapon stats load...');
@@ -85,11 +130,9 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         const weaponStats = await fetchWeaponStatsFromS3();
         setWeaponStatsCache(weaponStats);
         console.log('✅ PlotSection: Loaded weapon stats cache:', weaponStats.length, 'entries');
-        
-        // Log some sample entries for debugging
         if (weaponStats.length > 0) {
           console.log('🔍 Sample weapon stats entries:', weaponStats.slice(0, 5));
-          console.log('🔍 Unique item_ids (first 20):', 
+          console.log('🔍 Unique item_ids (first 20):',
             [...new Set(weaponStats.map(ws => ws.item_id))].slice(0, 20)
           );
         }
@@ -98,124 +141,37 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         setWeaponStatsCache([]);
       }
     };
-
     loadWeaponStats();
   }, []);
 
-  // Update current gear stats when gear or weapon stats change
+  // Update gear stats when gearSets or weaponStatsCache changes
   useEffect(() => {
-    const updateGearStats = async () => {
-      const stats = await calculateTotalGearStats();
-      setCurrentGearStats(stats);
-    };
-
-    if (weaponStatsCache.length > 0 || gearSets[activeGearTab].length > 0) {
-      updateGearStats();
-    }
-  }, [gearSets, activeGearTab, weaponStatsCache]);
-
-  // Calculate total gear stats for current gear set
-  const calculateTotalGearStats = async () => {
-    // Safety check
-    if (!gearSets || !gearSets[activeGearTab]) {
-      return {
-        attack_stab: 0,
-        attack_slash: 0,
-        attack_crush: 0,
-        attack_magic: 0,
-        attack_ranged: 0,
-        defence_stab: 0,
-        defence_slash: 0,
-        defence_crush: 0,
-        defence_magic: 0,
-        defence_ranged: 0,
-        melee_strength: 0,
-        ranged_strength: 0,
-        magic_damage: 0,
-        prayer: 0
-      };
-    }
-
-    const currentGearSet = gearSets[activeGearTab];
-    const totalStats = {
-      attack_stab: 0,
-      attack_slash: 0,
-      attack_crush: 0,
-      attack_magic: 0,
-      attack_ranged: 0,
-      defence_stab: 0,
-      defence_slash: 0,
-      defence_crush: 0,
-      defence_magic: 0,
-      defence_ranged: 0,
-      melee_strength: 0,
-      ranged_strength: 0,
-      magic_damage: 0,
-      prayer: 0
-    };
-
-    for (const slot of currentGearSet) {
-      if (slot.selected?.stats) {
-        // First add the basic gear stats
-        Object.keys(totalStats).forEach(stat => {
-          totalStats[stat as keyof typeof totalStats] += slot.selected!.stats[stat as keyof typeof slot.selected.stats];
-        });
-
-        // If this is a weapon slot, fetch and add weapon stats
-        if (slot.slot === 'Weapon' && weaponStatsCache.length > 0) {
-          console.log(`🗡️ Processing weapon slot with item ID: ${slot.selected.id}`);
-          console.log(`📦 Weapon stats cache size: ${weaponStatsCache.length}`);
-          
-          const weaponStats = getWeaponStatsByItemId(weaponStatsCache, slot.selected.id);
-          if (weaponStats.length > 0) {
-            console.log(`✅ Weapon ${slot.selected.name} has ${weaponStats.length} combat styles:`, 
-              weaponStats.map(ws => ({
-                style: ws.combat_style,
-                attackType: ws.attack_type,
-                attackBonus: ws.attack_bonus,
-                experience: ws.experience,
-                attackSpeed: ws.attack_speed
-              }))
-            );
-            
-            // For now, use the first weapon stat entry
-            // TODO: Later allow user to select combat style
-            const selectedWeaponStat = weaponStats[0];
-            console.log(`🎯 Using combat style: ${selectedWeaponStat.combat_style} (${selectedWeaponStat.attack_type})`);
-            
-            // Store weapon stats in the selected item for later use
-            slot.selected.weaponStats = weaponStats;
-          } else {
-            console.warn(`⚠️ No weapon stats found for weapon ID: ${slot.selected.id}`);
-            console.log(`🔍 Weapon name: ${slot.selected.name}`);
-            console.log(`🔍 Available weapon item_ids sample:`, 
-              weaponStatsCache.slice(0, 10).map(ws => `${ws.item_id} (${ws.weapon_name})`)
-            );
-          }
-        }
+    const updateAllGearStats = async () => {
+      const newStats: Record<typeof GEAR_TYPES[number], typeof DEFAULT_GEAR_STATS> = {} as any;
+      for (const type of GEAR_TYPES) {
+        newStats[type] = await calculateGearStatsForSet(type, gearSets, weaponStatsCache);
       }
+      setAllGearStats(newStats);
+    };
+    if (weaponStatsCache.length > 0 || Object.values(gearSets).some(set => set.length > 0)) {
+      updateAllGearStats();
     }
+  }, [gearSets, weaponStatsCache]);
 
-    return totalStats;
-  };
+  // Responsive design
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
+  // --- Core Logic ---
   const loadData = async () => {
     setIsLoading(true);
-    
     try {
-      // Get current gear stats
-      const gearStats = await calculateTotalGearStats();
-      
-      // Use first selected monster or default values
       const targetMonster = selectedMonsters[0];
-      
-      // Get weapon info if available
-      const weaponSlot = gearSets[activeGearTab].find(slot => slot.slot === 'Weapon');
-      const selectedWeapon = weaponSlot?.selected;
-      
       if (!targetMonster) {
         console.warn('No monster selected, using default values');
-        // Use legacy function with default values
         const { calculateDPS } = await import('../utils/wasmLoader');
         const result = await calculateDPS(450, 70, 0.7);
         setPlotData(result.tickData);
@@ -229,40 +185,51 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         return;
       }
 
-      console.log('Calculating with gear stats:', gearStats);
       console.log('Calculating against monster:', targetMonster);
       console.log('Combat stats:', combatStats);
 
-      // Prepare player object for WASM
+      // Calculate gear stats for all three gear sets
+      const calculatedGearStats: Record<typeof GEAR_TYPES[number], typeof DEFAULT_GEAR_STATS> = {} as any;
+      for (const type of GEAR_TYPES) {
+        calculatedGearStats[type] = await calculateGearStatsForSet(type, gearSets, weaponStatsCache);
+      }
+      setAllGearStats(calculatedGearStats);
+
+      // Get weapons for each gear set
+      const allWeapons: Record<typeof GEAR_TYPES[number], any> = GEAR_TYPES.reduce((acc, type) => {
+        const weaponSlot = gearSets[type].find(slot => slot.slot === 'Weapon');
+        const selectedWeapon = weaponSlot?.selected;
+        acc[type] = selectedWeapon
+          ? {
+              name: selectedWeapon.name,
+              id: selectedWeapon.id,
+              weaponStats: selectedWeapon.weaponStats || []
+            }
+          : null;
+        return acc;
+      }, {} as Record<typeof GEAR_TYPES[number], any>);
+
+      // Prepare player object for WASM with all gear sets
       const playerData = {
         combatStats,
-        gearStats,
-        activeGearTab,
-        selectedWeapon: selectedWeapon ? {
-          name: selectedWeapon.name,
-          id: selectedWeapon.id,
-          weaponStats: selectedWeapon.weaponStats || []
-        } : null
+        gearSets: GEAR_TYPES.reduce((acc, type) => {
+          acc[type] = {
+            gearStats: calculatedGearStats[type],
+            selectedWeapon: allWeapons[type],
+            gearType: type
+          };
+          return acc;
+        }, {} as any)
       };
 
       // Prepare monster object for WASM
-      const monsterData = {
-        hitpoints: targetMonster.hitpoints,
-        name: targetMonster.name,
-        combat_level: targetMonster.combat_level,
-        defence_level: targetMonster.defence_level,
-        defence_slash: targetMonster.defence_slash,
-        defence_stab: targetMonster.defence_stab,
-        defence_crush: targetMonster.defence_crush,
-        defence_magic: targetMonster.defence_magic,
-        defence_ranged: targetMonster.defence_ranged,
-        magic_level: targetMonster.magic_level,
-        max_hit: targetMonster.max_hit
-      };
+      const monsterData = { ...targetMonster };
 
-      // Call new WASM function with objects
+      console.log('Sending all gear sets to WASM:', playerData);
+
+      // Call WASM function
       const result = await calculateDPSWithObjects(playerData, monsterData);
-      
+
       setPlotData(result.tickData);
       setStats({
         maxDPS: result.summary.maxDPS,
@@ -270,6 +237,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         accuracy: result.summary.accuracy,
         timeToKill: result.summary.timeToKill
       });
+
     } catch (error) {
       console.error('WASM calculation failed:', error);
       setStats({
@@ -280,44 +248,32 @@ const PlotSection: React.FC<PlotSectionProps> = ({
       });
       setPlotData([]);
     }
-    
     setIsLoading(false);
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
+  // --- Debug & Controls ---
   const handleRecalculate = () => {
     console.log('Manual recalculation triggered');
     loadData();
   };
 
   const handleDebugLog = async () => {
-    const gearStats = await calculateTotalGearStats();
     const targetMonster = selectedMonsters[0];
-    
-    // Get weapon info if available
-    const weaponSlot = gearSets[activeGearTab].find(slot => slot.slot === 'Weapon');
-    const selectedWeapon = weaponSlot?.selected;
-    
-    // Prepare the same data that gets sent to WASM
+    const calculatedGearStats: Record<typeof GEAR_TYPES[number], typeof DEFAULT_GEAR_STATS> = {} as any;
+    for (const type of GEAR_TYPES) {
+      calculatedGearStats[type] = await calculateGearStatsForSet(type, gearSets, weaponStatsCache);
+    }
     const playerData = {
       combatStats,
-      gearStats,
-      activeGearTab,
-      selectedWeapon: selectedWeapon ? {
-        name: selectedWeapon.name,
-        id: selectedWeapon.id,
-        weaponStats: selectedWeapon.weaponStats || []
-      } : null
+      gearSets: GEAR_TYPES.reduce((acc, type) => {
+        acc[type] = {
+          gearStats: calculatedGearStats[type],
+          selectedWeapon: null,
+          gearType: type
+        };
+        return acc;
+      }, {} as any)
     };
-
     const monsterData = {
       hitpoints: targetMonster?.hitpoints || 450,
       name: targetMonster?.name || 'No monster selected',
@@ -331,7 +287,6 @@ const PlotSection: React.FC<PlotSectionProps> = ({
       magic_level: targetMonster?.magic_level || 1,
       max_hit: targetMonster?.max_hit || 0
     };
-
     const wasmInput = {
       player: playerData,
       monster: monsterData,
@@ -340,27 +295,21 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         parameters: [playerData, monsterData]
       }
     };
-
-    console.group('🔧 WASM Debug Information');
+    console.group('🔧 WASM Debug Information (No Active Gear Tab)');
     console.log('📊 Complete WASM Input Data:', wasmInput);
     console.log('⚔️ Monster Data:', wasmInput.monster);
     console.log('👤 Player Data:', wasmInput.player);
-    console.log('🗡️ Weapon Data:', wasmInput.player.selectedWeapon);
-    console.log('🎯 WASM Function Call:', wasmInput.wasmFunctionCall);
+    console.log('🗡️ All Gear Sets:', wasmInput.player.gearSets);
+    console.log('⚔️ Melee Setup:', wasmInput.player.gearSets.melee);
+    console.log('🏹 Ranged Setup:', wasmInput.player.gearSets.ranged);
+    console.log('🔮 Mage Setup:', wasmInput.player.gearSets.mage);
     console.groupEnd();
   };
 
-  const chartColors = {
-    primary: '#3b82f6',
-    secondary: '#6366f1',
-    grid: theme === 'light' ? '#e9ecef' : '#333333',
-    text: theme === 'light' ? '#0a0a0a' : '#ffffff',
-    background: 'transparent'
-  };
-
-  // Get current monster
+  // --- Current Monster ---
   const currentMonster = selectedMonsters[0];
 
+  // --- Render ---
   return (
     <motion.section
       id="plots"
@@ -381,38 +330,45 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         </motion.h2>
 
         <div className="plot-content">
-          {/* Current Configuration Display */}
+          {/* Gear Configuration */}
           <motion.div
             className="config-display card"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h3>Current Configuration</h3>
+            <h3>Gear Configuration</h3>
             <div className="config-info">
-              <div className="config-item">
-                <strong>Combat Style:</strong> {activeGearTab.charAt(0).toUpperCase() + activeGearTab.slice(1)}
-              </div>
+              {Object.entries({
+                'Attack Bonus': {
+                  Melee: allGearStats.melee.attack_stab,
+                  Ranged: allGearStats.ranged.attack_ranged,
+                  Magic: allGearStats.mage.attack_magic
+                },
+                'Strength Bonus': {
+                  Melee: allGearStats.melee.melee_strength,
+                  Ranged: allGearStats.ranged.ranged_strength,
+                  Magic: allGearStats.mage.magic_damage
+                }
+              }).map(([title, data]) => (
+                <div key={title} className="config-item">
+                  <strong>{title}:</strong>
+                  <div className="bonus-breakdown">
+                    {Object.entries(data).map(([label, value]) => (
+                      <span key={label} className="bonus-type">
+                        {label}: {value}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
               <div className="config-item">
                 <strong>Target Monster:</strong> {currentMonster ? `${currentMonster.name} (CB: ${currentMonster.combat_level})` : 'No monster selected'}
-              </div>
-              <div className="config-item">
-                <strong>Attack Bonus:</strong> {
-                  activeGearTab === 'melee' ? currentGearStats.attack_stab :
-                  activeGearTab === 'ranged' ? currentGearStats.attack_ranged :
-                  currentGearStats.attack_magic
-                }
-              </div>
-              <div className="config-item">
-                <strong>Strength Bonus:</strong> {
-                  activeGearTab === 'melee' ? currentGearStats.melee_strength :
-                  activeGearTab === 'ranged' ? currentGearStats.ranged_strength :
-                  currentGearStats.magic_damage
-                }
               </div>
             </div>
           </motion.div>
 
+          {/* Stats Cards */}
           <motion.div
             ref={statsRef}
             className="stats-cards"
@@ -461,6 +417,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
             ))}
           </motion.div>
 
+          {/* Chart */}
           <motion.div
             ref={chartRef}
             className="plot-container card"
@@ -589,6 +546,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
             </AnimatePresence>
           </motion.div>
 
+          {/* Controls */}
           <motion.div
             ref={controlsRef}
             className="plot-controls card"
@@ -599,8 +557,8 @@ const PlotSection: React.FC<PlotSectionProps> = ({
             <h3>Analysis Controls</h3>
             <p>Click recalculate to run WASM analysis with your current configuration.</p>
             <div className="control-buttons">
-              <button 
-                className="btn" 
+              <button
+                className="btn"
                 onClick={handleRecalculate}
                 disabled={isLoading}
               >

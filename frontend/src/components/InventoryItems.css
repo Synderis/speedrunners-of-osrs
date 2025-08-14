@@ -1,0 +1,50 @@
+/* Style for the inventory item buttons */
+.inventory-items {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.inventory-items-row {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  /* align-items: flex-start; */
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.inventory-items-label {
+  font-weight: 600;
+  font-size: 1.5rem;
+  min-width: 120px;
+  margin-left: 2rem;
+  line-height: 38.4px; /* match image height */
+  padding-top: 0.2rem;  /* optional fine-tune */
+}
+
+.inventory-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4.8px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 3.2px;
+  cursor: pointer;
+  outline: none;
+  transition: border 0.2s, background 0.2s;
+}
+
+.inventory-btn.selected {
+  border: 2px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.inventory-btn img {
+  width: 38.4px;
+  height: 38.4px;
+  object-fit: contain;
+  filter: drop-shadow(0 3.2px 6.4px rgba(0, 0, 0, 0.3));
+  border-radius: 4.8px;
+  transition: filter 0.2s;
+}
+
+.inventory-btn.selected img {
+  filter: drop-shadow(0 0 8px #3b82f6);
+}

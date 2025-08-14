@@ -12,7 +12,6 @@ export interface WeaponStat {
   attack_style: string;
   experience: string;
   boosts: string | null;
-  icon: string;
 }
 
 const createS3Client = () => {
@@ -120,8 +119,7 @@ const parseWeaponStatsCSV = (csvText: string): WeaponStat[] => {
       attack_type: values[7] || '',
       attack_style: values[8] || '',
       experience: values[9] || '',
-      boosts: values[10] === 'null' || values[10] === '' ? null : values[10],
-      icon: values[11] || ''
+      boosts: values[10] === 'null' || values[10] === '' ? null : values[10]
     };
     
     // Log first few entries for debugging
