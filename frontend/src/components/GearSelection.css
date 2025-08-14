@@ -1,3 +1,15 @@
+/* Remove left padding from the react-select dropdown indicator */
+.gear-dropdown__indicator {
+  padding-left: 0 !important;
+}
+/* Hide the vertical divider in react-select input */
+.gear-dropdown__indicator-separator {
+  display: none !important;
+}
+/* Hide image in react-select input selector when selected */
+.gear-dropdown__single-value img {
+  display: none;
+}
 .gear-tabs {
   display: flex;
   justify-content: center;
@@ -34,6 +46,7 @@
   width: 80%;
   margin: 0 auto;
   align-items: start;
+  overflow: visible;
 }
 
 .gear-slots {
@@ -49,11 +62,25 @@
   justify-items: center;
   max-width: 480px; /* 600px * 0.8 */
   margin: 0 auto;
+  overflow: visible;
 }
 
 .gear-slot {
   width: 100%;
   max-width: 144px; /* 180px * 0.8 */
+  position: relative;
+  z-index: 1;
+}
+/* Ensure Typeahead dropdown menu appears above other elements */
+/* Ensure Typeahead dropdown menu appears above other elements */
+.gear-slot .rbt-menu,
+.gear-slot .rbt-menu.dropdown-menu {
+  z-index: 9999 !important;
+  background: var(--bg-tertiary, #f3f4f6);
+  margin-top: 1rem;
+  border: 1px solid var(--accent-primary);
+  border-radius: 6.4px;
+  box-sizing: border-box;
 }
 .gear-slot.card {
   padding: 17px;
@@ -110,27 +137,96 @@
   color: var(--text-primary);
 }
 
-.gear-dropdown {
+.gear-dropdown,
+.gear-dropdown .rbt-input-main,
+.gear-dropdown input.rbt-input-main.form-control {
   width: 100%;
-  padding: 9.6px 6.4px; /* 12px 8px * 0.8 */
+  padding: 0 !important;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
-  border-radius: 6.4px; /* 8px * 0.8 */
+  border-radius: 6.4px;
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 11.2px; /* 14px * 0.8 */
+  font-size: 11.2px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.gear-dropdown:focus {
+.gear-dropdown:focus,
+.gear-dropdown .rbt-input-main:focus,
+.gear-dropdown input.rbt-input-main.form-control:focus {
   outline: none;
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.gear-dropdown:hover {
+.gear-dropdown:hover,
+.gear-dropdown .rbt-input-main:hover,
+.gear-dropdown input.rbt-input-main.form-control:hover {
   border-color: var(--accent-primary);
+}
+
+
+/* Stronger selectors for react-select (gear-dropdown) */
+.gear-slot .gear-dropdown__control {
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6.4px !important;
+  color: var(--text-primary) !important;
+  font-family: inherit !important;
+  font-size: 11.2px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  min-height: 38px;
+}
+.gear-slot .gear-dropdown__control--is-focused {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+.gear-slot .gear-dropdown__value-container {
+  padding: 2px 0px 0px 4px !important;
+}
+.gear-slot .gear-dropdown__single-value {
+  color: var(--text-primary) !important;
+  font-size: 11.2px !important;
+}
+.gear-slot .gear-dropdown__input-container {
+  color: var(--text-primary) !important;
+  font-size: 11.2px !important;
+}
+.gear-slot .gear-dropdown__indicator {
+  color: var(--text-primary) !important;
+}
+.gear-dropdown__menu {
+  min-width: max-content !important;
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--accent-primary) !important;
+  border-radius: 6.4px !important;
+  overflow: hidden !important;
+  z-index: 9999 !important;
+}
+.gear-dropdown__option {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  font-size: 11.2px !important;
+  border-radius: 6.4px !important;
+  cursor: pointer !important;
+}
+.gear-dropdown__option--is-focused {
+  background: var(--bg-secondary) !important;
+  border-radius: 6.4px !important;
+  color: var(--text-primary) !important;
+}
+.gear-dropdown__option--is-selected {
+  background: var(--accent-primary) !important;
+  color: #fff !important;
+}
+.gear-dropdown__placeholder {
+  color: var(--text-secondary) !important;
+  font-size: 11.2px !important;
+}
+.gear-dropdown__menu-list {
+  padding: 0 !important;
 }
 
 .selected-gear {
@@ -481,6 +577,13 @@
 .clear-type-btn.all:hover {
   background: linear-gradient(135deg, #4b5563, #374151);
   box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
+}
+
+.gear-tab-gradient {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 @media (max-width: 1024px) {
