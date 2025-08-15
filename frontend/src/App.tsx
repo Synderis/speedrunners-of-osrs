@@ -7,7 +7,7 @@ import PlotSection from './components/PlotSection';
 import FloatingBackground from './components/FloatingBackground';
 import { ThemeProvider } from './context/ThemeContext';
 import type { Monster } from './data/monsterStats';
-import type { GearSets, CombatStats, GearSetType } from './types/gear';
+import type { GearSets, CombatStats } from './types/gear';
 import './App.css';
 
 function App() {
@@ -33,7 +33,6 @@ function App() {
     thieving: 99
   });
   const [selectedMonsters, setSelectedMonsters] = useState<Monster[]>([]);
-  const [activeGearTab, setActiveGearTab] = useState<GearSetType>('melee');
 
   useEffect(() => {
     // Prevent browser from restoring scroll position
@@ -105,8 +104,6 @@ function App() {
             setGearSets={setGearSets}
             combatStats={combatStats}
             setCombatStats={setCombatStats}
-            activeGearTab={activeGearTab}
-            setActiveGearTab={setActiveGearTab}
             setIsGearLoading={setIsGearLoading}
             isGearLoading={isGearLoading}
           />
