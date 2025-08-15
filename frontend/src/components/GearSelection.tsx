@@ -1,10 +1,10 @@
-import { GearSlotMultiSelect } from './GearSlotMultiSelect';
+import CharacterModelCard from './CharacterModelCard';
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion} from 'framer-motion';
 import { fetchGearFromSupabase } from '../services/gearService';
-import { gearSetPresets, type GearSetType } from '../data/gearTemplates';
+import { gearSetPresets, type GearSetType, type GearSetPreset } from '../data/gearTemplates';
 import type { GearItem, GearSets, CombatStats } from '../types/gear';
-import { defaultSlotImages, statImages } from '../data/constants';
+import { statImages } from '../data/constants';
 import './GearSelection.css';
 import InventoryItems from './InventoryItems';
 
@@ -27,6 +27,57 @@ const GearSelection: React.FC<GearSelectionProps> = ({
 }) => {
   const [gearData, setGearData] = useState<GearItem[]>([]);
   const [selectedPreset, setSelectedPreset] = useState('');
+  const [allPresets, setAllPresets] = useState<GearSetPreset[]>([...gearSetPresets]);
+
+  // Load custom presets from localStorage on mount and merge with defaults
+  useEffect(() => {
+    const stored = localStorage.getItem('customGearSetPresets');
+    if (stored) {
+      try {
+        const custom = JSON.parse(stored);
+        setAllPresets([...gearSetPresets, ...custom]);
+      } catch {
+        setAllPresets([...gearSetPresets]);
+      }
+    } else {
+      setAllPresets([...gearSetPresets]);
+    }
+  }, []);
+
+  // Save custom presets to localStorage whenever they change
+  const saveCustomPresets = (custom: GearSetPreset[]) => {
+    localStorage.setItem('customGearSetPresets', JSON.stringify(custom));
+    setAllPresets([...gearSetPresets, ...custom]);
+  };
+  // Save current gearSets as a new custom preset
+  const handleSavePreset = () => {
+    const name = prompt('Enter a name for your preset:');
+    if (!name) return;
+    const description = prompt('Enter a description (optional):') || '';
+    // Build the preset object
+    const newPreset: GearSetPreset = {
+      id: `custom_${Date.now()}`,
+      name,
+      description,
+      gearSets: {
+        melee: Object.fromEntries(gearSets.melee.map(slot => [slot.slot.toLowerCase().replace('-', ''), slot.selected?.id || ''])),
+        mage: Object.fromEntries(gearSets.mage.map(slot => [slot.slot.toLowerCase().replace('-', ''), slot.selected?.id || ''])),
+        ranged: Object.fromEntries(gearSets.ranged.map(slot => [slot.slot.toLowerCase().replace('-', ''), slot.selected?.id || ''])),
+      }
+    };
+    const custom = allPresets.filter(p => p.id.startsWith('custom_')).concat(newPreset);
+    saveCustomPresets(custom);
+    setSelectedPreset(newPreset.id);
+  };
+
+  // Delete a custom preset
+  const handleDeletePreset = () => {
+    if (!selectedPreset || !selectedPreset.startsWith('custom_')) return;
+    if (!window.confirm('Delete this custom preset?')) return;
+    const custom = allPresets.filter(p => p.id.startsWith('custom_') && p.id !== selectedPreset);
+    saveCustomPresets(custom);
+    setSelectedPreset('');
+  };
 
   useEffect(() => {
       const loadGearData = async () => {
@@ -114,7 +165,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
   const handlePresetSelect = (presetId: string) => {
     setSelectedPreset(presetId);
     if (!presetId) return;
-    const preset = gearSetPresets.find(p => p.id === presetId);
+    const preset = allPresets.find(p => p.id === presetId);
     if (!preset) return;
     requestAnimationFrame(() => {
       setGearSets(prev => {
@@ -159,12 +210,24 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                     value={selectedPreset}
                   >
                     <option value="">Choose a preset...</option>
-                    {gearSetPresets.map(preset => (
+                    {allPresets.map(preset => (
                       <option key={preset.id} value={preset.id}>
                         {preset.name} - {preset.description}
+                        {preset.id.startsWith('custom_') ? ' (Custom)' : ''}
                       </option>
                     ))}
                   </select>
+                  <button className="btn save-preset-btn" onClick={handleSavePreset} style={{ marginLeft: 8 }}>
+                    Save Preset
+                  </button>
+                  <button
+                    className="btn delete-preset-btn"
+                    onClick={handleDeletePreset}
+                    style={{ marginLeft: 8 }}
+                    disabled={!selectedPreset || !selectedPreset.startsWith('custom_')}
+                  >
+                    Delete Preset
+                  </button>
                 </div>
                 <div className="clear-buttons">
                   {(['melee', 'mage', 'ranged'] as GearSetType[]).map(gearType => (
@@ -218,67 +281,15 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.6, delay: 0.5 }}
                   >
-                    {(['melee', 'mage', 'ranged'] as GearSetType[]).map((gearType, modelIndex) => {
-                      return (
-                        <motion.div
-                          key={gearType}
-                          className="character-model card"
-                          initial={{ opacity: 0, y: 30 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.4, delay: 0.5 + modelIndex * 0.1 }}
-                        >
-                          <motion.h3
-                            transition={{ duration: 0.3 }}
-                          >
-                            {gearType.charAt(0).toUpperCase() + gearType.slice(1)} Setup
-                          </motion.h3>
-                          {/* Single dropdown for this gear set */}
-                          <div className="model-container">
-                            <div className="character-silhouette">
-                              <AnimatePresence>
-                                {gearSets[gearType].map((slot, slotIndex) => {
-                                  const slotKey = slot.slot.toLowerCase().replace('-', '') as keyof typeof defaultSlotImages;
-                                  const defaultImage = defaultSlotImages[slotKey];
-                                  return (
-                                    <div
-                                      key={`${gearType}-${slot.slot}-${slotIndex}`}
-                                      className={`equipped-${slotKey}`}
-                                      style={{ position: 'relative', display: 'inline-block' }}
-                                    >
-                                      <img
-                                        src={slot.selected?.image || defaultImage}
-                                        alt={slot.selected?.name || `Empty ${slot.slot}`}
-                                        className="equipped-item"
-                                        style={{ cursor: slot.selected ? 'pointer' : 'default' }}
-                                        onClick={() => {
-                                          if (slot.selected) {
-                                            setGearSets(prev => ({
-                                              ...prev,
-                                              [gearType]: prev[gearType].map(s =>
-                                                s.slot === slot.slot ? { ...s, selected: undefined } : s
-                                              )
-                                            }));
-                                          }
-                                        }}
-                                      />
-                                    </div>
-                                  );
-                                })}
-                              </AnimatePresence>
-                            </div>
-                          </div>
-                          <div style={{ marginTop: 16 }}>
-                            {/* Multi-slot select dropdown for this gear set */}
-                            <GearSlotMultiSelect
-                              gearType={gearType}
-                              // gearSlots={gearSets[gearType]}
-                              gearData={gearData}
-                              setGearSets={setGearSets}
-                            />
-                          </div>
-                        </motion.div>
-                      );
-                    })}
+                    {(['melee', 'mage', 'ranged'] as GearSetType[]).map((gearType) => (
+                      <CharacterModelCard
+                        key={gearType}
+                        gearType={gearType}
+                        gearSet={gearSets[gearType]}
+                        setGearSets={setGearSets}
+                        gearData={gearData}
+                      />
+                    ))}
                   </motion.div>
                   <motion.div
                     initial={{ opacity: 0, y: 30 }}
