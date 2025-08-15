@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Select from 'react-select';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchGearFromSupabase, groupGearBySlot } from '../services/gearService';
@@ -29,12 +29,14 @@ const GearSelection: React.FC<GearSelectionProps> = ({
   setIsGearLoading,
   isGearLoading
 }) => {
-  // Track search terms for each slot index
-  // const [gearSearchTerms, setGearSearchTerms] = useState<Record<number, string>>({});
-  // const [isLoadingGear, setIsLoadingGear] = useState(true);
   const [gearData, setGearData] = useState<Record<string, GearItem[]>>({});
+  const [inputValues, setInputValues] = useState<Record<number, string>>({});
+  const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
+  const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Single shared gear slots template
+  // Helper to generate a unique inputId for each select
+  const getInputId = (index: number) => `gear-dropdown-input-${index}`;
+
   const createBaseGearSlots = (): GearSlot[] => {
     const slotMapping = {
       'head': 'Head',
@@ -49,7 +51,6 @@ const GearSelection: React.FC<GearSelectionProps> = ({
       'ammo': 'Ammo'
     };
 
-    // Combine weapon and 2h items into a single Weapon slot
     const weaponItems = [
       ...(gearData['weapon'] || []),
       ...(gearData['2h'] || [])
@@ -60,7 +61,6 @@ const GearSelection: React.FC<GearSelectionProps> = ({
       items: gearData[csvSlot] || []
     })).filter(slot => slot.items.length > 0);
 
-    // Add weapon slot if there are weapon items
     if (weaponItems.length > 0) {
       slots.unshift({
         slot: 'Weapon',
@@ -77,7 +77,6 @@ const GearSelection: React.FC<GearSelectionProps> = ({
     ranged: ''
   });
 
-  // Load gear data from Supabase on component mount
   useEffect(() => {
     const loadGearData = async () => {
       try {
@@ -97,7 +96,6 @@ const GearSelection: React.FC<GearSelectionProps> = ({
     loadGearData();
   }, []);
 
-  // Update gear sets when gearData changes
   useEffect(() => {
     if (Object.keys(gearData).length > 0) {
       const newGearSlots = createBaseGearSlots();
@@ -175,6 +173,27 @@ const GearSelection: React.FC<GearSelectionProps> = ({
       [stat]: Math.max(1, Math.min(99, value))
     }));
   };
+
+  // Robust outside click handler for react-select with custom trigger
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const menus = Array.from(document.querySelectorAll('.gear-dropdown__menu'));
+      const controls = Array.from(document.querySelectorAll('.gear-dropdown__control'));
+      const clickedInMenu = menus.some(menuEl => menuEl.contains(event.target as Node));
+      const clickedInControl = controls.some(controlEl => controlEl.contains(event.target as Node));
+      if (
+        openMenuIndex !== null &&
+        !clickedInMenu &&
+        !clickedInControl
+      ) {
+        setOpenMenuIndex(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMenuIndex]);
 
   return (
     <section id="gear" className="section">
@@ -271,9 +290,10 @@ const GearSelection: React.FC<GearSelectionProps> = ({
               >
                 <AnimatePresence mode="popLayout">
                   {gearSets[activeGearTab].map((slot, index) => {
-                    // Define the option type to allow item: GearItem | undefined
                     type GearOption = { value: string; label: string; item?: GearItem };
+                    const searchInput = inputValues[index] || '';
                     const options: GearOption[] = [
+                      ...(searchInput ? [{ value: '__search__', label: searchInput }] : []),
                       { value: '', label: 'Clear item' },
                       ...slot.items.map(item => ({
                         value: item.id,
@@ -281,34 +301,48 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                         item
                       }))
                     ];
-                    // Compute value as GearOption | null
                     const selectedValue: GearOption | null = slot.selected
                       ? { value: slot.selected.id, label: slot.selected.name, item: slot.selected }
                       : null;
+                    const selectedItem = slot.selected;
+                    const slotKey = slot.slot.toLowerCase().replace('-', '') as keyof typeof defaultSlotImages;
+                    const defaultImage = defaultSlotImages[slotKey];
+
                     return (
                       <motion.div
-                        key={`${activeGearTab}-${slot.slot}-${index}`}
-                        className="gear-slot card"
-                        data-slot={slot.slot.toLowerCase().replace('-', '')}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                        layout
-                        whileHover={{
-                          y: -4,
-                          transition: { duration: 0.2 }
-                        }}
+                        key={index}
+                        className={`gear-slot card${openMenuIndex === index ? ' gear-slot--active' : ''}`}
+                        ref={el => (slotRefs.current[index] = el)}
                       >
                         <label className="gear-label">{slot.slot}</label>
+                        {/* Image as dropdown trigger */}
+                        <div
+                          style={{ cursor: 'pointer', display: 'inline-block' }}
+                          onClick={() => {
+                            setOpenMenuIndex(index);
+                            setTimeout(() => {
+                              const input = document.getElementById(getInputId(index)) as HTMLInputElement | null;
+                              if (input) input.focus();
+                            }, 0);
+                          }}
+                        >
+                          <img
+                            src={selectedItem?.image || defaultImage}
+                            alt={selectedItem?.name || `Empty ${slot.slot}`}
+                            className="equipped-item"
+                          />
+                        </div>
+                        {/* Hidden Select, only dropdown menu is shown */}
                         <Select
+                          inputId={getInputId(index)}
                           classNamePrefix="gear-dropdown"
                           className="gear-dropdown"
                           options={options}
-                          placeholder={`${slot.slot}`}
-                          isClearable={false}
                           value={selectedValue}
+                          menuIsOpen={openMenuIndex === index}
                           onChange={option => {
                             const opt = option as GearOption | null;
+                            setOpenMenuIndex(null); // Close after selection
                             if (!opt || !opt.item) {
                               setGearSets(prev => ({
                                 ...prev,
@@ -320,6 +354,12 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                               handleGearSelect(index, opt.item);
                             }
                           }}
+                          onInputChange={(value, { action }) => {
+                            if (action === 'input-change') {
+                              setInputValues(prev => ({ ...prev, [index]: value }));
+                            }
+                          }}
+                          inputValue={inputValues[index] || ''}
                           formatOptionLabel={option => (
                             option && option.item ? (
                               <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -330,10 +370,16 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                               <span style={{ color: 'var(--text-secondary)' }}>{option.label}</span>
                             )
                           )}
-                          menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                           styles={{
                             menuPortal: base => ({ ...base, zIndex: 9999 }),
                             menu: base => ({ ...base, zIndex: 9999 })
+                          }}
+                          filterOption={(option, inputValue) => {
+                            // Always show "Clear item"
+                            if (option.data.value === '') return true;
+                            // For all other options, use default filtering
+                            if (!inputValue) return true;
+                            return option.label.toLowerCase().includes(inputValue.toLowerCase());
                           }}
                         />
                       </motion.div>
