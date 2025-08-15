@@ -57,6 +57,35 @@ export const cmMonsters: Monster[] = [
         attributes: ["xercian"],
         category: ["bosses"],
         slayer_masters: []
+    },
+    {
+        id: 10002,
+        name: "Vasa (CM)",
+        combat_level: 390,
+        hitpoints: 550,
+        max_hit: 78,
+        attack_speed: 3,
+        slayer_level: null,
+        slayer_xp: null,
+        attack_level: 585,
+        strength_level: 585,
+        defence_level: 246,
+        magic_level: 246,
+        ranged_level: 1,
+        defence_stab: 155,
+        defence_slash: 165,
+        defence_crush: 105,
+        defence_magic: 0,
+        defence_ranged: 0,
+        last_updated: "2025-08-13",
+        release_date: "2018-05-17",
+        examine: "Xeric's former artisan.",
+        wiki_name: "Vasa (CM)",
+        wiki_url: "https://oldschool.runescape.wiki/w/Vasa#(Challenge_Mode)",
+        attack_type: ["melee"],
+        attributes: ["xercian"],
+        category: ["bosses"],
+        slayer_masters: []
     }
 ];
 
@@ -118,7 +147,7 @@ export const rooms: Room[] = [
         description: 'High-level boss encounter'
     },
     {
-        id: 'vasa',
+        id: '10002',
         name: 'Vasa',
         image: '/rooms/250px-Vasa_Nistirio.webp',
         description: 'God Wars Dungeon - Zamorak'

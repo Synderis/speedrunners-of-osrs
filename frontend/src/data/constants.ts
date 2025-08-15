@@ -24,3 +24,26 @@ export const statImages = {
     woodcutting: '/gear/woodcutting.webp',
     thieving: '/gear/thieving.webp'
 };
+
+export const miscIcons = {
+    levels: '/gear/levels.webp',
+    attack: '/gear/attack.webp',
+    strength: '/gear/strength.webp',
+    defense: '/gear/defence.webp',
+    ranged: '/gear/ranged.webp',
+    hitpoints: '/gear/hitpoints.webp',
+    magic: '/gear/magic.webp',
+    prayer: '/gear/prayer.webp',
+    stab: '/gear/stab.webp',
+    crush: '/gear/crush.webp',
+    slash: '/gear/slash.webp',
+    ranged_strength: '/gear/ranged_strength.webp',
+    magic_strength: '/gear/magic_strength.webp',
+    max_hit: '/gear/max_hit.webp',
+    flat_armor: '/gear/flat_armor.webp',
+    magic_defence: '/gear/magic_defence.webp',
+    ranged_defence: '/gear/ranged_defence.webp',
+    light: '/gear/light.webp',
+    standard: '/gear/standard.webp',
+    heavy: '/gear/heavy.webp'
+};
