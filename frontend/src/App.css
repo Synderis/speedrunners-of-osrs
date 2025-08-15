@@ -99,7 +99,7 @@ body {
   padding: 19.2px; /* 24px * 0.8 */
   box-shadow: var(--shadow);
   transition: all 0.3s ease;
-  backdrop-filter: blur(8px); /* 10px * 0.8 */
+  /* backdrop-filter: blur(8px); */
 }
 
 .card:hover {
@@ -173,3 +173,4 @@ body {
     padding: 32px 0; /* 40px * 0.8 */
   }
 }
+

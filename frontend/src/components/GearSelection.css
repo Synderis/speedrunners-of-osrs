@@ -41,9 +41,9 @@
 
 .gear-content {
   display: grid;
-  grid-template-columns: 0.6fr auto;
+  grid-template-columns: auto;
   gap: 0.8rem; /* 1rem * 0.8 */
-  width: 80%;
+  width: 65%;
   margin: 0 auto;
   align-items: start;
   overflow: visible;
@@ -71,14 +71,14 @@
   position: relative;
 }
 .gear-slot--active {
-  z-index: 2;
+  z-index: 2147483647;
   position: relative;
 }
 /* Ensure Typeahead dropdown menu appears above other elements */
 /* Ensure Typeahead dropdown menu appears above other elements */
 .gear-slot .rbt-menu,
 .gear-slot .rbt-menu.dropdown-menu {
-  z-index: 9999 !important;
+  z-index: 2147483647 !important;
   background: var(--bg-tertiary, #f3f4f6);
   margin-top: 1rem;
   border: 1px solid var(--accent-primary);
@@ -207,7 +207,7 @@
   border: 1px solid var(--accent-primary) !important;
   border-radius: 6.4px !important;
   overflow: hidden !important;
-  z-index: 9999 !important;
+  z-index: 2147483647 !important;
 }
 .gear-dropdown__option {
   background: var(--bg-tertiary) !important;
@@ -231,6 +231,10 @@
 }
 .gear-dropdown__menu-list {
   padding: 0 !important;
+}
+
+.gear-dropdown__menu {
+  margin: -5px !important;
 }
 
 .selected-gear {
@@ -268,8 +272,8 @@
 .character-models-container {
   display: grid;
   grid-template-rows: 1fr auto;
-  position: sticky;
-  top: 80px; /* 100px * 0.8 */
+  /* position: sticky; */
+  /* top: 80px; */
   align-items: center;
   flex-wrap: wrap;
   gap: 1.2rem; /* 1.5rem * 0.8 */
@@ -296,7 +300,7 @@
   background: radial-gradient(circle, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
   border-radius: 16px; /* 20px * 0.8 */
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 .character-silhouette {
@@ -349,13 +353,11 @@
 }
 
 .equipped-weapon {
-  right: -20px;
-  top: 50%;
+  grid-area: weapon;
 }
 
 .equipped-shield {
-  left: -20px;
-  top: 50%;
+  grid-area: shield;
   /* transform: translateY(-50%); */
 }
 
@@ -721,17 +723,47 @@
   }
 }
 
-.gear-dropdown__control {
-  background: none;
-  border: none;
-  box-shadow: none;
-  min-height: 0;
-  height: 0;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
+.gear-dropdown.css-b62m3t-container {
+  width: 0 !important;
+  height: 0 !important;
 }
-.gear-dropdown__value-container,
+
+/* .gear-dropdown__value-container,
 .gear-dropdown__indicators {
   display: none;
+} */
+
+.gear-dropdown__placeholder {
+  height: 0 !important;
+  width: 0 !important;
+  display: none !important;
+}
+
+.gear-dropdown__indicators {
+  height: 0 !important;
+  width: 0 !important;
+  display: none !important;
+}
+
+.gear-dropdown__control {
+  height: 0 !important;
+  width: 0 !important;
+  border-width: 0px !important;
+  /* display: none !important; */
+}
+
+.character-models-container,
+.character-models,
+.model-container,
+.character-silhouette {
+  overflow: visible !important;
+}
+
+.gear-dropdown,
+.gear-dropdown.css-b62m3t-container:focus,
+.gear-dropdown__control:focus,
+.gear-dropdown__control--is-focused {
+  border-width: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
 }
