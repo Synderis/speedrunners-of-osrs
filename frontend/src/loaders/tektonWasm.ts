@@ -1,9 +1,9 @@
 import init, {
   weapon_and_thrall_kill_times,
   distribution_of_hits_to_kill,
-  calculate_dps_with_objects
-} from '../wasm/osrs_dps_wasm.js';
-import wasmUrl from '../wasm/osrs_dps_wasm_bg.wasm?url';
+  calculate_dps_with_objects_tekton
+} from '../wasm/tekton/tekton_wasm.js';
+import wasmUrl from '../wasm/tekton/tekton_wasm_bg.wasm?url';
 
 let wasmInitialized = false;
 
@@ -38,7 +38,7 @@ export interface CalculationSummary {
 }
 
 // New function that accepts a single payload object
-export const calculateDPSWithObjects = async (player: any, monster: any, cap: number = 0.99) => {
+export const calculateDPSWithObjectsTekton = async (player: any, monster: any, cap: number = 0.99) => {
   await initWasm();
   
   // Package everything into a single payload object
@@ -55,7 +55,7 @@ export const calculateDPSWithObjects = async (player: any, monster: any, cap: nu
   try {
     console.log('✅ Using calculate_dps_with_objects function');
     
-    const result = calculate_dps_with_objects(
+    const result = calculate_dps_with_objects_tekton(
       JSON.stringify(payload)  // Pass single JSON string
     );
     

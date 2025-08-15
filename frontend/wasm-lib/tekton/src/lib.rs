@@ -311,7 +311,7 @@ fn find_best_combat_style(player: &Player, monster: &Monster) -> StyleResult {
 
 /// Updated function that accepts new player object structure and uses melee gear set
 #[wasm_bindgen]
-pub fn calculate_dps_with_objects(payload_json: &str) -> String {
+pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     console_log!("Received payload JSON: {}", payload_json);
     
     let payload: DPSPayload = match serde_json::from_str(payload_json) {
