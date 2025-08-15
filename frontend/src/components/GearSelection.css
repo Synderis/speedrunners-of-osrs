@@ -1,15 +1,3 @@
-/* Remove left padding from the react-select dropdown indicator */
-.gear-dropdown__indicator {
-  padding-left: 0 !important;
-}
-/* Hide the vertical divider in react-select input */
-.gear-dropdown__indicator-separator {
-  display: none !important;
-}
-/* Hide image in react-select input selector when selected */
-.gear-dropdown__single-value img {
-  display: none;
-}
 .gear-tabs {
   display: flex;
   justify-content: center;
@@ -141,7 +129,7 @@
   color: var(--text-primary);
 }
 
-.gear-dropdown,
+/* .gear-dropdown,
 .gear-dropdown .rbt-input-main,
 .gear-dropdown input.rbt-input-main.form-control {
   width: 100%;
@@ -170,8 +158,6 @@
   border-color: var(--accent-primary);
 }
 
-
-/* Stronger selectors for react-select (gear-dropdown) */
 .gear-slot .gear-dropdown__control {
   background: var(--bg-tertiary) !important;
   border: 1px solid var(--border-color) !important;
@@ -235,7 +221,7 @@
 
 .gear-dropdown__menu {
   margin: -5px !important;
-}
+} */
 
 .selected-gear {
   display: flex;
@@ -721,49 +707,4 @@
   .clear-buttons {
     justify-content: center;
   }
-}
-
-.gear-dropdown.css-b62m3t-container {
-  width: 0 !important;
-  height: 0 !important;
-}
-
-/* .gear-dropdown__value-container,
-.gear-dropdown__indicators {
-  display: none;
-} */
-
-.gear-dropdown__placeholder {
-  height: 0 !important;
-  width: 0 !important;
-  display: none !important;
-}
-
-.gear-dropdown__indicators {
-  height: 0 !important;
-  width: 0 !important;
-  display: none !important;
-}
-
-.gear-dropdown__control {
-  height: 0 !important;
-  width: 0 !important;
-  border-width: 0px !important;
-  /* display: none !important; */
-}
-
-.character-models-container,
-.character-models,
-.model-container,
-.character-silhouette {
-  overflow: visible !important;
-}
-
-.gear-dropdown,
-.gear-dropdown.css-b62m3t-container:focus,
-.gear-dropdown__control:focus,
-.gear-dropdown__control--is-focused {
-  border-width: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
 }
