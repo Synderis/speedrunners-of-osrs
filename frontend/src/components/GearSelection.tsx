@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchGearFromSupabase, groupGearBySlot } from '../services/gearService';
@@ -30,12 +30,11 @@ const GearSelection: React.FC<GearSelectionProps> = ({
   isGearLoading
 }) => {
   const [gearData, setGearData] = useState<Record<string, GearItem[]>>({});
-  const [inputValues, setInputValues] = useState<Record<number, string>>({});
-  const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
-  const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [inputValues, setInputValues] = useState<Record<string, string>>({});
+  const [openMenu, setOpenMenu] = useState<{ gearType: GearSetType; slotIndex: number } | null>(null);
 
   // Helper to generate a unique inputId for each select
-  const getInputId = (index: number) => `gear-dropdown-input-${index}`;
+  const getInputId = (gearType: GearSetType, index: number) => `gear-dropdown-input-${gearType}-${index}`;
 
   const createBaseGearSlots = (): GearSlot[] => {
     const slotMapping = {
@@ -107,10 +106,10 @@ const GearSelection: React.FC<GearSelectionProps> = ({
     }
   }, [gearData]);
 
-  const handleGearSelect = (slotIndex: number, item: GearItem) => {
+  const handleGearSelect = (gearType: GearSetType, slotIndex: number, item: GearItem | undefined) => {
     setGearSets(prev => ({
       ...prev,
-      [activeGearTab]: prev[activeGearTab].map((slot, index) =>
+      [gearType]: prev[gearType].map((slot, index) =>
         index === slotIndex ? { ...slot, selected: item } : slot
       )
     }));
@@ -182,18 +181,18 @@ const GearSelection: React.FC<GearSelectionProps> = ({
       const clickedInMenu = menus.some(menuEl => menuEl.contains(event.target as Node));
       const clickedInControl = controls.some(controlEl => controlEl.contains(event.target as Node));
       if (
-        openMenuIndex !== null &&
+        openMenu !== null &&
         !clickedInMenu &&
         !clickedInControl
       ) {
-        setOpenMenuIndex(null);
+        setOpenMenu(null);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [openMenuIndex]);
+  }, [openMenu]);
 
   return (
     <section id="gear" className="section">
@@ -282,111 +281,9 @@ const GearSelection: React.FC<GearSelectionProps> = ({
             </motion.div>
 
             <div className="gear-content">
-              <motion.div
-                className="gear-slots"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                <AnimatePresence mode="popLayout">
-                  {gearSets[activeGearTab].map((slot, index) => {
-                    type GearOption = { value: string; label: string; item?: GearItem };
-                    const searchInput = inputValues[index] || '';
-                    const options: GearOption[] = [
-                      ...(searchInput ? [{ value: '__search__', label: searchInput }] : []),
-                      { value: '', label: 'Clear item' },
-                      ...slot.items.map(item => ({
-                        value: item.id,
-                        label: item.name,
-                        item
-                      }))
-                    ];
-                    const selectedValue: GearOption | null = slot.selected
-                      ? { value: slot.selected.id, label: slot.selected.name, item: slot.selected }
-                      : null;
-                    const selectedItem = slot.selected;
-                    const slotKey = slot.slot.toLowerCase().replace('-', '') as keyof typeof defaultSlotImages;
-                    const defaultImage = defaultSlotImages[slotKey];
+              {/* If you want to keep the gear slot cards, update them to use openMenu as well */}
+              {/* ...gear slot cards code here, if needed... */}
 
-                    return (
-                      <motion.div
-                        key={index}
-                        className={`gear-slot card${openMenuIndex === index ? ' gear-slot--active' : ''}`}
-                        ref={el => (slotRefs.current[index] = el)}
-                      >
-                        <label className="gear-label">{slot.slot}</label>
-                        {/* Image as dropdown trigger */}
-                        <div
-                          style={{ cursor: 'pointer', display: 'inline-block' }}
-                          onClick={() => {
-                            setOpenMenuIndex(index);
-                            setTimeout(() => {
-                              const input = document.getElementById(getInputId(index)) as HTMLInputElement | null;
-                              if (input) input.focus();
-                            }, 0);
-                          }}
-                        >
-                          <img
-                            src={selectedItem?.image || defaultImage}
-                            alt={selectedItem?.name || `Empty ${slot.slot}`}
-                            className="equipped-item"
-                          />
-                        </div>
-                        {/* Hidden Select, only dropdown menu is shown */}
-                        <Select
-                          inputId={getInputId(index)}
-                          classNamePrefix="gear-dropdown"
-                          className="gear-dropdown"
-                          options={options}
-                          value={selectedValue}
-                          menuIsOpen={openMenuIndex === index}
-                          onChange={option => {
-                            const opt = option as GearOption | null;
-                            setOpenMenuIndex(null); // Close after selection
-                            if (!opt || !opt.item) {
-                              setGearSets(prev => ({
-                                ...prev,
-                                [activeGearTab]: prev[activeGearTab].map((slot, idx) =>
-                                  idx === index ? { ...slot, selected: undefined } : slot
-                                )
-                              }));
-                            } else {
-                              handleGearSelect(index, opt.item);
-                            }
-                          }}
-                          onInputChange={(value, { action }) => {
-                            if (action === 'input-change') {
-                              setInputValues(prev => ({ ...prev, [index]: value }));
-                            }
-                          }}
-                          inputValue={inputValues[index] || ''}
-                          formatOptionLabel={option => (
-                            option && option.item ? (
-                              <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <img src={option.item.image} alt={option.label} style={{ width: 24, height: 24, marginRight: 8 }} />
-                                {option.label}
-                              </div>
-                            ) : (
-                              <span style={{ color: 'var(--text-secondary)' }}>{option.label}</span>
-                            )
-                          )}
-                          styles={{
-                            menuPortal: base => ({ ...base, zIndex: 9999 }),
-                            menu: base => ({ ...base, zIndex: 9999 })
-                          }}
-                          filterOption={(option, inputValue) => {
-                            // Always show "Clear item"
-                            if (option.data.value === '') return true;
-                            // For all other options, use default filtering
-                            if (!inputValue) return true;
-                            return option.label.toLowerCase().includes(inputValue.toLowerCase());
-                          }}
-                        />
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </motion.div>
               <div className="character-models-container">
                 <motion.div
                   className="character-models"
@@ -394,17 +291,13 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.5 }}
                 >
-                  {(['melee', 'mage', 'ranged'] as GearSetType[]).map((gearType, index) => (
+                  {(['melee', 'mage', 'ranged'] as GearSetType[]).map((gearType, modelIndex) => (
                     <motion.div
                       key={gearType}
                       className="character-model card"
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
-                      whileHover={{
-                        y: -6,
-                        transition: { duration: 0.2 }
-                      }}
+                      transition={{ duration: 0.4, delay: 0.5 + modelIndex * 0.1 }}
                     >
                       <motion.h3
                         className={activeGearTab === gearType ? 'gear-tab-gradient' : ''}
@@ -421,16 +314,88 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                             {gearSets[gearType].map((slot, slotIndex) => {
                               const slotKey = slot.slot.toLowerCase().replace('-', '') as keyof typeof defaultSlotImages;
                               const defaultImage = defaultSlotImages[slotKey];
+                              type GearOption = { value: string; label: string; item?: GearItem };
+                              const searchInput = inputValues[`${gearType}-${slotIndex}`] || '';
+                              const options: GearOption[] = [
+                                ...(searchInput ? [{ value: '__search__', label: searchInput }] : []),
+                                { value: '', label: 'Clear item' },
+                                ...slot.items.map(item => ({
+                                  value: item.id,
+                                  label: item.name,
+                                  item
+                                }))
+                              ];
+                              const selectedValue: GearOption | null = slot.selected
+                                ? { value: slot.selected.id, label: slot.selected.name, item: slot.selected }
+                                : null;
 
                               return (
                                 <div
                                   key={`${gearType}-${slot.slot}-${slotIndex}`}
                                   className={`equipped-${slotKey}`}
+                                  style={{ position: 'relative', display: 'inline-block' }}
                                 >
                                   <img
                                     src={slot.selected?.image || defaultImage}
                                     alt={slot.selected?.name || `Empty ${slot.slot}`}
                                     className="equipped-item"
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={() => {
+                                      setOpenMenu({ gearType, slotIndex });
+                                      setTimeout(() => {
+                                        const input = document.getElementById(getInputId(gearType, slotIndex)) as HTMLInputElement | null;
+                                        if (input) input.focus();
+                                      }, 0);
+                                    }}
+                                  />
+                                  <Select
+                                    inputId={getInputId(gearType, slotIndex)}
+                                    classNamePrefix="gear-dropdown"
+                                    className="gear-dropdown"
+                                    options={options}
+                                    value={selectedValue}
+                                    menuIsOpen={openMenu?.gearType === gearType && openMenu?.slotIndex === slotIndex}
+                                    onChange={option => {
+                                      const opt = option as GearOption | null;
+                                      setOpenMenu(null); // Close after selection
+                                      if (!opt || !opt.item) {
+                                        // Clear the selected item
+                                        handleGearSelect(gearType, slotIndex, undefined);
+                                        // Clear the input value for this slot
+                                        setInputValues(prev => {
+                                          const newValues = { ...prev };
+                                          delete newValues[`${gearType}-${slotIndex}`];
+                                          return newValues;
+                                        });
+                                      } else {
+                                        handleGearSelect(gearType, slotIndex, opt.item);
+                                      }
+                                    }}
+                                    onInputChange={(value, { action }) => {
+                                      if (action === 'input-change') {
+                                        setInputValues(prev => ({ ...prev, [`${gearType}-${slotIndex}`]: value }));
+                                      }
+                                    }}
+                                    inputValue={inputValues[`${gearType}-${slotIndex}`] || ''}
+                                    formatOptionLabel={option => (
+                                      option && option.item ? (
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                          <img src={option.item.image} alt={option.label} style={{ width: 24, height: 24, marginRight: 8 }} />
+                                          {option.label}
+                                        </div>
+                                      ) : (
+                                        <span style={{ color: 'var(--text-secondary)' }}>{option.label}</span>
+                                      )
+                                    )}
+                                    styles={{
+                                      menuPortal: base => ({ ...base, zIndex: 2147483647 }),
+                                      menu: base => ({ ...base, zIndex: 2147483647 })
+                                    }}
+                                    filterOption={(option, inputValue) => {
+                                      if (option.data.value === '') return true;
+                                      if (!inputValue) return true;
+                                      return option.label.toLowerCase().includes(inputValue.toLowerCase());
+                                    }}
                                   />
                                 </div>
                               );
