@@ -1,227 +1,12 @@
-.gear-tabs {
-  display: flex;
-  justify-content: center;
-  gap: 0.8rem; /* 1rem * 0.8 */
-}
-
-.tab-button {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  border-radius: 6.4px; /* 8px * 0.8 */
-  color: var(--text-secondary);
-  font-family: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.tab-button:hover {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border-color: var(--accent-primary);
-}
-
-.tab-button.active {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-  color: white;
-  border-color: var(--accent-primary);
-}
-
 .gear-content {
   display: grid;
   grid-template-columns: auto;
-  gap: 0.8rem; /* 1rem * 0.8 */
+  gap: 0.8rem;
   width: 65%;
   margin: 0 auto;
   align-items: start;
   overflow: visible;
 }
-
-.gear-slots {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-areas: 
-    ". head ."
-    "cape neck ammo"
-    "weapon body shield"
-    ". legs ."
-    "hands feet ring";
-  gap: 1.2rem; /* 1.5rem * 0.8 */
-  justify-items: center;
-  max-width: 480px; /* 600px * 0.8 */
-  margin: 0 auto;
-  overflow: visible;
-}
-
-.gear-slot {
-  width: 100%;
-  max-width: 144px; /* 180px * 0.8 */
-  position: relative;
-}
-.gear-slot--active {
-  z-index: 2147483647;
-  position: relative;
-}
-/* Ensure Typeahead dropdown menu appears above other elements */
-/* Ensure Typeahead dropdown menu appears above other elements */
-.gear-slot .rbt-menu,
-.gear-slot .rbt-menu.dropdown-menu {
-  z-index: 2147483647 !important;
-  background: var(--bg-tertiary, #f3f4f6);
-  margin-top: 1rem;
-  border: 1px solid var(--accent-primary);
-  border-radius: 6.4px;
-  box-sizing: border-box;
-}
-.gear-slot.card {
-  padding: 17px;
-  position: relative;
-}
-
-.gear-slot[data-slot="head"] {
-  grid-area: head;
-}
-
-.gear-slot[data-slot="cape"] {
-  grid-area: cape;
-}
-
-.gear-slot[data-slot="neck"] {
-  grid-area: neck;
-}
-
-.gear-slot[data-slot="ammo"] {
-  grid-area: ammo;
-}
-
-.gear-slot[data-slot="weapon"] {
-  grid-area: weapon;
-}
-
-.gear-slot[data-slot="body"] {
-  grid-area: body;
-}
-
-.gear-slot[data-slot="shield"] {
-  grid-area: shield;
-}
-
-.gear-slot[data-slot="legs"] {
-  grid-area: legs;
-}
-
-.gear-slot[data-slot="hands"] {
-  grid-area: hands;
-}
-
-.gear-slot[data-slot="feet"] {
-  grid-area: feet;
-}
-
-.gear-slot[data-slot="ring"] {
-  grid-area: ring;
-}
-
-.gear-label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--text-primary);
-}
-
-/* .gear-dropdown,
-.gear-dropdown .rbt-input-main,
-.gear-dropdown input.rbt-input-main.form-control {
-  width: 100%;
-  padding: 0 !important;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  border-radius: 6.4px;
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 11.2px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.gear-dropdown:focus,
-.gear-dropdown .rbt-input-main:focus,
-.gear-dropdown input.rbt-input-main.form-control:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.gear-dropdown:hover,
-.gear-dropdown .rbt-input-main:hover,
-.gear-dropdown input.rbt-input-main.form-control:hover {
-  border-color: var(--accent-primary);
-}
-
-.gear-slot .gear-dropdown__control {
-  background: var(--bg-tertiary) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 6.4px !important;
-  color: var(--text-primary) !important;
-  font-family: inherit !important;
-  font-size: 11.2px !important;
-  cursor: pointer !important;
-  transition: all 0.3s ease !important;
-  min-height: 38px;
-}
-.gear-slot .gear-dropdown__control--is-focused {
-  border-color: var(--accent-primary) !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
-}
-.gear-slot .gear-dropdown__value-container {
-  padding: 2px 0px 0px 4px !important;
-}
-.gear-slot .gear-dropdown__single-value {
-  color: var(--text-primary) !important;
-  font-size: 11.2px !important;
-}
-.gear-slot .gear-dropdown__input-container {
-  color: var(--text-primary) !important;
-  font-size: 11.2px !important;
-}
-.gear-slot .gear-dropdown__indicator {
-  color: var(--text-primary) !important;
-}
-.gear-dropdown__menu {
-  min-width: max-content !important;
-  background: var(--bg-tertiary) !important;
-  border: 1px solid var(--accent-primary) !important;
-  border-radius: 6.4px !important;
-  overflow: hidden !important;
-  z-index: 2147483647 !important;
-}
-.gear-dropdown__option {
-  background: var(--bg-tertiary) !important;
-  color: var(--text-primary) !important;
-  font-size: 11.2px !important;
-  border-radius: 6.4px !important;
-  cursor: pointer !important;
-}
-.gear-dropdown__option--is-focused {
-  background: var(--bg-secondary) !important;
-  border-radius: 6.4px !important;
-  color: var(--text-primary) !important;
-}
-.gear-dropdown__option--is-selected {
-  background: var(--accent-primary) !important;
-  color: #fff !important;
-}
-.gear-dropdown__placeholder {
-  color: var(--text-secondary) !important;
-  font-size: 11.2px !important;
-}
-.gear-dropdown__menu-list {
-  padding: 0 !important;
-}
-
-.gear-dropdown__menu {
-  margin: -5px !important;
-} */
 
 .selected-gear {
   display: flex;
@@ -248,8 +33,6 @@
 
 .character-models {
   display: grid;
-  /* position: sticky; */
-  /* top: 80px; */
   justify-items: center;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.8rem; /* 1rem * 0.8 */
@@ -258,8 +41,6 @@
 .character-models-container {
   display: grid;
   grid-template-rows: 1fr auto;
-  /* position: sticky; */
-  /* top: 80px; */
   align-items: center;
   flex-wrap: wrap;
   gap: 1.2rem; /* 1.5rem * 0.8 */
@@ -413,13 +194,6 @@
   justify-self: start;
 }
 
-.gear-tabs {
-  display: flex;
-  justify-content: center;
-  gap: 0.8rem; /* 1rem * 0.8 */
-  justify-self: center;
-}
-
 .clear-buttons {
   display: flex;
   gap: 0.5rem;
@@ -571,13 +345,6 @@
   box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
 }
 
-.gear-tab-gradient {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 @media (max-width: 1024px) {
   .gear-content {
     grid-template-columns: 1fr;
@@ -593,10 +360,6 @@
   .stats-bar {
     order: 1;
   }
-
-  .gear-slots {
-    order: 2;
-  }
 }
 
 @media (max-width: 768px) {
@@ -611,23 +374,8 @@
     justify-self: center;
   }
 
-  .gear-tabs {
-    flex-direction: column;
-    align-items: center;
-    justify-self: center;
-  }
-
   .clear-buttons {
     justify-self: center;
-  }
-
-  .gear-tabs {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .tab-button {
-    width: 200px;
   }
 
   .character-models {

@@ -46,7 +46,7 @@ export interface Monster {
 }
 
 // Use the interface for your array
-export const cmMonsters: Monster[] = [
+export const CM_MONSTERS: Monster[] = [
     {
         "id": 7545,
         "name": "Tekton",
@@ -86,6 +86,54 @@ export const cmMonsters: Monster[] = [
             "light": 0,
             "slash": 165,
             "stab": 155
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": null
+    },
+    {
+        "id": 7544,
+        "name": "Tekton",
+        "version": "Enraged (Challenge Mode)",
+        "image": "Tekton (enraged).png",
+        "level": 0,
+        "speed": 3,
+        "style": [
+            "Stab",
+            "Slash",
+            "Crush"
+        ],
+        "size": 4,
+        "max_hit": "87",
+        "skills": {
+            "atk": 585,
+            "def": 246,
+            "hp": 450,
+            "magic": 246,
+            "ranged": 1,
+            "str": 585
+        },
+        "offensive": {
+            "atk": 64,
+            "magic": 0,
+            "magic_str": 0,
+            "ranged": 0,
+            "ranged_str": 0,
+            "str": 30
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 180,
+            "magic": 0,
+            "heavy": 0,
+            "standard": 0,
+            "light": 0,
+            "slash": 290,
+            "stab": 280
         },
         "attributes": [
             "xerician"
@@ -153,7 +201,7 @@ export const cmMonsters: Monster[] = [
             "Slash"
         ],
         "size": 0,
-        "max_hit": 33,
+        "max_hit": "33",
         "skills": {
             "atk": 210,
             "def": 150,
@@ -272,5 +320,3 @@ export const rooms: Room[] = [
         description: 'High-level boss encounter'
     }
 ];
-
-export default cmMonsters;

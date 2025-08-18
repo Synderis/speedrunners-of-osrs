@@ -1,8 +1,8 @@
-import CharacterModelCard from './CharacterModelCard';
+import GearModelCard from './GearModelCard';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { gearSetPresets, type GearSetType, type GearSetPreset } from '../data/gearTemplates';
-import type { GearSets, CombatStats, Equipment, InventoryItem } from '../types/equipment';
+import type { GearSets, CombatStats, Equipment, InventoryItem } from '../types/player';
 import { statImages } from '../data/constants';
 import './GearSelection.css';
 import InventoryItems from './InventoryItems';
@@ -306,7 +306,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                     transition={{ duration: 0.6, delay: 0.5 }}
                   >
                     {(['melee', 'mage', 'ranged'] as GearSetType[]).map((gearType) => (
-                      <CharacterModelCard
+                      <GearModelCard
                         key={gearType}
                         gearType={gearType}
                         gearSet={gearSets[gearType]}

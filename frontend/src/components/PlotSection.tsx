@@ -8,9 +8,10 @@ import { calculateDPSWithObjectsTekton } from '../loaders/tektonWasm';
 import { calculateDPSWithObjectsVasa } from '../loaders/vasaWasm';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useTheme } from '../hooks/useTheme';
-import type { GearSets, CombatStats, Equipment, InventoryItem } from '../types/equipment';
+import type { GearSets, CombatStats, Equipment, InventoryItem } from '../types/player';
 import './PlotSection.css';
 import { getCombatStylesForCategory } from '../services/weaponStylesService';
+import { calculateDPSWithObjectsGuardians } from '../loaders/guardiansWasm';
 
 const defaultIcon = '/gear/default.webp'; // You can change this later
 
@@ -112,6 +113,7 @@ const calculateGearStatsForSet = (
 const wasmModelLoaders: Record<string, (player: any, monster: any) => Promise<any>> = {
   7545: calculateDPSWithObjectsTekton,
   7566: calculateDPSWithObjectsVasa,
+  7570: calculateDPSWithObjectsGuardians
 };
 
 // --- Main Component ---

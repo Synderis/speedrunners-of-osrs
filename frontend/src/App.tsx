@@ -9,7 +9,7 @@ import { ThemeProvider } from './context/ThemeContext';
 // import { fetchMonstersFromWiki } from './services/monsterServiceTemp';
 import type { Monster } from './data/monsterStats';
 import { fetchEquipmentFromWiki, fetchImageMapFromSupabase } from './services/gearServiceTemp';
-import type { GearSets, CombatStats, Equipment, InventoryItem } from './types/equipment';
+import type { GearSets, CombatStats, Equipment, InventoryItem } from './types/player';
 import './App.css';
 
 function App() {

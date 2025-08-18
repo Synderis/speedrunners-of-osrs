@@ -39,9 +39,11 @@ pub struct CombatStats {
 
 #[derive(Deserialize)]
 pub struct GearBonuses {
-    pub str: i32,
+    #[serde(rename = "ranged_str")]
     pub ranged_str: i32,
+    #[serde(rename = "magic_str")]
     pub magic_str: i32,
+    pub str: i32,
     pub prayer: i32,
 }
 
@@ -74,7 +76,9 @@ pub struct GearStats {
 #[derive(Deserialize)]
 pub struct WeaponStyle {
     pub name: String,
+    #[serde(rename = "attack_type")]
     pub attack_type: String,
+    #[serde(rename = "combat_style")]
     pub combat_style: String,
     pub att: i32,
     #[serde(rename = "str")]
@@ -82,12 +86,14 @@ pub struct WeaponStyle {
     pub def: i32,
     pub ranged: i32,
     pub magic: i32,
+    #[serde(rename = "att_spd_reduction")]
     pub att_spd_reduction: i32,
 }
 
 #[derive(Deserialize)]
 pub struct SelectedWeapon {
     pub name: String,
+    #[serde(deserialize_with = "from_str_or_int")]
     pub id: u32,
     #[serde(rename = "weapon_styles")]
     pub weapon_styles: Vec<WeaponStyle>,
@@ -135,11 +141,13 @@ pub struct MonsterSkills {
 
 #[derive(Deserialize)]
 pub struct MonsterOffensive {
+    #[serde(rename = "ranged_str")]
+    pub ranged_str: i32,
+    #[serde(rename = "magic_str")]
+    pub magic_str: i32,
     pub atk: i32,
     pub magic: i32,
-    pub magic_str: i32,
     pub ranged: i32,
-    pub ranged_str: i32,
     pub str: i32,
 }
 
@@ -533,4 +541,31 @@ pub struct DPSPayload {
 #[derive(Deserialize)]
 pub struct DPSConfig {
     pub cap: f64,
+}
+// Custom deserializer for u32 that accepts string or int
+use serde::de::{self, Deserializer};
+fn from_str_or_int<'de, D>(deserializer: D) -> Result<u32, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct StringOrIntVisitor;
+    impl<'de> de::Visitor<'de> for StringOrIntVisitor {
+        type Value = u32;
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("a string or integer representing a u32")
+        }
+        fn visit_u64<E>(self, value: u64) -> Result<u32, E>
+        where
+            E: de::Error,
+        {
+            Ok(value as u32)
+        }
+        fn visit_str<E>(self, value: &str) -> Result<u32, E>
+        where
+            E: de::Error,
+        {
+            value.parse::<u32>().map_err(E::custom)
+        }
+    }
+    deserializer.deserialize_any(StringOrIntVisitor)
 }

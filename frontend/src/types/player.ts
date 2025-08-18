@@ -1,3 +1,15 @@
+export interface GearSetPreset {
+    id: string;
+    name: string;
+    description: string;
+    gearSets: {
+        melee: Record<string, string>;
+        mage: Record<string, string>;
+        ranged: Record<string, string>;
+    };
+    inventoryItems: string[]; // Array of inventory item IDs
+}
+
 export interface GearSets {
     melee: GearSlot[];
     mage: GearSlot[];
@@ -17,7 +29,7 @@ export interface InventoryItem {
 
 export interface Equipment {
     name: string;
-    id: number | string;
+    id: number;
     version: string;
     slot: string;
     image: string;

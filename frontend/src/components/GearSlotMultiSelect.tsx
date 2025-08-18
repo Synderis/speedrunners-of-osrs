@@ -3,7 +3,7 @@ import './GearSlotMultiSelect.css';
 import Select from 'react-select';
 import { FixedSizeList as List } from 'react-window';
 import type { MultiValue, ActionMeta } from 'react-select';
-import type { Equipment, GearSets, GearSetType } from '../types/equipment';
+import type { Equipment, GearSets, GearSetType } from '../types/player';
 
 interface GearSlotMultiSelectProps {
     gearType: GearSetType;
