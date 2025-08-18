@@ -211,6 +211,7 @@ fn calculate_accuracy_for_style(player: &Player, monster: &Monster, style: &Weap
         "crush" => gear.offensive.crush,
         "magic" => gear.offensive.magic,
         "ranged" => gear.offensive.ranged,
+        _ => 0,
     };
     let attack_bonus = equipment_bonus;
     let max_attack_roll = effective_attack as u64 * (attack_bonus + 64) as u64;
@@ -219,7 +220,8 @@ fn calculate_accuracy_for_style(player: &Player, monster: &Monster, style: &Weap
         "slash" => monster.defensive.slash,
         "crush" => monster.defensive.crush,
         "magic" => monster.defensive.magic,
-        "ranged" => monster.defensive.standard, // Use standard for ranged defence
+        "ranged" => monster.defensive.standard,
+        _ => 0,
     };
     let max_defence_roll = (monster.skills.def + 9) as u64 * (defence_bonus + 64) as u64;
     let accuracy = if max_attack_roll > max_defence_roll {
