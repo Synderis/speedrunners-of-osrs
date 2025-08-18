@@ -1,5 +1,7 @@
 .room-selection {
     margin-bottom: 3rem;
+    width: 85%;
+    margin: 0 auto;
 }
 
 .room-header {

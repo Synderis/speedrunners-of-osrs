@@ -38,45 +38,61 @@ pub struct CombatStats {
 }
 
 #[derive(Deserialize)]
-pub struct GearStats {
-    pub attack_stab: i32,
-    pub attack_slash: i32,
-    pub attack_crush: i32,
-    pub attack_magic: i32,
-    pub attack_ranged: i32,
-    pub defence_stab: i32,
-    pub defence_slash: i32,
-    pub defence_crush: i32,
-    pub defence_magic: i32,
-    pub defence_ranged: i32,
-    pub melee_strength: i32,
-    pub ranged_strength: i32,
-    pub magic_damage: i32,
+pub struct GearBonuses {
+    pub str: i32,
+    pub ranged_str: i32,
+    pub magic_str: i32,
     pub prayer: i32,
 }
 
 #[derive(Deserialize)]
-pub struct WeaponStat {
-    pub id: u32,
-    pub item_id: u32,
-    pub weapon_name: String,
-    pub weapon_type: String,
-    pub attack_speed: u32,
-    pub attack_bonus: i32,
-    pub combat_style: String,
+pub struct GearOffensive {
+    pub stab: i32,
+    pub slash: i32,
+    pub crush: i32,
+    pub magic: i32,
+    pub ranged: i32,
+}
+
+#[derive(Deserialize)]
+pub struct GearDefensive {
+    pub stab: i32,
+    pub slash: i32,
+    pub crush: i32,
+    pub magic: i32,
+    pub ranged: i32,
+}
+
+#[derive(Deserialize)]
+pub struct GearStats {
+    pub bonuses: GearBonuses,
+    pub offensive: GearOffensive,
+    pub defensive: GearDefensive,
+}
+
+
+#[derive(Deserialize)]
+pub struct WeaponStyle {
+    pub name: String,
     pub attack_type: String,
-    pub attack_style: String,
-    pub experience: String,
-    pub boosts: Option<String>
+    pub combat_style: String,
+    pub att: i32,
+    #[serde(rename = "str")]
+    pub str_: i32,
+    pub def: i32,
+    pub ranged: i32,
+    pub magic: i32,
+    pub att_spd_reduction: i32,
 }
 
 #[derive(Deserialize)]
 pub struct SelectedWeapon {
     pub name: String,
-    pub id: String,
-    #[serde(rename = "weaponStats")]
-    pub weapon_stats: Vec<WeaponStat>,
+    pub id: u32,
+    #[serde(rename = "weapon_styles")]
+    pub weapon_styles: Vec<WeaponStyle>,
 }
+
 
 // New struct for individual gear set data
 #[derive(Deserialize)]
@@ -106,19 +122,56 @@ pub struct Player {
     pub gear_sets: AllGearSets,
 }
 
+
+#[derive(Deserialize)]
+pub struct MonsterSkills {
+    pub atk: u32,
+    pub def: u32,
+    pub hp: u32,
+    pub magic: u32,
+    pub ranged: u32,
+    pub str: u32,
+}
+
+#[derive(Deserialize)]
+pub struct MonsterOffensive {
+    pub atk: i32,
+    pub magic: i32,
+    pub magic_str: i32,
+    pub ranged: i32,
+    pub ranged_str: i32,
+    pub str: i32,
+}
+
+#[derive(Deserialize)]
+pub struct MonsterDefensive {
+    pub flat_armour: i32,
+    pub crush: i32,
+    pub magic: i32,
+    pub heavy: i32,
+    pub standard: i32,
+    pub light: i32,
+    pub slash: i32,
+    pub stab: i32,
+}
+
 #[derive(Deserialize)]
 pub struct Monster {
-    pub hitpoints: u32,
+    pub id: u32,
     pub name: String,
-    pub combat_level: u32,
-    pub defence_level: u32,
-    pub defence_slash: i32,
-    pub defence_stab: i32,
-    pub defence_crush: i32,
-    pub defence_magic: i32,
-    pub defence_ranged: i32,
-    pub magic_level: u32,
-    pub max_hit: u32,
+    pub version: Option<String>,
+    pub image: Option<String>,
+    pub level: Option<u32>,
+    pub speed: Option<u32>,
+    pub style: Option<Vec<String>>,
+    pub size: Option<u32>,
+    pub max_hit: Option<u32>,
+    pub skills: MonsterSkills,
+    pub offensive: MonsterOffensive,
+    pub defensive: MonsterDefensive,
+    pub attributes: Option<Vec<String>>,
+    pub immunities: Option<serde_json::Value>,
+    pub weakness: Option<serde_json::Value>,
 }
 
 #[derive(Serialize)]
@@ -132,82 +185,50 @@ pub struct CalculationResult {
 }
 
 // Updated calculation functions to use melee gear set
-fn calculate_max_hit_for_style(player: &Player, weapon_stat: &WeaponStat) -> (u32, u32) {
+fn calculate_max_hit_for_style(player: &Player, style: &WeaponStyle, gear: &GearStats) -> (u32, u32) {
     let strength_level = player.combat_stats.strength;
     let potion_bonus = 19; // Super strength potion
     let prayer_strength_bonus = 1.23; // Piety
-    
-    // Style bonus based on weapon combat style
-    let style_bonus = match weapon_stat.attack_style.as_str() {
-        "aggressive" => 3,
-        _ => 1,
-    };
-    
+    // Style bonus based on combat style
+    let style_bonus = style.str_;
     let void_bonus = 1.0; // No void for now
-    
-    // Calculate effective strength using OSRS formula
     let effective_strength = ((((strength_level + potion_bonus) as f64 * prayer_strength_bonus).floor() + style_bonus as f64 + 8.0) * void_bonus).floor() as u32;
-    
-    // Use melee strength bonus from melee gear set
-    let strength_bonus = player.gear_sets.melee.gear_stats.melee_strength;
-    
-    // Calculate max hit: floor(0.5 + (Effective Strength × (Strength Bonus + 64)) / 640)
+    let strength_bonus = gear.bonuses.str;
     let max_hit = (0.5 + (effective_strength as f64 * (strength_bonus + 64) as f64) / 640.0).floor() as u32;
-    
     (max_hit, effective_strength)
 }
 
-fn calculate_accuracy_for_style(player: &Player, monster: &Monster, weapon_stat: &WeaponStat) -> (f64, u32, u64, u64) {
+fn calculate_accuracy_for_style(player: &Player, monster: &Monster, style: &WeaponStyle, gear: &GearStats) -> (f64, u32, u64, u64) {
     let attack_level = player.combat_stats.attack;
     let potion_bonus = 19; // Super attack potion
     let prayer_attack_bonus = 1.20; // Piety
-    
-    // Style bonus based on weapon combat style
-    let style_bonus = match weapon_stat.attack_style.as_str() {
-        "accurate" => 3,
-        _ => 1,
-    };
-    
+    let style_bonus = style.att;
     let void_bonus = 1.0; // No void for now
-    
-    // Calculate effective attack level
     let effective_attack = ((((attack_level + potion_bonus) as f64 * prayer_attack_bonus).floor() + style_bonus as f64 + 8.0) * void_bonus).floor() as u32;
-    
-    // Get equipment bonus based on attack type from melee gear set
-    let equipment_bonus = match weapon_stat.attack_type.as_str() {
-        "stab" => player.gear_sets.melee.gear_stats.attack_stab,
-        "slash" => player.gear_sets.melee.gear_stats.attack_slash,
-        "crush" => player.gear_sets.melee.gear_stats.attack_crush,
-        "magic" => player.gear_sets.melee.gear_stats.attack_magic,
-        "ranged" => player.gear_sets.melee.gear_stats.attack_ranged,
-        _ => player.gear_sets.melee.gear_stats.attack_stab,
+    let equipment_bonus = match style.attack_type.to_lowercase().as_str() {
+        "stab" => gear.offensive.stab,
+        "slash" => gear.offensive.slash,
+        "crush" => gear.offensive.crush,
+        "magic" => gear.offensive.magic,
+        "ranged" => gear.offensive.ranged,
+        _ => 0,
     };
-    
-    // Total attack bonus = equipment bonus
     let attack_bonus = equipment_bonus;
-    
-    // Calculate max attack roll
     let max_attack_roll = effective_attack as u64 * (attack_bonus + 64) as u64;
-    
-    // Calculate max defence roll (using appropriate defence type)
-    let defence_bonus = match weapon_stat.attack_type.as_str() {
-        "stab" => monster.defence_stab,
-        "slash" => monster.defence_slash,
-        "crush" => monster.defence_crush,
-        "magic" => monster.defence_magic,
-        "ranged" => monster.defence_ranged,
-        _ => monster.defence_stab,
+    let defence_bonus = match style.attack_type.to_lowercase().as_str() {
+        "stab" => monster.defensive.stab,
+        "slash" => monster.defensive.slash,
+        "crush" => monster.defensive.crush,
+        "magic" => monster.defensive.magic,
+        "ranged" => monster.defensive.standard,
+        _ => 0,
     };
-    
-    let max_defence_roll = (monster.defence_level + 9) as u64 * (defence_bonus + 64) as u64;
-    
-    // Calculate accuracy
+    let max_defence_roll = (monster.skills.def + 9) as u64 * (defence_bonus + 64) as u64;
     let accuracy = if max_attack_roll > max_defence_roll {
         1.0 - (max_defence_roll + 2) as f64 / (2.0 * (max_attack_roll + 1) as f64)
     } else {
         max_attack_roll as f64 / (2.0 * (max_defence_roll + 1) as f64)
     };
-    
     (accuracy, effective_attack, max_attack_roll, max_defence_roll)
 }
 
@@ -227,24 +248,17 @@ pub struct StyleResult {
 fn find_best_combat_style(player: &Player, monster: &Monster) -> StyleResult {
     let mut best_style: Option<StyleResult> = None;
     let mut best_dps = 0.0;
-    
     // Use melee weapon from melee gear set
     if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
-        console_log!("Evaluating {} combat styles for melee weapon: {}", weapon.weapon_stats.len(), weapon.name);
-        
-        for weapon_stat in &weapon.weapon_stats {
-            let (max_hit, effective_strength) = calculate_max_hit_for_style(player, weapon_stat);
-            let (accuracy, effective_attack, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, weapon_stat);
-            
-            // Calculate effective DPS (max_hit * accuracy)
+        console_log!("Evaluating {} combat styles for melee weapon: {}", weapon.weapon_styles.len(), weapon.name);
+        for style in &weapon.weapon_styles {
+            let (max_hit, effective_strength) = calculate_max_hit_for_style(player, style, &player.gear_sets.melee.gear_stats);
+            let (accuracy, effective_attack, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, style, &player.gear_sets.melee.gear_stats);
             let effective_dps = max_hit as f64 * accuracy;
-            
-            console_log!("Style: {} ({}), Max Hit: {}, Accuracy: {:.2}%, Effective DPS: {:.2}", 
-                weapon_stat.combat_style, weapon_stat.attack_type, max_hit, accuracy * 100.0, effective_dps);
-            
+            console_log!("Style: {} ({}), Max Hit: {}, Accuracy: {:.2}%, Effective DPS: {:.2}", style.combat_style, style.attack_type, max_hit, accuracy * 100.0, effective_dps);
             let style_result = StyleResult {
-                combat_style: weapon_stat.combat_style.clone(),
-                attack_type: weapon_stat.attack_type.clone(),
+                combat_style: style.combat_style.clone(),
+                attack_type: style.attack_type.clone(),
                 max_hit,
                 accuracy,
                 effective_dps,
@@ -253,42 +267,32 @@ fn find_best_combat_style(player: &Player, monster: &Monster) -> StyleResult {
                 max_attack_roll,
                 max_defence_roll,
             };
-            
             if effective_dps > best_dps {
                 best_dps = effective_dps;
                 best_style = Some(style_result);
             }
         }
     }
-    
     // Fallback if no melee weapon or weapon styles
     if best_style.is_none() {
         console_log!("No melee weapon styles found, using fallback calculation");
-        
-        // Use fallback calculation with default stab style using melee gear stats
         let strength_level = player.combat_stats.strength;
         let attack_level = player.combat_stats.attack;
         let potion_bonus = 19;
         let prayer_strength_bonus = 1.23;
         let prayer_attack_bonus = 1.20;
-        
         let effective_strength = ((((strength_level + potion_bonus) as f64 * prayer_strength_bonus).floor() + 8.0)).floor() as u32;
         let effective_attack = ((((attack_level + potion_bonus) as f64 * prayer_attack_bonus).floor() + 8.0)).floor() as u32;
-        
-        // Use melee gear stats for fallback
-        let strength_bonus = player.gear_sets.melee.gear_stats.melee_strength;
-        let attack_bonus = player.gear_sets.melee.gear_stats.attack_stab;
-        
+        let strength_bonus = player.gear_sets.melee.gear_stats.bonuses.str;
+        let attack_bonus = player.gear_sets.melee.gear_stats.offensive.stab;
         let max_hit = (0.5 + (effective_strength as f64 * (strength_bonus + 64) as f64) / 640.0).floor() as u32;
         let max_attack_roll = effective_attack as u64 * (attack_bonus + 64) as u64;
-        let max_defence_roll = (monster.defence_level + 9) as u64 * (monster.defence_stab + 64) as u64;
-        
+    let max_defence_roll = (monster.skills.def + 9) as u64 * (monster.defensive.stab + 64) as u64;
         let accuracy = if max_attack_roll > max_defence_roll {
             1.0 - (max_defence_roll + 2) as f64 / (2.0 * (max_attack_roll + 1) as f64)
         } else {
             max_attack_roll as f64 / (2.0 * (max_defence_roll + 1) as f64)
         };
-        
         best_style = Some(StyleResult {
             combat_style: "fallback".to_string(),
             attack_type: "stab".to_string(),
@@ -301,11 +305,8 @@ fn find_best_combat_style(player: &Player, monster: &Monster) -> StyleResult {
             max_defence_roll,
         });
     }
-    
     let result = best_style.unwrap();
-    console_log!("🏆 Best melee combat style selected: {} ({}) with {:.2} effective DPS", 
-        result.combat_style, result.attack_type, result.effective_dps);
-    
+    console_log!("🏆 Best melee combat style selected: {} ({}) with {:.2} effective DPS", result.combat_style, result.attack_type, result.effective_dps);
     result
 }
 
@@ -329,14 +330,14 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     
     console_log!("Extracted player combat stats - Attack: {}, Strength: {}", 
         player.combat_stats.attack, player.combat_stats.strength);
-    console_log!("Extracted monster - Name: {}, HP: {}, CB: {}", 
-        monster.name, monster.hitpoints, monster.combat_level);
+    console_log!("Extracted monster - Name: {}, HP: {}, CB: {:?}", 
+        monster.name, monster.skills.hp, monster.level);
     console_log!("Config - Cap: {}", cap);
     
     console_log!("Using melee gear set for calculations");
     console_log!("Melee gear stats - Attack Stab: {}, Melee Strength: {}", 
-        player.gear_sets.melee.gear_stats.attack_stab, 
-        player.gear_sets.melee.gear_stats.melee_strength);
+        player.gear_sets.melee.gear_stats.offensive.stab, 
+        player.gear_sets.melee.gear_stats.bonuses.str);
     
     if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
         console_log!("Melee weapon: {}", weapon.name);
@@ -350,7 +351,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     console_log!("Using best melee style - Max Hit: {}, Accuracy: {:.2}%", best_style.max_hit, best_style.accuracy * 100.0);
     
     // Generate kill time distribution using the best style
-    let kill_times = weapon_and_thrall_kill_times_internal(monster.hitpoints as usize, best_style.max_hit as usize, best_style.accuracy, cap);
+    let kill_times = weapon_and_thrall_kill_times_internal(monster.skills.hp as usize, best_style.max_hit as usize, best_style.accuracy, cap);
     
     let result = CalculationResult {
         max_hit: best_style.max_hit,

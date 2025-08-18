@@ -1,6 +1,8 @@
 .plot-content {
   display: grid;
   gap: 1.6rem;
+  width: 90%;
+  margin: 0 auto;
 }
 
 .stats-cards {
@@ -264,9 +266,10 @@
 
 /* Two-column layout for config display */
 .config-columns {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 2fr));
+  display: flex;
+  /* grid-template-columns: repeat(auto-fit, minmax(220px, 2fr)); */
   gap: 2rem;
+  justify-content: space-between;
   /* justify-items: center; */
 }
 

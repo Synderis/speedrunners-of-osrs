@@ -1,0 +1,403 @@
+import type { WeaponStyles } from '../types/equipment';
+
+const weaponStyles: Record<string, WeaponStyles[]> = {
+    "Bladed staff": [
+        { "name": "Jab", "attack_type": "Stab", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Swipe", "attack_type": "Slash", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Fend", "attack_type": "Crush", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Spell (Defensive)", "attack_type": "Magic", "combat_style": "Defensive Autocast", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Spell (Autocast)", "attack_type": "Magic", "combat_style": "Autocast", "att": 0, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Powered Staff": [
+        { "name": "Accurate", "attack_type": "Magic", "combat_style": "Accurate", "att": 0, "str": 0, "def": 0, "ranged": 0, "magic": 3, "att_spd_reduction": 0 },
+        { "name": "Accurate", "attack_type": "Magic", "combat_style": "Accurate", "att": 0, "str": 0, "def": 0, "ranged": 0, "magic": 3, "att_spd_reduction": 0 },
+        { "name": "Longrange", "attack_type": "Magic", "combat_style": "Longrange", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 1, "att_spd_reduction": 0 }
+    ],
+    "Powered Wand": [
+        { "name": "Accurate", "attack_type": "Magic", "combat_style": "Accurate", "att": 0, "str": 0, "def": 0, "ranged": 0, "magic": 3, "att_spd_reduction": 0 },
+        { "name": "Accurate", "attack_type": "Magic", "combat_style": "Accurate", "att": 0, "str": 0, "def": 0, "ranged": 0, "magic": 3, "att_spd_reduction": 0 },
+        { "name": "Longrange", "attack_type": "Magic", "combat_style": "Longrange", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 1, "att_spd_reduction": 0 }
+    ],
+    "Staff": [
+        { "name": "Bash", "attack_type": "Crush", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Pound", "attack_type": "Crush", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Focus", "attack_type": "Crush", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Spell (Defensive)", "attack_type": "Magic", "combat_style": "Defensive Autocast", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Spell (Autocast)", "attack_type": "Magic", "combat_style": "Autocast", "att": 0, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Banner": [
+        { "name": "Lunge", "attack_type": "Stab", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Swipe", "attack_type": "Slash", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Pound", "attack_type": "Crush", "combat_style": "Controlled", "att": 1, "str": 1, "def": 1, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Block", "attack_type": "Stab", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Blunt": [
+        { "name": "Pound", "attack_type": "Crush", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Pummel", "attack_type": "Crush", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Block", "attack_type": "Crush", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Bludgeon": [
+        { "name": "Pound", "attack_type": "Crush", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Pummel", "attack_type": "Crush", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Smash", "attack_type": "Crush", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Bulwark": [
+        { "name": "Pummel", "attack_type": "Crush", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Block", "attack_type": "None", "combat_style": "Defensive", "att": 0, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Claw": [
+        { "name": "Chop", "attack_type": "Slash", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Slash", "attack_type": "Slash", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Lunge", "attack_type": "Stab", "combat_style": "Controlled", "att": 1, "str": 1, "def": 1, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Block", "attack_type": "Slash", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Egg": [
+        { "name": "Pound", "attack_type": "Crush", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Pummel", "attack_type": "Crush", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Block", "attack_type": "Crush", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Partisan": [
+        { "name": "Stab", "attack_type": "Stab", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Lunge", "attack_type": "Stab", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Pound", "attack_type": "Crush", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Block", "attack_type": "Stab", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Pickaxe": [
+        { "name": "Spike", "attack_type": "Stab", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Impale", "attack_type": "Stab", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Smash", "attack_type": "Crush", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Block", "attack_type": "Stab", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Polearm": [
+        { "name": "Jab", "attack_type": "Stab", "combat_style": "Controlled", "att": 1, "str": 1, "def": 1, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Swipe", "attack_type": "Slash", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Fend", "attack_type": "Stab", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Polestaff": [
+        { "name": "Bash", "attack_type": "Crush", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Pound", "attack_type": "Crush", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Block", "attack_type": "Crush", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Scythe": [
+        { "name": "Reap", "attack_type": "Slash", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Chop", "attack_type": "Slash", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Jab", "attack_type": "Crush", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Block", "attack_type": "Slash", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Slash sword": [
+        { "name": "Chop", "attack_type": "Slash", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Slash", "attack_type": "Slash", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Lunge", "attack_type": "Stab", "combat_style": "Controlled", "att": 1, "str": 1, "def": 1, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Block", "attack_type": "Slash", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Spiked": [
+        { "name": "Pound", "attack_type": "Crush", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Pummel", "attack_type": "Crush", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Spike", "attack_type": "Stab", "combat_style": "Controlled", "att": 1, "str": 1, "def": 1, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Block", "attack_type": "Crush", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Stab sword": [
+        { "name": "Stab", "attack_type": "Stab", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Lunge", "attack_type": "Stab", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Slash", "attack_type": "Slash", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Block", "attack_type": "Stab", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Unarmed": [
+        { "name": "Punch", "attack_type": "Crush", "combat_style": "Accurate", "att": 3, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Kick", "attack_type": "Crush", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Block", "attack_type": "Crush", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ],
+    "Two-handed sword": [
+        {
+            "name": "Chop",
+            "attack_type": "Slash",
+            "combat_style": "Accurate",
+            "att": 3,
+            "str": 0,
+            "def": 0,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Slash",
+            "attack_type": "Slash",
+            "combat_style": "Aggressive",
+            "att": 0,
+            "str": 3,
+            "def": 0,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Smash",
+            "attack_type": "Crush",
+            "combat_style": "Aggressive",
+            "att": 0,
+            "str": 3,
+            "def": 0,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Block",
+            "attack_type": "Slash",
+            "combat_style": "Defensive",
+            "att": 0,
+            "str": 0,
+            "def": 3,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        }
+    ],
+    "Axe": [
+        {
+            "name": "Chop",
+            "attack_type": "Slash",
+            "combat_style": "Accurate",
+            "att": 3,
+            "str": 0,
+            "def": 0,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Hack",
+            "attack_type": "Slash",
+            "combat_style": "Aggressive",
+            "att": 0,
+            "str": 3,
+            "def": 0,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Smash",
+            "attack_type": "Crush",
+            "combat_style": "Aggressive",
+            "att": 0,
+            "str": 3,
+            "def": 0,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Block",
+            "attack_type": "Slash",
+            "combat_style": "Defensive",
+            "att": 0,
+            "str": 0,
+            "def": 3,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        }
+    ],
+    "Spear": [
+        {
+            "name": "Lunge",
+            "attack_type": "Stab",
+            "combat_style": "Controlled",
+            "att": 1,
+            "str": 1,
+            "def": 1,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Swipe",
+            "attack_type": "Slash",
+            "combat_style": "Controlled",
+            "att": 1,
+            "str": 1,
+            "def": 1,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Pound",
+            "attack_type": "Crush",
+            "combat_style": "Controlled",
+            "att": 1,
+            "str": 1,
+            "def": 1,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Block",
+            "attack_type": "Stab",
+            "combat_style": "Defensive",
+            "att": 0,
+            "str": 0,
+            "def": 3,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        }
+    ],
+    "Whip": [
+        {
+            "name": "Flick",
+            "attack_type": "Slash",
+            "combat_style": "Accurate",
+            "att": 3,
+            "str": 0,
+            "def": 0,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Lash",
+            "attack_type": "Slash",
+            "combat_style": "Controlled",
+            "att": 1,
+            "str": 1,
+            "def": 1,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Deflect",
+            "attack_type": "Slash",
+            "combat_style": "Defensive",
+            "att": 0,
+            "str": 0,
+            "def": 3,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        }
+    ],
+    "Bow": [
+        {
+            "name": "Aim",
+            "attack_type": "Ranged",
+            "combat_style": "Accurate",
+            "att": 3,
+            "str": 0,
+            "def": 0,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Shoot",
+            "attack_type": "Ranged",
+            "combat_style": "Aggressive",
+            "att": 0,
+            "str": 3,
+            "def": 0,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Block",
+            "attack_type": "None",
+            "combat_style": "Defensive",
+            "att": 0,
+            "str": 0,
+            "def": 3,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        }
+    ],
+    "Crossbow": [
+        {
+            "name": "Load",
+            "attack_type": "Ranged",
+            "combat_style": "Accurate",
+            "att": 3,
+            "str": 0,
+            "def": 0,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Fire",
+            "attack_type": "Ranged",
+            "combat_style": "Aggressive",
+            "att": 0,
+            "str": 3,
+            "def": 0,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Block",
+            "attack_type": "None",
+            "combat_style": "Defensive",
+            "att": 0,
+            "str": 0,
+            "def": 3,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        }
+    ],
+    "Magic": [
+        {
+            "name": "Cast Spell",
+            "attack_type": "Magic",
+            "combat_style": "Accurate",
+            "att": 3,
+            "str": 0,
+            "def": 0,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Fire Spell",
+            "attack_type": "Magic",
+            "combat_style": "Aggressive",
+            "att": 0,
+            "str": 3,
+            "def": 0,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        },
+        {
+            "name": "Block",
+            "attack_type": "None",
+            "combat_style": "Defensive",
+            "att": 0,
+            "str": 0,
+            "def": 3,
+            "ranged": 0,
+            "magic": 0,
+            "att_spd_reduction": 0
+        }
+    ],
+    "Multi-style": [
+        { "name": "Melee", "attack_type": "Stab", "combat_style": "Aggressive", "att": 0, "str": 3, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 0 },
+        { "name": "Ranged", "attack_type": "Ranged", "combat_style": "Rapid", "att": 0, "str": 0, "def": 0, "ranged": 0, "magic": 0, "att_spd_reduction": 1 },
+        { "name": "Magic", "attack_type": "Magic", "combat_style": "Defensive", "att": 0, "str": 0, "def": 3, "ranged": 0, "magic": 0, "att_spd_reduction": 0 }
+    ]
+} as const;
+
+export const getCombatStylesForCategory = (category: string): WeaponStyles[] => {
+    // Normalize category key to match JSON keys if needed
+    // e.g., '2h Sword' => 'Two-handed sword', 'Slash Sword' => 'Slash sword', etc.
+    // You may want to implement a mapping if your categories differ from the JSON keys.
+    const styles = (weaponStyles as Record<string, WeaponStyles[]>)[category];
+    if (!styles) return [];
+    // Optionally add a manual cast spell style if needed, or just return styles
+    return styles;
+};

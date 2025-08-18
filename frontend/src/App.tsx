@@ -6,13 +6,18 @@ import RoomSelection from './components/RoomSelection';
 import PlotSection from './components/PlotSection';
 import FloatingBackground from './components/FloatingBackground';
 import { ThemeProvider } from './context/ThemeContext';
+// import { fetchMonstersFromWiki } from './services/monsterServiceTemp';
 import type { Monster } from './data/monsterStats';
-import type { GearSets, CombatStats, GearSetType } from './types/gear';
+import { fetchEquipmentFromWiki, fetchImageMapFromSupabase } from './services/gearServiceTemp';
+import type { GearSets, CombatStats, Equipment, InventoryItem } from './types/equipment';
 import './App.css';
 
 function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isGearLoading, setIsGearLoading] = useState(true);
+  // State for selected inventory items
+  const [selectedInventoryItems, setSelectedInventoryItems] = useState<InventoryItem[]>([]);
+  // const [monsters, setMonsters] = useState<Monster[]>([]);
 
   // Shared state for gear and monsters
   const [gearSets, setGearSets] = useState<GearSets>({
@@ -33,7 +38,7 @@ function App() {
     thieving: 99
   });
   const [selectedMonsters, setSelectedMonsters] = useState<Monster[]>([]);
-  const [activeGearTab, setActiveGearTab] = useState<GearSetType>('melee');
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
 
   useEffect(() => {
     // Prevent browser from restoring scroll position
@@ -82,6 +87,20 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    setIsGearLoading(true);
+    loadEquipmentWithImages().then(equip => {
+      setEquipment(equip);
+      setIsGearLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (equipment.length > 0) {
+      console.log('Equipment loaded:', equipment);
+    }
+  }, [equipment]);
+
   return (
     <ThemeProvider>
       <div className="app">
@@ -103,12 +122,13 @@ function App() {
           <GearSelection
             gearSets={gearSets}
             setGearSets={setGearSets}
+            selectedInventoryItems={selectedInventoryItems}
+            setSelectedInventoryItems={setSelectedInventoryItems}
             combatStats={combatStats}
             setCombatStats={setCombatStats}
-            activeGearTab={activeGearTab}
-            setActiveGearTab={setActiveGearTab}
             setIsGearLoading={setIsGearLoading}
             isGearLoading={isGearLoading}
+            equipment={equipment} // <-- Pass equipment here
           />
           {!isGearLoading && (
             <>
@@ -117,6 +137,7 @@ function App() {
                 gearSets={gearSets}
                 combatStats={combatStats}
                 selectedMonsters={selectedMonsters}
+                selectedInventoryItems={selectedInventoryItems}
               />
             </>
           )}
@@ -124,6 +145,17 @@ function App() {
       </div>
     </ThemeProvider>
   );
+}
+
+async function loadEquipmentWithImages(): Promise<Equipment[]> {
+  const [equipment, imageMap] = await Promise.all([
+    fetchEquipmentFromWiki(),
+    fetchImageMapFromSupabase()
+  ]);
+  return equipment.map(eq => ({
+    ...eq,
+    image: imageMap[eq.image] || eq.image // replace with base64 if found
+  }));
 }
 
 export default App;
