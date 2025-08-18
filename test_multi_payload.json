@@ -352,52 +352,100 @@
             }
         ]
     },
-    "monster": {
-        "id": 7570,
-        "name": "Guardian (Chambers of Xeric)",
-        "version": "Challenge Mode",
-        "image": "Guardian (Chambers of Xeric, female).png",
-        "level": 0,
-        "speed": 4,
-        "style": [
-            "Slash"
-        ],
-        "size": 0,
-        "max_hit": 33,
-        "skills": {
-            "atk": 210,
-            "def": 150,
-            "hp": 600,
-            "magic": 1,
-            "ranged": 1,
-            "str": 210
+    "monsters": [
+        {
+            "id": 7570,
+            "name": "Guardian (Chambers of Xeric)",
+            "version": "Challenge Mode",
+            "image": "Guardian (Chambers of Xeric, female).png",
+            "level": 0,
+            "speed": 4,
+            "style": [
+                "Slash"
+            ],
+            "size": 0,
+            "max_hit": 33,
+            "skills": {
+                "atk": 210,
+                "def": 150,
+                "hp": 375,
+                "magic": 1,
+                "ranged": 1,
+                "str": 210
+            },
+            "offensive": {
+                "atk": 0,
+                "magic": 0,
+                "magic_str": 0,
+                "ranged": 0,
+                "ranged_str": 0,
+                "str": 20
+            },
+            "defensive": {
+                "flat_armour": 0,
+                "crush": -10,
+                "magic": 0,
+                "heavy": 0,
+                "standard": 0,
+                "light": 0,
+                "slash": 180,
+                "stab": 80
+            },
+            "attributes": [
+                "xerician"
+            ],
+            "immunities": {
+                "burn": null
+            },
+            "weakness": null
         },
-        "offensive": {
-            "atk": 0,
-            "magic": 0,
-            "magic_str": 0,
-            "ranged": 0,
-            "ranged_str": 0,
-            "str": 20
-        },
-        "defensive": {
-            "flat_armour": 0,
-            "crush": -10,
-            "magic": 0,
-            "heavy": 0,
-            "standard": 0,
-            "light": 0,
-            "slash": 180,
-            "stab": 80
-        },
-        "attributes": [
-            "xerician"
-        ],
-        "immunities": {
-            "burn": null
-        },
-        "weakness": null
-    },
+        {
+            "id": 7570,
+            "name": "Guardian (Chambers of Xeric)",
+            "version": "Challenge Mode",
+            "image": "Guardian (Chambers of Xeric, female).png",
+            "level": 0,
+            "speed": 4,
+            "style": [
+                "Slash"
+            ],
+            "size": 0,
+            "max_hit": 33,
+            "skills": {
+                "atk": 210,
+                "def": 150,
+                "hp": 375,
+                "magic": 1,
+                "ranged": 1,
+                "str": 210
+            },
+            "offensive": {
+                "atk": 0,
+                "magic": 0,
+                "magic_str": 0,
+                "ranged": 0,
+                "ranged_str": 0,
+                "str": 20
+            },
+            "defensive": {
+                "flat_armour": 0,
+                "crush": -10,
+                "magic": 0,
+                "heavy": 0,
+                "standard": 0,
+                "light": 0,
+                "slash": 180,
+                "stab": 80
+            },
+            "attributes": [
+                "xerician"
+            ],
+            "immunities": {
+                "burn": null
+            },
+            "weakness": null
+        }
+    ],
     "config": {
         "cap": 0.99
     }

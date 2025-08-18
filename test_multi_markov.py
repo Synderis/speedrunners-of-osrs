@@ -267,7 +267,7 @@ def single_matrix(a, m, hp):
 
 def npc_state(hp):
     v = [0.0] * (hp + 1)
-    v[0] = 1.0
+    v[hp] = 1.0  # Start at full HP
     return v
 
 def row_vec_times_square_mat(row, mat, n):
@@ -276,25 +276,25 @@ def row_vec_times_square_mat(row, mat, n):
         r = row[i]
         if r == 0.0:
             continue
-        row_start = i * n
         for j in range(n):
-            out[j] += r * mat[row_start + j]
+            out[j] += r * mat[i][j]
     return out
 
 def weapon_kill_times(hp, max_hit, acc, cap):
     n = hp + 1
-    weapon = single_matrix(acc, max_hit, hp)
+    weapon = build_transition_matrix(hp, max_hit, acc)
     state = npc_state(hp)
     out = []
-    p_dead = state[n - 1]
-    tick = 0
+    p_dead = state[0]  # Probability of being dead is state[0]
+    tick = 0  # Start at tick 0 to match sim
+    attack_speed = 5
     while p_dead < cap:
-        tick += 1
-        if tick % 5 == 1:
-            state = row_vec_times_square_mat(state, weapon, n)
-        p_dead = state[n - 1]
+        # Each step is an attack (like the sim)
+        state = row_vec_times_square_mat(state, weapon, n)
+        p_dead = state[0]
         out.append(p_dead)
-    return out
+        tick += attack_speed
+    return out, attack_speed
 
 def kill_time_distribution_matrix(hp, max_hit, accuracy, cap=0.99, max_steps=512):
     n = hp + 1
@@ -316,10 +316,17 @@ def build_transition_matrix(hp, max_hit, accuracy):
         if i == 0:
             mat[i][i] = 1.0  # Absorbing state
             continue
-        mat[i][i] += 1 - accuracy  # Miss
-        for dmg in range(0, min(max_hit, i) + 1):  # 0 to max_hit
+        # Probability of 0 damage: miss + hitting 0
+        p_zero = (1 - accuracy) + accuracy / (max_hit + 1)
+        mat[i][i] += p_zero
+        # Probability of k damage (1 <= k <= min(i, max_hit))
+        for dmg in range(1, min(max_hit, i) + 1):
             next_hp = max(0, i - dmg)
             mat[i][next_hp] += accuracy / (max_hit + 1)
+        # Overkill: if max_hit > i, add probability to state 0
+        if max_hit > i:
+            overkill_prob = (max_hit - i) * (accuracy / (max_hit + 1))
+            mat[i][0] += overkill_prob
     return mat
 
 def propagate_state(state, mat):
@@ -331,38 +338,66 @@ def propagate_state(state, mat):
     return new_state
 
 if __name__ == "__main__":
-    with open("test_payload.json", "r") as f:
+    import time
+    # Support both single and multiple monsters for backward compatibility
+    with open("test_multi_payload.json", "r") as f:
         payload = json.load(f)
 
     player = payload["player"]
-    monster = payload["monster"]
-    cap = payload["config"]["cap"]
     mining_level = player["combatStats"]["mining"]
+    cap = payload["config"]["cap"]
+    monsters = payload.get("monsters")
+    if monsters is None:
+        monsters = [payload["monster"]]
 
-    best_style = find_best_combat_style(player, monster, mining_level)
-    print("Best style:", best_style)
+    total_expected_tick = 0.0
+    total_expected_seconds = 0.0
+    all_attack_ticks = []
+    all_kill_times = []
+    start_time = time.time()
+    for idx, monster in enumerate(monsters):
+        best_style = find_best_combat_style(player, monster, mining_level)
+        print(f"[Monster {idx+1}] Best style: {best_style}")
+        max_hit = best_style["max_hit"]
+        accuracy = best_style["accuracy"]
+        p_zero = (1 - accuracy) + accuracy / (max_hit + 1)
+        expected_damage = accuracy * (sum(i for i in range(0, max_hit + 1)) / (max_hit + 1))
+        print(f"[Monster {idx+1}] Probability of 0 damage: {p_zero:.4f}")
+        print(f"[Monster {idx+1}] Expected damage per attack: {expected_damage:.4f}")
 
-    kill_times = weapon_kill_times(
-        monster["skills"]["hp"],
-        best_style["max_hit"],
-        best_style["accuracy"],
-        cap
-    )
-    expected_tick = sum((i + 1) * (kill_times[i] - (kill_times[i - 1] if i > 0 else 0)) for i in range(len(kill_times)))
-    expected_seconds = expected_tick * 0.6
-    print(f"Expected TTK: {expected_tick:.2f} ticks ({expected_seconds:.2f} seconds)")
+        kill_times, attack_speed = weapon_kill_times(
+            monster["skills"]["hp"],
+            max_hit,
+            accuracy,
+            cap
+        )
+        attack_ticks = [i * attack_speed for i in range(len(kill_times))]
+        expected_tick = sum(
+            tick * (kill_times[i] - kill_times[i - 1] if i > 0 else kill_times[0])
+            for i, tick in enumerate(attack_ticks)
+        )
+        expected_seconds = expected_tick * 0.6
+        print(f"[Monster {idx+1}] Expected TTK: {expected_tick:.2f} ticks ({expected_seconds:.2f} seconds)")
+        total_expected_tick += expected_tick
+        total_expected_seconds += expected_seconds
+        # For plotting, just plot the last monster
+        all_attack_ticks = attack_ticks
+        all_kill_times = kill_times
 
+    elapsed = time.time() - start_time
+    print(f"Total Expected TTK for {len(monsters)} monsters: {total_expected_tick:.2f} ticks ({total_expected_seconds:.2f} seconds)")
+    print(f"Elapsed Markov calculation time: {elapsed:.2f} seconds")
 
-    # Interactive plot with Plotly
+    # Interactive plot with Plotly (last monster)
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=list(range(len(kill_times))),
-        y=kill_times,
+        x=all_attack_ticks,
+        y=all_kill_times,
         mode='lines',
         name='Kill Probability'
     ))
     fig.update_layout(
-        title="Kill Probability Over Time",
+        title="Kill Probability Over Time (Last Monster)",
         xaxis_title="Tick",
         yaxis_title="Cumulative Probability",
         legend_title="Legend",
