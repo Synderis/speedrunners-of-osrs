@@ -1,26 +1,43 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { Equipment, InventoryItem } from '../types/equipment';
 import './InventoryItems.css';
 
-const INVENTORY_IMAGES = [
-    '/gear/120px-Lightbearer_detail.webp',
-    '/gear/140px-Zamorak_godsword_detail.webp',
-    '/gear/130px-Burning_claws_detail.webp',
-    '/gear/150px-Emberlight_detail.webp',
-    '/gear/150px-Salve_amulet(ei)_detail.webp',
-    '/gear/140px-Slayer_helmet_detail.webp',
-    '/gear/150px-Voidwaker_detail.webp'
+const INVENTORY_IDS = [
+    25975, 11808, 29577, 29589, 12018, 11865, 27690, 21003
 ];
+//make sure to add lockpick somehow as its not technically an item so we will exclude it for now
 
-const InventoryItems: React.FC = () => {
-    const [selected, setSelected] = useState<boolean[]>(() =>
-        Array(INVENTORY_IMAGES.length).fill(false)
+interface InventoryItemsProps {
+    equipment: Equipment[];
+    selectedItems: InventoryItem[];
+    setSelectedItems: React.Dispatch<React.SetStateAction<InventoryItem[]>>;
+}
+
+const InventoryItems: React.FC<InventoryItemsProps> = ({
+    equipment,
+    selectedItems = [],
+    setSelectedItems
+}) => {
+    // Find Equipment objects for inventory IDs
+    const inventoryEquipment = INVENTORY_IDS.map(id =>
+        equipment.find(eq => Number(eq.id) === id)
     );
 
+    const isSelected = (id: number | string) =>
+        selectedItems.some(item => item.equipment?.id === id);
+
     const handleToggle = (idx: number) => {
-        setSelected(prev =>
-            prev.map((val, i) => (i === idx ? !val : val))
-        );
+        const eq = inventoryEquipment[idx];
+        if (!eq) return;
+        setSelectedItems(prev => {
+            if (isSelected(eq.id)) {
+                // Remove if already selected
+                return prev.filter(item => item.equipment?.id !== eq.id);
+            } else {
+                // Add new InventoryItem
+                return [...prev, { name: eq.name, equipment: eq }];
+            }
+        });
     };
 
     return (
@@ -31,31 +48,34 @@ const InventoryItems: React.FC = () => {
                 transition={{ duration: 0.6 }}
             >
                 <span className="inventory-items-label">Inventory items:</span>
-                </motion.div>
-                <div className="inventory-items">
-                    {INVENTORY_IMAGES.map((img, idx) => (
+            </motion.div>
+            <div className="inventory-items">
+                <AnimatePresence>
+                    {inventoryEquipment.map((eq, idx) => (
                         <motion.div
-                            key={img}
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.1 * idx }}
-                        whileHover={{
-                            y: -6,
-                            transition: { duration: 0.1 }
-                        }}
-                    >
-                        <button
-                            type="button"
-                            className={`inventory-btn${selected[idx] ? ' selected' : ''}`}
-                            onClick={() => handleToggle(idx)}
+                            key={eq?.id || idx}
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: 0.1 * idx }}
+                            whileHover={{
+                                y: -6,
+                                transition: { duration: 0.1 }
+                            }}
                         >
-                            <img
-                                src={img}
-                                alt={`Inventory item ${idx + 1}`}
-                            />
-                        </button>
-                    </motion.div>
-                ))}
+                            <button
+                                type="button"
+                                className={`inventory-btn${eq && isSelected(eq.id) ? ' selected' : ''}`}
+                                onClick={() => handleToggle(idx)}
+                                disabled={!eq}
+                            >
+                                <img
+                                    src={`data:image/png;base64,${eq?.image}` || '/gear/default.webp'}
+                                    alt={eq?.name || `Inventory item ${idx + 1}`}
+                                />
+                            </button>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
             </div>
         </div>
     );

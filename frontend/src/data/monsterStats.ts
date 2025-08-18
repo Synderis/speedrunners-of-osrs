@@ -1,91 +1,146 @@
+// Define the interface
 export interface Monster {
     id: number;
     name: string;
-    combat_level: number;
-    hitpoints: number;
-    max_hit: number;
-    attack_speed: number;
-    slayer_level: number | null;
-    slayer_xp: number | null;
-    attack_level: number;
-    strength_level: number;
-    defence_level: number;
-    magic_level: number;
-    ranged_level: number;
-    defence_stab: number;
-    defence_slash: number;
-    defence_crush: number;
-    defence_magic: number;
-    defence_ranged: number;
-    last_updated: string;
-    release_date: string;
-    examine: string;
-    wiki_name: string;
-    wiki_url: string;
-    attack_type: string[];
-    attributes: string[];
-    category: string[];
-    slayer_masters: string[];
+    version: string;
+    image: string;
+    level: number;
+    speed: number;
+    style: string[] | null;
+    size: number;
+    max_hit: string | number;
+    skills: {
+        atk: number;
+        def: number;
+        hp: number;
+        magic: number;
+        ranged: number;
+        str: number;
+    };
+    offensive: {
+        atk: number;
+        magic: number;
+        magic_str: number;
+        ranged: number;
+        ranged_str: number;
+        str: number;
+    };
+    defensive: {
+        flat_armour: number;
+        crush: number;
+        magic: number;
+        heavy: number;
+        standard: number;
+        light: number;
+        slash: number;
+        stab: number;
+    };
+    attributes: any[];
+    immunities: {
+        burn: string | null;
+    };
+    weakness?: {
+        element: string;
+        severity: number;
+    } | null;
 }
 
+// Use the interface for your array
 export const cmMonsters: Monster[] = [
     {
-        id: 10001,
-        name: "Tekton (CM)",
-        combat_level: 390,
-        hitpoints: 450,
-        max_hit: 78,
-        attack_speed: 3,
-        slayer_level: null,
-        slayer_xp: null,
-        attack_level: 585,
-        strength_level: 585,
-        defence_level: 246,
-        magic_level: 246,
-        ranged_level: 1,
-        defence_stab: 155,
-        defence_slash: 165,
-        defence_crush: 105,
-        defence_magic: 0,
-        defence_ranged: 0,
-        last_updated: "2025-08-13",
-        release_date: "2018-05-17",
-        examine: "Xeric's former artisan.",
-        wiki_name: "Tekton (CM)",
-        wiki_url: "https://oldschool.runescape.wiki/w/Tekton#Normal_(Challenge_Mode)",
-        attack_type: ["melee"],
-        attributes: ["xercian"],
-        category: ["bosses"],
-        slayer_masters: []
+        "id": 7545,
+        "name": "Tekton",
+        "version": "Normal (Challenge Mode)",
+        "image": "Tekton.png",
+        "level": 0,
+        "speed": 3,
+        "style": [
+            "Stab",
+            "Slash",
+            "Crush"
+        ],
+        "size": 4,
+        "max_hit": 78,
+        "skills": {
+            "atk": 585,
+            "def": 246,
+            "hp": 450,
+            "magic": 246,
+            "ranged": 1,
+            "str": 585
+        },
+        "offensive": {
+            "atk": 64,
+            "magic": 0,
+            "magic_str": 0,
+            "ranged": 0,
+            "ranged_str": 0,
+            "str": 20
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 105,
+            "magic": 0,
+            "heavy": 0,
+            "standard": 0,
+            "light": 0,
+            "slash": 165,
+            "stab": 155
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": null
     },
     {
-        id: 10002,
-        name: "Vasa (CM)",
-        combat_level: 390,
-        hitpoints: 550,
-        max_hit: 78,
-        attack_speed: 3,
-        slayer_level: null,
-        slayer_xp: null,
-        attack_level: 585,
-        strength_level: 585,
-        defence_level: 246,
-        magic_level: 246,
-        ranged_level: 1,
-        defence_stab: 155,
-        defence_slash: 165,
-        defence_crush: 105,
-        defence_magic: 0,
-        defence_ranged: 0,
-        last_updated: "2025-08-13",
-        release_date: "2018-05-17",
-        examine: "Xeric's former artisan.",
-        wiki_name: "Vasa (CM)",
-        wiki_url: "https://oldschool.runescape.wiki/w/Vasa#(Challenge_Mode)",
-        attack_type: ["melee"],
-        attributes: ["xercian"],
-        category: ["bosses"],
-        slayer_masters: []
+        "id": 7566,
+        "name": "Vasa Nistirio",
+        "version": "Challenge Mode",
+        "image": "Vasa Nistirio.png",
+        "level": 0,
+        "speed": 3,
+        "style": [
+            "Magic",
+            "Ranged"
+        ],
+        "size": 5,
+        "max_hit": 0,
+        "skills": {
+            "atk": 1,
+            "def": 262,
+            "hp": 450,
+            "magic": 345,
+            "ranged": 345,
+            "str": 1
+        },
+        "offensive": {
+            "atk": 0,
+            "magic": 0,
+            "magic_str": 0,
+            "ranged": 100,
+            "ranged_str": 0,
+            "str": 0
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 40,
+            "magic": 400,
+            "heavy": 30,
+            "standard": 40,
+            "light": 40,
+            "slash": 190,
+            "stab": 170
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": null
     }
 ];
 
@@ -98,7 +153,7 @@ export interface Room {
 
 export const rooms: Room[] = [
     {
-        id: '10001',
+        id: '7545',
         name: 'Tekton',
         image: '/rooms/220px-Tekton.webp',
         description: 'High-level boss encounter'
@@ -147,7 +202,7 @@ export const rooms: Room[] = [
         description: 'High-level boss encounter'
     },
     {
-        id: '10002',
+        id: '7566',
         name: 'Vasa',
         image: '/rooms/250px-Vasa_Nistirio.webp',
         description: 'God Wars Dungeon - Zamorak'

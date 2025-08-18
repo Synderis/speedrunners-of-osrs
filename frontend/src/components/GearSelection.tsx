@@ -1,9 +1,8 @@
 import CharacterModelCard from './CharacterModelCard';
 import React, { useState, useEffect } from 'react';
-import { motion} from 'framer-motion';
-import { fetchGearFromSupabase } from '../services/gearService';
+import { motion } from 'framer-motion';
 import { gearSetPresets, type GearSetType, type GearSetPreset } from '../data/gearTemplates';
-import type { GearItem, GearSets, CombatStats } from '../types/gear';
+import type { GearSets, CombatStats, Equipment, InventoryItem } from '../types/equipment';
 import { statImages } from '../data/constants';
 import './GearSelection.css';
 import InventoryItems from './InventoryItems';
@@ -11,21 +10,28 @@ import InventoryItems from './InventoryItems';
 interface GearSelectionProps {
   gearSets: GearSets;
   setGearSets: React.Dispatch<React.SetStateAction<GearSets>>;
+  selectedInventoryItems: InventoryItem[];
+  setSelectedInventoryItems: React.Dispatch<React.SetStateAction<InventoryItem[]>>;
   combatStats: CombatStats;
   setCombatStats: React.Dispatch<React.SetStateAction<CombatStats>>;
   setIsGearLoading: React.Dispatch<React.SetStateAction<boolean>>;
   isGearLoading: boolean;
+  equipment: Equipment[];
 }
 
 const GearSelection: React.FC<GearSelectionProps> = ({
   gearSets,
   setGearSets,
+  selectedInventoryItems,
+  setSelectedInventoryItems,
   combatStats,
   setCombatStats,
   setIsGearLoading,
-  isGearLoading
+  isGearLoading,
+  equipment
 }) => {
-  const [gearData, setGearData] = useState<GearItem[]>([]);
+  // Use equipment as the source of gear data
+  const [gearData, setGearData] = useState<Equipment[]>([]);
   const [selectedPreset, setSelectedPreset] = useState('');
   const [allPresets, setAllPresets] = useState<GearSetPreset[]>([...gearSetPresets]);
 
@@ -60,11 +66,28 @@ const GearSelection: React.FC<GearSelectionProps> = ({
       name,
       description,
       gearSets: {
-        melee: Object.fromEntries(gearSets.melee.map(slot => [slot.slot.toLowerCase().replace('-', ''), slot.selected?.id || ''])),
-        mage: Object.fromEntries(gearSets.mage.map(slot => [slot.slot.toLowerCase().replace('-', ''), slot.selected?.id || ''])),
-        ranged: Object.fromEntries(gearSets.ranged.map(slot => [slot.slot.toLowerCase().replace('-', ''), slot.selected?.id || ''])),
-      }
+        melee: Object.fromEntries(
+          gearSets.melee.map(slot => [
+            slot.slot.toLowerCase().replace('-', ''),
+            slot.selected?.id?.toString() || ''
+          ])
+        ) as Record<string, string>,
+        mage: Object.fromEntries(
+          gearSets.mage.map(slot => [
+            slot.slot.toLowerCase().replace('-', ''),
+            slot.selected?.id?.toString() || ''
+          ])
+        ) as Record<string, string>,
+        ranged: Object.fromEntries(
+          gearSets.ranged.map(slot => [
+            slot.slot.toLowerCase().replace('-', ''),
+            slot.selected?.id?.toString() || ''
+          ])
+        ) as Record<string, string>,
+      },
+  inventoryItems: selectedInventoryItems.map(item => item.equipment?.id?.toString() || '')
     };
+    console.log('Saving preset:', newPreset);
     const custom = allPresets.filter(p => p.id.startsWith('custom_')).concat(newPreset);
     saveCustomPresets(custom);
     setSelectedPreset(newPreset.id);
@@ -79,20 +102,11 @@ const GearSelection: React.FC<GearSelectionProps> = ({
     setSelectedPreset('');
   };
 
+  // Replace loading logic: set gearData from equipment prop
   useEffect(() => {
-      const loadGearData = async () => {
-        try {
-          setIsGearLoading(true);
-          const gearItems = await fetchGearFromSupabase();
-          setGearData(gearItems);
-        } catch (error) {
-          setGearData([]);
-        } finally {
-          setIsGearLoading(false);
-        }
-      };
-      loadGearData();
-    }, []);
+    setGearData(equipment);
+    setIsGearLoading(equipment.length === 0);
+  }, [equipment, setIsGearLoading]);
 
   useEffect(() => {
     if (gearData.length > 0) {
@@ -112,7 +126,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
         { csv: '2h', display: 'Weapon' }, // 2h weapons also go in Weapon slot
       ];
       // Group items by slot field
-      const slotMap: Record<string, GearItem[]> = {};
+      const slotMap: Record<string, Equipment[]> = {};
       for (const item of gearData) {
         const slot = item.slot.toLowerCase();
         if (!slotMap[slot]) slotMap[slot] = [];
@@ -122,7 +136,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
       const slots = slotOrder
         .filter(({ display }, idx, arr) => arr.findIndex(s => s.display === display) === idx) // dedupe Weapon
         .map(({ csv, display }) => {
-          let items: GearItem[] = [];
+          let items: Equipment[] = [];
           if (display === 'Weapon') {
             items = [ ...(slotMap['weapon'] || []), ...(slotMap['2h'] || []) ];
           } else {
@@ -170,12 +184,22 @@ const GearSelection: React.FC<GearSelectionProps> = ({
     requestAnimationFrame(() => {
       setGearSets(prev => {
         const updated = { ...prev };
+          // Reconstruct selectedInventoryItems from preset.inventoryItems (string[] of IDs)
+          setSelectedInventoryItems(
+            (preset.inventoryItems || [])
+              .map(id => {
+                // Search all equipment for a match
+                const eq = gearData.find(e => e.id.toString() === id);
+                return eq ? { name: eq.name, equipment: eq } : null;
+              })
+              .filter(Boolean) as InventoryItem[]
+          );
         (['melee', 'mage', 'ranged'] as GearSetType[]).forEach(type => {
           updated[type] = prev[type].map(slot => {
             const slotKey = slot.slot.toLowerCase().replace('-', '');
             const gearId = preset.gearSets[type][slotKey];
             if (gearId) {
-              const selectedItem = slot.items.find(item => item.id === gearId);
+              const selectedItem = slot.items.find(item => item.id.toString() === gearId);
               return { ...slot, selected: selectedItem };
             }
             return { ...slot, selected: undefined };
@@ -287,7 +311,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                         gearType={gearType}
                         gearSet={gearSets[gearType]}
                         setGearSets={setGearSets}
-                        gearData={gearData}
+                        gearData={gearData} // gearData is now Equipment[]
                       />
                     ))}
                   </motion.div>
@@ -296,7 +320,11 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 1.15 }}
                   >
-                    <InventoryItems />
+                    <InventoryItems 
+                      equipment={gearData}
+                      selectedItems={selectedInventoryItems}
+                      setSelectedItems={setSelectedInventoryItems}
+                    />
                   </motion.div>
                 </div>
               </div>

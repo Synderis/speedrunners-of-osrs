@@ -3,12 +3,11 @@ import './GearSlotMultiSelect.css';
 import Select from 'react-select';
 import { FixedSizeList as List } from 'react-window';
 import type { MultiValue, ActionMeta } from 'react-select';
-import type { GearItem, GearSets } from '../types/gear';
-import type { GearSetType } from '../data/gearTemplates';
+import type { Equipment, GearSets, GearSetType } from '../types/equipment';
 
 interface GearSlotMultiSelectProps {
     gearType: GearSetType;
-    gearData: GearItem[];
+    gearData: Equipment[];
     setGearSets: React.Dispatch<React.SetStateAction<GearSets>>;
 }
 
@@ -136,13 +135,11 @@ export const GearSlotMultiSelect: React.FC<GearSlotMultiSelectProps> = ({ gearTy
                             className={`gear-dropdown__option${isFocused ? ' gear-dropdown__option--is-focused' : ''}${isSelected ? ' gear-dropdown__option--is-selected' : ''}`}
                             style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                         >
-                            {data.item?.image && (
-                                <img
-                                    src={data.item.image}
-                                    alt={data.item.name}
-                                    style={{ width: 24, height: 24, objectFit: 'contain', marginRight: 8, borderRadius: 4 }}
-                                />
-                            )}
+                            <img
+                                src={`data:image/png;base64,${data.item.image}`}
+                                alt={data.item.name}
+                                style={{ width: 24, height: 24, objectFit: 'contain', marginRight: 8, borderRadius: 4 }}
+                            />
                             <span>{data.label}</span>
                         </div>
                     );
@@ -152,4 +149,3 @@ export const GearSlotMultiSelect: React.FC<GearSlotMultiSelectProps> = ({ gearTy
         />
     );
 };
-// (Removed duplicate trailing code)

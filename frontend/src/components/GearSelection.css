@@ -393,10 +393,10 @@
 
 .preset-controls {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 1.6rem; /* 2rem * 0.8 */
-  width: 85%;
+  width: 90%;
   margin: 0 auto;
   margin-bottom: 2.4rem; /* 3rem * 0.8 */
   padding: 1.2rem; /* 1.5rem * 0.8 */
