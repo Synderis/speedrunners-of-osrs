@@ -22,44 +22,44 @@ export const gearSetPresets: GearSetPreset[] = [
                 weapon: "22325",
                 head: "26382",
                 neck: "29801",
-                cape: "24224",
+                cape: "21295",
                 shield: "",
                 body: "26384",
                 legs: "26386",
                 hands: "22981",
                 feet: "31097",
                 ring: "28307",
-                ammo: "11227"
+                ammo: "11212"
             },
             mage: {
                 weapon: "27275",
                 head: "21018",
                 neck: "12002",
-                cape: "24248",
+                cape: "21791",
                 shield: "",
                 body: "21021",
                 legs: "21024",
                 hands: "31106",
                 feet: "31088",
                 ring: "28313",
-                ammo: "11227"
+                ammo: "11212"
             },
             ranged: {
                 weapon: "20997",
                 head: "27235",
                 neck: "19547",
-                cape: "27359",
+                cape: "22109",
                 shield: "",
                 body: "27238",
                 legs: "27241",
                 hands: "26235",
                 feet: "31097",
                 ring: "28310",
-                ammo: "11227"
+                ammo: "11212"
             }
         },
         inventoryItems: [
-            "21003",
+            "25975",
             "12018",
             "11865",
             "11808"

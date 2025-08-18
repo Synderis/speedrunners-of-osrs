@@ -8,6 +8,7 @@
     Written for Python 3.9.
 """
 
+
 import requests
 import json
 import urllib.parse
@@ -15,6 +16,15 @@ import time
 import os
 import glob
 from supabase_temp_credentials import SUPABASE_URL, SUPABASE_KEY
+
+# Load equipment aliases
+with open('equipmentAliases.json', 'r', encoding='utf-8') as f:
+    equipment_aliases = json.load(f)
+# Build variant to base mapping
+variant_to_base = {}
+for base, variants in equipment_aliases.items():
+    for variant in variants:
+        variant_to_base[str(variant)] = str(base)
 
 from supabase import create_client, Client
 
@@ -141,12 +151,26 @@ for k, v in wiki_data.items():
 
     po = v['printouts']
     item_id = getPrintoutValue(po['Item ID'])
+
+    # Determine image, using alias if needed
+    image = ''
+    if po['Image']:
+        image = po['Image'][0]['fulltext'].replace('File:', '')
+    # If no image, try to use base id's image
+    if not image and str(item_id) in variant_to_base:
+        base_id = variant_to_base[str(item_id)]
+        # Try to find the base id's image in the data already processed
+        for eq in data:
+            if str(eq['id']) == base_id and eq['image']:
+                image = eq['image']
+                break
+
     equipment = {
         'name': k.rsplit('#', 1)[0],
         'id': item_id,
         'version': getPrintoutValue(po['Version anchor']) or '',
         'slot': getPrintoutValue(po['Equipment slot']) or '',
-        'image': '' if not po['Image'] else po['Image'][0]['fulltext'].replace('File:', ''),
+        'image': image,
         'speed': getPrintoutValue(po['Weapon attack speed']) or 0,
         'category': getPrintoutValue(po['Combat style']) or '',
         'bonuses': {
