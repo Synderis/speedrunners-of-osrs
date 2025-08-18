@@ -1,15 +1,14 @@
-
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { defaultSlotImages } from '../data/constants';
 import { GearSlotMultiSelect } from './GearSlotMultiSelect';
-import type { GearSetType, GearSets, GearItem } from '../types/gear';
+import type { GearSetType, GearSets, Equipment } from '../types/equipment';
 
 interface CharacterModelCardProps {
     gearType: GearSetType;
     gearSet: any[];
     setGearSets: React.Dispatch<React.SetStateAction<GearSets>>;
-    gearData: GearItem[];
+    gearData: Equipment[];
 }
 
 const CharacterModelCard: React.FC<CharacterModelCardProps> = ({ gearType, gearSet, setGearSets, gearData }) => {
@@ -29,6 +28,7 @@ const CharacterModelCard: React.FC<CharacterModelCardProps> = ({ gearType, gearS
                         {gearSet.map((slot, slotIndex) => {
                             const slotKey = slot.slot.toLowerCase().replace('-', '') as keyof typeof defaultSlotImages;
                             const defaultImage = defaultSlotImages[slotKey];
+                            // Use S3 url if image exists, otherwise fallback to default
                             return (
                                 <div
                                     key={`${gearType}-${slot.slot}-${slotIndex}`}
@@ -36,7 +36,7 @@ const CharacterModelCard: React.FC<CharacterModelCardProps> = ({ gearType, gearS
                                     style={{ position: 'relative', display: 'inline-block' }}
                                 >
                                     <img
-                                        src={slot.selected?.image || defaultImage}
+                                        src={slot.selected?.image ? `data:image/png;base64,${slot.selected.image}` : defaultImage}
                                         alt={slot.selected?.name || `Empty ${slot.slot}`}
                                         className="equipped-item"
                                         style={{ cursor: slot.selected ? 'pointer' : 'default' }}
@@ -58,15 +58,15 @@ const CharacterModelCard: React.FC<CharacterModelCardProps> = ({ gearType, gearS
                 </div>
             </div>
             <div style={{ marginTop: 16 }}>
-                        <GearSlotMultiSelect
-                            gearType={gearType}
-                            gearData={gearData.map(item =>
-                                item.slot && item.slot.toLowerCase() === '2h'
-                                    ? { ...item, slot: 'Weapon' }
-                                    : item
-                            )}
-                            setGearSets={setGearSets}
-                        />
+                <GearSlotMultiSelect
+                    gearType={gearType}
+                    gearData={gearData.map(item =>
+                        item.slot && item.slot.toLowerCase() === '2h'
+                            ? { ...item, slot: 'Weapon' }
+                            : item
+                    )}
+                    setGearSets={setGearSets}
+                />
             </div>
         </motion.div>
     );

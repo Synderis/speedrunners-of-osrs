@@ -24,7 +24,7 @@ const Header: React.FC = () => {
     setTimeout(() => {
       const element = document.getElementById(sectionId);
       if (element) {
-        const headerHeight = 80; // Match the header height from CSS
+        const headerHeight = 63.6; // Match the header height from CSS
         const elementPosition = element.getBoundingClientRect().top + window.scrollY - headerHeight;
         window.scrollTo({
           top: elementPosition,

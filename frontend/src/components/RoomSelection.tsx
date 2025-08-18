@@ -167,8 +167,8 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                                                         <span className="selected-room-item-name">{room.name}</span>
                                                         {room.monster && (
                                                             <div className="monster-stats-preview">
-                                                                <span className="monster-level">CB: {room.monster.combat_level}</span>
-                                                                <span className="monster-hp">HP: {room.monster.hitpoints}</span>
+                                                                <span className="monster-level">CB: {room.monster.level}</span>
+                                                                <span className="monster-hp">HP: {room.monster.skills.hp}</span>
                                                             </div>
                                                         )}
                                                     </div>
