@@ -14,7 +14,7 @@ interface GearSlotMultiSelectProps {
 // Virtualized MenuList for react-select
 const MenuList = (props: any) => {
     const { children, maxHeight } = props;
-    const height = 40; // px per option
+    const height = 24; // px per option
     const itemCount = children.length;
     const listHeight = Math.min(maxHeight, itemCount * height);
     return (
