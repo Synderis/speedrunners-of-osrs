@@ -1,3 +1,25 @@
+import equipmentIds from '../data/equipmentIdExclusions';
+import { equipmentNameExclusions } from '../data/equipmentNameExclusions';
+/**
+ * A reverse map of variant item ID -> base item ID for quick lookup.
+ */
+const equipmentAliasReverseMap: Record<string, string> = (() => {
+    const reverse: Record<string, string> = {};
+    for (const [base, variants] of Object.entries(equipmentIds)) {
+        for (const variant of variants) {
+            reverse[String(variant)] = base;
+        }
+    }
+    return reverse;
+})();
+
+/**
+ * Given an item ID, returns the base item ID if it's a known variant, else returns the original.
+ */
+export function resolveBaseItemId(itemId: string | number): string | number {
+    const idStr = String(itemId);
+    return equipmentAliasReverseMap[idStr] || idStr;
+}
 import type { Equipment } from '../types/equipment';
 const WIKI_BASE = 'https://oldschool.runescape.wiki';
 const API_BASE = `${WIKI_BASE}/api.php`;
@@ -95,6 +117,10 @@ async function fetchEquipmentFromWiki(): Promise<Equipment[]> {
             ? item_id_raw
             : '';
 
+        // Remove if this id is a variant in the alias list
+        const allVariantIds = new Set(Object.values(equipmentIds).flat().map(String));
+        if (allVariantIds.has(String(item_id))) continue;
+
         const name = k.split('#', 1)[0];
         let slot_raw = getPrintoutValue(po['Equipment slot']);
         let slot = typeof slot_raw === 'string' ? slot_raw : '';
@@ -111,10 +137,25 @@ async function fetchEquipmentFromWiki(): Promise<Equipment[]> {
         if (name.includes('(Last Man Standing)')) continue;
         if (ITEMS_TO_SKIP.includes(name)) continue;
         if (name.includes('Keris partisan of amascut') && k.includes('Outside ToA')) continue;
+        const isExcluded = (name: string) =>
+            equipmentNameExclusions.some(exclusion => name.includes(exclusion));
+        if (isExcluded(name)) continue;
+        const versionLower = version.toLowerCase();
+        if (
+            versionLower !== '' &&
+            versionLower !== 'unpoisoned' &&
+            versionLower !== 'normal' &&
+            versionLower !== 'recoil' &&
+            versionLower !== 'activated' &&
+            versionLower !== 'undamaged' &&
+            versionLower !== 'charged' &&
+            versionLower !== 'restored' &&
+            versionLower !== 'active'
+        ) continue;
 
         const equipmentItem: Equipment = {
             name,
-            id: item_id,
+            id: resolveBaseItemId(item_id),
             version,
             slot,
             image: po['Image']?.[0]?.fulltext?.replace('File:', '') || '',
@@ -143,12 +184,35 @@ async function fetchEquipmentFromWiki(): Promise<Equipment[]> {
             two_handed,
         };
 
+        // Filter: skip if all bonuses, offensive, and defensive stats are 0
+
+        const b = equipmentItem.bonuses;
+        const o = equipmentItem.offensive;
+        const d = equipmentItem.defensive;
+        const allStats = [
+            b.str, b.ranged_str, b.magic_str, b.prayer,
+            o.stab, o.slash, o.crush, o.magic, o.ranged,
+            d.stab, d.slash, d.crush, d.magic, d.ranged
+        ];
+        const excludedIds = new Set(['25975', '2550']);
+        const itemIdStr = String(equipmentItem.id);
+
+        // Filter: skip if all bonuses are negative or zero (no positive stat)
+        const allNegative = allStats.every(val => val === null || Number(val) <= 0);
+        if (allNegative && !excludedIds.has(itemIdStr)) continue;
+
         result.push(equipmentItem);
     }
 
     // Optionally sort by name
     result.sort((a, b) => a.name.localeCompare(b.name));
-    return result;
+    // Remove duplicate ids, keeping the first occurrence
+    // Remove any items whose id appears as a variant in the alias list
+    const allVariantIds = new Set(
+        Object.values(equipmentIds).flat().map(String)
+    );
+    const filteredResult = result.filter(item => !allVariantIds.has(String(item.id)));
+    return filteredResult;
 }
 
 export async function fetchImageMapFromSupabase(): Promise<Record<string, string>> {
