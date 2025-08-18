@@ -205,51 +205,55 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                         transition={{ duration: 0.6 }}
                     >
                         <AnimatePresence>
-                            {rooms.filter(room => !selectedRooms.some(r => r.id === room.id)).map((room, index) => {
-                                const hasMonsterData = getMonsterByRoom(room) !== undefined;
+                            {rooms.filter(room => !selectedRooms.some(r => r.id === room.id)).length === 0 ? (
+                                <div className="no-rooms">No rooms available</div>
+                            ) : (
+                                rooms.filter(room => !selectedRooms.some(r => r.id === room.id)).map((room, index) => {
+                                    const hasMonsterData = getMonsterByRoom(room) !== undefined;
 
-                                return (
-                                    <motion.div
-                                        key={room.id}
-                                        className={`room-card card ${hasMonsterData ? 'has-monster-data' : 'no-monster-data'}`}
-                                        onClick={() => handleRoomSelect(room)}
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={gridInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
-                                        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                                        transition={{
-                                            duration: 0.3,
-                                            delay: gridInView ? index * 0.05 : 0,
-                                            ease: [0.25, 0.1, 0.25, 1]
-                                        }}
-                                        whileHover={{
-                                            y: -8,
-                                            scale: 1.02,
-                                            transition: { duration: 0.2 }
-                                        }}
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        <div className="room-image-container">
-                                            <motion.img
-                                                src={room.image}
-                                                alt={room.name}
-                                                className="room-image"
-                                                whileHover={{
-                                                    scale: 1.05,
-                                                    transition: { duration: 0.2 }
-                                                }}
-                                            />
-                                            {hasMonsterData && (
-                                                <div className="monster-data-indicator">
-                                                    <span>✓</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="room-info">
-                                            <h4 className="room-name">{room.name}</h4>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
+                                    return (
+                                        <motion.div
+                                            key={room.id}
+                                            className={`room-card card ${hasMonsterData ? 'has-monster-data' : 'no-monster-data'}`}
+                                            onClick={() => handleRoomSelect(room)}
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={gridInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
+                                            exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                                            transition={{
+                                                duration: 0.3,
+                                                delay: gridInView ? index * 0.05 : 0,
+                                                ease: [0.25, 0.1, 0.25, 1]
+                                            }}
+                                            whileHover={{
+                                                y: -8,
+                                                scale: 1.02,
+                                                transition: { duration: 0.2 }
+                                            }}
+                                            whileTap={{ scale: 0.98 }}
+                                        >
+                                            <div className="room-image-container">
+                                                <motion.img
+                                                    src={room.image}
+                                                    alt={room.name}
+                                                    className="room-image"
+                                                    whileHover={{
+                                                        scale: 1.05,
+                                                        transition: { duration: 0.2 }
+                                                    }}
+                                                />
+                                                {hasMonsterData && (
+                                                    <div className="monster-data-indicator">
+                                                        <span>✓</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="room-info">
+                                                <h4 className="room-name">{room.name}</h4>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })
+                            )}
                         </AnimatePresence>
                     </motion.div>
                 </motion.div>
