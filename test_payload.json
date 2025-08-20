@@ -367,7 +367,7 @@
         "skills": {
             "atk": 210,
             "def": 150,
-            "hp": 600,
+            "hp": 375,
             "magic": 1,
             "ranged": 1,
             "str": 210

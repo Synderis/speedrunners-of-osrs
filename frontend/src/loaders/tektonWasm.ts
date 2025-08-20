@@ -26,10 +26,11 @@ export interface HitDataPoint {
 }
 
 export interface CalculationSummary {
-  maxDPS: number;
-  avgDPS: number;
+  expectedHit: number;
+  expectedHits: number;
   accuracy: number;
-  timeToKill: number;
+  ticksTimeToKill: number;
+  secondsTimeToKill: number;
   maxHit: number;
   effectiveStrength: number;
   effectiveAttack: number;
@@ -78,10 +79,11 @@ export const calculateDPSWithObjectsTekton = async (player: any, monster: any, c
     
     // Calculate summary statistics
     const summary: CalculationSummary = {
-      maxDPS: calculation.max_hit * calculation.accuracy,
-      avgDPS: (calculation.max_hit / 2) * calculation.accuracy,
+      expectedHit: calculation.max_hit * calculation.accuracy,
+      expectedHits: parsedResult.expected_hits,
       accuracy: calculation.accuracy * 100,
-      timeToKill: tickData.findIndex(p => p.dps >= 0.95) + 1 || tickData.length,
+      ticksTimeToKill: parsedResult.expected_ticks,
+      secondsTimeToKill: parsedResult.expected_seconds,
       maxHit: calculation.max_hit,
       effectiveStrength: calculation.effective_strength,
       effectiveAttack: calculation.effective_attack,
@@ -138,10 +140,11 @@ export const calculateDPS = async (hp: number, maxHit: number, accuracy: number,
   
   // Simplified summary for legacy function (real calculations are in WASM)
   const summary: CalculationSummary = {
-    maxDPS: maxHit * accuracy,
-    avgDPS: (maxHit / 2) * accuracy,
+    expectedHit: (maxHit / 2) * accuracy,
+    expectedHits: 0,
     accuracy: accuracy * 100,
-    timeToKill: tickData.findIndex(p => p.dps >= 0.95) + 1 || tickData.length,
+    ticksTimeToKill: tickData.findIndex(p => p.dps >= 0.95) + 1 || tickData.length,
+    secondsTimeToKill: (tickData.findIndex(p => p.dps >= 0.95) + 1 || tickData.length) / 20,
     // These values are not available in legacy mode
     maxHit: maxHit,
     effectiveStrength: 0,

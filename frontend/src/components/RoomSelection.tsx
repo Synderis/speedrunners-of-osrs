@@ -9,13 +9,16 @@ interface SelectedRoomWithMonster extends Room {
 }
 
 interface RoomSelectionProps {
-    setSelectedMonsters: React.Dispatch<React.SetStateAction<Monster[]>>;
+    // setSelectedMonsters: React.Dispatch<React.SetStateAction<Monster[]>>;
+    selectedRooms: Room[];
+    setSelectedRooms: React.Dispatch<React.SetStateAction<Room[]>>;
 }
 
 const RoomSelection: React.FC<RoomSelectionProps> = ({
-    setSelectedMonsters
+    // setSelectedMonsters,
+    selectedRooms,
+    setSelectedRooms
 }) => {
-    const [selectedRooms, setSelectedRooms] = useState<SelectedRoomWithMonster[]>([]);
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
     const headerRef = useRef(null);
@@ -32,18 +35,24 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
         return cmMonsters.find(monster => monster.id.toString() === room.id);
     };
 
+    // Helper function to get all monsters for a room
+    const getMonstersByRoom = (room: Room): Monster[] => {
+        if (!room.monsters) return [];
+        return room.monsters
+            .map(monsterId => cmMonsters.find(m => m.id.toString() === monsterId))
+            .filter((m): m is Monster => m !== undefined);
+    };
+
     // Get all selected monsters for WASM input
     const getSelectedMonsters = (): Monster[] => {
-        return selectedRooms
-            .map(room => room.monster)
-            .filter((monster): monster is Monster => monster !== undefined);
+        return selectedRooms.flatMap(room => getMonstersByRoom(room));
     };
 
     // Update the parent state whenever selected rooms change
-    useEffect(() => {
-        const monsters = getSelectedMonsters();
-        setSelectedMonsters(monsters);
-    }, [selectedRooms, setSelectedMonsters]);
+    // useEffect(() => {
+    //     const monsters = getSelectedMonsters();
+    //     setSelectedMonsters(monsters);
+    // }, [selectedRooms, setSelectedMonsters]);
 
     const handleRoomSelect = (room: Room) => {
         setSelectedRooms(prev => {
@@ -154,7 +163,7 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                                             {selectedRooms.map((room) => (
                                                 <motion.div
                                                     key={room.id}
-                                                    className={`selected-room-item ${room.monster ? 'has-monster' : 'no-monster'}`}
+                                                    className={`selected-room-item ${room.id ? 'has-monster' : 'no-monster'}`}
                                                     {...slideInOut}
                                                     {...hoverEffects.cardHover}
                                                 >
@@ -165,10 +174,10 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                                                     />
                                                     <div className="selected-room-info">
                                                         <span className="selected-room-item-name">{room.name}</span>
-                                                        {room.monster && (
+                                                        {room.id && (
                                                             <div className="monster-stats-preview">
-                                                                <span className="monster-level">CB: {room.monster.level}</span>
-                                                                <span className="monster-hp">HP: {room.monster.skills.hp}</span>
+                                                                <span className="monster-level">CB: {room.id}</span>
+                                                                <span className="monster-hp">HP: {room.id}</span>
                                                             </div>
                                                         )}
                                                     </div>

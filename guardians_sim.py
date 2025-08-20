@@ -432,7 +432,7 @@ kill_times = kill_time_distribution_matrix(
 )
 
 # Calculate expected kill time in ticks and seconds
-expected_tick = sum((i + 1) * (kill_times[i] - (kill_times[i - 1] if i > 0 else 0)) for i in range(len(kill_times)))
+expected_tick = sum((i + 1) * (kill_times[i] - (kill_times[i - 1] if i > 0 else 0)) for i in range(len(kill_times))) + 28
 expected_seconds = expected_tick
 print(f"Expected TTK: {expected_tick:.2f} ticks ({expected_seconds:.2f} seconds)")
 

@@ -88,6 +88,7 @@ pub struct SelectedWeapon {
     pub name: String,
     #[serde(deserialize_with = "from_str_or_int")]
     pub id: u32,
+    pub speed: i32,
     #[serde(rename = "weapon_styles")]
     pub weapon_styles: Vec<WeaponStyle>,
 }
@@ -196,13 +197,29 @@ pub struct StyleResult {
 #[derive(Deserialize)]
 pub struct DPSPayload {
     pub player: Player,
-    pub monster: Monster,
+    pub monsters: Vec<Monster>,
     pub config: DPSConfig,
 }
 
 #[derive(Deserialize)]
 pub struct DPSConfig {
     pub cap: f64,
+}
+
+#[derive(Deserialize)]
+pub struct DPSRoomPayload {
+    pub player: Player,
+    pub room: Room,
+    pub config: DPSConfig,
+}
+
+#[derive(Deserialize)]
+pub struct Room {
+    pub id: String,
+    pub name: String,
+    pub image: Option<String>,
+    pub description: Option<String>,
+    pub monsters: Vec<Monster>,
 }
 
 // --- Custom deserializer for u32 that accepts string or int ---
@@ -417,25 +434,149 @@ fn distribution_of_hits_to_kill_internal(hp: usize, max_hit: usize, acc: f64, ca
     out
 }
 
-fn weapon_kill_times_internal(hp: usize, max_hit: usize, acc: f64, cap: f64) -> Vec<f64> {
+// fn weapon_kill_times_internal(hp: usize, max_hit: usize, acc: f64, cap: f64) -> Vec<f64> {
+//     let n = hp + 1;
+//     let weapon = single_matrix_internal(acc, max_hit, hp);
+//     let mut state = npc_state_internal(hp);
+
+//     let mut out = Vec::with_capacity(512);
+//     let mut p_dead = state[n - 1];
+//     let mut tick: usize = 0;
+
+//     while p_dead < cap {
+//         tick += 1;
+//         // Guardians: Only apply weapon hits (every 5 ticks, or whatever your attack interval is)
+//         if tick % 5 == 1 {
+//             state = row_vec_times_square_mat(&state, &weapon, n);
+//         }
+//         p_dead = state[n - 1];
+//         out.push(p_dead);
+//     }
+//     out
+// }
+
+// --- Markov Matrix Helpers (Python-style, updated) ---
+fn build_transition_matrix(hp: usize, max_hit: usize, accuracy: f64) -> Vec<Vec<f64>> {
     let n = hp + 1;
-    let weapon = single_matrix_internal(acc, max_hit, hp);
-    let mut state = npc_state_internal(hp);
-
-    let mut out = Vec::with_capacity(512);
-    let mut p_dead = state[n - 1];
-    let mut tick: usize = 0;
-
-    while p_dead < cap {
-        tick += 1;
-        // Guardians: Only apply weapon hits (every 5 ticks, or whatever your attack interval is)
-        if tick % 5 == 1 {
-            state = row_vec_times_square_mat(&state, &weapon, n);
+    let mut mat = vec![vec![0.0; n]; n];
+    for i in 0..n {
+        if i == 0 {
+            mat[i][i] = 1.0; // Absorbing state
+            continue;
         }
-        p_dead = state[n - 1];
-        out.push(p_dead);
+        // Probability of 0 damage: miss + hitting 0
+        let p_zero = (1.0 - accuracy) + accuracy / (max_hit as f64 + 1.0);
+        mat[i][i] += p_zero;
+        // Probability of k damage (1 <= k <= min(i, max_hit))
+        for dmg in 1..=usize::min(max_hit, i) {
+            let next_hp = i.saturating_sub(dmg);
+            mat[i][next_hp] += accuracy / (max_hit as f64 + 1.0);
+        }
+        // Overkill: if max_hit > i, add probability to state 0
+        if max_hit > i {
+            let overkill_prob = (max_hit - i) as f64 * (accuracy / (max_hit as f64 + 1.0));
+            mat[i][0] += overkill_prob;
+        }
     }
-    out
+    mat
+}
+
+fn propagate_state(state: &[f64], mat: &[Vec<f64>]) -> Vec<f64> {
+    let n = state.len();
+    let mut new_state = vec![0.0; n];
+    for i in 0..n {
+        for j in 0..n {
+            new_state[j] += state[i] * mat[i][j];
+        }
+    }
+    new_state
+}
+
+/// Returns (kill_times, attack_speed)
+// fn weapon_kill_times_markov(
+//     hp: usize,
+//     max_hit: usize,
+//     accuracy: f64,
+//     cap: f64,
+//     max_steps: usize,
+// ) -> (Vec<f64>, usize) {
+//     let n = hp + 1;
+//     let mat = build_transition_matrix(hp, max_hit, accuracy);
+//     let mut state = vec![0.0; n];
+//     state[hp] = 1.0; // Start at full HP (index = hp)
+//     let mut kill_times = Vec::new();
+//     let attack_speed = 5;
+//     let mut steps = 0;
+//     // Apply the first attack immediately (tick 0)
+//     state = propagate_state(&state, &mat);
+//     let mut p_dead = state[0];
+//     kill_times.push(p_dead);
+//     steps += 1;
+//     while p_dead < cap && steps < max_steps {
+//         state = propagate_state(&state, &mat);
+//         p_dead = state[0];
+//         kill_times.push(p_dead);
+//         steps += 1;
+//     }
+//     (kill_times, attack_speed)
+// }
+
+fn weapon_kill_times_markov_per_tick(
+    hp: usize,
+    max_hit: usize,
+    accuracy: f64,
+    cap: f64,
+    max_steps: usize,
+) -> (Vec<f64>, usize) {
+    let n = hp + 1;
+    let mat = build_transition_matrix(hp, max_hit, accuracy);
+    let mut state = vec![0.0; n];
+    state[hp] = 1.0; // Start at full HP (index = hp)
+    let mut kill_times = Vec::new();
+    let attack_speed = 5;
+    let mut steps = 0;
+    let mut p_dead = state[0];
+
+    while p_dead < cap && steps < max_steps {
+        // On attack tick (including the first tick), apply the attack matrix
+        if steps % attack_speed == 0 {
+            state = propagate_state(&state, &mat);
+        }
+        p_dead = state[0];
+        kill_times.push(p_dead);
+        steps += 1;
+    }
+    (kill_times, attack_speed)
+}
+
+fn weapon_kill_times_markov_per_tick_with_delay(
+    hp: usize,
+    max_hit: usize,
+    accuracy: f64,
+    cap: f64,
+    max_steps: usize,
+    attack_speed: usize,
+    start_tick: usize, // <-- number of ticks to wait before first attack
+) -> Vec<f64> {
+    let n = hp + 1;
+    let mat = build_transition_matrix(hp, max_hit, accuracy);
+    let mut state = vec![0.0; n];
+    state[hp] = 1.0; // Start at full HP (index = hp)
+    let mut kill_times = Vec::new();
+    let mut steps = 0;
+    let mut p_dead = state[0];
+
+    while p_dead < cap && steps < max_steps {
+        // Wait for start_tick ticks before first attack
+        if steps >= start_tick && ((steps - start_tick) % attack_speed == 0) {
+            state = propagate_state(&state, &mat);
+        }
+        // Before start_tick, just propagate with identity (no change)
+        p_dead = state[0];
+        kill_times.push(p_dead);
+        steps += 1;
+    }
+    kill_times
 }
 
 // --- WASM exports (same as tekton) ---
@@ -461,14 +602,96 @@ pub fn distribution_of_hits_to_kill(hp: usize, max_hit: usize, acc: f64, cap: f6
 
 #[wasm_bindgen]
 pub fn weapon_kill_times(hp: usize, max_hit: usize, acc: f64, cap: f64) -> Vec<f64> {
-    weapon_kill_times_internal(hp, max_hit, acc, cap)
+    // Now returns per-tick kill_times!
+    let (kill_times, _attack_speed) = weapon_kill_times_markov_per_tick(hp, max_hit, acc, cap, 1000);
+    kill_times
 }
+
+// #[wasm_bindgen]
+// pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
+//     console_log!("Received payload JSON: {}", payload_json);
+
+//     let payload: DPSPayload = match serde_json::from_str(payload_json) {
+//         Ok(p) => p,
+//         Err(e) => {
+//             console_log!("Failed to parse payload JSON: {}", e);
+//             return format!("{{\"error\": \"Failed to parse payload data: {}\"}}", e);
+//         }
+//     };
+
+//     let player = payload.player;
+//     let monster = payload.monster;
+//     let cap = payload.config.cap;
+//     let mining_level = player.combat_stats.mining as f64;
+
+//     let best_style = find_best_combat_style(&player, &monster, mining_level);
+
+//     let max_hit = best_style.max_hit as usize;
+//     let accuracy = best_style.accuracy;
+//     let hp = monster.skills.hp as usize;
+
+//     // Get attack speed from selected weapon or fallback
+//     let attack_speed = if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
+//         weapon.speed as usize
+//     } else {
+//         5 // fallback default
+//     };
+
+//     let walk_delay = 28;
+//     let skip_attacks = walk_delay / attack_speed;
+
+//     let kill_times_per_tick = weapon_kill_times_markov_per_tick_with_delay(
+//         hp, max_hit, accuracy, cap, 1000, attack_speed, walk_delay
+//     );
+
+//     let kill_times: Vec<f64> = kill_times_per_tick
+//         .iter()
+//         .enumerate()
+//         .filter_map(|(i, &v)| if (i + 1) % attack_speed == 0 { Some(v) } else { None })
+//         .collect();
+
+//     // Calculate expected hits, skipping the walk delay attacks
+//     let mut expected_hits = 0.0;
+//     for (i, &p) in kill_times.iter().enumerate().skip(skip_attacks) {
+//         let dp = if i == 0 { p } else { p - kill_times[i - 1] };
+//         expected_hits += ((i - skip_attacks) as f64 + 1.0) * dp;
+//     }
+
+//     let expected_tick = walk_delay as f64 + expected_hits * attack_speed as f64;
+//     let expected_seconds = expected_tick * 0.6;
+
+//     let result = CalculationResult {
+//         max_hit: best_style.max_hit,
+//         accuracy: best_style.accuracy,
+//         effective_strength: best_style.effective_strength,
+//         effective_attack: best_style.effective_attack,
+//         max_attack_roll: best_style.max_attack_roll,
+//         max_defence_roll: best_style.max_defence_roll,
+//     };
+
+//     let response = serde_json::json!({
+//         "calculation": result,
+//         "best_style": {
+//             "combat_style": best_style.combat_style,
+//             "attack_type": best_style.attack_type,
+//             "effective_dps": best_style.effective_dps,
+//             "gear_type": "melee"
+//         },
+//         "kill_times": kill_times,
+//         // These fields are safe to add and will not break TS:
+//         "expected_hits": expected_hits,
+//         "expected_ticks": expected_tick,
+//         "expected_seconds": expected_seconds
+//     });
+
+//     response.to_string()
+// }
 
 #[wasm_bindgen]
 pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
     console_log!("Received payload JSON: {}", payload_json);
 
-    let payload: DPSPayload = match serde_json::from_str(payload_json) {
+    let payload: DPSRoomPayload = match serde_json::from_str(payload_json) {
         Ok(p) => p,
         Err(e) => {
             console_log!("Failed to parse payload JSON: {}", e);
@@ -477,41 +700,108 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
     };
 
     let player = payload.player;
-    let monster = payload.monster;
+    let monsters = payload.room.monsters;
     let cap = payload.config.cap;
     let mining_level = player.combat_stats.mining as f64;
 
-    console_log!("Extracted player combat stats - Attack: {}, Strength: {}, Mining: {}", 
-        player.combat_stats.attack, player.combat_stats.strength, player.combat_stats.mining);
-    console_log!("Extracted monster - Name: {}, HP: {}, CB: {:?}", 
-        monster.name, monster.skills.hp, monster.level);
-    console_log!("Config - Cap: {}", cap);
+    let walk_delay = 28;
+    let mut total_expected_hits = 0.0;
+    let mut total_expected_ticks = 0.0;
+    let mut total_expected_seconds = 0.0;
+    let mut first = true;
+    let mut results = Vec::new();
 
-    let best_style = find_best_combat_style(&player, &monster, mining_level);
+    // For cumulative kill times
+    let mut encounter_kill_times: Vec<f64> = Vec::new();
 
-    console_log!("Using best melee style - Max Hit: {}, Accuracy: {:.2}%", best_style.max_hit, best_style.accuracy * 100.0);
+    for monster in monsters {
+        let best_style = find_best_combat_style(&player, &monster, mining_level);
 
-    let kill_times = weapon_kill_times_internal(monster.skills.hp as usize, best_style.max_hit as usize, best_style.accuracy, cap);
+        let max_hit = best_style.max_hit as usize;
+        let accuracy = best_style.accuracy;
+        let hp = monster.skills.hp as usize;
 
-    let result = CalculationResult {
-        max_hit: best_style.max_hit,
-        accuracy: best_style.accuracy,
-        effective_strength: best_style.effective_strength,
-        effective_attack: best_style.effective_attack,
-        max_attack_roll: best_style.max_attack_roll,
-        max_defence_roll: best_style.max_defence_roll,
-    };
+        let attack_speed = if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
+            weapon.speed as usize
+        } else {
+            5
+        };
 
-    let response = serde_json::json!({
-        "calculation": result,
-        "best_style": {
-            "combat_style": best_style.combat_style,
-            "attack_type": best_style.attack_type,
-            "effective_dps": best_style.effective_dps,
-            "gear_type": "melee"
-        },
-        "kill_times": kill_times
-    });
+        let walk = if first { walk_delay } else { 0 };
+        let skip_attacks = walk / attack_speed;
 
-    response.to_string()
+        let kill_times_per_tick = weapon_kill_times_markov_per_tick_with_delay(
+            hp, max_hit, accuracy, cap, 1000, attack_speed, walk
+        );
+
+        let kill_times: Vec<f64> = kill_times_per_tick
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &v)| if (i + 1) % attack_speed == 0 { Some(v) } else { None })
+            .collect();
+
+        let mut expected_hits = 0.0;
+        for (i, &p) in kill_times.iter().enumerate().skip(skip_attacks) {
+            let dp = if i == 0 { p } else { p - kill_times[i - 1] };
+            expected_hits += ((i - skip_attacks) as f64 + 1.0) * dp;
+        }
+
+        let expected_tick = walk as f64 + expected_hits * attack_speed as f64;
+        let expected_seconds = expected_tick * 0.6;
+
+        total_expected_hits += expected_hits;
+        total_expected_ticks += expected_tick;
+        total_expected_seconds += expected_seconds;
+
+        // --- Cumulative kill times for the encounter ---
+        if first {
+            encounter_kill_times = kill_times.clone();
+        } else {
+            // Convert both to PMF
+            let mut pmf1 = vec![0.0; encounter_kill_times.len()];
+            let mut pmf2 = vec![0.0; kill_times.len()];
+            for i in 0..encounter_kill_times.len() {
+                pmf1[i] = if i == 0 { encounter_kill_times[0] } else { encounter_kill_times[i] - encounter_kill_times[i - 1] };
+            }
+            for i in 0..kill_times.len() {
+                pmf2[i] = if i == 0 { kill_times[0] } else { kill_times[i] - kill_times[i - 1] };
+            }
+            // Convolve PMFs
+            let mut new_pmf = vec![0.0; pmf1.len() + pmf2.len() - 1];
+            for i in 0..pmf1.len() {
+                for j in 0..pmf2.len() {
+                    new_pmf[i + j] += pmf1[i] * pmf2[j];
+                }
+            }
+            // Convert back to CDF
+            let mut new_cdf = vec![0.0; new_pmf.len()];
+            let mut sum = 0.0;
+            for (i, &v) in new_pmf.iter().enumerate() {
+                sum += v;
+                new_cdf[i] = sum;
+            }
+            encounter_kill_times = new_cdf;
+        }
+        // ---
+
+        let result = serde_json::json!({
+            "monster_id": monster.id,
+            "monster_name": monster.name,
+            "expected_hits": expected_hits,
+            "expected_ticks": expected_tick,
+            "expected_seconds": expected_seconds,
+            "kill_times": kill_times,
+        });
+        results.push(result);
+
+        first = false;
+    }
+
+    serde_json::json!({
+        "results": results,
+        "total_hits": total_expected_hits,
+        "total_expected_ticks": total_expected_ticks,
+        "total_expected_seconds": total_expected_seconds,
+        "encounter_kill_times": encounter_kill_times
+    }).to_string()
 }

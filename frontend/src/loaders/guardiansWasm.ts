@@ -26,10 +26,11 @@ export interface HitDataPoint {
 }
 
 export interface CalculationSummary {
-    maxDPS: number;
-    avgDPS: number;
+    expectedHit: number;
+    expectedHits: number;
     accuracy: number;
-    timeToKill: number;
+    ticksTimeToKill: number;
+    secondsTimeToKill: number;
     maxHit: number;
     effectiveStrength: number;
     effectiveAttack: number;
@@ -38,13 +39,12 @@ export interface CalculationSummary {
 }
 
 // New function that accepts a single payload object
-export const calculateDPSWithObjectsGuardians = async (player: any, monster: any, cap: number = 0.99) => {
+export const calculateDPSWithObjectsGuardians = async (player: any, room: any, cap: number = 0.99) => {
     await initWasm();
 
-    // Package everything into a single payload object
     const payload = {
         player,
-        monster,
+        room,
         config: {
             cap
         }
@@ -56,7 +56,7 @@ export const calculateDPSWithObjectsGuardians = async (player: any, monster: any
         console.log('✅ Using calculate_dps_with_objects function');
 
         const result = calculate_dps_with_objects_guardians(
-            JSON.stringify(payload)  // Pass single JSON string
+            JSON.stringify(payload)
         );
 
         console.log('WASM result:', result);
@@ -67,31 +67,41 @@ export const calculateDPSWithObjectsGuardians = async (player: any, monster: any
             throw new Error(parsedResult.error);
         }
 
-        const { calculation, kill_times } = parsedResult;
-
-        // Convert kill times to plot data
-        const tickData: PlotDataPoint[] = kill_times.map((prob: number, tick: number) => ({
-            time: tick + 1,
-            dps: prob,
-            accuracy: calculation.accuracy * 100
+        // Use encounter_kill_times for the overall plot
+        const encounterKillTimes = parsedResult.encounter_kill_times || [];
+        const tickData: PlotDataPoint[] = encounterKillTimes.map((prob: number, idx: number) => ({
+            time: idx * 5, // ticks are 1-based
+            dps: prob,     // This is actually cumulative probability
+            accuracy: 0    // Not meaningful for the encounter as a whole
         }));
 
-        // Calculate summary statistics
+        // Optionally, you can also expose per-monster kill_times if you want
+        // const perMonsterTickData = parsedResult.results.map((res: any) =>
+        //     res.kill_times.map((prob: number, idx: number) => ({
+        //         time: idx + 1,
+        //         dps: prob,
+        //         accuracy: 0
+        //     }))
+        // );
+
+        // Calculate summary statistics for the whole encounter
         const summary: CalculationSummary = {
-            maxDPS: calculation.max_hit * calculation.accuracy,
-            avgDPS: (calculation.max_hit / 2) * calculation.accuracy,
-            accuracy: calculation.accuracy * 100,
-            timeToKill: tickData.findIndex(p => p.dps >= 0.95) + 1 || tickData.length,
-            maxHit: calculation.max_hit,
-            effectiveStrength: calculation.effective_strength,
-            effectiveAttack: calculation.effective_attack,
-            maxAttackRoll: calculation.max_attack_roll,
-            maxDefenceRoll: calculation.max_defence_roll,
+            expectedHit: 0, // Not meaningful for the whole encounter
+            expectedHits: parsedResult.total_hits,
+            accuracy: 0, // Not meaningful for the whole encounter
+            ticksTimeToKill: parsedResult.total_expected_ticks,
+            secondsTimeToKill: parsedResult.total_expected_seconds,
+            maxHit: 0,
+            effectiveStrength: 0,
+            effectiveAttack: 0,
+            maxAttackRoll: 0,
+            maxDefenceRoll: 0,
         };
 
         return {
             tickData,
-            summary
+            summary,
+            perMonster: parsedResult.results // Expose per-monster results if needed
         };
     } catch (error) {
         console.error('WASM calculation error, falling back to legacy calculation:', error);
@@ -101,7 +111,7 @@ export const calculateDPSWithObjectsGuardians = async (player: any, monster: any
         const maxHit = 50; // Estimate
         const accuracy = 0.8; // Estimate
 
-        return calculateDPS(monster.hitpoints || 450, maxHit, accuracy, cap);
+        return calculateDPS(maxHit, maxHit, accuracy, cap);
     }
 };
 
@@ -138,10 +148,11 @@ export const calculateDPS = async (hp: number, maxHit: number, accuracy: number,
 
     // Simplified summary for legacy function (real calculations are in WASM)
     const summary: CalculationSummary = {
-        maxDPS: maxHit * accuracy,
-        avgDPS: (maxHit / 2) * accuracy,
+        expectedHit: (maxHit / 2) * accuracy,
+        expectedHits: (maxHit / 2) * accuracy,
         accuracy: accuracy * 100,
-        timeToKill: tickData.findIndex(p => p.dps >= 0.95) + 1 || tickData.length,
+        ticksTimeToKill: tickData.find(p => p.dps >= 0.95)?.time ?? (tickData.length * 5),
+        secondsTimeToKill: tickData.find(p => p.dps >= 0.95)?.time ?? (tickData.length * 5) / 20,
         // These values are not available in legacy mode
         maxHit: maxHit,
         effectiveStrength: 0,

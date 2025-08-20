@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { fadeInOut } from '../utils/animations';
 import type { PlotDataPoint } from '../types/loaders';
-import type { Monster } from '../data/monsterStats';
+import type { Monster, Room } from '../data/monsterStats';
 import { miscIcons } from '../data/constants';
 import { calculateDPSWithObjectsTekton } from '../loaders/tektonWasm';
 import { calculateDPSWithObjectsVasa } from '../loaders/vasaWasm';
@@ -12,6 +12,7 @@ import type { GearSets, CombatStats, Equipment, InventoryItem } from '../types/p
 import './PlotSection.css';
 import { getCombatStylesForCategory } from '../services/weaponStylesService';
 import { calculateDPSWithObjectsGuardians } from '../loaders/guardiansWasm';
+import { cmMonsters } from '../data/monsterStats';
 
 const defaultIcon = '/gear/default.webp'; // You can change this later
 
@@ -66,15 +67,15 @@ const DEFAULT_GEAR_STATS = {
 interface PlotSectionProps {
   gearSets?: GearSets;
   combatStats?: CombatStats;
-  selectedMonsters?: Monster[];
+  selectedRooms?: Room[];
   selectedInventoryItems?: InventoryItem[];
 }
 
 type Stats = {
-  maxDPS: number;
-  avgDPS: number;
-  accuracy: number;
-  timeToKill: number;
+  total_hits: number;
+  // expectedHits: number;
+  // accuracy: number;
+  total_expected_ticks: number;
 };
 
 // --- Helper Functions ---
@@ -110,10 +111,16 @@ const calculateGearStatsForSet = (
   }
   return totalStats;
 };
+const getMonstersByRoom = (room: Room): Monster[] => {
+  if (!room.monsters) return [];
+  return room.monsters
+    .map(monsterId => cmMonsters.find(m => m.id.toString() === monsterId))
+    .filter((m): m is Monster => m !== undefined);
+};
 const wasmModelLoaders: Record<string, (player: any, monster: any) => Promise<any>> = {
-  7545: calculateDPSWithObjectsTekton,
-  7566: calculateDPSWithObjectsVasa,
-  7570: calculateDPSWithObjectsGuardians
+  'tekton': calculateDPSWithObjectsTekton,
+  'vasa': calculateDPSWithObjectsVasa,
+  'guardians': calculateDPSWithObjectsGuardians
 };
 
 // --- Main Component ---
@@ -135,7 +142,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
     mining: 99,
     thieving: 99
   },
-  selectedMonsters = [],
+  selectedRooms = [],
   selectedInventoryItems = []
 }) => {
   // --- Theme & Chart Colors ---
@@ -153,7 +160,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [activeTab, setActiveTab] = useState<string>(
-    selectedMonsters.length > 0 ? String(selectedMonsters[0].id) : ''
+    selectedRooms.length > 0 ? selectedRooms[0].id : ''
   );
   const [allGearStats, setAllGearStats] = useState(() =>
     GEAR_TYPES.reduce((acc, type) => {
@@ -163,6 +170,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   );
   const [plotDataDict, setPlotDataDict] = useState<Record<string, PlotDataPoint[]>>({});
   const [statsDict, setStatsDict] = useState<Record<string, Stats>>({});
+  const [showSeconds, setShowSeconds] = useState(false);
 
   // --- Refs ---
   const titleRef = useRef(null);
@@ -184,12 +192,12 @@ const PlotSection: React.FC<PlotSectionProps> = ({
 
   useEffect(() => {
     if (
-      selectedMonsters.length > 0 &&
-      !selectedMonsters.some(m => String(m.id) === activeTab)
+      selectedRooms.length > 0 &&
+      !selectedRooms.some(r => r.id === activeTab)
     ) {
-      setActiveTab(String(selectedMonsters[0].id));
+      setActiveTab(selectedRooms[0].id);
     }
-  }, [selectedMonsters]);
+  }, [selectedRooms]);
 
   function isNonEmptyGearStats(stats: typeof DEFAULT_GEAR_STATS) {
     return Object.values(stats).some(group =>
@@ -208,15 +216,21 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   }, [gearSets]);
 
   // --- Current Monster ---
-  const currentMonster = selectedMonsters.find(m => String(m.id) === activeTab);
+  const activeRoom = selectedRooms.find(r => r.id === activeTab);
+  const monstersInRoom = activeRoom ? getMonstersByRoom(activeRoom) : [];
+  const currentMonster = monstersInRoom.length > 0 ? monstersInRoom[0] : null;
   const plotData = plotDataDict[activeTab] || [];
   const defaultStats: Stats = {
-    maxDPS: 0,
-    avgDPS: 0,
-    accuracy: 0,
-    timeToKill: 0
+    total_hits: 0,
+    // total_expected_hits: 0,
+    total_expected_ticks: 0,
   };
   const activeStats = statsDict[activeTab] || defaultStats;
+
+  // --- Transform plotData for seconds/ticks ---
+  const plotDataToShow = showSeconds
+    ? plotData.map(d => ({ ...d, time: d.time * 0.6 }))
+    : plotData;
 
   const gearConfigSections = GEAR_TYPES
     .filter(type => isNonEmptyGearStats(allGearStats[type]))
@@ -286,7 +300,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   const loadData = async () => {
     setIsLoading(true);
     try {
-      if (!selectedMonsters.length) {
+      if (!selectedRooms.length) {
         setIsLoading(false);
         return;
       }
@@ -302,14 +316,9 @@ const PlotSection: React.FC<PlotSectionProps> = ({
       const allWeapons: Record<typeof GEAR_TYPES[number], any> = GEAR_TYPES.reduce((acc, type) => {
         const weaponSlot = gearSets[type].find(slot => slot.slot === 'Weapon');
         const selectedWeapon = weaponSlot?.selected;
-        console.log('Selected Weapon:', selectedWeapon);
-        console.log('Weapon Styles:', getCombatStylesForCategory(selectedWeapon!.category));
         acc[type] = selectedWeapon
           ? {
-            name: selectedWeapon.name,
-            id: selectedWeapon.id,
-            // Use category and getCombatStylesForCategory
-            
+            ...selectedWeapon,
             weapon_styles: selectedWeapon.category
               ? getCombatStylesForCategory(selectedWeapon.category)
               : []
@@ -336,22 +345,22 @@ const PlotSection: React.FC<PlotSectionProps> = ({
       const plotDataUpdates: Record<string, PlotDataPoint[]> = {};
       const statsUpdates: Record<string, Stats> = {};
 
-      for (const monster of selectedMonsters) {
-        const monsterData = { ...monster };
-        const model = monster?.id || 'tekton';
-        const loader = wasmModelLoaders[model];
+      for (const room of selectedRooms) {
+        const model = room.id || 'tekton';
+        const loader = wasmModelLoaders[model] || wasmModelLoaders['tekton'];
         if (!loader) {
           console.error(`No WASM loader for model: ${model}`);
           continue;
         }
-        const result = await loader(playerData, monsterData);
-        const key = String(monster.id || 'default');
+        // Get the full monster objects for this room
+        const monsters = getMonstersByRoom(room);
+        // Pass the array of monster objects as the "monsters" property
+        const result = await loader(playerData, { ...room, monsters });
+        const key = String(room.id || 'default');
         plotDataUpdates[key] = result.tickData;
         statsUpdates[key] = {
-          maxDPS: result.summary.maxDPS,
-          avgDPS: result.summary.avgDPS,
-          accuracy: result.summary.accuracy,
-          timeToKill: result.summary.timeToKill
+          total_hits: result.summary.expectedHits,
+          total_expected_ticks: result.summary.ticksTimeToKill
         };
       }
 
@@ -367,8 +376,13 @@ const PlotSection: React.FC<PlotSectionProps> = ({
 
   // --- Debug & Controls ---
   const handleRecalculate = () => {
-    console.log('Manual recalculation triggered');
     loadData();
+  };
+
+  const formatSeconds = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -399,13 +413,13 @@ const PlotSection: React.FC<PlotSectionProps> = ({
             transition={{ duration: 0.5 }}
           >
             <div className="plot-tabs">
-              {selectedMonsters.map(monster => (
+              {selectedRooms.map(room => (
                 <button
-                  key={monster.id}
-                  className={`plot-tab${activeTab === String(monster.id) ? ' active' : ''}`}
-                  onClick={() => setActiveTab(String(monster.id))}
+                  key={room.id}
+                  className={`plot-tab${activeTab === room.id ? ' active' : ''}`}
+                  onClick={() => setActiveTab(room.id)}
                 >
-                  {monster.name}
+                  {room.name}
                 </button>
               ))}
             </div>
@@ -450,10 +464,18 @@ const PlotSection: React.FC<PlotSectionProps> = ({
             transition={{ duration: 0.6 }}
           >
             {[
-              { title: 'Max DPS', value: activeStats.maxDPS > 0 ? activeStats.maxDPS.toFixed(1) : '--', unit: 'damage/sec' },
-              { title: 'Average DPS', value: activeStats.avgDPS > 0 ? activeStats.avgDPS.toFixed(1) : '--', unit: 'damage/sec' },
-              { title: 'Accuracy', value: activeStats.accuracy > 0 ? `${activeStats.accuracy.toFixed(1)}%` : '--', unit: 'hit rate' },
-              { title: 'Time to Kill', value: activeStats.timeToKill > 0 ? `${activeStats.timeToKill}` : '--', unit: 'ticks' }
+              { title: 'Total Hit Value', value: activeStats.total_hits > 0 ? activeStats.total_hits.toFixed(1) : '--' },
+              // { title: 'Total Hit Count', value: activeStats.total_expected_ticks > 0 ? activeStats.total_expected_ticks.toFixed(1) : '--' },
+              // { title: 'Accuracy', value: activeStats.accuracy > 0 ? `${activeStats.accuracy.toFixed(1)}%` : '--', unit: 'hit rate' },
+              { 
+                title: 'Time to Kill', 
+                value: activeStats.total_expected_ticks > 0
+                  ? (showSeconds
+                      ? formatSeconds(activeStats.total_expected_ticks * 0.6)
+                      : activeStats.total_expected_ticks.toFixed(1))
+                  : '--',
+                unit: showSeconds ? 'min:sec' : 'ticks' 
+              },
             ].map((stat, index) => (
               <motion.div
                 key={stat.title}
@@ -498,7 +520,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
             animate={chartInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            {/* Chart type buttons above the chart */}
+            {/* Chart type and unit toggle buttons above the chart */}
             <div className="chart-controls">
               <motion.button
                 className="btn"
@@ -508,6 +530,15 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                 whileTap={{ scale: 0.95 }}
               >
                 {isLoading ? 'Calculating...' : 'Calculate'}
+              </motion.button>
+              <motion.button
+                className="btn"
+                onClick={() => setShowSeconds(s => !s)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                style={{ marginLeft: 8 }}
+              >
+                Show in {showSeconds ? 'Ticks' : 'Seconds'}
               </motion.button>
               {['line', 'bar'].map((type) => (
                 <motion.button
@@ -539,7 +570,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                   />
                   <p>Calculating DPS...</p>
                 </motion.div>
-              ) : plotData.length > 0 ? (
+              ) : plotDataToShow.length > 0 ? (
                 <motion.div
                   className="chart-wrapper"
                   initial={{ opacity: 0, y: 20 }}
@@ -549,7 +580,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                 >
                   <ResponsiveContainer width="100%" height={400}>
                     {chartType === 'line' ? (
-                      <LineChart data={plotData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                      <LineChart data={plotDataToShow} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                         <XAxis
                           dataKey="time"
@@ -557,8 +588,14 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                           fontSize={12}
                           type="number"
                           domain={['dataMin', 'dataMax']}
-                          tickCount={plotData.length}
-                          label={{ value: 'Tick', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: chartColors.text } }}
+                          tickCount={plotDataToShow.length}
+                          label={{
+                            value: showSeconds ? 'Time (min:sec)' : 'Tick',
+                            position: 'insideBottom',
+                            offset: -10,
+                            style: { textAnchor: 'middle', fill: chartColors.text }
+                          }}
+                          tickFormatter={showSeconds ? formatSeconds : undefined}
                         />
                         <YAxis
                           stroke={chartColors.text}
@@ -572,6 +609,13 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                             borderRadius: '8px',
                             color: chartColors.text
                           }}
+                          formatter={(value, name) => [
+                            value,
+                            name === "P(Dead)" ? "P(Dead)" : name
+                          ]}
+                          labelFormatter={label =>
+                            showSeconds ? formatSeconds(label as number) : `Tick ${label}`
+                          }
                         />
                         <Legend />
                         <Line
@@ -585,12 +629,13 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                         />
                       </LineChart>
                     ) : (
-                      <BarChart data={plotData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                      <BarChart data={plotDataToShow} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                         <XAxis
                           dataKey="time"
                           stroke={chartColors.text}
                           fontSize={12}
+                          label={{ value: showSeconds ? 'Seconds' : 'Tick', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: chartColors.text } }}
                         />
                         <YAxis
                           stroke={chartColors.text}
@@ -625,36 +670,11 @@ const PlotSection: React.FC<PlotSectionProps> = ({
               )}
             </AnimatePresence>
           </motion.div>
-
-          {/* Controls */}
-          {/* <motion.div
-            ref={controlsRef}
-            className="plot-controls card"
-            initial={{ opacity: 0, y: 30 }}
-            animate={controlsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <h3>Analysis Controls</h3>
-            <p>Click recalculate to run WASM analysis with your current configuration.</p>
-            <div className="control-buttons">
-              <button
-                className="btn"
-                onClick={handleRecalculate}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Calculating...' : 'Recalculate'}
-              </button>
-              <button className="btn debug-btn" onClick={handleDebugLog}>
-                Debug WASM Input
-              </button>
-            </div>
-          </motion.div> */}
         </div>
       </div>
     </motion.section>
   );
 };
 
-
-
 export default PlotSection;
+

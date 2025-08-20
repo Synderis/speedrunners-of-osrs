@@ -95,6 +95,7 @@ pub struct SelectedWeapon {
     pub name: String,
     #[serde(deserialize_with = "from_str_or_int")]
     pub id: u32,
+    pub speed: i32,
     #[serde(rename = "weapon_styles")]
     pub weapon_styles: Vec<WeaponStyle>,
 }
@@ -251,6 +252,7 @@ pub struct StyleResult {
     pub effective_attack: u32,
     pub max_attack_roll: u64,
     pub max_defence_roll: u64,
+    pub att_spd_reduction: i32, // <-- Add this line
 }
 
 fn find_best_combat_style(player: &Player, monster: &Monster) -> StyleResult {
@@ -274,6 +276,7 @@ fn find_best_combat_style(player: &Player, monster: &Monster) -> StyleResult {
                 effective_attack,
                 max_attack_roll,
                 max_defence_roll,
+                att_spd_reduction: style.att_spd_reduction, // <-- Add this line
             };
             if effective_dps > best_dps {
                 best_dps = effective_dps;
@@ -311,6 +314,7 @@ fn find_best_combat_style(player: &Player, monster: &Monster) -> StyleResult {
             effective_attack,
             max_attack_roll,
             max_defence_roll,
+            att_spd_reduction: 0, // fallback
         });
     }
     let result = best_style.unwrap();
@@ -359,8 +363,32 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     console_log!("Using best melee style - Max Hit: {}, Accuracy: {:.2}%", best_style.max_hit, best_style.accuracy * 100.0);
     
     // Generate kill time distribution using the best style
-    let kill_times = weapon_and_thrall_kill_times_internal(monster.skills.hp as usize, best_style.max_hit as usize, best_style.accuracy, cap);
+    let kill_times = weapon_and_thrall_kill_times_internal(
+        monster.skills.hp as usize,
+        best_style.max_hit as usize,
+        best_style.accuracy,
+        cap,
+    );
     
+    // Calculate attack speed from selected weapon and best style
+    let base_speed = if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
+        weapon.speed as f64
+    } else {
+        5.0 // fallback default
+    };
+    let att_spd_reduction = best_style.att_spd_reduction as f64;
+    let attack_speed = base_speed - att_spd_reduction;
+
+    // Calculate expected hits, ticks, and seconds
+    let mut expected_hits = 0.0;
+    for (i, &p) in kill_times.iter().enumerate() {
+        let dp = if i == 0 { p } else { p - kill_times[i - 1] };
+        expected_hits += (i as f64 + 1.0) * dp;
+    }
+    expected_hits = expected_hits / attack_speed;
+    let expected_tick = expected_hits * attack_speed;
+    let expected_seconds = expected_tick * 0.6;
+
     let result = CalculationResult {
         max_hit: best_style.max_hit,
         accuracy: best_style.accuracy,
@@ -378,7 +406,10 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             "effective_dps": best_style.effective_dps,
             "gear_type": "melee"
         },
-        "kill_times": kill_times
+        "kill_times": kill_times,
+        "expected_hits": expected_hits,
+        "expected_ticks": expected_tick,
+        "expected_seconds": expected_seconds
     });
     
     response.to_string()

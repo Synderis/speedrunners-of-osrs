@@ -7,7 +7,7 @@ import PlotSection from './components/PlotSection';
 import FloatingBackground from './components/FloatingBackground';
 import { ThemeProvider } from './context/ThemeContext';
 // import { fetchMonstersFromWiki } from './services/monsterServiceTemp';
-import type { Monster } from './data/monsterStats';
+import type { Room } from './data/monsterStats'; // <-- Add Room here
 import { fetchEquipmentFromWiki, fetchImageMapFromSupabase } from './services/gearServiceTemp';
 import type { GearSets, CombatStats, Equipment, InventoryItem } from './types/player';
 import './App.css';
@@ -37,8 +37,8 @@ function App() {
     mining: 99,
     thieving: 99
   });
-  const [selectedMonsters, setSelectedMonsters] = useState<Monster[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [selectedRooms, setSelectedRooms] = useState<Room[]>([]);
 
   useEffect(() => {
     // Prevent browser from restoring scroll position
@@ -132,11 +132,14 @@ function App() {
           />
           {!isGearLoading && (
             <>
-              <RoomSelection setSelectedMonsters={setSelectedMonsters} />
+              <RoomSelection
+                selectedRooms={selectedRooms}
+                setSelectedRooms={setSelectedRooms}
+              />
               <PlotSection
                 gearSets={gearSets}
                 combatStats={combatStats}
-                selectedMonsters={selectedMonsters}
+                selectedRooms={selectedRooms}
                 selectedInventoryItems={selectedInventoryItems}
               />
             </>
