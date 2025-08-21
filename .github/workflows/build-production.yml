@@ -43,12 +43,12 @@ jobs:
         run: npm run build
         working-directory: ./frontend
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_BUCKET: ${{ secrets.VITE_SUPABASE_BUCKET }}
-          VITE_SUPABASE_PROJECT_REF: ${{ secrets.VITE_SUPABASE_PROJECT_REF }}
-          VITE_SUPABASE_REGION: ${{ secrets.VITE_SUPABASE_REGION }}
-          VITE_SUPABASE_ACCESS_KEY_ID: ${{ secrets.VITE_SUPABASE_ACCESS_KEY_ID }}
-          VITE_SUPABASE_SECRET_ACCESS_KEY: ${{ secrets.VITE_SUPABASE_SECRET_ACCESS_KEY }}
+          VITE_SUPABASE_URL: ${{ github.secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_BUCKET: ${{ github.secrets.VITE_SUPABASE_BUCKET }}
+          VITE_SUPABASE_PROJECT_REF: ${{ github.secrets.VITE_SUPABASE_PROJECT_REF }}
+          VITE_SUPABASE_REGION: ${{ github.secrets.VITE_SUPABASE_REGION }}
+          VITE_SUPABASE_ACCESS_KEY_ID: ${{ github.secrets.VITE_SUPABASE_ACCESS_KEY_ID }}
+          VITE_SUPABASE_SECRET_ACCESS_KEY: ${{ github.secrets.VITE_SUPABASE_SECRET_ACCESS_KEY }}
       - name: List directory
         run: ls -al
 
@@ -60,7 +60,7 @@ jobs:
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-token: ${{ github.secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ github.secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ github.secrets.VERCEL_PROJECT_ID }}
           prod: true
