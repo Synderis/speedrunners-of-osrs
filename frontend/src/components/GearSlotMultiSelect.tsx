@@ -3,7 +3,7 @@ import './GearSlotMultiSelect.css';
 import Select from 'react-select';
 import { FixedSizeList as List } from 'react-window';
 import type { MultiValue, ActionMeta } from 'react-select';
-import type { Equipment, GearSets, GearSetType } from '../types/equipment';
+import type { Equipment, GearSets, GearSetType } from '../types/player';
 
 interface GearSlotMultiSelectProps {
     gearType: GearSetType;
@@ -14,7 +14,7 @@ interface GearSlotMultiSelectProps {
 // Virtualized MenuList for react-select
 const MenuList = (props: any) => {
     const { children, maxHeight } = props;
-    const height = 40; // px per option
+    const height = 24; // px per option
     const itemCount = children.length;
     const listHeight = Math.min(maxHeight, itemCount * height);
     return (

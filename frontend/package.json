@@ -10,7 +10,7 @@
     "build:wasm:vasa": "cd wasm-lib/vasa && wasm-pack build --target web --out-dir ../../src/wasm/vasa --out-name vasa_wasm",
     "build:wasm:guardians": "cd wasm-lib/guardians && wasm-pack build --target web --out-dir ../../src/wasm/guardians --out-name guardians_wasm",
     "build:wasm:all": "npm run build:wasm:tekton && npm run build:wasm:vasa && npm run build:wasm:guardians",
-    "build:wasm:current": "npm run build:wasm:tekton && npm run build:wasm:vasa",
+    "build:wasm:current": "npm run build:wasm:tekton && npm run build:wasm:vasa && npm run build:wasm:guardians",
     "prebuild": "npm run build:wasm:current",
     "predev": "npm run build:wasm:current",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

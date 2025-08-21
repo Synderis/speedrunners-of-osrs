@@ -20,7 +20,7 @@ export function resolveBaseItemId(itemId: string | number): string | number {
     const idStr = String(itemId);
     return equipmentAliasReverseMap[idStr] || idStr;
 }
-import type { Equipment } from '../types/equipment';
+import type { Equipment } from '../types/player';
 const WIKI_BASE = 'https://oldschool.runescape.wiki';
 const API_BASE = `${WIKI_BASE}/api.php`;
 
@@ -155,7 +155,7 @@ async function fetchEquipmentFromWiki(): Promise<Equipment[]> {
 
         const equipmentItem: Equipment = {
             name,
-            id: resolveBaseItemId(item_id),
+            id: Number(resolveBaseItemId(item_id)),
             version,
             slot,
             image: po['Image']?.[0]?.fulltext?.replace('File:', '') || '',

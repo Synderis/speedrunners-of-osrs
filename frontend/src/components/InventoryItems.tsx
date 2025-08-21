@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Equipment, InventoryItem } from '../types/equipment';
+import type { Equipment, InventoryItem } from '../types/player';
 import './InventoryItems.css';
 
 const INVENTORY_IDS = [

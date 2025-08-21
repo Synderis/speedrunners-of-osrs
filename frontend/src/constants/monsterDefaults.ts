@@ -46,7 +46,7 @@ export interface Monster {
 }
 
 // Use the interface for your array
-export const cmMonsters: Monster[] = [
+export const CM_MONSTERS: Monster[] = [
     {
         "id": 7545,
         "name": "Tekton",
@@ -86,6 +86,54 @@ export const cmMonsters: Monster[] = [
             "light": 0,
             "slash": 165,
             "stab": 155
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": null
+    },
+    {
+        "id": 7544,
+        "name": "Tekton",
+        "version": "Enraged (Challenge Mode)",
+        "image": "Tekton (enraged).png",
+        "level": 0,
+        "speed": 3,
+        "style": [
+            "Stab",
+            "Slash",
+            "Crush"
+        ],
+        "size": 4,
+        "max_hit": "87",
+        "skills": {
+            "atk": 585,
+            "def": 246,
+            "hp": 450,
+            "magic": 246,
+            "ranged": 1,
+            "str": 585
+        },
+        "offensive": {
+            "atk": 64,
+            "magic": 0,
+            "magic_str": 0,
+            "ranged": 0,
+            "ranged_str": 0,
+            "str": 30
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 180,
+            "magic": 0,
+            "heavy": 0,
+            "standard": 0,
+            "light": 0,
+            "slash": 290,
+            "stab": 280
         },
         "attributes": [
             "xerician"
@@ -153,7 +201,7 @@ export const cmMonsters: Monster[] = [
             "Slash"
         ],
         "size": 0,
-        "max_hit": 33,
+        "max_hit": "33",
         "skills": {
             "atk": 210,
             "def": 150,
@@ -195,7 +243,6 @@ export interface Room {
     name: string;
     image: string;
     description: string;
-    monsters: string[]
 }
 
 export const rooms: Room[] = [
@@ -203,86 +250,73 @@ export const rooms: Room[] = [
         id: '7545',
         name: 'Tekton',
         image: '/rooms/220px-Tekton.webp',
-        description: 'High-level boss encounter',
-        monsters: ['7545']
+        description: 'High-level boss encounter'
     },
     {
         id: 'crabs',
         name: 'Crabs',
         image: '/rooms/150px-Jewelled_Crab.webp',
-        description: 'Low-level training area',
-        monsters: ['crabs']
+        description: 'Low-level training area'
+        // No monsterId yet - add when you have crab monster data
     },
     {
         id: 'ice_demon',
         name: 'Ice Demon',
         image: '/rooms/170px-Ice_demon.webp',
-        description: 'High-level boss encounter',
-        monsters: ['ice_demon']
+        description: 'High-level boss encounter'
     },
     {
         id: 'lizardman_shamans',
         name: 'Lizardman Shamans',
         image: '/rooms/200px-Lizardman_shaman.webp',
-        description: 'High-level boss encounter',
-        monsters: ['lizardman_shaman']
+        description: 'High-level boss encounter'
     },
     {
         id: 'vanguards',
         name: 'Vanguards',
         image: '/rooms/280px-Vanguard_(magic).webp',
-        description: 'God Wars Dungeon - Zamorak',
-        monsters: ['vanguard']
+        description: 'God Wars Dungeon - Zamorak'
     },
     {
         id: 'vespula',
         name: 'Vespula',
         image: '/rooms/280px-Vespula.webp',
-        description: 'Barrows Brothers minigame',
-        monsters: ['vespula']
+        description: 'Barrows Brothers minigame'
     },
     {
         id: 'tightrope',
         name: 'Tightrope',
         image: '/rooms/130px-Keystone_crystal_detail.webp',
-        description: 'High-level agility course',
-        monsters: []
+        description: 'High-level agility course'
     },
     {
-        id: 'guardians',
+        id: '7570',
         name: 'Guardians',
         image: '/rooms/guardians.png',
-        description: 'High-level boss encounter',
-        monsters: ['7570', '7570']
+        description: 'High-level boss encounter'
     },
     {
         id: '7566',
         name: 'Vasa',
         image: '/rooms/250px-Vasa_Nistirio.webp',
-        description: 'God Wars Dungeon - Zamorak',
-        monsters: ['7566']
+        description: 'God Wars Dungeon - Zamorak'
     },
     {
         id: 'mystics',
         name: 'Mystics',
         image: '/rooms/mystics.png',
-        description: 'Barrows Brothers minigame',
-        monsters: ['mystics']
+        description: 'Barrows Brothers minigame'
     },
     {
         id: 'muttadile',
         name: 'Muttadile',
         image: '/rooms/250px-Muttadile.webp',
-        description: 'High-level boss encounter',
-        monsters: ['muttadile']
+        description: 'High-level boss encounter'
     },
     {
         id: 'olm',
         name: 'Olm',
         image: '/rooms/300px-Great_Olm.webp',
-        description: 'High-level boss encounter',
-        monsters: ['olm']
+        description: 'High-level boss encounter'
     }
 ];
-
-export default cmMonsters;

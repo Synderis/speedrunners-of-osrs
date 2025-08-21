@@ -2,16 +2,16 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { defaultSlotImages } from '../data/constants';
 import { GearSlotMultiSelect } from './GearSlotMultiSelect';
-import type { GearSetType, GearSets, Equipment } from '../types/equipment';
+import type { GearSetType, GearSets, Equipment } from '../types/player';
 
-interface CharacterModelCardProps {
+interface GearModelCardProps {
     gearType: GearSetType;
     gearSet: any[];
     setGearSets: React.Dispatch<React.SetStateAction<GearSets>>;
     gearData: Equipment[];
 }
 
-const CharacterModelCard: React.FC<CharacterModelCardProps> = ({ gearType, gearSet, setGearSets, gearData }) => {
+const GearModelCard: React.FC<GearModelCardProps> = ({ gearType, gearSet, setGearSets, gearData }) => {
     return (
         <motion.div
             className="character-model card"
@@ -72,4 +72,4 @@ const CharacterModelCard: React.FC<CharacterModelCardProps> = ({ gearType, gearS
     );
 };
 
-export default CharacterModelCard;
+export default GearModelCard;
