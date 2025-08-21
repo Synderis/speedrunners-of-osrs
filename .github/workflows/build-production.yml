@@ -21,6 +21,7 @@ jobs:
         run: cargo install wasm-pack
       - name: Build WASM
         run: npm run build:wasm:current
+        working-directory: ./frontend
       - name: Commit WASM artifacts
         run: |
           git config --global user.name 'github-actions'
