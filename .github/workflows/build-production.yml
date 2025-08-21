@@ -19,17 +19,17 @@ jobs:
           override: true
       - name: Install wasm-pack
         run: cargo install wasm-pack
-      - name: Build WASM
-        run: npm run build:wasm:current
-        working-directory: ./frontend
-      - name: Commit WASM artifacts
-        working-directory: ./frontend
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git add src/wasm/
-          git commit -m "Build WASM artifacts [skip ci]" || echo "No changes to commit"
-          git push
+    #   - name: Build WASM
+    #     run: npm run build:wasm:current
+    #     working-directory: ./frontend
+    #   - name: Commit WASM artifacts
+    #     working-directory: ./frontend
+    #     run: |
+    #       git config --global user.name 'github-actions'
+    #       git config --global user.email 'github-actions@github.com'
+    #       git add src/wasm/
+    #       git commit -m "Build WASM artifacts [skip ci]" || echo "No changes to commit"
+    #       git push
 
       # Build frontend
       - name: Use Node.js
