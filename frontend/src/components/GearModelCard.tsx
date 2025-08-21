@@ -25,35 +25,37 @@ const GearModelCard: React.FC<GearModelCardProps> = ({ gearType, gearSet, setGea
             <div className="model-container">
                 <div className="character-silhouette">
                     <AnimatePresence>
-                        {gearSet.map((slot, slotIndex) => {
-                            const slotKey = slot.slot.toLowerCase().replace('-', '') as keyof typeof defaultSlotImages;
-                            const defaultImage = defaultSlotImages[slotKey];
-                            // Use S3 url if image exists, otherwise fallback to default
-                            return (
-                                <div
-                                    key={`${gearType}-${slot.slot}-${slotIndex}`}
-                                    className={`equipped-${slotKey}`}
-                                    style={{ position: 'relative', display: 'inline-block' }}
-                                >
-                                    <img
-                                        src={slot.selected?.image ? `data:image/png;base64,${slot.selected.image}` : defaultImage}
-                                        alt={slot.selected?.name || `Empty ${slot.slot}`}
-                                        className="equipped-item"
-                                        style={{ cursor: slot.selected ? 'pointer' : 'default' }}
-                                        onClick={() => {
-                                            if (slot.selected) {
-                                                setGearSets(prev => ({
-                                                    ...prev,
-                                                    [gearType]: prev[gearType].map(s =>
-                                                        s.slot === slot.slot ? { ...s, selected: undefined } : s
-                                                    )
-                                                }));
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            );
-                        })}
+                        {gearSet
+                            .filter(slot => slot && slot.slot)
+                            .map((slot, slotIndex) => {
+                                const slotKey = slot.slot.toLowerCase().replace('-', '') as keyof typeof defaultSlotImages;
+                                const defaultImage = defaultSlotImages[slotKey];
+                                // Use S3 url if image exists, otherwise fallback to default
+                                return (
+                                    <div
+                                        key={`${gearType}-${slot.slot}-${slotIndex}`}
+                                        className={`equipped-${slotKey}`}
+                                        style={{ position: 'relative', display: 'inline-block' }}
+                                    >
+                                        <img
+                                            src={slot.selected?.image ? `data:image/png;base64,${slot.selected.image}` : defaultImage}
+                                            alt={slot.selected?.name || `Empty ${slot.slot}`}
+                                            className="equipped-item"
+                                            style={{ cursor: slot.selected ? 'pointer' : 'default' }}
+                                            onClick={() => {
+                                                if (slot.selected) {
+                                                    setGearSets(prev => ({
+                                                        ...prev,
+                                                        [gearType]: prev[gearType].map(s =>
+                                                            s.slot === slot.slot ? { ...s, selected: undefined } : s
+                                                        )
+                                                    }));
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                );
+                            })}
                     </AnimatePresence>
                 </div>
             </div>

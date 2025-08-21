@@ -119,19 +119,19 @@ function App() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
+          <GearSelection
+            gearSets={gearSets}
+            setGearSets={setGearSets}
+            selectedInventoryItems={selectedInventoryItems}
+            setSelectedInventoryItems={setSelectedInventoryItems}
+            combatStats={combatStats}
+            setCombatStats={setCombatStats}
+            setIsGearLoading={setIsGearLoading}
+            isGearLoading={isGearLoading}
+            equipment={equipment} // <-- Pass equipment here
+          />
           {!isGearLoading && (
             <>
-              <GearSelection
-                gearSets={gearSets}
-                setGearSets={setGearSets}
-                selectedInventoryItems={selectedInventoryItems}
-                setSelectedInventoryItems={setSelectedInventoryItems}
-                combatStats={combatStats}
-                setCombatStats={setCombatStats}
-                setIsGearLoading={setIsGearLoading}
-                isGearLoading={isGearLoading}
-                equipment={equipment} // <-- Pass equipment here
-              />
               <RoomSelection
                 selectedRooms={selectedRooms}
                 setSelectedRooms={setSelectedRooms}

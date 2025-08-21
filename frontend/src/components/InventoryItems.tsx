@@ -51,30 +51,31 @@ const InventoryItems: React.FC<InventoryItemsProps> = ({
             </motion.div>
             <div className="inventory-items">
                 <AnimatePresence>
-                    {inventoryEquipment.map((eq, idx) => (
-                        <motion.div
-                            key={eq?.id || idx}
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: 0.1 * idx }}
-                            whileHover={{
-                                y: -6,
-                                transition: { duration: 0.1 }
-                            }}
-                        >
-                            <button
-                                type="button"
-                                className={`inventory-btn${eq && isSelected(eq.id) ? ' selected' : ''}`}
-                                onClick={() => handleToggle(idx)}
-                                disabled={!eq}
+                    {inventoryEquipment.map((eq, idx) =>
+                        eq ? (
+                            <motion.div
+                                key={eq.id}
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.1 * idx }}
+                                whileHover={{
+                                    y: -6,
+                                    transition: { duration: 0.1 }
+                                }}
                             >
-                                <img
-                                    src={`data:image/png;base64,${eq?.image}` || '/gear/default.webp'}
-                                    alt={eq?.name || `Inventory item ${idx + 1}`}
-                                />
-                            </button>
-                        </motion.div>
-                    ))}
+                                <button
+                                    type="button"
+                                    className={`inventory-btn${isSelected(eq.id) ? ' selected' : ''}`}
+                                    onClick={() => handleToggle(idx)}
+                                >
+                                    <img
+                                        src={`data:image/png;base64,${eq.image}`}
+                                        alt={eq.name}
+                                    />
+                                </button>
+                            </motion.div>
+                        ) : null
+                    )}
                 </AnimatePresence>
             </div>
         </div>

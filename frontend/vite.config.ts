@@ -17,5 +17,9 @@ export default defineConfig({
     fs: {
       allow: ['..']
     }
-  }
+  },
+  build: {
+    sourcemap: true,
+    // ...other options
+  },
 })
