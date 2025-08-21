@@ -1,0 +1,15 @@
+{
+  "name": "osrs-dps-wasm",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "vasa_wasm_bg.wasm",
+    "vasa_wasm.js",
+    "vasa_wasm.d.ts"
+  ],
+  "main": "vasa_wasm.js",
+  "types": "vasa_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

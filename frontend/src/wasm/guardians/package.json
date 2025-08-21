@@ -1,0 +1,15 @@
+{
+  "name": "osrs-dps-wasm",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "guardians_wasm_bg.wasm",
+    "guardians_wasm.js",
+    "guardians_wasm.d.ts"
+  ],
+  "main": "guardians_wasm.js",
+  "types": "guardians_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

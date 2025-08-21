@@ -23,6 +23,7 @@ jobs:
         run: npm run build:wasm:current
         working-directory: ./frontend
       - name: Commit WASM artifacts
+        working-directory: ./frontend
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
