@@ -329,6 +329,29 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         return acc;
       }, {} as Record<typeof GEAR_TYPES[number], any>);
 
+      // Apply the same logic to inventory items: add weapon_styles if category exists
+      const inventoryWithStyles = selectedInventoryItems.map(item => {
+        if (item.equipment && item.equipment.category && item.equipment.slot == 'weapon') {
+          return {
+            ...item,
+            equipment: {
+              ...item.equipment,
+              weapon_styles: getCombatStylesForCategory(item.equipment.category)
+            }
+          };
+        } else if (item.equipment) {
+          return {
+            ...item,
+            equipment: {
+              ...item.equipment,
+              weapon_styles: []
+            }
+          };
+        } else {
+          return item;
+        }
+      });
+
       // Prepare player object for WASM (shared for all monsters)
       const playerData = {
         combatStats,
@@ -340,7 +363,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
           };
           return acc;
         }, {} as any),
-        inventory: selectedInventoryItems
+        inventory: inventoryWithStyles
       };
 
       // Loop over all selected monsters

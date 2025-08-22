@@ -284,18 +284,24 @@ def find_best_magic_style(player, monster):
 
 def simulate_ttk(monster_hp, max_hit, accuracy, attack_speed, trials=100_000):
     ttks = []
+    httks = []
     for _ in range(trials):
         hp = monster_hp
-        ticks = 0
+        ticks = 20.4
+        hits = 0
         while hp > 0:
             ticks += attack_speed
+            hits += 1
             if np.random.rand() < accuracy:
                 hit = np.random.randint(0, max_hit + 1)  # 0 to max_hit, inclusive
             else:
                 hit = 0
             hp -= hit
+        if ticks % 4 != 0:
+            ticks += 4 - (ticks % 4)
+        httks.append(ticks)
         ttks.append(ticks)
-    return np.mean(ttks), np.std(ttks)
+    return np.mean(ttks), np.std(ttks), np.mean(httks), np.std(httks)
 
 if __name__ == "__main__":
     import time
@@ -328,10 +334,13 @@ if __name__ == "__main__":
     trials = 100_000
     max_attacks = 1000  # Reasonable upper bound for plotting
     kill_attack_counts = []
+    tick_counts = []
     for _ in range(trials):
         hp = monster_hp
+        ticks = 20.4
         attacks = 0
         while hp > 0 and attacks < max_attacks:
+            ticks += attack_speed
             attacks += 1
             if np.random.rand() < accuracy:
                 hit = np.random.randint(0, max_hit + 1)
@@ -339,6 +348,7 @@ if __name__ == "__main__":
                 hit = 0
             hp -= hit
         kill_attack_counts.append(attacks)
+        tick_counts.append(ticks)
 
     # Empirical cumulative kill probability by attack number
     kill_prob = np.zeros(max_attacks)
@@ -347,10 +357,14 @@ if __name__ == "__main__":
             kill_prob[a - 1:] += 1
     kill_prob = kill_prob / trials
     # Align the simulation so the first attack is at tick 0 (like Markov)
-    attack_ticks = [i * attack_speed for i in range(max_attacks)]
+    attack_ticks = [20.4 + i * attack_speed for i in range(max_attacks)]
 
     mean_ttk = np.mean([(a) * attack_speed for a in kill_attack_counts])
     std_ttk = np.std([(a) * attack_speed for a in kill_attack_counts])
+    print(f"Expected TTK: {mean_ttk:.2f} ticks ({mean_ttk * 0.6:.2f} seconds)")
+    print(f"Expected hit count: {np.mean(kill_attack_counts):.2f}")
+    mean_ttk = np.mean(tick_counts)
+    std_ttk = np.std(tick_counts)
     print(f"Expected TTK: {mean_ttk:.2f} ticks ({mean_ttk * 0.6:.2f} seconds)")
     print(f"Expected hit count: {np.mean(kill_attack_counts):.2f}")
 
@@ -362,9 +376,23 @@ if __name__ == "__main__":
     capped_idx = np.argmax(kill_prob >= cap) + 1 if np.any(kill_prob >= cap) else len(kill_prob)
 
     # # Print the empirical kill probability distribution (cumulative)
-    # print("\n[Sim] Empirical cumulative kill probability distribution (up to cap):")
-    # for i in range(capped_idx):
-    #     print(f"Attack {i+1}: P(kill) = {kill_prob[i]:.5f}")
+    print("\n[Sim] Empirical cumulative kill probability distribution (up to cap):")
+    for i in range(capped_idx):
+        print(f"Attack {i+1}: P(kill) = {kill_prob[i]:.5f}")
+    # Find the maximum tick reached in your simulation
+    max_tick = int(np.ceil(max(tick_counts))) + 1
+
+    # Initialize the cumulative kill probability array by tick
+    kill_prob_by_tick = np.zeros(max_tick)
+
+    # For each trial, increment all ticks at or after the kill tick
+    for t in tick_counts:
+        idx = int(np.floor(t))
+        if idx < max_tick:
+            kill_prob_by_tick[idx:] += 1
+
+    # Normalize to get probability
+    kill_prob_by_tick = kill_prob_by_tick / len(tick_counts)
 
     # fig = go.Figure()
     # fig.add_trace(go.Scatter(
@@ -381,3 +409,19 @@ if __name__ == "__main__":
     #     hovermode="x unified"
     # )
     # fig.show()
+    tick_axis = np.arange(max_tick)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=tick_axis,
+        y=kill_prob_by_tick,
+        mode='lines',
+        name='Empirical Kill Probability (by tick)'
+    ))
+    fig.update_layout(
+        title="Empirical Kill Probability Over Time (by tick)",
+        xaxis_title="Tick",
+        yaxis_title="Cumulative Probability",
+        legend_title="Legend",
+        hovermode="x unified"
+    )
+    fig.show()

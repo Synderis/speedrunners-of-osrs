@@ -280,28 +280,31 @@ def row_vec_times_square_mat(row, mat, n):
             out[j] += r * mat[i][j]
     return out
 
-def weapon_kill_times(hp, max_hit, acc, cap, max_steps=1000):
-    n = hp + 1
-    weapon = build_transition_matrix(hp, max_hit, acc)
-    state = npc_state(hp)
-    out = []
-    attack_speed = 5
-    tick = 0
-    # Apply the first attack immediately (tick 0)
-    state = row_vec_times_square_mat(state, weapon, n)
-    p_dead = state[0]
-    out.append(p_dead)
-    tick += attack_speed
-    steps = 1
-    while p_dead < cap and steps < max_steps:
-        state = row_vec_times_square_mat(state, weapon, n)
-        p_dead = state[0]
-        out.append(p_dead)
-        tick += attack_speed
-        steps += 1
-    if steps == max_steps:
-        print(f"[Warning] Markov process reached max_steps={max_steps} without reaching cap={cap}.")
-    return out, attack_speed
+# def weapon_kill_times(hp, max_hit, acc, cap, max_steps=1000):
+#     n = hp + 1
+#     weapon = build_transition_matrix(hp, max_hit, acc)
+#     state = npc_state(hp)
+#     out = []
+#     attack_speed = 5
+#     tick = 0
+#     wait_time = 28
+#     for _ in range(wait_time):
+#         out.append(0.0)
+#     # Apply the first attack immediately (tick 0)
+#     state = row_vec_times_square_mat(state, weapon, n)
+#     p_dead = state[0]
+#     out.append(p_dead)
+#     tick += attack_speed
+#     steps = 1
+#     while p_dead < cap and steps < max_steps:
+#         state = row_vec_times_square_mat(state, weapon, n)
+#         p_dead = state[0]
+#         out.append(p_dead)
+#         tick += attack_speed
+#         steps += 1
+#     if steps == max_steps:
+#         print(f"[Warning] Markov process reached max_steps={max_steps} without reaching cap={cap}.")
+#     return out, attack_speed
 
 def kill_time_distribution_matrix(hp, max_hit, accuracy, cap=0.9999, max_steps=512):
     n = hp + 1
@@ -310,11 +313,28 @@ def kill_time_distribution_matrix(hp, max_hit, accuracy, cap=0.9999, max_steps=5
     state[hp] = 1.0  # Start at full HP
     kill_times = []
     p_dead = 0.0
+    wait_time = 28
+    attack_speed = 5
+    # Fill wait period with zeros
+    for _ in range(wait_time):
+        kill_times.append(0.0)
+    prev_p_dead = 0.0
+    expected_ttk = 0.0
+    expected_hits = 0.0
+    attack_num = 1
     while p_dead < cap and len(kill_times) < max_steps:
         state = propagate_state(state, mat)
         p_dead = state[0]
         kill_times.append(p_dead)
-    return kill_times
+        dp = p_dead - prev_p_dead
+        tick = wait_time + (attack_num) * attack_speed + 1  # Attack lands at this tick
+        expected_ttk += tick * dp
+        expected_hits += attack_num * dp
+        prev_p_dead = p_dead
+        attack_num += 1
+    if expected_tick % 4 != 0:
+        expected_ttk += 4 - (expected_tick % 4)
+    return kill_times, attack_speed, expected_hits, expected_ttk
 
 def build_transition_matrix(hp, max_hit, accuracy):
     n = hp + 1
@@ -367,39 +387,25 @@ if __name__ == "__main__":
     print(f"[Markov] Probability of 0 damage: {p_zero:.4f}")
     print(f"[Markov] Expected damage per attack: {expected_damage:.4f}")
 
-    kill_times, attack_speed = weapon_kill_times(
+    kill_times, attack_speed, expected_hits, expected_ticks = kill_time_distribution_matrix(
         monster["skills"]["hp"],
         max_hit,
         accuracy,
         cap
     )
-    # Each entry in kill_times is after an attack (tick 0, 5, 10, ...)
-    attack_ticks = [i * attack_speed for i in range(len(kill_times))]
+    wait_time = 28
+    print(expected_hits)
+    print(expected_ticks)
+    # Only plot the actual attacks (skip the wait period)
+    attack_ticks = [wait_time + (attack_num - 1) * attack_speed + 1
+                    for attack_num in range(1, len(kill_times) - wait_time + 1)]
+    kill_probs = kill_times[wait_time:]
 
-    # Correct expected hit count: sum over (attack_number * probability_increment)
-    expected_hits = sum(
-        (i + 1) * (kill_times[i] - kill_times[i - 1] if i > 0 else kill_times[0])
-        for i in range(len(kill_times))
-    )
-    expected_tick = expected_hits * attack_speed
-    expected_seconds = expected_tick * 0.6
-    print(f"Expected TTK: {expected_tick:.2f} ticks ({expected_seconds:.2f} seconds)")
-    print(f"Expected hit count: {expected_hits:.2f}")
-
-    elapsed = time.time() - start_time
-    print(f"Elapsed Markov calculation time: {elapsed:.2f} seconds")
-
-    # Print the Markov cumulative kill probability distribution
-    print("\n[Markov] Cumulative kill probability distribution:")
-    for i, p in enumerate(kill_times):
-        print(f"Attack {i+1}: P(kill) = {p:.5f}")
-
-    # Interactive plot with Plotly
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=attack_ticks,
-        y=kill_times,
-        mode='lines',
+        y=kill_probs,
+        mode='lines+markers',
         name='Kill Probability'
     ))
     fig.update_layout(
@@ -410,3 +416,21 @@ if __name__ == "__main__":
         hovermode="x unified"
     )
     fig.show()
+
+    expected_tick = expected_ticks
+    
+    expected_seconds = expected_tick * 0.6
+    print(f"Expected TTK: {expected_tick:.2f} ticks ({expected_seconds:.2f} seconds)")
+    print(f"Expected hit count: {expected_hits:.2f}")
+
+    elapsed = time.time() - start_time
+    print(f"Elapsed Markov calculation time: {elapsed:.2f} seconds")
+
+    # Print the Markov cumulative kill probability distribution
+    print("\n[Markov] Cumulative kill probability distribution:")
+    max_attacks_to_print = int(expected_hits + 5)
+    for attack_num, i in enumerate(range(wait_time, len(kill_times)), 1):
+        tick = wait_time + (attack_num - 1) * attack_speed + 1
+        if attack_num > max_attacks_to_print:
+            break
+        print(f"Attack {attack_num} (tick {tick}): P(kill) = {kill_times[i]:.5f}")

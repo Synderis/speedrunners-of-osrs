@@ -74,16 +74,6 @@ function passStringToWasm0(arg, malloc, realloc) {
     return ptr;
 }
 /**
- * @param {string} name
- */
-export function greet(name) {
-    const ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN;
-    wasm.greet(ptr0, len0);
-}
-
-/**
- * Updated function that accepts new player object structure and uses melee gear set
  * @param {string} payload_json
  * @returns {string}
  */
@@ -100,85 +90,6 @@ export function calculate_dps_with_objects_tekton(payload_json) {
     } finally {
         wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
     }
-}
-
-let cachedFloat64ArrayMemory0 = null;
-
-function getFloat64ArrayMemory0() {
-    if (cachedFloat64ArrayMemory0 === null || cachedFloat64ArrayMemory0.byteLength === 0) {
-        cachedFloat64ArrayMemory0 = new Float64Array(wasm.memory.buffer);
-    }
-    return cachedFloat64ArrayMemory0;
-}
-
-function getArrayF64FromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return getFloat64ArrayMemory0().subarray(ptr / 8, ptr / 8 + len);
-}
-/**
- * @param {number} a
- * @param {number} m
- * @param {number} hp
- * @returns {Float64Array}
- */
-export function single_matrix(a, m, hp) {
-    const ret = wasm.single_matrix(a, m, hp);
-    var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
-    return v1;
-}
-
-/**
- * @param {number} hp
- * @returns {Float64Array}
- */
-export function npc_state(hp) {
-    const ret = wasm.npc_state(hp);
-    var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
-    return v1;
-}
-
-/**
- * @param {number} hp
- * @param {number} max_hit
- * @param {number} acc
- * @param {number} no_hits
- * @returns {Float64Array}
- */
-export function hitting_basic_npc(hp, max_hit, acc, no_hits) {
-    const ret = wasm.hitting_basic_npc(hp, max_hit, acc, no_hits);
-    var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
-    return v1;
-}
-
-/**
- * @param {number} hp
- * @param {number} max_hit
- * @param {number} acc
- * @param {number} cap
- * @returns {Float64Array}
- */
-export function distribution_of_hits_to_kill(hp, max_hit, acc, cap) {
-    const ret = wasm.distribution_of_hits_to_kill(hp, max_hit, acc, cap);
-    var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
-    return v1;
-}
-
-/**
- * @param {number} hp
- * @param {number} max_hit
- * @param {number} acc
- * @param {number} cap
- * @returns {Float64Array}
- */
-export function weapon_and_thrall_kill_times(hp, max_hit, acc, cap) {
-    const ret = wasm.weapon_and_thrall_kill_times(hp, max_hit, acc, cap);
-    var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
-    return v1;
 }
 
 async function __wbg_load(module, imports) {
@@ -215,9 +126,6 @@ async function __wbg_load(module, imports) {
 function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
-    imports.wbg.__wbg_alert_659b1fb8b99d024f = function(arg0, arg1) {
-        alert(getStringFromWasm0(arg0, arg1));
-    };
     imports.wbg.__wbg_log_74dadf7155c6d723 = function(arg0, arg1) {
         console.log(getStringFromWasm0(arg0, arg1));
     };
@@ -242,7 +150,6 @@ function __wbg_init_memory(imports, memory) {
 function __wbg_finalize_init(instance, module) {
     wasm = instance.exports;
     __wbg_init.__wbindgen_wasm_module = module;
-    cachedFloat64ArrayMemory0 = null;
     cachedUint8ArrayMemory0 = null;
 
 
