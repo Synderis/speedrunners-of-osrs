@@ -305,7 +305,7 @@ export const rooms: Room[] = [
         monsters: ['7570', '7570']
     },
     {
-        id: '7566',
+        id: 'vasa',
         name: 'Vasa',
         image: '/rooms/250px-Vasa_Nistirio.webp',
         description: 'God Wars Dungeon - Zamorak',
