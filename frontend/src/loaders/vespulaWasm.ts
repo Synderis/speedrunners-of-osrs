@@ -66,11 +66,10 @@ export const calculateDPSWithObjectsVespula = async (player: any, room: any, cap
         }
 
         // Use encounter_kill_times for the overall plot
-        const encounterKillTimes = parsedResult.encounter_kill_times || [];
-        const tickData: PlotDataPoint[] = encounterKillTimes.map((prob: number, idx: number) => ({
-            time: idx * 5, // ticks are 1-based
-            dps: prob,     // This is actually cumulative probability
-            accuracy: 0    // Not meaningful for the encounter as a whole
+        const tickData: PlotDataPoint[] = (parsedResult.encounter_kill_times || []).map((pt: any) => ({
+            time: pt.tick,
+            dps: pt.probability,
+            accuracy: 0
         }));
 
         // Optionally, you can also expose per-monster kill_times if you want

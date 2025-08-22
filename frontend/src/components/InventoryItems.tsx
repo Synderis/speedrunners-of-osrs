@@ -3,7 +3,7 @@ import type { Equipment, InventoryItem } from '../types/player';
 import './InventoryItems.css';
 
 const INVENTORY_IDS = [
-    25975, 11808, 29577, 29589, 12018, 11865, 27690, 21003
+    25975, 11808, 29577, 29589, 12018, 11865, 27690, 21003, 11920
 ];
 //make sure to add lockpick somehow as its not technically an item so we will exclude it for now
 

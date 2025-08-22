@@ -1,6 +1,4 @@
 import init, {
-  weapon_and_thrall_kill_times,
-  distribution_of_hits_to_kill,
   calculate_dps_with_objects_tekton
 } from '../wasm/tekton/tekton_wasm.js';
 import wasmUrl from '../wasm/tekton/tekton_wasm_bg.wasm?url';
@@ -68,27 +66,25 @@ export const calculateDPSWithObjectsTekton = async (player: any, room: any, cap:
       throw new Error(parsedResult.error);
     }
     
-    const { calculation, kill_times } = parsedResult;
-    
     // Convert kill times to plot data
-    const tickData: PlotDataPoint[] = kill_times.map((prob: number, tick: number) => ({
-      time: tick + 1,
-      dps: prob,
-      accuracy: calculation.accuracy * 100
+    const tickData: PlotDataPoint[] = (parsedResult.encounter_kill_times || []).map((pt: any) => ({
+      time: pt.tick,
+      dps: pt.probability,
+      accuracy: 0
     }));
     
     // Calculate summary statistics
     const summary: CalculationSummary = {
-      expectedHit: calculation.max_hit * calculation.accuracy,
-      expectedHits: parsedResult.expected_hits,
-      accuracy: calculation.accuracy * 100,
-      ticksTimeToKill: parsedResult.expected_ticks,
-      secondsTimeToKill: parsedResult.expected_seconds,
-      maxHit: calculation.max_hit,
-      effectiveStrength: calculation.effective_strength,
-      effectiveAttack: calculation.effective_attack,
-      maxAttackRoll: calculation.max_attack_roll,
-      maxDefenceRoll: calculation.max_defence_roll,
+        expectedHit: 0, // Not meaningful for the whole encounter
+        expectedHits: parsedResult.total_hits,
+        accuracy: 0, // Not meaningful for the whole encounter
+        ticksTimeToKill: parsedResult.total_expected_ticks,
+        secondsTimeToKill: parsedResult.total_expected_seconds,
+        maxHit: 0,
+        effectiveStrength: 0,
+        effectiveAttack: 0,
+        maxAttackRoll: 0,
+        maxDefenceRoll: 0,
     };
     
     return {
@@ -98,64 +94,22 @@ export const calculateDPSWithObjectsTekton = async (player: any, room: any, cap:
   } catch (error) {
     console.error('WASM calculation error, falling back to legacy calculation:', error);
     console.error('Make sure to run: npm run build:wasm');
-    
-    // Fallback to legacy calculation with estimated values
-    const maxHit = 50; // Estimate
-    const accuracy = 0.8; // Estimate
 
-    return calculateDPS(maxHit, maxHit, accuracy, cap);
+    return {
+            tickData: [],
+            hitData: [],
+            summary: {
+                expectedHit: 0,
+                expectedHits: 0,
+                accuracy: 0.8 * 100,
+                ticksTimeToKill: 0,
+                secondsTimeToKill: 0,
+                maxHit: 50,
+                effectiveStrength: 0,
+                effectiveAttack: 0,
+                maxAttackRoll: 0,
+                maxDefenceRoll: 0,
+            }
+        };
   }
-};
-
-// Keep existing function for backward compatibility
-export const calculateDPS = async (hp: number, maxHit: number, accuracy: number, cap: number = 0.99) => {
-  await initWasm();
-  
-  // Get raw arrays from WASM
-  const tickDataRaw = weapon_and_thrall_kill_times(hp, maxHit, accuracy, cap);
-  const hitDataRaw = distribution_of_hits_to_kill(hp, maxHit, accuracy, Math.min(0.999, Math.max(cap, 0.99)));
-  
-  // Log what WASM returns
-  console.log('WASM tickDataRaw:', tickDataRaw);
-  console.log('WASM hitDataRaw:', hitDataRaw);
-  console.log('tickDataRaw type:', typeof tickDataRaw);
-  console.log('hitDataRaw type:', typeof hitDataRaw);
-  console.log('tickDataRaw length:', tickDataRaw?.length);
-  console.log('hitDataRaw length:', hitDataRaw?.length);
-  
-  // Convert Float64Array to proper JavaScript arrays with correct structure
-  const tickData: PlotDataPoint[] = Array.from(tickDataRaw).map((prob: number, tick: number) => ({
-    time: tick + 1, // ticks are 1-based
-    dps: prob, // This is actually P(dead) not DPS, but keeping for chart compatibility
-    accuracy: accuracy * 100
-  }));
-  
-  const hitData: HitDataPoint[] = Array.from(hitDataRaw).map((prob: number, hits: number) => ({
-    hits,
-    probability: prob
-  }));
-  
-  console.log('Converted tickData:', tickData.slice(0, 5)); // Log first 5 items
-  console.log('Converted hitData:', hitData.slice(0, 5)); // Log first 5 items
-  
-  // Simplified summary for legacy function (real calculations are in WASM)
-  const summary: CalculationSummary = {
-    expectedHit: (maxHit / 2) * accuracy,
-    expectedHits: 0,
-    accuracy: accuracy * 100,
-    ticksTimeToKill: tickData.findIndex(p => p.dps >= 0.95) + 1 || tickData.length,
-    secondsTimeToKill: (tickData.findIndex(p => p.dps >= 0.95) + 1 || tickData.length) / 20,
-    // These values are not available in legacy mode
-    maxHit: maxHit,
-    effectiveStrength: 0,
-    effectiveAttack: 0,
-    maxAttackRoll: 0,
-    maxDefenceRoll: 0,
-  };
-  
-  return {
-    tickData,
-    hitData,
-    summary
-  };
 };

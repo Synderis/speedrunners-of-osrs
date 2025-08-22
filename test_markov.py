@@ -332,6 +332,8 @@ def kill_time_distribution_matrix(hp, max_hit, accuracy, cap=0.9999, max_steps=5
         expected_hits += attack_num * dp
         prev_p_dead = p_dead
         attack_num += 1
+    if expected_tick % 4 != 0:
+        expected_ttk += 4 - (expected_tick % 4)
     return kill_times, attack_speed, expected_hits, expected_ttk
 
 def build_transition_matrix(hp, max_hit, accuracy):

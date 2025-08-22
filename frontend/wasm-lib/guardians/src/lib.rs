@@ -31,7 +31,7 @@ pub struct CombatStats {
     pub thieving: u32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct GearBonuses {
     #[serde(rename = "ranged_str")]
     pub ranged_str: i32,
@@ -41,7 +41,7 @@ pub struct GearBonuses {
     pub prayer: i32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct GearOffensive {
     pub stab: i32,
     pub slash: i32,
@@ -50,7 +50,7 @@ pub struct GearOffensive {
     pub ranged: i32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct GearDefensive {
     pub stab: i32,
     pub slash: i32,
@@ -66,7 +66,7 @@ pub struct GearStats {
     pub defensive: GearDefensive,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct WeaponStyle {
     pub name: String,
     #[serde(rename = "attack_type")]
@@ -83,7 +83,7 @@ pub struct WeaponStyle {
     pub att_spd_reduction: i32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct SelectedWeapon {
     pub name: String,
     #[serde(deserialize_with = "from_str_or_int")]
@@ -92,6 +92,13 @@ pub struct SelectedWeapon {
     pub category: String,
     #[serde(rename = "weapon_styles")]
     pub weapon_styles: Vec<WeaponStyle>,
+    // Add these fields for inventory weapons
+    #[serde(default)]
+    pub bonuses: Option<GearBonuses>,
+    #[serde(default)]
+    pub offensive: Option<GearOffensive>,
+    #[serde(default)]
+    pub defensive: Option<GearDefensive>,
 }
 
 #[derive(Deserialize)]
@@ -111,12 +118,19 @@ pub struct AllGearSets {
     pub ranged: GearSetData,
 }
 
+#[derive(Deserialize, Clone)]
+pub struct InventoryItem {
+    pub name: String,
+    pub equipment: Option<SelectedWeapon>,
+}
+
 #[derive(Deserialize)]
 pub struct Player {
     #[serde(rename = "combatStats")]
     pub combat_stats: CombatStats,
     #[serde(rename = "gearSets")]
     pub gear_sets: AllGearSets,
+    pub inventory: Vec<InventoryItem>,
 }
 
 #[derive(Deserialize)]
@@ -367,75 +381,68 @@ fn find_best_combat_style(player: &Player, monster: &Monster, mining_level: f64)
     }
     best_style.unwrap()
 }
+fn ensure_pickaxe_equipped(
+    gear_set: &mut GearSetData,
+    inventory: &[SelectedWeapon],
+) {
+    // Check if current selected weapon is a pickaxe
+    let is_pickaxe = gear_set.selected_weapon
+        .as_ref()
+        .map_or(false, |w| w.category == "Pickaxe");
 
-// --- Matrix helpers (same as tekton) ---
-fn row_vec_times_square_mat(row: &[f64], mat: &[f64], n: usize) -> Vec<f64> {
-    let mut out = vec![0.0; n];
-    for i in 0..n {
-        let r = row[i];
-        if r == 0.0 { continue; }
-        let row_start = i * n;
-        for j in 0..n {
-            out[j] += r * mat[row_start + j];
+    if is_pickaxe {
+        return;
+    }
+
+    // Remove current weapon's bonuses from gear
+    if let Some(current_weapon) = &gear_set.selected_weapon {
+        if let (Some(bonuses), Some(offensive), Some(defensive)) = (
+            current_weapon.bonuses.as_ref(),
+            current_weapon.offensive.as_ref(),
+            current_weapon.defensive.as_ref(),
+        ) {
+            gear_set.gear_stats.bonuses.str -= bonuses.str;
+            gear_set.gear_stats.bonuses.ranged_str -= bonuses.ranged_str;
+            gear_set.gear_stats.bonuses.magic_str -= bonuses.magic_str;
+            gear_set.gear_stats.bonuses.prayer -= bonuses.prayer;
+            gear_set.gear_stats.offensive.stab -= offensive.stab;
+            gear_set.gear_stats.offensive.slash -= offensive.slash;
+            gear_set.gear_stats.offensive.crush -= offensive.crush;
+            gear_set.gear_stats.offensive.magic -= offensive.magic;
+            gear_set.gear_stats.offensive.ranged -= offensive.ranged;
+            gear_set.gear_stats.defensive.stab -= defensive.stab;
+            gear_set.gear_stats.defensive.slash -= defensive.slash;
+            gear_set.gear_stats.defensive.crush -= defensive.crush;
+            gear_set.gear_stats.defensive.magic -= defensive.magic;
+            gear_set.gear_stats.defensive.ranged -= defensive.ranged;
         }
     }
-    out
-}
 
-fn single_matrix_internal(a: f64, m: usize, hp: usize) -> Vec<f64> {
-    let n = hp + 1;
-    let mut mat = vec![0.0f64; n * n];
-    for i in 0..n {
-        let row_start = i * n;
-        for j in 0..n {
-            if j == i && j != hp {
-                mat[row_start + j] = 1.0 - a;
-            }
-            if j > i && j <= i + m && j != hp {
-                mat[row_start + j] = a / (m as f64);
-            }
+    // Find a pickaxe in inventory
+    if let Some(pickaxe) = inventory.iter().find(|w| w.category == "Pickaxe") {
+        if let (Some(bonuses), Some(offensive), Some(defensive)) = (
+            pickaxe.bonuses.as_ref(),
+            pickaxe.offensive.as_ref(),
+            pickaxe.defensive.as_ref(),
+        ) {
+            gear_set.gear_stats.bonuses.str += bonuses.str;
+            gear_set.gear_stats.bonuses.ranged_str += bonuses.ranged_str;
+            gear_set.gear_stats.bonuses.magic_str += bonuses.magic_str;
+            gear_set.gear_stats.bonuses.prayer += bonuses.prayer;
+            gear_set.gear_stats.offensive.stab += offensive.stab;
+            gear_set.gear_stats.offensive.slash += offensive.slash;
+            gear_set.gear_stats.offensive.crush += offensive.crush;
+            gear_set.gear_stats.offensive.magic += offensive.magic;
+            gear_set.gear_stats.offensive.ranged += offensive.ranged;
+            gear_set.gear_stats.defensive.stab += defensive.stab;
+            gear_set.gear_stats.defensive.slash += defensive.slash;
+            gear_set.gear_stats.defensive.crush += defensive.crush;
+            gear_set.gear_stats.defensive.magic += defensive.magic;
+            gear_set.gear_stats.defensive.ranged += defensive.ranged;
         }
-        let mut sum = 0.0;
-        for j in 0..n {
-            sum += mat[row_start + j];
-        }
-        mat[row_start + (n - 1)] = 1.0 - sum;
+        // Swap selected weapon
+        gear_set.selected_weapon = Some(pickaxe.clone());
     }
-    mat
-}
-
-fn npc_state_internal(hp: usize) -> Vec<f64> {
-    let mut v = vec![0.0f64; hp + 1];
-    v[0] = 1.0;
-    v
-}
-
-fn hitting_basic_npc_internal(hp: usize, max_hit: usize, acc: f64, no_hits: usize) -> Vec<f64> {
-    let n = hp + 1;
-    let t = single_matrix_internal(acc, max_hit, hp);
-    let mut state = npc_state_internal(hp);
-    for _ in 0..no_hits {
-        state = row_vec_times_square_mat(&state, &t, n);
-    }
-    state
-}
-
-fn distribution_of_hits_to_kill_internal(hp: usize, max_hit: usize, acc: f64, cap: f64) -> Vec<f64> {
-    let n = hp + 1;
-    let t = single_matrix_internal(acc, max_hit, hp);
-    let mut state = npc_state_internal(hp);
-
-    let mut out = Vec::with_capacity(128);
-    let mut p_dead = state[n - 1];
-    out.push(p_dead);
-
-    while p_dead < cap {
-        state = row_vec_times_square_mat(&state, &t, n);
-        p_dead = state[n - 1];
-        out.push(p_dead);
-    }
-
-    out
 }
 
 // --- Markov Matrix Helpers (Python-style, updated) ---
@@ -475,34 +482,6 @@ fn propagate_state(state: &[f64], mat: &[Vec<f64>]) -> Vec<f64> {
     new_state
 }
 
-fn weapon_kill_times_markov_per_tick(
-    hp: usize,
-    max_hit: usize,
-    accuracy: f64,
-    cap: f64,
-    max_steps: usize,
-) -> (Vec<f64>, usize) {
-    let n = hp + 1;
-    let mat = build_transition_matrix(hp, max_hit, accuracy);
-    let mut state = vec![0.0; n];
-    state[hp] = 1.0; // Start at full HP (index = hp)
-    let mut kill_times = Vec::new();
-    let attack_speed = 5;
-    let mut steps = 0;
-    let mut p_dead = state[0];
-
-    while p_dead < cap && steps < max_steps {
-        // On attack tick (including the first tick), apply the attack matrix
-        if steps % attack_speed == 0 {
-            state = propagate_state(&state, &mat);
-        }
-        p_dead = state[0];
-        kill_times.push(p_dead);
-        steps += 1;
-    }
-    (kill_times, attack_speed)
-}
-
 fn weapon_kill_times_markov_per_tick_with_delay(
     hp: usize,
     max_hit: usize,
@@ -511,42 +490,37 @@ fn weapon_kill_times_markov_per_tick_with_delay(
     max_steps: usize,
     attack_speed: usize,
     start_tick: usize, // <-- number of ticks to wait before first attack
-) -> (Vec<f64>, usize) {
+) -> (Vec<f64>, usize, f64, f64) {
     let n = hp + 1;
     let mat = build_transition_matrix(hp, max_hit, accuracy);
     let mut state = vec![0.0; n];
     state[hp] = 1.0; // Start at full HP (index = hp)
     let mut kill_times = Vec::new();
-    let mut steps = 0;
     let mut p_dead = state[0];
 
-    while p_dead < cap && steps < max_steps {
-        // Wait for start_tick ticks before first attack
-        if steps >= start_tick && ((steps - start_tick) % attack_speed == 0) {
-            state = propagate_state(&state, &mat);
-        }
-        // Before start_tick, just propagate with identity (no change)
+    for _ in 0..start_tick {
+        kill_times.push(p_dead); // Fill initial ticks with current state
+    }
+    let mut prev_p_dead = p_dead;
+    let mut expected_ttk = 0.0;
+    let mut expected_hits = 0.0;
+    let mut attack_num = 1;
+
+    while p_dead < cap && kill_times.len() < max_steps {
+        state = propagate_state(&state, &mat);
         p_dead = state[0];
         kill_times.push(p_dead);
-        steps += 1;
+        let dp = p_dead - prev_p_dead;
+        let tick = start_tick + (attack_num) * attack_speed + 1;
+        expected_ttk += tick as f64 * dp;
+        expected_hits += attack_num as f64 * dp;
+        prev_p_dead = p_dead;
+        attack_num += 1;
     }
-    (kill_times, attack_speed)
-}
-
-// --- WASM exports (same as tekton) ---
-#[wasm_bindgen]
-pub fn single_matrix(a: f64, m: usize, hp: usize) -> Vec<f64> {
-    single_matrix_internal(a, m, hp)
-}
-
-#[wasm_bindgen]
-pub fn npc_state(hp: usize) -> Vec<f64> {
-    npc_state_internal(hp)
-}
-
-#[wasm_bindgen]
-pub fn hitting_basic_npc(hp: usize, max_hit: usize, acc: f64, no_hits: usize) -> Vec<f64> {
-    hitting_basic_npc_internal(hp, max_hit, acc, no_hits)
+    if expected_ttk % 4.0 != 0.0 {
+        expected_ttk += 4.0 - (expected_ttk % 4.0);
+    }
+    (kill_times, attack_speed, expected_hits, expected_ttk)
 }
 
 #[wasm_bindgen]
@@ -561,12 +535,22 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
         }
     };
 
-    let player = payload.player;
+    // Make mutable copies for gear/inventory mutation
+    let mut player = payload.player;
     let monsters = payload.room.monsters;
     let cap = payload.config.cap;
     let mining_level = player.combat_stats.mining as f64;
 
-    let walk_delay = 29;
+    // --- Ensure pickaxe is equipped in melee gear if present in inventory ---
+    // Collect inventory weapons (flattened from inventory items with equipment)
+    let inventory_weapons: Vec<SelectedWeapon> = player
+        .inventory
+        .iter()
+        .filter_map(|item| item.equipment.clone())
+        .collect();
+    ensure_pickaxe_equipped(&mut player.gear_sets.melee, &inventory_weapons);
+
+    let walk_delay = 28;
     let mut total_expected_hits = 0.0;
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
@@ -575,6 +559,8 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
 
     // For cumulative kill times
     let mut encounter_kill_times: Vec<f64> = Vec::new();
+    let mut encounter_attack_speed: Option<usize> = None;
+
 
     for monster in monsters {
         let best_style = find_best_combat_style(&player, &monster, mining_level);
@@ -588,31 +574,22 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
         } else {
             5
         };
+        if encounter_attack_speed.is_none() {
+            encounter_attack_speed = Some(attack_speed);
+        }
 
         let walk = if first { walk_delay } else { 0 };
-        let skip_attacks = walk / attack_speed;
 
-        let (kill_times_per_tick, _attack_speed) = weapon_kill_times_markov_per_tick_with_delay(
+        let (kill_times_per_tick, _attack_speed, expected_hits, expected_ttk) = weapon_kill_times_markov_per_tick_with_delay(
             hp, max_hit, accuracy, cap, 1000, attack_speed, walk
         );
 
-        let kill_times: Vec<f64> = kill_times_per_tick
-            .iter()
-            .enumerate()
-            .filter_map(|(i, &v)| if (i + 1) % attack_speed == 0 { Some(v) } else { None })
-            .collect();
+        let kill_times: Vec<f64> = kill_times_per_tick.iter().cloned().skip(walk).collect();
 
-        let mut expected_hits = 0.0;
-        for (i, &p) in kill_times.iter().enumerate().skip(skip_attacks) {
-            let dp = if i == 0 { p } else { p - kill_times[i - 1] };
-            expected_hits += ((i - skip_attacks) as f64 + 1.0) * dp;
-        }
-
-        let expected_tick = walk as f64 + expected_hits * attack_speed as f64;
-        let expected_seconds = expected_tick * 0.6;
+        let expected_seconds = expected_ttk * 0.6;
 
         total_expected_hits += expected_hits;
-        total_expected_ticks += expected_tick;
+        total_expected_ticks += expected_ttk;
         total_expected_seconds += expected_seconds;
 
         // --- Cumulative kill times for the encounter ---
@@ -649,7 +626,7 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
             "monster_id": monster.id,
             "monster_name": monster.name,
             "expected_hits": expected_hits,
-            "expected_ticks": expected_tick,
+            "expected_ticks": expected_ttk,
             "expected_seconds": expected_seconds,
             "kill_times": kill_times,
         });
@@ -658,11 +635,20 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
         first = false;
     }
 
+    let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()
+        .map(|(idx, &prob)| {
+            serde_json::json!({
+                "tick": idx * encounter_attack_speed.unwrap(),
+                "probability": prob
+            })
+        })
+        .collect();
+
     serde_json::json!({
         "results": results,
         "total_hits": total_expected_hits,
         "total_expected_ticks": total_expected_ticks,
         "total_expected_seconds": total_expected_seconds,
-        "encounter_kill_times": encounter_kill_times
+        "encounter_kill_times": encounter_kill_times_obj
     }).to_string()
 }
