@@ -394,7 +394,27 @@ if __name__ == "__main__":
     wait_time = 28
     print(expected_hits)
     print(expected_ticks)
-    attack_ticks = [wait_time + i * attack_speed for i in range(len(kill_times))]
+    # Only plot the actual attacks (skip the wait period)
+    attack_ticks = [wait_time + (attack_num - 1) * attack_speed + 1
+                    for attack_num in range(1, len(kill_times) - wait_time + 1)]
+    kill_probs = kill_times[wait_time:]
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=attack_ticks,
+        y=kill_probs,
+        mode='lines+markers',
+        name='Kill Probability'
+    ))
+    fig.update_layout(
+        title="Kill Probability Over Time",
+        xaxis_title="Tick",
+        yaxis_title="Cumulative Probability",
+        legend_title="Legend",
+        hovermode="x unified"
+    )
+    fig.show()
+
     expected_tick = expected_ticks
     
     expected_seconds = expected_tick * 0.6
@@ -412,20 +432,3 @@ if __name__ == "__main__":
         if attack_num > max_attacks_to_print:
             break
         print(f"Attack {attack_num} (tick {tick}): P(kill) = {kill_times[i]:.5f}")
-
-    # Interactive plot with Plotly
-    # fig = go.Figure()
-    # fig.add_trace(go.Scatter(
-    #     x=attack_ticks,
-    #     y=kill_times,
-    #     mode='lines',
-    #     name='Kill Probability'
-    # ))
-    # fig.update_layout(
-    #     title="Kill Probability Over Time",
-    #     xaxis_title="Tick",
-    #     yaxis_title="Cumulative Probability",
-    #     legend_title="Legend",
-    #     hovermode="x unified"
-    # )
-    # fig.show()
