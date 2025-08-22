@@ -96,6 +96,7 @@ pub struct SelectedWeapon {
     #[serde(deserialize_with = "from_str_or_int")]
     pub id: u32,
     pub speed: i32,
+    pub category: String,
     #[serde(rename = "weapon_styles")]
     pub weapon_styles: Vec<WeaponStyle>,
 }
@@ -193,6 +194,41 @@ pub struct CalculationResult {
     pub max_defence_roll: u64,
 }
 
+#[derive(Serialize)]
+pub struct StyleResult {
+    pub combat_style: String,
+    pub attack_type: String,
+    pub max_hit: u32,
+    pub accuracy: f64,
+    pub effective_dps: f64,
+    pub effective_strength: u32,
+    pub effective_attack: u32,
+    pub max_attack_roll: u64,
+    pub max_defence_roll: u64,
+    pub att_spd_reduction: i32, // <-- Add this line
+}
+
+#[derive(Deserialize)]
+pub struct DPSPayload {
+    pub player: Player,
+    pub room: Room,
+    pub config: DPSConfig,
+}
+
+#[derive(Deserialize)]
+pub struct DPSConfig {
+    pub cap: f64,
+}
+
+#[derive(Deserialize)]
+pub struct Room {
+    pub id: String,
+    pub name: String,
+    pub image: Option<String>,
+    pub description: Option<String>,
+    pub monsters: Vec<Monster>,
+}
+
 // Updated calculation functions to use melee gear set
 fn calculate_max_hit_for_style(player: &Player, style: &WeaponStyle, gear: &GearStats) -> (u32, u32) {
     let strength_level = player.combat_stats.strength;
@@ -241,19 +277,7 @@ fn calculate_accuracy_for_style(player: &Player, monster: &Monster, style: &Weap
     (accuracy, effective_attack, max_attack_roll, max_defence_roll)
 }
 
-#[derive(Serialize)]
-pub struct StyleResult {
-    pub combat_style: String,
-    pub attack_type: String,
-    pub max_hit: u32,
-    pub accuracy: f64,
-    pub effective_dps: f64,
-    pub effective_strength: u32,
-    pub effective_attack: u32,
-    pub max_attack_roll: u64,
-    pub max_defence_roll: u64,
-    pub att_spd_reduction: i32, // <-- Add this line
-}
+
 
 fn find_best_combat_style(player: &Player, monster: &Monster) -> StyleResult {
     let mut best_style: Option<StyleResult> = None;
@@ -337,8 +361,9 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     
     // Extract player, monster, and config from payload
     let player = payload.player;
-    let monster = payload.monster;
+    let monsters = payload.room.monsters;
     let cap = payload.config.cap;
+    let monster = &monsters[0];
     
     console_log!("Extracted player combat stats - Attack: {}, Strength: {}", 
         player.combat_stats.attack, player.combat_stats.strength);
@@ -562,17 +587,7 @@ pub fn weapon_and_thrall_kill_times(hp: usize, max_hit: usize, acc: f64, cap: f6
     weapon_and_thrall_kill_times_internal(hp, max_hit, acc, cap)
 }
 
-#[derive(Deserialize)]
-pub struct DPSPayload {
-    pub player: Player,
-    pub monster: Monster,
-    pub config: DPSConfig,
-}
 
-#[derive(Deserialize)]
-pub struct DPSConfig {
-    pub cap: f64,
-}
 // Custom deserializer for u32 that accepts string or int
 use serde::de::{self, Deserializer};
 fn from_str_or_int<'de, D>(deserializer: D) -> Result<u32, D::Error>

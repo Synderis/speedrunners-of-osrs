@@ -69,34 +69,6 @@ export function hitting_basic_npc(hp, max_hit, acc, no_hits) {
     return v1;
 }
 
-/**
- * @param {number} hp
- * @param {number} max_hit
- * @param {number} acc
- * @param {number} cap
- * @returns {Float64Array}
- */
-export function distribution_of_hits_to_kill(hp, max_hit, acc, cap) {
-    const ret = wasm.distribution_of_hits_to_kill(hp, max_hit, acc, cap);
-    var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
-    return v1;
-}
-
-/**
- * @param {number} hp
- * @param {number} max_hit
- * @param {number} acc
- * @param {number} cap
- * @returns {Float64Array}
- */
-export function weapon_kill_times(hp, max_hit, acc, cap) {
-    const ret = wasm.weapon_kill_times(hp, max_hit, acc, cap);
-    var v1 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
-    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
-    return v1;
-}
-
 let WASM_VECTOR_LEN = 0;
 
 const cachedTextEncoder = (typeof TextEncoder !== 'undefined' ? new TextEncoder('utf-8') : { encode: () => { throw Error('TextEncoder not available') } } );

@@ -39,13 +39,13 @@ export interface CalculationSummary {
 }
 
 // New function that accepts a single payload object
-export const calculateDPSWithObjectsTekton = async (player: any, monster: any, cap: number = 0.99) => {
+export const calculateDPSWithObjectsTekton = async (player: any, room: any, cap: number = 0.9999) => {
   await initWasm();
   
   // Package everything into a single payload object
   const payload = {
     player,
-    monster,
+    room,
     config: {
       cap
     }
@@ -102,8 +102,8 @@ export const calculateDPSWithObjectsTekton = async (player: any, monster: any, c
     // Fallback to legacy calculation with estimated values
     const maxHit = 50; // Estimate
     const accuracy = 0.8; // Estimate
-    
-    return calculateDPS(monster.hitpoints || 450, maxHit, accuracy, cap);
+
+    return calculateDPS(maxHit, maxHit, accuracy, cap);
   }
 };
 

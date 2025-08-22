@@ -187,6 +187,55 @@ export const cmMonsters: Monster[] = [
             "burn": null
         },
         "weakness": null
+    },
+    {
+        "id": 7533,
+        "name": "Abyssal portal",
+        "version": "Challenge Mode",
+        "image": "Abyssal portal.png",
+        "level": 0,
+        "speed": 2,
+        "style": [
+            "None"
+        ],
+        "size": 4,
+        "max_hit": 0,
+        "skills": {
+            "atk": 1,
+            "def": 264,
+            "hp": 375,
+            "magic": 264,
+            "ranged": 1,
+            "str": 1
+        },
+        "offensive": {
+            "atk": 0,
+            "magic": 0,
+            "magic_str": 0,
+            "ranged": 0,
+            "ranged_str": 0,
+            "str": 0
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 0,
+            "magic": 60,
+            "heavy": 110,
+            "standard": 140,
+            "light": 140,
+            "slash": 0,
+            "stab": 0
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": {
+            "element": "fire",
+            "severity": 50
+        }
     }
 ];
 
@@ -239,7 +288,7 @@ export const rooms: Room[] = [
         name: 'Vespula',
         image: '/rooms/280px-Vespula.webp',
         description: 'Barrows Brothers minigame',
-        monsters: ['vespula']
+        monsters: ['7533']
     },
     {
         id: 'tightrope',
