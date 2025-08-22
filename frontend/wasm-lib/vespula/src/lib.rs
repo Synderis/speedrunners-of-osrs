@@ -224,7 +224,7 @@ pub struct Room {
     pub monsters: Vec<Monster>,
 }
 
-// --- Custom deserializer for u32 that accepts string or int ---
+// Custom deserializer for u32 that accepts string or int
 use serde::de::{self, Deserializer};
 fn from_str_or_int<'de, D>(deserializer: D) -> Result<u32, D::Error>
 where
@@ -252,30 +252,64 @@ where
     deserializer.deserialize_any(StringOrIntVisitor)
 }
 
-// --- Calculation logic (same as tekton, but with mining scaling for guardians) ---
-fn calculate_max_hit_for_style(player: &Player, style: &WeaponStyle, gear: &GearStats, mining_level: f64) -> (u32, u32) {
-    let strength_level = player.combat_stats.strength;
-    let potion_bonus = 21.0; // Super strength potion
-    let prayer_strength_bonus = 1.23; // Piety
-    let style_bonus = style.str_ as f64;
-    let void_bonus = 1.0; // No void for now
-    let effective_strength = (((strength_level as f64 + potion_bonus) * prayer_strength_bonus + style_bonus + 8.0) * void_bonus).floor() as u32;
-    let strength_bonus = gear.bonuses.str as f64;
-    let base_max_hit = (0.5 + (effective_strength as f64 * (strength_bonus + 64.0)) / 640.0).floor();
-    // Guardians: apply mining level scaling
-    let level_requirement = 60.0;
-    let damage_multiplier = (50.0 + mining_level + level_requirement) / 150.0;
-    let max_hit = (base_max_hit * damage_multiplier).ceil() as u32;
-    (max_hit, effective_strength)
+// Updated calculation functions to use melee gear set
+fn calculate_max_hit_for_style(player: &Player, style: &WeaponStyle, gear: &GearStats) -> (u32, u32) {
+    let magic_level = player.combat_stats.magic as f64;
+    let potion_bonus = 21.0;
+    let style_bonus = style.magic as f64;
+    let void_bonus = 0.0; // No void for now
+    let prayer_magic_bonus = 4.0;
+    console_log!("Magic Strength for style: {}", gear.bonuses.magic_str);
+
+    // Get magic damage bonus as a fraction (e.g., 15 for +15% becomes 0.15)
+    let magic_damage_bonus = (gear.bonuses.magic_str as f64 + prayer_magic_bonus) / 100.0;
+
+    // Default values
+    let mut effective_magic = (magic_level + potion_bonus).floor();
+    let mut base_damage = 0.0;
+    let mut multiplier = 1.0;
+
+    console_log!("magic_level: {}", magic_level);
+    console_log!("potion_bonus: {}", potion_bonus);
+    console_log!("style_bonus: {}", style_bonus);
+    console_log!("void_bonus: {}", void_bonus);
+    console_log!("prayer_magic_bonus: {}", prayer_magic_bonus);
+    console_log!("magic_damage_bonus: {}", magic_damage_bonus);
+
+    // Check if selected_weapon exists
+    if let Some(ref weapon) = player.gear_sets.mage.selected_weapon {
+        console_log!("Selected weapon: {} (category: {})", weapon.name, weapon.category);
+        if weapon.name == "Tumeken's shadow" {
+            multiplier = 3.0;
+            base_damage = (magic_level * multiplier).floor();
+            console_log!("Tumeken's shadow: multiplier = {}, base_damage = {}", multiplier, base_damage);
+        } else if weapon.category == "Powered Staff" {
+            effective_magic = (magic_level + potion_bonus).floor();
+            base_damage = ((effective_magic / 3.0) - 1.0).floor();
+            console_log!("Powered Staff: effective_magic = {}, base_damage = {}", effective_magic, base_damage);
+        } else {
+            // For other weapons/spells, set base_damage as needed
+            base_damage = 0.0;
+            console_log!("Other weapon: base_damage = {}", base_damage);
+        }
+    } else {
+        console_log!("No selected weapon found.");
+    }
+
+    // Calculate max hit with all modifiers, flooring after each step
+    let max_hit = (base_damage * (1.0 + ((magic_damage_bonus + void_bonus) * multiplier).min(2.0))).floor() as u32;
+    console_log!("max_hit: {}", max_hit);
+
+    (max_hit, effective_magic as u32)
 }
 
 fn calculate_accuracy_for_style(player: &Player, monster: &Monster, style: &WeaponStyle, gear: &GearStats) -> (f64, u32, u64, u64) {
-    let attack_level = player.combat_stats.attack;
-    let potion_bonus = 21.0; // Super attack potion
-    let prayer_attack_bonus = 1.20; // Piety
-    let style_bonus = style.att as f64;
+    let magic_level = player.combat_stats.magic;
+    let potion_bonus = 21;
+    let prayer_magic_bonus = 1.25;
+    let style_bonus = style.magic;
     let void_bonus = 1.0; // No void for now
-    let effective_attack = (((attack_level as f64 + potion_bonus) * prayer_attack_bonus + style_bonus + 8.0) * void_bonus).floor() as u32;
+    let effective_magic = ((((magic_level + potion_bonus) as f64 * prayer_magic_bonus).floor() + style_bonus as f64 + 8.0) * void_bonus).floor() as u32;
     let equipment_bonus = match style.attack_type.to_lowercase().as_str() {
         "stab" => gear.offensive.stab,
         "slash" => gear.offensive.slash,
@@ -284,8 +318,8 @@ fn calculate_accuracy_for_style(player: &Player, monster: &Monster, style: &Weap
         "ranged" => gear.offensive.ranged,
         _ => 0,
     };
-    let attack_bonus = equipment_bonus;
-    let max_attack_roll = effective_attack as u64 * (attack_bonus + 64) as u64;
+    let magic_bonus = equipment_bonus;
+    let max_attack_roll = effective_magic as u64 * (magic_bonus + 64) as u64;
     let defence_bonus = match style.attack_type.to_lowercase().as_str() {
         "stab" => monster.defensive.stab,
         "slash" => monster.defensive.slash,
@@ -300,17 +334,24 @@ fn calculate_accuracy_for_style(player: &Player, monster: &Monster, style: &Weap
     } else {
         max_attack_roll as f64 / (2.0 * (max_defence_roll + 1) as f64)
     };
-    (accuracy, effective_attack, max_attack_roll, max_defence_roll)
+    (accuracy, effective_magic, max_attack_roll, max_defence_roll)
 }
 
-fn find_best_combat_style(player: &Player, monster: &Monster, mining_level: f64) -> StyleResult {
+
+
+fn find_best_combat_style(player: &Player, monster: &Monster) -> StyleResult {
     let mut best_style: Option<StyleResult> = None;
     let mut best_dps = 0.0;
-    if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
+    // Use mage weapon from mage gear set
+    if let Some(weapon) = &player.gear_sets.mage.selected_weapon {
+        console_log!("Evaluating {} combat styles for mage weapon: {}", weapon.weapon_styles.len(), weapon.name);
         for style in &weapon.weapon_styles {
-            let (max_hit, effective_strength) = calculate_max_hit_for_style(player, style, &player.gear_sets.melee.gear_stats, mining_level);
-            let (accuracy, effective_attack, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, style, &player.gear_sets.melee.gear_stats);
+            let (max_hit, effective_magic) = calculate_max_hit_for_style(player, style, &player.gear_sets.mage.gear_stats);
+            let (accuracy, effective_magic, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, style, &player.gear_sets.mage.gear_stats);
             let effective_dps = max_hit as f64 * accuracy;
+            let effective_strength = 0; // Not used for mage
+            let effective_attack = effective_magic;
+            console_log!("Style: {} ({}), Max Hit: {}, Accuracy: {:.2}%, Effective DPS: {:.2}", style.combat_style, style.attack_type, max_hit, accuracy * 100.0, effective_dps);
             let style_result = StyleResult {
                 combat_style: style.combat_style.clone(),
                 attack_type: style.attack_type.clone(),
@@ -321,7 +362,7 @@ fn find_best_combat_style(player: &Player, monster: &Monster, mining_level: f64)
                 effective_attack,
                 max_attack_roll,
                 max_defence_roll,
-                att_spd_reduction: style.att_spd_reduction,
+                att_spd_reduction: style.att_spd_reduction, // <-- Add this line
             };
             if effective_dps > best_dps {
                 best_dps = effective_dps;
@@ -331,22 +372,19 @@ fn find_best_combat_style(player: &Player, monster: &Monster, mining_level: f64)
     }
     // Fallback if no melee weapon or weapon styles
     if best_style.is_none() {
+        console_log!("No melee weapon styles found, using fallback calculation");
         let strength_level = player.combat_stats.strength;
-        let attack_level = player.combat_stats.attack;
-        let potion_bonus = 21.0;
+        let magic_level = player.combat_stats.attack;
+        let potion_bonus = 19;
         let prayer_strength_bonus = 1.23;
         let prayer_attack_bonus = 1.20;
-        let effective_strength = (((strength_level as f64 + potion_bonus) * prayer_strength_bonus + 8.0)).floor() as u32;
-        let effective_attack = (((attack_level as f64 + potion_bonus) * prayer_attack_bonus + 8.0)).floor() as u32;
-        let strength_bonus = player.gear_sets.melee.gear_stats.bonuses.str as f64;
+        let effective_strength = ((((magic_level + potion_bonus) as f64 * prayer_strength_bonus).floor() + 8.0)).floor() as u32;
+        let effective_attack = ((((magic_level + potion_bonus) as f64 * prayer_attack_bonus).floor() + 8.0)).floor() as u32;
+        let strength_bonus = player.gear_sets.melee.gear_stats.bonuses.str;
         let attack_bonus = player.gear_sets.melee.gear_stats.offensive.stab;
-        let base_max_hit = (0.5 + (effective_strength as f64 * (strength_bonus + 64.0)) / 640.0).floor();
-        let level_requirement = 60.0;
-        let mining_level = player.combat_stats.mining as f64;
-        let damage_multiplier = (50.0 + mining_level + level_requirement) / 150.0;
-        let max_hit = (base_max_hit * damage_multiplier).ceil() as u32;
+        let max_hit = (0.5 + (effective_strength as f64 * (strength_bonus + 64) as f64) / 640.0).floor() as u32;
         let max_attack_roll = effective_attack as u64 * (attack_bonus + 64) as u64;
-        let max_defence_roll = (monster.skills.def + 9) as u64 * (monster.defensive.stab + 64) as u64;
+    let max_defence_roll = (monster.skills.def + 9) as u64 * (monster.defensive.stab + 64) as u64;
         let accuracy = if max_attack_roll > max_defence_roll {
             1.0 - (max_defence_roll + 2) as f64 / (2.0 * (max_attack_roll + 1) as f64)
         } else {
@@ -362,10 +400,12 @@ fn find_best_combat_style(player: &Player, monster: &Monster, mining_level: f64)
             effective_attack,
             max_attack_roll,
             max_defence_roll,
-            att_spd_reduction: 0,
+            att_spd_reduction: 0, // fallback
         });
     }
-    best_style.unwrap()
+    let result = best_style.unwrap();
+    console_log!("🏆 Best melee combat style selected: {} ({}) with {:.2} effective DPS", result.combat_style, result.attack_type, result.effective_dps);
+    result
 }
 
 // --- Matrix helpers (same as tekton) ---
@@ -475,33 +515,33 @@ fn propagate_state(state: &[f64], mat: &[Vec<f64>]) -> Vec<f64> {
     new_state
 }
 
-fn weapon_kill_times_markov_per_tick(
-    hp: usize,
-    max_hit: usize,
-    accuracy: f64,
-    cap: f64,
-    max_steps: usize,
-) -> (Vec<f64>, usize) {
-    let n = hp + 1;
-    let mat = build_transition_matrix(hp, max_hit, accuracy);
-    let mut state = vec![0.0; n];
-    state[hp] = 1.0; // Start at full HP (index = hp)
-    let mut kill_times = Vec::new();
-    let attack_speed = 5;
-    let mut steps = 0;
-    let mut p_dead = state[0];
+// fn weapon_kill_times_markov_per_tick(
+//     hp: usize,
+//     max_hit: usize,
+//     accuracy: f64,
+//     cap: f64,
+//     max_steps: usize,
+// ) -> (Vec<f64>, usize) {
+//     let n = hp + 1;
+//     let mat = build_transition_matrix(hp, max_hit, accuracy);
+//     let mut state = vec![0.0; n];
+//     state[hp] = 1.0; // Start at full HP (index = hp)
+//     let mut kill_times = Vec::new();
+//     let attack_speed = 4;
+//     let mut steps = 0;
+//     let mut p_dead = state[0];
 
-    while p_dead < cap && steps < max_steps {
-        // On attack tick (including the first tick), apply the attack matrix
-        if steps % attack_speed == 0 {
-            state = propagate_state(&state, &mat);
-        }
-        p_dead = state[0];
-        kill_times.push(p_dead);
-        steps += 1;
-    }
-    (kill_times, attack_speed)
-}
+//     while p_dead < cap && steps < max_steps {
+//         // On attack tick (including the first tick), apply the attack matrix
+//         if steps % attack_speed == 0 {
+//             state = propagate_state(&state, &mat);
+//         }
+//         p_dead = state[0];
+//         kill_times.push(p_dead);
+//         steps += 1;
+//     }
+//     (kill_times, attack_speed)
+// }
 
 fn weapon_kill_times_markov_per_tick_with_delay(
     hp: usize,
@@ -550,7 +590,7 @@ pub fn hitting_basic_npc(hp: usize, max_hit: usize, acc: f64, no_hits: usize) ->
 }
 
 #[wasm_bindgen]
-pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
+pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
     console_log!("Received payload JSON: {}", payload_json);
 
     let payload: DPSRoomPayload = match serde_json::from_str(payload_json) {
@@ -564,9 +604,8 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
     let player = payload.player;
     let monsters = payload.room.monsters;
     let cap = payload.config.cap;
-    let mining_level = player.combat_stats.mining as f64;
 
-    let walk_delay = 29;
+    let walk = 21;
     let mut total_expected_hits = 0.0;
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
@@ -577,19 +616,19 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
     let mut encounter_kill_times: Vec<f64> = Vec::new();
 
     for monster in monsters {
-        let best_style = find_best_combat_style(&player, &monster, mining_level);
+        let best_style = find_best_combat_style(&player, &monster);
 
         let max_hit = best_style.max_hit as usize;
         let accuracy = best_style.accuracy;
         let hp = monster.skills.hp as usize;
 
-        let attack_speed = if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
+        let attack_speed = if let Some(weapon) = &player.gear_sets.mage.selected_weapon {
             weapon.speed as usize
         } else {
             5
         };
 
-        let walk = if first { walk_delay } else { 0 };
+        let walk = if first { walk } else { 0 };
         let skip_attacks = walk / attack_speed;
 
         let (kill_times_per_tick, _attack_speed) = weapon_kill_times_markov_per_tick_with_delay(

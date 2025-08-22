@@ -38,7 +38,7 @@ export interface CalculationSummary {
 }
 
 // New function that accepts a single payload object
-export const calculateDPSWithObjectsVasa = async (player: any, monster: any, cap: number = 0.99) => {
+export const calculateDPSWithObjectsVasa = async (player: any, monster: any, cap: number = 0.9999) => {
     await initWasm();
 
     // Package everything into a single payload object

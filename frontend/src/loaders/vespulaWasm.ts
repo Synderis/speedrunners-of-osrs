@@ -1,7 +1,7 @@
 import init, {
-    calculate_dps_with_objects_guardians
-} from '../wasm/guardians/guardians_wasm.js';
-import wasmUrl from '../wasm/guardians/guardians_wasm_bg.wasm?url';
+    calculate_dps_with_objects_vespula
+} from '../wasm/vespula/vespula_wasm.js';
+import wasmUrl from '../wasm/vespula/vespula_wasm_bg.wasm?url';
 
 let wasmInitialized = false;
 
@@ -37,7 +37,7 @@ export interface CalculationSummary {
 }
 
 // New function that accepts a single payload object
-export const calculateDPSWithObjectsGuardians = async (player: any, room: any, cap: number = 0.9999) => {
+export const calculateDPSWithObjectsVespula = async (player: any, room: any, cap: number = 0.9999) => {
     await initWasm();
 
     const payload = {
@@ -53,7 +53,7 @@ export const calculateDPSWithObjectsGuardians = async (player: any, room: any, c
     try {
         console.log('✅ Using calculate_dps_with_objects function');
 
-        const result = calculate_dps_with_objects_guardians(
+        const result = calculate_dps_with_objects_vespula(
             JSON.stringify(payload)
         );
 

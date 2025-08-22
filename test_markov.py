@@ -303,7 +303,7 @@ def weapon_kill_times(hp, max_hit, acc, cap, max_steps=1000):
         print(f"[Warning] Markov process reached max_steps={max_steps} without reaching cap={cap}.")
     return out, attack_speed
 
-def kill_time_distribution_matrix(hp, max_hit, accuracy, cap=0.99, max_steps=512):
+def kill_time_distribution_matrix(hp, max_hit, accuracy, cap=0.9999, max_steps=512):
     n = hp + 1
     mat = build_transition_matrix(hp, max_hit, accuracy)
     state = [0.0 for _ in range(n)]
@@ -353,6 +353,7 @@ if __name__ == "__main__":
     player = payload["player"]
     monster = payload["monster"]
     cap = payload["config"]["cap"]
+    cap = .9999
     mining_level = player["combatStats"]["mining"]
 
     best_style = find_best_combat_style(player, monster, mining_level)

@@ -3,8 +3,6 @@
 export function single_matrix(a: number, m: number, hp: number): Float64Array;
 export function npc_state(hp: number): Float64Array;
 export function hitting_basic_npc(hp: number, max_hit: number, acc: number, no_hits: number): Float64Array;
-export function distribution_of_hits_to_kill(hp: number, max_hit: number, acc: number, cap: number): Float64Array;
-export function weapon_kill_times(hp: number, max_hit: number, acc: number, cap: number): Float64Array;
 export function calculate_dps_with_objects_guardians(payload_json: string): string;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -14,8 +12,6 @@ export interface InitOutput {
   readonly single_matrix: (a: number, b: number, c: number) => [number, number];
   readonly npc_state: (a: number) => [number, number];
   readonly hitting_basic_npc: (a: number, b: number, c: number, d: number) => [number, number];
-  readonly distribution_of_hits_to_kill: (a: number, b: number, c: number, d: number) => [number, number];
-  readonly weapon_kill_times: (a: number, b: number, c: number, d: number) => [number, number];
   readonly calculate_dps_with_objects_guardians: (a: number, b: number) => [number, number];
   readonly __wbindgen_export_0: WebAssembly.Table;
   readonly __wbindgen_free: (a: number, b: number, c: number) => void;

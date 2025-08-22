@@ -6,6 +6,7 @@ import type { Monster, Room } from '../data/monsterStats';
 import { miscIcons } from '../data/constants';
 import { calculateDPSWithObjectsTekton } from '../loaders/tektonWasm';
 import { calculateDPSWithObjectsVasa } from '../loaders/vasaWasm';
+import { calculateDPSWithObjectsVespula } from '../loaders/vespulaWasm';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useTheme } from '../hooks/useTheme';
 import type { GearSets, CombatStats, Equipment, InventoryItem } from '../types/player';
@@ -93,7 +94,7 @@ const calculateGearStatsForSet = (
       // Bonuses
       totalStats.bonuses.str += eq.bonuses.str ?? 0;
       totalStats.bonuses.ranged_str += eq.bonuses.ranged_str ?? 0;
-      totalStats.bonuses.magic_str += eq.bonuses.magic_str ?? 0;
+      totalStats.bonuses.magic_str += (eq.bonuses.magic_str ? eq.bonuses.magic_str * 0.1 : 0);
       totalStats.bonuses.prayer += eq.bonuses.prayer ?? 0;
       // Offensive
       totalStats.offensive.stab += eq.offensive.stab ?? 0;
@@ -120,7 +121,8 @@ const getMonstersByRoom = (room: Room): Monster[] => {
 const wasmModelLoaders: Record<string, (player: any, monster: any) => Promise<any>> = {
   'tekton': calculateDPSWithObjectsTekton,
   'vasa': calculateDPSWithObjectsVasa,
-  'guardians': calculateDPSWithObjectsGuardians
+  'guardians': calculateDPSWithObjectsGuardians,
+  'vespula': calculateDPSWithObjectsVespula
 };
 
 // --- Main Component ---
