@@ -1,5 +1,5 @@
 import init, { calculate_dps_with_objects_guardians } from '../wasm/guardians/guardians_wasm.js';
-import wasmUrl from '../wasm/tekton/tekton_wasm_bg.wasm?url';
+import wasmUrl from '../wasm/guardians/guardians_wasm_bg.wasm?url';
 import { createWasmDpsLoader } from './wasmLoader';
 
 // Wrap init to match the expected type (Promise<void>)

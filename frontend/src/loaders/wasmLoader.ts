@@ -63,6 +63,7 @@ export const createWasmDpsLoader = (
 
             return { tickData, summary, perMonster: parsedResult.results };
         } catch (error) {
+            console.error('WASM calculation error:', error);
             return {
                 tickData: [],
                 summary: {

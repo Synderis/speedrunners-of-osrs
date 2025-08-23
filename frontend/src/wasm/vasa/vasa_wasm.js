@@ -215,10 +215,10 @@ async function __wbg_load(module, imports) {
 function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
-    imports.wbg.__wbg_alert_659b1fb8b99d024f = function(arg0, arg1) {
+    imports.wbg.__wbg_alert_375d4963086ab4d2 = function(arg0, arg1) {
         alert(getStringFromWasm0(arg0, arg1));
     };
-    imports.wbg.__wbg_log_74dadf7155c6d723 = function(arg0, arg1) {
+    imports.wbg.__wbg_log_1d7c7a2a07d709a8 = function(arg0, arg1) {
         console.log(getStringFromWasm0(arg0, arg1));
     };
     imports.wbg.__wbindgen_init_externref_table = function() {

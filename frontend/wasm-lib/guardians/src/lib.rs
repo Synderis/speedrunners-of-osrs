@@ -1,5 +1,5 @@
 use wasm_bindgen::prelude::*;
-use serde::{Deserialize, Serialize};
+use osrs_shared_types::*;
 
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
@@ -14,256 +14,6 @@ extern "C" {
 
 macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-}
-
-// --- Types (same as tekton) ---
-#[derive(Deserialize)]
-pub struct CombatStats {
-    pub attack: u32,
-    pub strength: u32,
-    pub defense: u32,
-    pub ranged: u32,
-    pub magic: u32,
-    pub hitpoints: u32,
-    pub prayer: u32,
-    pub woodcutting: u32,
-    pub mining: u32,
-    pub thieving: u32,
-}
-
-#[derive(Deserialize, Clone)]
-pub struct GearBonuses {
-    #[serde(rename = "ranged_str")]
-    pub ranged_str: i32,
-    #[serde(rename = "magic_str")]
-    pub magic_str: i32,
-    pub str: i32,
-    pub prayer: i32,
-}
-
-#[derive(Deserialize, Clone)]
-pub struct GearOffensive {
-    pub stab: i32,
-    pub slash: i32,
-    pub crush: i32,
-    pub magic: i32,
-    pub ranged: i32,
-}
-
-#[derive(Deserialize, Clone)]
-pub struct GearDefensive {
-    pub stab: i32,
-    pub slash: i32,
-    pub crush: i32,
-    pub magic: i32,
-    pub ranged: i32,
-}
-
-#[derive(Deserialize)]
-pub struct GearStats {
-    pub bonuses: GearBonuses,
-    pub offensive: GearOffensive,
-    pub defensive: GearDefensive,
-}
-
-#[derive(Deserialize, Clone)]
-pub struct WeaponStyle {
-    pub name: String,
-    #[serde(rename = "attack_type")]
-    pub attack_type: String,
-    #[serde(rename = "combat_style")]
-    pub combat_style: String,
-    pub att: i32,
-    #[serde(rename = "str")]
-    pub str_: i32,
-    pub def: i32,
-    pub ranged: i32,
-    pub magic: i32,
-    #[serde(rename = "att_spd_reduction")]
-    pub att_spd_reduction: i32,
-}
-
-#[derive(Deserialize, Clone)]
-pub struct SelectedWeapon {
-    pub name: String,
-    #[serde(deserialize_with = "from_str_or_int")]
-    pub id: u32,
-    pub speed: i32,
-    pub category: String,
-    #[serde(rename = "weapon_styles")]
-    pub weapon_styles: Vec<WeaponStyle>,
-    // Add these fields for inventory weapons
-    #[serde(default)]
-    pub bonuses: Option<GearBonuses>,
-    #[serde(default)]
-    pub offensive: Option<GearOffensive>,
-    #[serde(default)]
-    pub defensive: Option<GearDefensive>,
-}
-
-#[derive(Deserialize)]
-pub struct GearSetData {
-    #[serde(rename = "gearStats")]
-    pub gear_stats: GearStats,
-    #[serde(rename = "selectedWeapon")]
-    pub selected_weapon: Option<SelectedWeapon>,
-    #[serde(rename = "gearType")]
-    pub gear_type: String,
-}
-
-#[derive(Deserialize)]
-pub struct AllGearSets {
-    pub melee: GearSetData,
-    pub mage: GearSetData,
-    pub ranged: GearSetData,
-}
-
-#[derive(Deserialize, Clone)]
-pub struct InventoryItem {
-    pub name: String,
-    pub equipment: Option<SelectedWeapon>,
-}
-
-#[derive(Deserialize)]
-pub struct Player {
-    #[serde(rename = "combatStats")]
-    pub combat_stats: CombatStats,
-    #[serde(rename = "gearSets")]
-    pub gear_sets: AllGearSets,
-    pub inventory: Vec<InventoryItem>,
-}
-
-#[derive(Deserialize)]
-pub struct MonsterSkills {
-    pub atk: u32,
-    pub def: u32,
-    pub hp: u32,
-    pub magic: u32,
-    pub ranged: u32,
-    pub str: u32,
-}
-
-#[derive(Deserialize)]
-pub struct MonsterOffensive {
-    #[serde(rename = "ranged_str")]
-    pub ranged_str: i32,
-    #[serde(rename = "magic_str")]
-    pub magic_str: i32,
-    pub atk: i32,
-    pub magic: i32,
-    pub ranged: i32,
-    pub str: i32,
-}
-
-#[derive(Deserialize)]
-pub struct MonsterDefensive {
-    pub flat_armour: i32,
-    pub crush: i32,
-    pub magic: i32,
-    pub heavy: i32,
-    pub standard: i32,
-    pub light: i32,
-    pub slash: i32,
-    pub stab: i32,
-}
-
-#[derive(Deserialize)]
-pub struct Monster {
-    pub id: u32,
-    pub name: String,
-    pub version: Option<String>,
-    pub image: Option<String>,
-    pub level: Option<u32>,
-    pub speed: Option<u32>,
-    pub style: Option<Vec<String>>,
-    pub size: Option<u32>,
-    pub max_hit: Option<u32>,
-    pub skills: MonsterSkills,
-    pub offensive: MonsterOffensive,
-    pub defensive: MonsterDefensive,
-    pub attributes: Option<Vec<String>>,
-    pub immunities: Option<serde_json::Value>,
-    pub weakness: Option<serde_json::Value>,
-}
-
-#[derive(Serialize)]
-pub struct CalculationResult {
-    pub max_hit: u32,
-    pub accuracy: f64,
-    pub effective_strength: u32,
-    pub effective_attack: u32,
-    pub max_attack_roll: u64,
-    pub max_defence_roll: u64,
-}
-
-#[derive(Serialize)]
-pub struct StyleResult {
-    pub combat_style: String,
-    pub attack_type: String,
-    pub max_hit: u32,
-    pub accuracy: f64,
-    pub effective_dps: f64,
-    pub effective_strength: u32,
-    pub effective_attack: u32,
-    pub max_attack_roll: u64,
-    pub max_defence_roll: u64,
-    pub att_spd_reduction: i32,
-}
-
-#[derive(Deserialize)]
-pub struct DPSPayload {
-    pub player: Player,
-    pub monsters: Vec<Monster>,
-    pub config: DPSConfig,
-}
-
-#[derive(Deserialize)]
-pub struct DPSConfig {
-    pub cap: f64,
-}
-
-#[derive(Deserialize)]
-pub struct DPSRoomPayload {
-    pub player: Player,
-    pub room: Room,
-    pub config: DPSConfig,
-}
-
-#[derive(Deserialize)]
-pub struct Room {
-    pub id: String,
-    pub name: String,
-    pub image: Option<String>,
-    pub description: Option<String>,
-    pub monsters: Vec<Monster>,
-}
-
-// --- Custom deserializer for u32 that accepts string or int ---
-use serde::de::{self, Deserializer};
-fn from_str_or_int<'de, D>(deserializer: D) -> Result<u32, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    struct StringOrIntVisitor;
-    impl<'de> de::Visitor<'de> for StringOrIntVisitor {
-        type Value = u32;
-        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            formatter.write_str("a string or integer representing a u32")
-        }
-        fn visit_u64<E>(self, value: u64) -> Result<u32, E>
-        where
-            E: de::Error,
-        {
-            Ok(value as u32)
-        }
-        fn visit_str<E>(self, value: &str) -> Result<u32, E>
-        where
-            E: de::Error,
-        {
-            value.parse::<u32>().map_err(E::custom)
-        }
-    }
-    deserializer.deserialize_any(StringOrIntVisitor)
 }
 
 // --- Calculation logic (same as tekton, but with mining scaling for guardians) ---
@@ -309,11 +59,25 @@ fn calculate_accuracy_for_style(player: &Player, monster: &Monster, style: &Weap
         _ => 0,
     };
     let max_defence_roll = (monster.skills.def + 9) as u64 * (defence_bonus + 64) as u64;
-    let accuracy = if max_attack_roll > max_defence_roll {
-        1.0 - (max_defence_roll + 2) as f64 / (2.0 * (max_attack_roll + 1) as f64)
-    } else {
-        max_attack_roll as f64 / (2.0 * (max_defence_roll + 1) as f64)
+
+    let mut accuracy = 0.0;
+
+    if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
+        if weapon.name.to_lowercase().contains("osmumten's fang") {
+            if max_attack_roll > max_defence_roll {
+                accuracy = 1.0 - (((max_defence_roll as f64 + 2.0) * (2.0 * max_defence_roll as f64 + 3.0)) / (6.0 * (max_attack_roll as f64 + 1.0).powf(2.0)));
+            } else {
+                accuracy = (max_attack_roll as f64 * (4.0 * max_attack_roll as f64 + 5.0)) / (6.0 * (max_attack_roll as f64 + 1.0) * (max_defence_roll as f64 + 1.0));
+            };
+        } else {
+            if max_attack_roll > max_defence_roll {
+                accuracy = 1.0 - ((max_defence_roll as f64 + 2.0) / (2.0 * (max_attack_roll as f64 + 1.0)));
+            } else {
+                accuracy = max_attack_roll as f64 / (2.0 * (max_defence_roll as f64 + 1.0));
+            };
+        };
     };
+
     (accuracy, effective_attack, max_attack_roll, max_defence_roll)
 }
 
@@ -342,42 +106,6 @@ fn find_best_combat_style(player: &Player, monster: &Monster, mining_level: f64)
                 best_style = Some(style_result);
             }
         }
-    }
-    // Fallback if no melee weapon or weapon styles
-    if best_style.is_none() {
-        let strength_level = player.combat_stats.strength;
-        let attack_level = player.combat_stats.attack;
-        let potion_bonus = 21.0;
-        let prayer_strength_bonus = 1.23;
-        let prayer_attack_bonus = 1.20;
-        let effective_strength = (((strength_level as f64 + potion_bonus) * prayer_strength_bonus + 8.0)).floor() as u32;
-        let effective_attack = (((attack_level as f64 + potion_bonus) * prayer_attack_bonus + 8.0)).floor() as u32;
-        let strength_bonus = player.gear_sets.melee.gear_stats.bonuses.str as f64;
-        let attack_bonus = player.gear_sets.melee.gear_stats.offensive.stab;
-        let base_max_hit = (0.5 + (effective_strength as f64 * (strength_bonus + 64.0)) / 640.0).floor();
-        let level_requirement = 60.0;
-        let mining_level = player.combat_stats.mining as f64;
-        let damage_multiplier = (50.0 + mining_level + level_requirement) / 150.0;
-        let max_hit = (base_max_hit * damage_multiplier).ceil() as u32;
-        let max_attack_roll = effective_attack as u64 * (attack_bonus + 64) as u64;
-        let max_defence_roll = (monster.skills.def + 9) as u64 * (monster.defensive.stab + 64) as u64;
-        let accuracy = if max_attack_roll > max_defence_roll {
-            1.0 - (max_defence_roll + 2) as f64 / (2.0 * (max_attack_roll + 1) as f64)
-        } else {
-            max_attack_roll as f64 / (2.0 * (max_defence_roll + 1) as f64)
-        };
-        best_style = Some(StyleResult {
-            combat_style: "fallback".to_string(),
-            attack_type: "stab".to_string(),
-            max_hit,
-            accuracy,
-            effective_dps: max_hit as f64 * accuracy,
-            effective_strength,
-            effective_attack,
-            max_attack_roll,
-            max_defence_roll,
-            att_spd_reduction: 0,
-        });
     }
     best_style.unwrap()
 }
@@ -549,6 +277,8 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
         .filter_map(|item| item.equipment.clone())
         .collect();
     ensure_pickaxe_equipped(&mut player.gear_sets.melee, &inventory_weapons);
+    console_log!("Using pickaxe");
+    
 
     let walk_delay = 28;
     let mut total_expected_hits = 0.0;
@@ -621,7 +351,7 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
             }
             encounter_kill_times = new_cdf;
         }
-
+        console_log!("Monster: {}, Max Hit: {}, Accuracy: {:.4}, DPS: {:.4}", monster.name, max_hit, accuracy, best_style.effective_dps);
         let result = serde_json::json!({
             "monster_id": monster.id,
             "monster_name": monster.name,

@@ -1,5 +1,5 @@
 [package]
-name = "osrs-dps-wasm"
+name = "vasa"
 version = "0.1.0"
 edition = "2021"
 

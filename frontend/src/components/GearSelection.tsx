@@ -200,6 +200,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
             const gearId = preset.gearSets[type][slotKey];
             if (gearId) {
               const selectedItem = slot.items.find(item => item.id.toString() === gearId);
+              console.log('Selected item', type, '->', selectedItem);
               return { ...slot, selected: selectedItem };
             }
             return { ...slot, selected: undefined };
