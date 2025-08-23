@@ -359,7 +359,10 @@ const PlotSection: React.FC<PlotSectionProps> = ({
           acc[type] = {
             gearStats: calculatedGearStats[type],
             selectedWeapon: allWeapons[type],
-            gearType: type
+            gearType: type,
+            gearItems: gearSets[type]
+              .map(slot => slot.selected?.name)
+              .filter(Boolean)
           };
           return acc;
         }, {} as any),

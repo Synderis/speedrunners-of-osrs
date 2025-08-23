@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = [
+    "tekton",
+    "vasa",
+    "guardians",
+    "vespula",
+    "osrs_shared_types"
+]
