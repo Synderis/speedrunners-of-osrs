@@ -150,29 +150,44 @@ def extract_dps_payload(obj):
         "config": obj.get("config", {}),
     }
 
-def calculate_max_hit_for_style(player, monster, style, gear):
-    ranged_level = player["combatStats"]["ranged"]
+def calculate_max_hit_for_style(player, monster, combat_type, style, gear):
+    level = player["combatStats"][combat_type]
     potion_bonus = 21.0
-    prayer_ranged_bonus = 1.23
-    style_bonus = style.get("ranged", 0)
+    prayer_bonus_dict = {
+        "ranged": 1.23,
+        "magic": 4,
+        "melee": 1.23
+    }
+    prayer_bonus = prayer_bonus_dict.get(combat_type, 1.0)
+    style_bonus = style.get(combat_type, 0)
     void_bonus = 1.0
-    effective_ranged = int(((ranged_level + potion_bonus) * prayer_ranged_bonus + style_bonus + 8.0) * void_bonus)
-    ranged_bonus = gear["bonuses"]["ranged_str"]
-    if player["gearSets"]["ranged"].get("selectedWeapon", {}).get("name", "").lower() == "twisted bow":
+    effective_level = int(((level + potion_bonus) * prayer_bonus + style_bonus + 8.0) * void_bonus)
+    bonus_dict = {
+        "melee": "str",
+        "ranged": "ranged_str",
+        "magic": "magic_str"
+    }
+    bonus = gear["bonuses"][bonus_dict.get(combat_type, "str")]
+    if player["gearSets"][combat_type].get("selectedWeapon", {}).get("name", "").lower() == "twisted bow":
         max_hit_multiplier = (250 + ((((10 * 3 * monster["skills"]["magic"]) / 10) - 14) / 100) - (((((3 * monster["skills"]["magic"]) / 10) - 140) ** 2) / 100)) / 100
         max_hit_multiplier = max(1.0, min(max_hit_multiplier, 2.50))
-    max_hit = int(0.5 + (effective_ranged * (ranged_bonus + 64.0)) / 640.0)
-    
-    max_hit = int(max_hit * max_hit_multiplier)
-    return max_hit, effective_ranged
+    max_hit = int(0.5 + (effective_level * (bonus + 64.0)) / 640.0)
 
-def calculate_accuracy_for_style(player, monster, style, gear):
-    attack_level = player["combatStats"]["ranged"]
+    max_hit = int(max_hit * max_hit_multiplier)
+    return max_hit, effective_level
+
+def calculate_att_def_max_roll(player, monster, combat_type, style, gear):
+    level = player["combatStats"][combat_type]
     potion_bonus = 21.0
-    prayer_ranged_bonus = 1.20
-    style_bonus = style.get("ranged", 0)
+    prayer_bonus_dict = {
+        "ranged": 1.20,
+        "magic": 1.25,
+        "melee": 1.20
+    }
+    prayer_bonus = prayer_bonus_dict.get(combat_type, 1.0)
+    style_bonus = style.get(combat_type, 0)
     void_bonus = 1.0
-    effective_attack = int(((attack_level + potion_bonus) * prayer_ranged_bonus + style_bonus + 8.0) * void_bonus)
+    effective_level = int(((level + potion_bonus) * prayer_bonus + style_bonus + 8.0) * void_bonus)
     attack_type = style.get("attack_type", "").lower()
     equipment_bonus = {
         "stab": gear["offensive"]["stab"],
@@ -181,8 +196,8 @@ def calculate_accuracy_for_style(player, monster, style, gear):
         "magic": gear["offensive"]["magic"],
         "ranged": gear["offensive"]["ranged"],
     }.get(attack_type, 0)
-    attack_bonus = equipment_bonus
-    max_attack_roll = effective_attack * (attack_bonus + 64)
+    bonus = equipment_bonus
+    max_attack_roll = effective_level * (bonus + 64)
     defence_bonus = {
         "stab": monster["defensive"]["stab"],
         "slash": monster["defensive"]["slash"],
@@ -191,8 +206,12 @@ def calculate_accuracy_for_style(player, monster, style, gear):
         "ranged": monster["defensive"]["standard"],
     }.get(attack_type, 0)
     max_defence_roll = (monster["skills"]["def"] + 9) * (defence_bonus + 64)
+    return max_attack_roll, max_defence_roll
+
+def calculate_accuracy_for_style(player, monster, combat_type, style, gear):
+    max_attack_roll, max_defence_roll = calculate_att_def_max_roll(player, monster, combat_type, style, gear)
     accuracy_multiplier = 1.0
-    if player["gearSets"]["ranged"].get("selectedWeapon", {}).get("name", "").lower() == "twisted bow":
+    if player["gearSets"][combat_type].get("selectedWeapon", {}).get("name", "").lower() == "twisted bow":
         accuracy_multiplier = (140 + ((((10 * 3 * monster["skills"]["magic"]) / 10) - 10) / 100) - (((((3 * monster["skills"]["magic"]) / 10) - 100) ** 2) / 100)) / 100
         accuracy_multiplier = max(1.0, min(accuracy_multiplier, 1.40))
     max_attack_roll = int(max_attack_roll * accuracy_multiplier)
@@ -200,7 +219,7 @@ def calculate_accuracy_for_style(player, monster, style, gear):
         accuracy = 1.0 - (max_defence_roll + 2) / (2.0 * (max_attack_roll + 1))
     else:
         accuracy = max_attack_roll / (2.0 * (max_defence_roll + 1))
-    return accuracy, effective_attack, max_attack_roll, max_defence_roll
+    return accuracy, max_attack_roll, max_defence_roll
 
 def find_best_combat_style(player, monster):
     best_style = None
