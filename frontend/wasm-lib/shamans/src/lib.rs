@@ -20,23 +20,25 @@ macro_rules! console_log {
 fn ensure_item_equipped(
     gear_set: &mut GearSetData,
     inventory: &[SelectedItem],
-    _item_name: &str, // item_name is not needed anymore
+    item_name: &str,
 ) {
-    // Prefer salve (slot == "neck" and name contains "salve"), else slayer helm (slot == "head" and name contains "slayer")
-    let item = if let Some(salve) = inventory.iter().find(|item| item.slot == "neck" && item.name.to_lowercase().contains("salve")) {
-        salve
-    } else if let Some(slayer_helm) = inventory.iter().find(|item| item.slot == "head" && item.name.to_lowercase().contains("slayer")) {
-        slayer_helm
-    } else {
+    // Only proceed if a Salve item is present in inventory (case-insensitive)
+    let has_salve = inventory.iter().any(|item| item.name.to_lowercase().contains("salve"));
+    if !has_salve {
         return;
     };
 
-    // Remove any existing item from the relevant slot and subtract its bonuses
-    let target_slot = &item.slot;
+    // Find the item in inventory (case-insensitive)
+    let item = match inventory.iter().find(|item| item.name.to_lowercase().contains(item_name)) {
+        Some(item) => item,
+        None => return,
+    };
+
+    // Remove any existing head item from gear_items and subtract its bonuses
     let mut i = 0;
     while i < gear_set.gear_items.len() {
         if let Some(existing) = &gear_set.gear_items[i] {
-            if &existing.slot == target_slot {
+            if existing.slot == "head" {
                 if let (Some(bonuses), Some(offensive), Some(defensive)) = (
                     existing.bonuses.as_ref(),
                     existing.offensive.as_ref(),
@@ -56,15 +58,15 @@ fn ensure_item_equipped(
                     gear_set.gear_stats.defensive.crush -= defensive.crush;
                     gear_set.gear_stats.defensive.magic -= defensive.magic;
                     gear_set.gear_stats.defensive.ranged -= defensive.ranged;
-                }
+                };
                 gear_set.gear_items.remove(i);
                 continue;
-            }
+            };
         }
         i += 1;
-    }
+    };
 
-    // Add the selected item to gear_items as equipped
+    // Add the Salve item to gear_items as equipped
     gear_set.gear_items.push(Some(item.clone()));
 
     // Add item's bonuses to gear
@@ -87,7 +89,7 @@ fn ensure_item_equipped(
         gear_set.gear_stats.defensive.crush += defensive.crush;
         gear_set.gear_stats.defensive.magic += defensive.magic;
         gear_set.gear_stats.defensive.ranged += defensive.ranged;
-    }
+    };
 }
 
 // --- Markov Matrix Helpers (Python-style, updated) ---
@@ -169,7 +171,7 @@ fn weapon_kill_times_markov_per_tick_with_delay(
 }
 
 #[wasm_bindgen]
-pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
+pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
     console_log!("Received payload JSON: {}", payload_json);
 
     let payload: DPSRoomPayload = match serde_json::from_str(payload_json) {
@@ -194,9 +196,9 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     ];
 
     for (_, gear_set) in sets.iter_mut() {
-        ensure_item_equipped(gear_set, &inventory_items, "salve");
-        console_log!("Using salve");
-    }
+        ensure_item_equipped(gear_set, &inventory_items, "slayer");
+        console_log!("Using slayer helmet");
+    };
 
     // if !salve {
 

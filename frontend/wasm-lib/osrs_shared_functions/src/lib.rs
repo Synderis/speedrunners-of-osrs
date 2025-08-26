@@ -133,16 +133,23 @@ pub fn calculate_max_hit_for_style(
     let weapon = weapon.unwrap();
     console_log!("Selected weapon: {} (combat type: {})", weapon.name, combat_type);
     console_log!("Weapon category: {}", weapon.category);
-    let mut salve_mod = 1.0;
+    let mut salve_bonus = 1.0;
     if gear_set.gear_items.iter().any(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name == "Salve amulet(ei)")
     }) {
         if let Some(attributes) = &monster.attributes {
             if attributes.contains(&"undead".to_string()) {
-                salve_mod = 1.2;
-                console_log!("Salve amulet(ei) bonus applied, new salve_mod: {}", salve_mod);
+                salve_bonus = 1.2;
+                console_log!("Salve amulet(ei) bonus applied, new salve_bonus: {}", salve_bonus);
             }
         }
+    };
+    let mut slayer_bonus = 1.0;
+    if gear_set.gear_items.iter().any(|item_opt| {
+        item_opt.as_ref().map_or(false, |item| item.name == "Slayer helmet (i)")
+    }) {
+        slayer_bonus = 1.15;
+        console_log!("Slayer helmet (i) bonus applied, new slayer_bonus: {}", slayer_bonus);
     };
 
     if combat_type == "magic" {
@@ -157,10 +164,12 @@ pub fn calculate_max_hit_for_style(
             effective_level = (level + potion_bonus).floor();
             base_damage = ((effective_level / 3.0) + 1.0).floor();
         };
-        console_log!("Base magic damage before bonuses: {}, bonus: {}, prayer_bonus: {}, void_bonus: {}, salve_mod: {}, multiplier: {}", base_damage, bonus, prayer_bonus, void_bonus, salve_mod, multiplier);
+        console_log!("Base magic damage before bonuses: {}, bonus: {}, prayer_bonus: {}, void_bonus: {}, salve_bonus: {}, slayer_bonus: {}, multiplier: {}", base_damage, bonus, prayer_bonus, void_bonus, salve_bonus, slayer_bonus, multiplier);
         // For magic, prayer_bonus is a flat addition to the gear bonus, not a multiplier
-        salve_mod = 20.0;
-        let magic_strength = (bonus * multiplier).min(100.0) + salve_mod + prayer_bonus + void_bonus;
+        salve_bonus = (salve_bonus - 1.0) * 100.0;
+        slayer_bonus = (slayer_bonus - 1.0) * 100.0;
+        console_log!("Base magic damage before bonuses: {}, bonus: {}, prayer_bonus: {}, void_bonus: {}, salve_bonus: {}, slayer_bonus: {}, multiplier: {}", base_damage, bonus, prayer_bonus, void_bonus, salve_bonus, slayer_bonus, multiplier);
+        let magic_strength = (bonus * multiplier).min(100.0) + salve_bonus + slayer_bonus + prayer_bonus + void_bonus;
         max_hit = (base_damage * (1.0 + (magic_strength / 100.0))).floor() as u32;
     } else if combat_type == "ranged" {
         let mut max_hit_multiplier = 1.0;
@@ -178,7 +187,7 @@ pub fn calculate_max_hit_for_style(
         let effective_ranged = ((level + potion_bonus) * prayer_bonus + style_bonus + 8.0).floor();
         max_hit = (0.5 + (effective_ranged * (bonus + 64.0)) / 640.0).floor() as u32;
         // console_log!("Ranged max_hit before multiplier: {}", max_hit);
-        max_hit = (max_hit as f64 * max_hit_multiplier * salve_mod).floor() as u32;
+        max_hit = (max_hit as f64 * max_hit_multiplier * salve_bonus * slayer_bonus).floor() as u32;
         // console_log!("Ranged max_hit after multiplier: {}", max_hit);
     } else if combat_type == "melee" {
         if weapon.category == "Pickaxe" {
@@ -272,6 +281,12 @@ pub fn calculate_max_rolls_for_style(
                 console_log!("Salve amulet(ei) bonus applied, new max_attack_roll: {}", max_attack_roll);
             }
         }
+    };
+    if gear_set.gear_items.iter().any(|item_opt| {
+        item_opt.as_ref().map_or(false, |item| item.name == "Slayer helmet (i)")
+    }) {
+        max_attack_roll = (max_attack_roll as f64 * 1.15).floor() as u64;
+        console_log!("Slayer helmet (i) bonus applied, new max_attack_roll: {}", max_attack_roll);
     };
     console_log!("Monster def: {}, monster def bonus: {}", monster.skills.def, defence_bonus);
     let max_defence_roll;

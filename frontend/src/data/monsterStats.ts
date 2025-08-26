@@ -285,6 +285,53 @@ export const cmMonsters: Monster[] = [
         },
         "weakness": null
     },
+    {
+        "id": 7573,
+        "name": "Lizardman shaman (Chambers of Xeric)",
+        "version": "Challenge Mode",
+        "image": "Lizardman shaman (1).png",
+        "level": 0,
+        "speed": 4,
+        "style": [
+            "Melee",
+            "Ranged"
+        ],
+        "size": 3,
+        "max_hit": 65,
+        "skills": {
+            "atk": 195,
+            "def": 315,
+            "hp": 285,
+            "magic": 195,
+            "ranged": 195,
+            "str": 195
+        },
+        "offensive": {
+            "atk": 58,
+            "magic": 0,
+            "magic_str": 0,
+            "ranged": 56,
+            "ranged_str": 49,
+            "str": 52
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 150,
+            "magic": 160,
+            "heavy": 0,
+            "standard": 0,
+            "light": 0,
+            "slash": 160,
+            "stab": 102
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": null
+    },
 ];
 
 export interface Room {
@@ -322,7 +369,7 @@ export const rooms: Room[] = [
         name: 'Lizardman Shamans',
         image: '/rooms/200px-Lizardman_shaman.webp',
         description: 'High-level boss encounter',
-        monsters: ['lizardman_shaman']
+        monsters: ['7573']
     },
     {
         id: 'vanguards',
