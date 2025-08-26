@@ -40,7 +40,7 @@ export const gearSetPresets: GearSetPreset[] = [
                 body: "21021",
                 legs: "21024",
                 hands: "31106",
-                feet: "31088",
+                feet: "31097",
                 ring: "28313",
                 ammo: "11212"
             },
