@@ -6,6 +6,7 @@ members = [
     "guardians",
     "vespula",
     "mystics",
+    "shamans",
     "osrs_shared_types",
     "osrs_shared_functions"
 ]

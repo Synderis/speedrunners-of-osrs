@@ -15,6 +15,7 @@ import './PlotSection.css';
 import { getCombatStylesForCategory } from '../services/weaponStylesService';
 import { calculateDPSWithObjectsGuardians } from '../loaders/guardiansWasm';
 import { cmMonsters } from '../data/monsterStats';
+import { calculateDPSWithObjectsShamans } from '../loaders/shamansWasm';
 
 const defaultIcon = '/gear/default.webp'; // You can change this later
 
@@ -124,7 +125,8 @@ const wasmModelLoaders: Record<string, (player: any, monster: any) => Promise<an
   'vasa': calculateDPSWithObjectsVasa,
   'guardians': calculateDPSWithObjectsGuardians,
   'vespula': calculateDPSWithObjectsVespula,
-  'mystics': calculateDPSWithObjectsMystics
+  'mystics': calculateDPSWithObjectsMystics,
+  'lizardman_shamans': calculateDPSWithObjectsShamans
 };
 
 // --- Main Component ---
