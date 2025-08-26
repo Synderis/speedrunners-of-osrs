@@ -126,6 +126,9 @@ async function __wbg_load(module, imports) {
 function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
+    imports.wbg.__wbg_log_9c85360673780c95 = function(arg0, arg1) {
+        console.log(getStringFromWasm0(arg0, arg1));
+    };
     imports.wbg.__wbg_log_d537f50d5a83d5fa = function(arg0, arg1) {
         console.log(getStringFromWasm0(arg0, arg1));
     };

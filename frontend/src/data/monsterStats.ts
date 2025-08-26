@@ -236,7 +236,55 @@ export const cmMonsters: Monster[] = [
             "element": "fire",
             "severity": 50
         }
-    }
+    },
+    {
+        "id": 7604,
+        "name": "Skeletal Mystic",
+        "version": "Challenge Mode",
+        "image": "Skeletal mystic (1).png",
+        "level": 0,
+        "speed": 4,
+        "style": [
+            "Magic",
+            "Melee"
+        ],
+        "size": 2,
+        "max_hit": 0,
+        "skills": {
+            "atk": 210,
+            "def": 280,
+            "hp": 240,
+            "magic": 210,
+            "ranged": 1,
+            "str": 210
+        },
+        "offensive": {
+            "atk": 85,
+            "magic": 40,
+            "magic_str": 38,
+            "ranged": 0,
+            "ranged_str": 0,
+            "str": 50
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 75,
+            "magic": 140,
+            "heavy": 75,
+            "standard": 115,
+            "light": 115,
+            "slash": 155,
+            "stab": 155
+        },
+        "attributes": [
+            "undead",
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": null
+    },
 ];
 
 export interface Room {
@@ -316,7 +364,8 @@ export const rooms: Room[] = [
         name: 'Mystics',
         image: '/rooms/mystics.png',
         description: 'Barrows Brothers minigame',
-        monsters: ['mystics']
+        // monsters: ['7604', '7604', '7604']
+        monsters: ['7604']
     },
     {
         id: 'muttadile',

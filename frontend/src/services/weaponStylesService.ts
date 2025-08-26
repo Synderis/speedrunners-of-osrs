@@ -981,7 +981,7 @@ const weaponStyles: Record<string, WeaponStyles[]> = {
             def: 0,
             ranged: 0,
             magic: 0,
-            att_spd_reduction: 0,
+            att_spd_reduction: 1,
         },
         {
             name: "Block",
@@ -1016,7 +1016,7 @@ const weaponStyles: Record<string, WeaponStyles[]> = {
             def: 0,
             ranged: 0,
             magic: 0,
-            att_spd_reduction: 0,
+            att_spd_reduction: 1,
         },
         {
             name: "Block",

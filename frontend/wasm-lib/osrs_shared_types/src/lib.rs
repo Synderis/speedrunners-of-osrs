@@ -67,16 +67,16 @@ pub struct WeaponStyle {
 }
 
 #[derive(Deserialize, Clone)]
-pub struct SelectedWeapon {
+pub struct SelectedItem {
     pub name: String,
     #[serde(deserialize_with = "from_str_or_int")]
     pub id: u32,
     pub speed: i32,
     pub two_handed: bool,
+    pub slot: String,
     pub category: String,
     #[serde(rename = "weapon_styles")]
-    pub weapon_styles: Vec<WeaponStyle>,
-    // Add these fields for inventory weapons
+    pub weapon_styles: Option<Vec<WeaponStyle>>,
     #[serde(default)]
     pub bonuses: Option<GearBonuses>,
     #[serde(default)]
@@ -90,11 +90,11 @@ pub struct GearSetData {
     #[serde(rename = "gearStats")]
     pub gear_stats: GearStats,
     #[serde(rename = "selectedWeapon")]
-    pub selected_weapon: Option<SelectedWeapon>,
+    pub selected_weapon: Option<SelectedItem>,
     #[serde(rename = "gearType")]
     pub gear_type: String,
     #[serde(rename = "gearItems")]
-    pub gear_items: Vec<String>,
+    pub gear_items: Vec<Option<SelectedItem>>,
 }
 
 #[derive(Deserialize)]
@@ -107,7 +107,7 @@ pub struct AllGearSets {
 #[derive(Deserialize, Clone)]
 pub struct InventoryItem {
     pub name: String,
-    pub equipment: Option<SelectedWeapon>,
+    pub equipment: Option<SelectedItem>,
 }
 
 #[derive(Deserialize)]
