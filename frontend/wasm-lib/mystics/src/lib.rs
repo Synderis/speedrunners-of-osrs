@@ -17,6 +17,74 @@ macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
 
+fn ensure_item_equipped(
+    gear_set: &mut GearSetData,
+    inventory: &[SelectedItem],
+    item_name: &str,
+) {
+    // Find the item in inventory (case-insensitive)
+    let item = match inventory.iter().find(|item| item.name.to_lowercase().contains(item_name)) {
+        Some(item) => item,
+        None => return,
+    };
+
+    // Remove any existing neck item from gear_items and subtract its bonuses
+    let mut i = 0;
+    while i < gear_set.gear_items.len() {
+        if let Some(existing) = &gear_set.gear_items[i] {
+            if existing.slot == "neck" {
+                if let (Some(bonuses), Some(offensive), Some(defensive)) = (
+                    existing.bonuses.as_ref(),
+                    existing.offensive.as_ref(),
+                    existing.defensive.as_ref(),
+                ) {
+                    gear_set.gear_stats.bonuses.str -= bonuses.str;
+                    gear_set.gear_stats.bonuses.ranged_str -= bonuses.ranged_str;
+                    gear_set.gear_stats.bonuses.magic_str -= bonuses.magic_str;
+                    gear_set.gear_stats.bonuses.prayer -= bonuses.prayer;
+                    gear_set.gear_stats.offensive.stab -= offensive.stab;
+                    gear_set.gear_stats.offensive.slash -= offensive.slash;
+                    gear_set.gear_stats.offensive.crush -= offensive.crush;
+                    gear_set.gear_stats.offensive.magic -= offensive.magic;
+                    gear_set.gear_stats.offensive.ranged -= offensive.ranged;
+                    gear_set.gear_stats.defensive.stab -= defensive.stab;
+                    gear_set.gear_stats.defensive.slash -= defensive.slash;
+                    gear_set.gear_stats.defensive.crush -= defensive.crush;
+                    gear_set.gear_stats.defensive.magic -= defensive.magic;
+                    gear_set.gear_stats.defensive.ranged -= defensive.ranged;
+                }
+                gear_set.gear_items.remove(i);
+                continue;
+            }
+        }
+        i += 1;
+    }
+
+    // Add the Salve item to gear_items as equipped
+    gear_set.gear_items.push(Some(item.clone()));
+
+    // Add item's bonuses to gear
+    if let (Some(bonuses), Some(offensive), Some(defensive)) = (
+        item.bonuses.as_ref(),
+        item.offensive.as_ref(),
+        item.defensive.as_ref(),
+    ) {
+        gear_set.gear_stats.bonuses.str += bonuses.str;
+        gear_set.gear_stats.bonuses.ranged_str += bonuses.ranged_str;
+        gear_set.gear_stats.bonuses.magic_str += bonuses.magic_str;
+        gear_set.gear_stats.bonuses.prayer += bonuses.prayer;
+        gear_set.gear_stats.offensive.stab += offensive.stab;
+        gear_set.gear_stats.offensive.slash += offensive.slash;
+        gear_set.gear_stats.offensive.crush += offensive.crush;
+        gear_set.gear_stats.offensive.magic += offensive.magic;
+        gear_set.gear_stats.offensive.ranged += offensive.ranged;
+        gear_set.gear_stats.defensive.stab += defensive.stab;
+        gear_set.gear_stats.defensive.slash += defensive.slash;
+        gear_set.gear_stats.defensive.crush += defensive.crush;
+        gear_set.gear_stats.defensive.magic += defensive.magic;
+        gear_set.gear_stats.defensive.ranged += defensive.ranged;
+    }
+}
 
 // --- Markov Matrix Helpers (Python-style, updated) ---
 fn build_transition_matrix(hp: usize, max_hit: usize, accuracy: f64) -> Vec<Vec<f64>> {
@@ -97,7 +165,7 @@ fn weapon_kill_times_markov_per_tick_with_delay(
 }
 
 #[wasm_bindgen]
-pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
+pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     console_log!("Received payload JSON: {}", payload_json);
 
     let payload: DPSRoomPayload = match serde_json::from_str(payload_json) {
@@ -108,11 +176,30 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
         }
     };
 
-    let player = payload.player;
+    let mut player = payload.player;
     let monsters = payload.room.monsters;
     let cap = payload.config.cap;
+    let inventory_items: Vec<SelectedItem> = player
+        .inventory
+        .iter()
+        .filter_map(|item| item.equipment.clone())
+        .collect();
+    let mut sets = [
+        ("magic", &mut player.gear_sets.mage),
+        ("ranged", &mut player.gear_sets.ranged),
+    ];
 
-    let walk_delay = 21;
+    for (_, gear_set) in sets.iter_mut() {
+        ensure_item_equipped(gear_set, &inventory_items, "salve");
+        console_log!("Using salve");
+    }
+
+    // if !salve {
+
+    // }
+
+    // let walk_delay = 24;
+    let walk_delay = 0;
     let mut total_expected_hits = 0.0;
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;

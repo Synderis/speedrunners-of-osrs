@@ -1,0 +1,12 @@
+import init, { calculate_dps_with_objects_mystics } from '../wasm/mystics/mystics_wasm.js';
+import wasmUrl from '../wasm/mystics/mystics_wasm_bg.wasm?url';
+import { createWasmDpsLoader } from './wasmLoader';
+
+// Wrap init to match the expected type (Promise<void>)
+const initVoid = async (options: any) => { await init(options); };
+
+export const calculateDPSWithObjectsMystics = createWasmDpsLoader(
+    initVoid,
+    wasmUrl,
+    calculate_dps_with_objects_mystics
+);

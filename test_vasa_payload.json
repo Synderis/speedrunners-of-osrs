@@ -1,0 +1,531 @@
+{
+    "player": {
+        "combatStats": {
+            "attack": 99,
+            "strength": 99,
+            "defense": 99,
+            "ranged": 99,
+            "magic": 99,
+            "hitpoints": 99,
+            "prayer": 99,
+            "woodcutting": 99,
+            "mining": 99,
+            "thieving": 99
+        },
+        "gearSets": {
+            "melee": {
+                "gearStats": {
+                    "bonuses": {
+                        "str": 145,
+                        "ranged_str": 63,
+                        "magic_str": 2,
+                        "prayer": 7
+                    },
+                    "offensive": {
+                        "stab": 120,
+                        "slash": 175,
+                        "crush": 80,
+                        "magic": -63,
+                        "ranged": -38
+                    },
+                    "defensive": {
+                        "stab": 294,
+                        "slash": 294,
+                        "crush": 305,
+                        "magic": 0,
+                        "ranged": 323
+                    }
+                },
+                "selectedWeapon": {
+                    "name": "Scythe of vitur",
+                    "id": 22325,
+                    "version": "Charged",
+                    "slot": "weapon",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAbCAMAAABcI88jAAAAflBMVEUAAACYjo2WjIuViomTiIiQhoaHfn19dHR7cnJ5cXB3b251bWxza2tuZmZsZGRnYGBlXl1jXFtdV1dYUlJWUFBUTU1OSUhMRkZIQ0NFQEBjMCxgLiw/OjpzJB08NzdXKig5NDQ1MDBgHRgyLi5IIiAsKiooJiYkIiIgHR0AAAErnkU7AAAAAXRSTlMAQObYZgAAAKRJREFUeAF9wYtSwjAAAMGzKDRB8QWW+ihgTeH+/wcdmFE7YLLLL0/4lxpjDCnJJY2hruvZrN/LBWN9cz2pqupqd5BzxjCdevI+yBnnQeXI1y4pY85v5Ydv22EvI97JH10nGZMxWylwmSTLtb3kmT4+Jct+2EmebdtLnj6tpMBHKXAhJT5LgfdSYiMFPkiJjRQYBMlyoV+SZbdtNpLj6qWTPBW+AQ2XE+B7aqYXAAAAAElFTkSuQmCC",
+                    "speed": 5,
+                    "category": "Scythe",
+                    "bonuses": {
+                        "str": 75,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 70,
+                        "slash": 125,
+                        "crush": 30,
+                        "magic": -6,
+                        "ranged": 0
+                    },
+                    "defensive": {
+                        "stab": -2,
+                        "slash": 8,
+                        "crush": 10,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "two_handed": true,
+                    "weapon_styles": [
+                        {
+                            "name": "Reap",
+                            "attack_type": "Slash",
+                            "combat_style": "Accurate",
+                            "att": 3,
+                            "str": 0,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Chop",
+                            "attack_type": "Slash",
+                            "combat_style": "Aggressive",
+                            "att": 0,
+                            "str": 3,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Jab",
+                            "attack_type": "Crush",
+                            "combat_style": "Aggressive",
+                            "att": 0,
+                            "str": 3,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Block",
+                            "attack_type": "Slash",
+                            "combat_style": "Defensive",
+                            "att": 0,
+                            "str": 0,
+                            "def": 3,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        }
+                    ]
+                },
+                "gearType": "melee",
+                "gearItems": [
+                    "Scythe of vitur",
+                    "Torva full helm",
+                    "Amulet of rancour",
+                    "Infernal cape",
+                    "Torva platebody",
+                    "Torva platelegs",
+                    "Ferocious gloves",
+                    "Avernic treads (max)",
+                    "Ultor ring",
+                    "Dragon arrow"
+                ]
+            },
+            "mage": {
+                "gearStats": {
+                    "bonuses": {
+                        "str": 4,
+                        "ranged_str": 62,
+                        "magic_str": 26,
+                        "prayer": 5
+                    },
+                    "offensive": {
+                        "stab": 5,
+                        "slash": 5,
+                        "crush": 5,
+                        "magic": 177,
+                        "ranged": -6
+                    },
+                    "defensive": {
+                        "stab": 120,
+                        "slash": 112,
+                        "crush": 129,
+                        "magic": 103,
+                        "ranged": 15
+                    }
+                },
+                "selectedWeapon": {
+                    "name": "Tumeken's shadow",
+                    "id": 27275,
+                    "version": "Charged",
+                    "slot": "weapon",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAcCAMAAABBJv+bAAAAyVBMVEUAAAD80YD7wkL7wTzusx3lrBrapBrVoBrLpRjQnBjNmhi9mhi0nhXCkhi/jxi9jhi6ixWujhW3iRW0hxWrixWrgBXMbBilfBWYfBGfdxGVeRGLcRG0UBWHZQ2AZw2cUhCiSBFwYg14Wg29KBi3JhWLPRFxQyKuJBVgSAmlIhVWRglbQwmVIBFkNAhRPQmLHRE8NzeEGg2AGg1INQlULAkyLi5tFQ1kFQksKipgEQkoJiZbEQkgHR0mHQAaGBgVEREdAAANBQAAAAHlTK7wAAAAAXRSTlMAQObYZgAAAK9JREFUeNqd0EcSwjAMBVDTawi9914MCT1AQOHf/1BMspa14M949UayJKXYAOGDCYMK8B1dWAcRFdHbN5dGzrZLSUNzEFkZikPxxZNdkCdAocA43rV8OhdOXud0OywjSrfPcaNxO5ynnZOjua/xcVZ4LMZ6M+eKSYdDReH0aLhkpOuYpLAl/TxdM8P3IGj1KnUeWJLqmaAKrriRqC8tqe9Jenf+r7UT4katlMQKkv4AsmgklDKCmc0AAAAASUVORK5CYII=",
+                    "speed": 5,
+                    "category": "Powered Staff",
+                    "bonuses": {
+                        "str": 0,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 1
+                    },
+                    "offensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 35,
+                        "ranged": 0
+                    },
+                    "defensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 20,
+                        "ranged": 0
+                    },
+                    "two_handed": true,
+                    "weapon_styles": [
+                        {
+                            "name": "Accurate",
+                            "attack_type": "Magic",
+                            "combat_style": "Accurate",
+                            "att": 0,
+                            "str": 0,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 3,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Accurate",
+                            "attack_type": "Magic",
+                            "combat_style": "Accurate",
+                            "att": 0,
+                            "str": 0,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 3,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Longrange",
+                            "attack_type": "Magic",
+                            "combat_style": "Longrange",
+                            "att": 0,
+                            "str": 0,
+                            "def": 3,
+                            "ranged": 0,
+                            "magic": 1,
+                            "att_spd_reduction": 0
+                        }
+                    ]
+                },
+                "gearType": "mage",
+                "gearItems": [
+                    "Tumeken's shadow",
+                    "Ancestral hat",
+                    "Occult necklace",
+                    "Imbued saradomin cape",
+                    "Ancestral robe top",
+                    "Ancestral robe bottom",
+                    "Confliction gauntlets",
+                    "Avernic treads",
+                    "Magus ring",
+                    "Dragon arrow"
+                ]
+            },
+            "ranged": {
+                "gearStats": {
+                    "bonuses": {
+                        "str": 6,
+                        "ranged_str": 102,
+                        "magic_str": 2,
+                        "prayer": 6
+                    },
+                    "offensive": {
+                        "stab": -3,
+                        "slash": -3,
+                        "crush": -3,
+                        "magic": 4,
+                        "ranged": 218
+                    },
+                    "defensive": {
+                        "stab": 132,
+                        "slash": 126,
+                        "crush": 149,
+                        "magic": 155,
+                        "ranged": 126
+                    }
+                },
+                "selectedWeapon": {
+                    "name": "Twisted bow",
+                    "id": 20997,
+                    "version": "",
+                    "slot": "weapon",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB0AAAAeCAMAAADn2eWTAAAAsVBMVEUAAADLy8PIyMHHx7/Gxr6vr6SpqZ2muhWjopaPj4WLi4GOnxGImBF5eXBza2tvfA1waWlseA1sZGRpdA1nYGBkcA1lXl1hbQ1jXFtdXVddaQldV1dYWFJbVVVaZAlWVlBYUlJVYAlWUFBUTU1RWwlOTkhRSkpNVglOSUhMRkZISENJUQlFQEBCQj1CPT0/Ojo8Nzc5NDQ1MDAyLi4sKiooJiYkIiIgHR0aGBgVEREAAAF0MTGTAAAAAXRSTlMAQObYZgAAAN1JREFUeNp90tlSwzAMhWFDAUMpa0PZIbiQhS0pSR37f/8HYxK4ixTdfuM5Ohobow5MEE2NZrF2eFn5yH8yYhQVQ9yg5HIG2UrLvLCcrE+VzKWFo3R1LjFXFh4O5+mNoFxbDAd7ZIJyZxnq+k8Bn3rsu1TpSHkZcJ/WJWN87TOZb7ZufAjyHjtflOW3gjF0HuWlISTSdf/Q0IkXyv+rpNpL2KGOC2Wh212KYtsi4vOM5lJadwEwCyGTQpfw9f7WNpW40nHw5fq+KJ2EMVYJw0hVH5n69E43Y6jCJE/gL57JLuXmu+TdAAAAAElFTkSuQmCC",
+                    "speed": 6,
+                    "category": "Bow",
+                    "bonuses": {
+                        "str": 0,
+                        "ranged_str": 20,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 70
+                    },
+                    "defensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "two_handed": true,
+                    "weapon_styles": [
+                        {
+                            "name": "Aim",
+                            "attack_type": "Ranged",
+                            "combat_style": "Accurate",
+                            "att": 3,
+                            "str": 0,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Shoot",
+                            "attack_type": "Ranged",
+                            "combat_style": "Aggressive",
+                            "att": 0,
+                            "str": 3,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Block",
+                            "attack_type": "None",
+                            "combat_style": "Defensive",
+                            "att": 0,
+                            "str": 0,
+                            "def": 3,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        }
+                    ]
+                },
+                "gearType": "ranged",
+                "gearItems": [
+                    "Twisted bow",
+                    "Masori mask (f)",
+                    "Necklace of anguish",
+                    "Masori assembler max cape",
+                    "Masori body (f)",
+                    "Masori chaps (f)",
+                    "Zaryte vambraces",
+                    "Avernic treads (max)",
+                    "Venator ring",
+                    "Dragon arrow"
+                ]
+            }
+        },
+        "inventory": [
+            {
+                "name": "Lightbearer",
+                "equipment": {
+                    "name": "Lightbearer",
+                    "id": 25975,
+                    "version": "",
+                    "slot": "ring",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAABYAAAAbCAMAAABP9I/XAAABUFBMVEUAAADU2tjxxB3swR3ixhrgxBrpvh2C1LXnvB3dwRravxriuRrYvRo87rLgthrVuxo66q/TuRrashrQthjYsBrNtBg546rVrhrLshhwxaTTrBrIrxjQqRjNqBjFrBg32aPCqhi/qBi9pRjFoBi6oxXCnhjNkTS3oBW9mhi0nhW6lxWxmxWumBUwvY6rlRWxkBWFj42okxWujhW4gy6lkBUutoiijhGfixGlhhWbiBGihBGqeCqYhRGfgREqp32ndiqVgxGRfxGhciifcCiOfBGbbiaLeRGYbCaOdBGHdg2VaiSLcRGEcw2SZyRIf2qPZSSAcA2MYyJ8bQ2IYSJDdmN4ag2CXCB0Zg1+WiBwYg10Xg17Vx1tXg0dd1p3VR1wWw1zUR1wThpkVwlbUAlkRhhbSglWTAlgQxhWRglRSAlcQBVSOhVCNQA/LA0dGAAAAAG1zDUDAAAAAXRSTlMAQObYZgAAAVhJREFUeNptkmlXgmAQhbVFzUzDndwSMSKIXoo0ihRzScvMhXa1fV/m/3/rAIHk8X585sycuXfGZrMKbBME8DCBQ642iXKlK4CxWQCQa3wXCmoB+gaHJEFLOI4rigLQNikWIrjUOo6QooD8YmK3L0SkwmGEEBK7Izwz5wsshu1OhFpWPOvGsgt2u9PZaonddxOveDCaYTluezAYtB/BWI4kCZKiGVbIl5oXuldIq1pOqwWOF8TKF2jueJ7nq3vFA1Xl6uHRj4YluVTpVIsUzXL8yWmn96xRotm+H/bKW5lQNEacX94M9clc//XpDgCWIkF3oAFGWlHx8wP0fVyR/Mg3ZcQMjqRkHAL8MeHsr3GaH4Xn8ND5mjYRKGmEp/xYmpcqAACsZLnLfDAeYwRRlmXZih3eYCJDMiy7X7eeGFzeSCK7trlTv4b//xHPrG7sHt++wfjj6DLBL0nZXSn8NEDNAAAAAElFTkSuQmCC",
+                    "speed": 0,
+                    "category": "",
+                    "bonuses": {
+                        "str": 0,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "defensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "two_handed": false,
+                    "weapon_styles": []
+                }
+            },
+            {
+                "name": "Salve amulet(ei)",
+                "equipment": {
+                    "name": "Salve amulet(ei)",
+                    "id": 12018,
+                    "version": "",
+                    "slot": "neck",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAABsAAAAZCAMAAAD3wqVsAAABFFBMVEUAAAD8+/v7+vr4+Pj39vb29fX18/P08vLz8fHx8PDv7e3u7Ozs6enp5ubo5eXn4+Pl4uLk4eHj4ODi3t7g29ve2trc19fa1NTY09LX0dHQysrPyMjOx8bNxsXLxMPHv7/FvLzDu7rCubnBuLe/tra7sbG6r6+5rq23rKy2q6qyqKexpaWvpKSvoqKrn5+onJumm5qhlZWflJSbkJCaj4+Yjo2WjIuViomTiIiQhoaPhYWNg4OLgoGHfn2FfHuEenqBeHh/dnZ9dHR7cnIycspsZGRnYGAqa8MnaMBjXFsXZckvW5RYUlJUTU0VWbEVV69IQ0NCPT0/OjoNPXsLPHoNO3U1MDAoJiYHKlUHJ04VEREAAAHmYaikAAAAAXRSTlMAQObYZgAAARlJREFUeAFtwYc2w2AAhuHPphS1ataqPZqa6dLa/EgQP6n3/u/DqVO0iefRL36oHcDacmZmfDLtXgDoFwe5nfWV+XQqMTQ8NjHluJcAamDH2d1Ymp0aGejo6h0YTI6OL246hUsksXq2R6vu/sFkavcJiblaFbUCmM5/InFxg6JYqCExd/+Iosi+IpF9QTE4SGL/E8VQQRIlFEP5A0lcoygK70gS2yiC01fUwGiJJn2Do2f0ja6tmu/71tbrSIL8yRNqYmT/1vestXUEuSMX9IO+zNWdZ621sJc/KaI/dA77nm14yB26ZdSKhO9Za23AcbGC2tDjedYGQUi5iiIwJgiCMOQcRWGMMWGIUAzGmLcQ/QdjTIj+B6C4L3uUVGUL7Wu6AAAAAElFTkSuQmCC",
+                    "speed": 0,
+                    "category": "",
+                    "bonuses": {
+                        "str": 0,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 3
+                    },
+                    "offensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "defensive": {
+                        "stab": 3,
+                        "slash": 3,
+                        "crush": 3,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "two_handed": false,
+                    "weapon_styles": []
+                }
+            },
+            {
+                "name": "Slayer helmet (i)",
+                "equipment": {
+                    "name": "Slayer helmet (i)",
+                    "id": 11865,
+                    "version": "",
+                    "slot": "head",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAABUAAAAeCAMAAAD0DqVnAAAB6VBMVEUAAADGxr7CwrnGvr7Du7q+vrTCubm9t8G/tra7tr+6ua+5uK2+tLS3t6y5sry8srK3sbu2sbu2r7q6r6+1r7q5rq21rbmysqezrLe3rKy2q6qyqrawqra0qaiwqLSvqLSyqKevp7KsrKCtpbGxpaWspbGspK+vpKSqpK+voqKooKysoKCnoKynn6uln6ulnamknamonJukm6ihoJWim6iimqagmqakmZigmKSfmKSjl5adlqOhlZWclaGblJ+flJSalJ+YmI2Zkp2dkpKYkp2XkJubkJCWkJuaj4+Vj5qYjo2UjZiTjZiWjIuSi5aRi5aViomPiZWPiJOTiIiOiJONhpCQhoaMhpCPhYWKhY+Ng4OJg42Ig42LgoGHgYuFf4mEfYeDfYeFfHuCe4WEeoOEenqBeIF9eIF/dn99dH17cnt5cHl3bnducnd1bHRscHVrbnNwa3NwaXBpbHBuZm5mam5sZGxkZ2xiZWpnYGdgY2dkYGdlXWVdYWVlXl1jW2NjXFtbXmNhWmBhWlpaXGFdV11XWl1dV1dbVVtVV1tbVVVSVVhYUlJWUFZQUlZWUFBUTU1RSlFKTVFRSkpOSUhISk5GSExMRkZIQ0NAQkVFQEBCPT06PD8/Ojo8Nzc5NDQdHRUYGA0AAAFmm4KuAAAAAXRSTlMAQObYZgAAAcVJREFUeAFNwc1vTGEUwOHfvOfcO9OZpg2VVEVohAV2GgtWllYW1nIi+BOsSPgHJI0dC9GchRSx0FWjC2EvdhYyoSLis1Wtmfsxc98rQyp9HuU/N7Yp23zRDdwAFGfEYAw3v+cGqD+IVXEcN/OVM84/av60bObhuRsVeUsZUcyXYx7kmROhf3DZDRTMeSRBls69i/HV4KwBCpjnSBgsRV5KH8dQRnqBAmbnj0pGiZsy0gt5ljKc6oUPb5IjhgL+evJ9L++UeXvQGZ/9BCg4m42p5Geoy3Tm86W6AhS/PtdRCZ1so5hm5u5l2XRTvzMhItKWNGvL728HSnTdlSuN7l4eS5In2krT8sWJuomy+rCfXzvPk5SkpQEOxcSUwDC7eqM4PTw8BjT4mCSuiDakIRJDlwpRaYaAmqdpEVpVVRNlSEOIAxQ6eS8wuRZDrCjDeLj9fUHhwv1BJl02gwyyk9WvqfUFU1i7OMy6NZ2vUpwqfuy+OQ8KrS9beV0T98T9xVrrVqagoGMlQyI1ECTO99so5rv2vS0hEoGVaUlAwcBXK6hoFkzQUFBGzBlZL47N0RNQ/jJGfKsCSQ1lB/MNEEDZydxwgz9IxMHH2lxtRgAAAABJRU5ErkJggg==",
+                    "speed": 0,
+                    "category": "",
+                    "bonuses": {
+                        "str": 0,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 3,
+                        "ranged": 3
+                    },
+                    "defensive": {
+                        "stab": 30,
+                        "slash": 32,
+                        "crush": 27,
+                        "magic": 10,
+                        "ranged": 30
+                    },
+                    "two_handed": false,
+                    "weapon_styles": []
+                }
+            },
+            {
+                "name": "Zamorak godsword",
+                "equipment": {
+                    "name": "Zamorak godsword",
+                    "id": 11808,
+                    "version": "",
+                    "slot": "weapon",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAfCAMAAADHso01AAAAqFBMVEUAAADGx860tL6vr7qqqranp7Kioq+fn6udnambm6iamqaYmKSWl6OVlaGUlJ+Skp2QkJuPj5qNjZiLi5aJipWIiJOGhpCFhY+Dg41/f4l9fYd7fIV4eIF2dn9wcHlpaXBmZm5kZGxgYGddXWVbW2NVVVtSUlhWUFBRSkpMRkZDQ0hCPT08Nzc5NDQyLi4uLjIsKipgEQlMDQlIDQkgHR01CQAuCQAAAAHdnqFQAAAAAXRSTlMAQObYZgAAAOlJREFUeAF9wes6AlEAQNHtMiKamW4jhKNcSoVK7fd/M1/8qKkz1qKaSjVrjbZU8bLRzuWACljPi/at7DNJEvEiK7rKIT3V87ToSZQn1tLiRuI8PkqLO6lis+hLBU3zrJNJlM2ieFDZpwo2857sE0MIQa9a3aaAsuVQg0Gz63sFTBLZEoNi1pINE9llCOpZR/5ImfZDPTVInPPXjihRzherYdAgMS7XDp5CCBLhci06UMoEdLESQClzrD4O3mXDZ9nlTCeTwcun/JIywensQyo5HU2kit/qm8T5JTiSKGcCjiVOwJH8R6J+AHUfKaiN7fApAAAAAElFTkSuQmCC",
+                    "speed": 6,
+                    "category": "2h Sword",
+                    "bonuses": {
+                        "str": 132,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 8
+                    },
+                    "offensive": {
+                        "stab": 0,
+                        "slash": 132,
+                        "crush": 80,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "defensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "two_handed": true,
+                    "weapon_styles": []
+                }
+            }
+        ]
+    },
+    "room": {
+        "id": "vasa",
+        "name": "Vasa",
+        "image": "/rooms/250px-Vasa_Nistirio.webp",
+        "description": "God Wars Dungeon - Zamorak",
+        "monsters": [
+            {
+                "id": 7566,
+                "name": "Vasa Nistirio",
+                "version": "Challenge Mode",
+                "image": "Vasa Nistirio.png",
+                "level": 0,
+                "speed": 3,
+                "style": [
+                    "Magic",
+                    "Ranged"
+                ],
+                "size": 5,
+                "max_hit": 0,
+                "skills": {
+                    "atk": 1,
+                    "def": 262,
+                    "hp": 450,
+                    "magic": 345,
+                    "ranged": 345,
+                    "str": 1
+                },
+                "offensive": {
+                    "atk": 0,
+                    "magic": 0,
+                    "magic_str": 0,
+                    "ranged": 100,
+                    "ranged_str": 0,
+                    "str": 0
+                },
+                "defensive": {
+                    "flat_armour": 0,
+                    "crush": 40,
+                    "magic": 400,
+                    "heavy": 30,
+                    "standard": 40,
+                    "light": 40,
+                    "slash": 190,
+                    "stab": 170
+                },
+                "attributes": [
+                    "xerician"
+                ],
+                "immunities": {
+                    "burn": null
+                },
+                "weakness": null
+            }
+        ]
+    },
+    "config": {
+        "cap": 0.9999
+    }
+}

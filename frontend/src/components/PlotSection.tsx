@@ -7,6 +7,7 @@ import { miscIcons } from '../data/constants';
 import { calculateDPSWithObjectsTekton } from '../loaders/tektonWasm';
 import { calculateDPSWithObjectsVasa } from '../loaders/vasaWasm';
 import { calculateDPSWithObjectsVespula } from '../loaders/vespulaWasm';
+import { calculateDPSWithObjectsMystics } from '../loaders/mysticsWasm';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useTheme } from '../hooks/useTheme';
 import type { GearSets, CombatStats, Equipment, InventoryItem } from '../types/player';
@@ -122,7 +123,8 @@ const wasmModelLoaders: Record<string, (player: any, monster: any) => Promise<an
   'tekton': calculateDPSWithObjectsTekton,
   'vasa': calculateDPSWithObjectsVasa,
   'guardians': calculateDPSWithObjectsGuardians,
-  'vespula': calculateDPSWithObjectsVespula
+  'vespula': calculateDPSWithObjectsVespula,
+  'mystics': calculateDPSWithObjectsMystics
 };
 
 // --- Main Component ---
@@ -361,13 +363,14 @@ const PlotSection: React.FC<PlotSectionProps> = ({
             selectedWeapon: allWeapons[type],
             gearType: type,
             gearItems: gearSets[type]
-              .map(slot => slot.selected?.name)
-              .filter(Boolean)
+              .map(slot => slot.selected)
+              .filter((item): item is Equipment => Boolean(item))
           };
           return acc;
         }, {} as any),
         inventory: inventoryWithStyles
       };
+      console.log('Player Data for WASM:', playerData);
 
       // Loop over all selected monsters
       const plotDataUpdates: Record<string, PlotDataPoint[]> = {};

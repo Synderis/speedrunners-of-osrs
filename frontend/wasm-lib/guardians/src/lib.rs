@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
+use osrs_shared_functions::*;
 
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
@@ -16,102 +17,9 @@ macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
 
-// --- Calculation logic (same as tekton, but with mining scaling for guardians) ---
-fn calculate_max_hit_for_style(player: &Player, style: &WeaponStyle, gear: &GearStats, mining_level: f64) -> (u32, u32) {
-    let strength_level = player.combat_stats.strength;
-    let potion_bonus = 21.0; // Super strength potion
-    let prayer_strength_bonus = 1.23; // Piety
-    let style_bonus = style.str_ as f64;
-    let void_bonus = 1.0; // No void for now
-    let effective_strength = (((strength_level as f64 + potion_bonus) * prayer_strength_bonus + style_bonus + 8.0) * void_bonus).floor() as u32;
-    let strength_bonus = gear.bonuses.str as f64;
-    let base_max_hit = (0.5 + (effective_strength as f64 * (strength_bonus + 64.0)) / 640.0).floor();
-    // Guardians: apply mining level scaling
-    let level_requirement = 60.0;
-    let damage_multiplier = (50.0 + mining_level + level_requirement) / 150.0;
-    let max_hit = (base_max_hit * damage_multiplier).ceil() as u32;
-    (max_hit, effective_strength)
-}
-
-fn calculate_accuracy_for_style(player: &Player, monster: &Monster, style: &WeaponStyle, gear: &GearStats) -> (f64, u32, u64, u64) {
-    let attack_level = player.combat_stats.attack;
-    let potion_bonus = 21.0; // Super attack potion
-    let prayer_attack_bonus = 1.20; // Piety
-    let style_bonus = style.att as f64;
-    let void_bonus = 1.0; // No void for now
-    let effective_attack = (((attack_level as f64 + potion_bonus) * prayer_attack_bonus + style_bonus + 8.0) * void_bonus).floor() as u32;
-    let equipment_bonus = match style.attack_type.to_lowercase().as_str() {
-        "stab" => gear.offensive.stab,
-        "slash" => gear.offensive.slash,
-        "crush" => gear.offensive.crush,
-        "magic" => gear.offensive.magic,
-        "ranged" => gear.offensive.ranged,
-        _ => 0,
-    };
-    let attack_bonus = equipment_bonus;
-    let max_attack_roll = effective_attack as u64 * (attack_bonus + 64) as u64;
-    let defence_bonus = match style.attack_type.to_lowercase().as_str() {
-        "stab" => monster.defensive.stab,
-        "slash" => monster.defensive.slash,
-        "crush" => monster.defensive.crush,
-        "magic" => monster.defensive.magic,
-        "ranged" => monster.defensive.standard,
-        _ => 0,
-    };
-    let max_defence_roll = (monster.skills.def + 9) as u64 * (defence_bonus + 64) as u64;
-
-    let mut accuracy = 0.0;
-
-    if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
-        if weapon.name.to_lowercase().contains("osmumten's fang") {
-            if max_attack_roll > max_defence_roll {
-                accuracy = 1.0 - (((max_defence_roll as f64 + 2.0) * (2.0 * max_defence_roll as f64 + 3.0)) / (6.0 * (max_attack_roll as f64 + 1.0).powf(2.0)));
-            } else {
-                accuracy = (max_attack_roll as f64 * (4.0 * max_attack_roll as f64 + 5.0)) / (6.0 * (max_attack_roll as f64 + 1.0) * (max_defence_roll as f64 + 1.0));
-            };
-        } else {
-            if max_attack_roll > max_defence_roll {
-                accuracy = 1.0 - ((max_defence_roll as f64 + 2.0) / (2.0 * (max_attack_roll as f64 + 1.0)));
-            } else {
-                accuracy = max_attack_roll as f64 / (2.0 * (max_defence_roll as f64 + 1.0));
-            };
-        };
-    };
-
-    (accuracy, effective_attack, max_attack_roll, max_defence_roll)
-}
-
-fn find_best_combat_style(player: &Player, monster: &Monster, mining_level: f64) -> StyleResult {
-    let mut best_style: Option<StyleResult> = None;
-    let mut best_dps = 0.0;
-    if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
-        for style in &weapon.weapon_styles {
-            let (max_hit, effective_strength) = calculate_max_hit_for_style(player, style, &player.gear_sets.melee.gear_stats, mining_level);
-            let (accuracy, effective_attack, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, style, &player.gear_sets.melee.gear_stats);
-            let effective_dps = max_hit as f64 * accuracy;
-            let style_result = StyleResult {
-                combat_style: style.combat_style.clone(),
-                attack_type: style.attack_type.clone(),
-                max_hit,
-                accuracy,
-                effective_dps,
-                effective_strength,
-                effective_attack,
-                max_attack_roll,
-                max_defence_roll,
-                att_spd_reduction: style.att_spd_reduction,
-            };
-            if effective_dps > best_dps {
-                best_dps = effective_dps;
-                best_style = Some(style_result);
-            }
-        }
-    }
-    best_style.unwrap()
-}
 fn ensure_pickaxe_equipped(
     gear_set: &mut GearSetData,
-    inventory: &[SelectedWeapon],
+    inventory: &[SelectedItem],
 ) {
     // Check if current selected weapon is a pickaxe
     let is_pickaxe = gear_set.selected_weapon
@@ -267,16 +175,15 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
     let mut player = payload.player;
     let monsters = payload.room.monsters;
     let cap = payload.config.cap;
-    let mining_level = player.combat_stats.mining as f64;
 
     // --- Ensure pickaxe is equipped in melee gear if present in inventory ---
     // Collect inventory weapons (flattened from inventory items with equipment)
-    let inventory_weapons: Vec<SelectedWeapon> = player
+    let inventory_items: Vec<SelectedItem> = player
         .inventory
         .iter()
         .filter_map(|item| item.equipment.clone())
         .collect();
-    ensure_pickaxe_equipped(&mut player.gear_sets.melee, &inventory_weapons);
+    ensure_pickaxe_equipped(&mut player.gear_sets.melee, &inventory_items);
     console_log!("Using pickaxe");
     
 
@@ -293,7 +200,7 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
 
 
     for monster in monsters {
-        let best_style = find_best_combat_style(&player, &monster, mining_level);
+        let best_style = find_best_combat_style(&player, &monster, vec!["melee".to_string()]);
 
         let max_hit = best_style.max_hit as usize;
         let accuracy = best_style.accuracy;
