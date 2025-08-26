@@ -63,7 +63,7 @@ fn ensure_pickaxe_equipped(
         ) {
             gear_set.gear_stats.bonuses.str += bonuses.str;
             gear_set.gear_stats.bonuses.ranged_str += bonuses.ranged_str;
-            gear_set.gear_stats.bonuses.magic_str += bonuses.magic_str;
+            gear_set.gear_stats.bonuses.magic_str += bonuses.magic_str / 10;
             gear_set.gear_stats.bonuses.prayer += bonuses.prayer;
             gear_set.gear_stats.offensive.stab += offensive.stab;
             gear_set.gear_stats.offensive.slash += offensive.slash;
