@@ -146,76 +146,94 @@ def extract_player(obj):
 def extract_dps_payload(obj):
     return {
         "player": extract_player(obj.get("player", {})),
-        "monster": extract_monster(obj.get("monster", {})),
+        "room": extract_monster(obj.get("room", {})),
         "config": obj.get("config", {}),
     }
 
-def calculate_max_hit_for_style(player, monster, style, gear):
-    ranged_level = player["combatStats"]["ranged"]
-    potion_bonus = 21.0
-    prayer_ranged_bonus = 1.23
-    style_bonus = style.get("ranged", 0)
-    void_bonus = 1.0
-    effective_ranged = int(((ranged_level + potion_bonus) * prayer_ranged_bonus + style_bonus + 8.0) * void_bonus)
-    ranged_bonus = gear["bonuses"]["ranged_str"]
-    if player["gearSets"]["ranged"].get("selectedWeapon", {}).get("name", "").lower() == "twisted bow":
-        max_hit_multiplier = (250 + ((((10 * 3 * monster["skills"]["magic"]) / 10) - 14) / 100) - (((((3 * monster["skills"]["magic"]) / 10) - 140) ** 2) / 100)) / 100
-        max_hit_multiplier = max(1.0, min(max_hit_multiplier, 2.50))
-    max_hit = int(0.5 + (effective_ranged * (ranged_bonus + 64.0)) / 640.0)
-    
-    max_hit = int(max_hit * max_hit_multiplier)
-    return max_hit, effective_ranged
+def calculate_max_hit_for_style(player, monster, style, gear, gear_type="ranged"):
+    if gear_type == "melee":
+        level = player["combatStats"]["strength"]
+        potion_bonus = 21.0  # super combat
+        prayer_bonus = 1.23  # piety
+        style_bonus = style.get("str", 0)
+        void_bonus = 1.1 if player.get("void_melee", False) else 1.0
+        effective_strength = int(((level + potion_bonus) * prayer_bonus + style_bonus + 8.0) * void_bonus)
+        str_bonus = gear["bonuses"]["str"]
+        max_hit = int(0.5 + (effective_strength * (str_bonus + 64.0)) / 640.0)
+        return max_hit, effective_strength
+    elif gear_type == "ranged":
+        level = player["combatStats"]["ranged"]
+        potion_bonus = 21.0
+        prayer_bonus = 1.23
+        style_bonus = style.get("ranged", 0)
+        void_bonus = 1.0
+        effective_ranged = int(((level + potion_bonus) * prayer_bonus + style_bonus + 8.0) * void_bonus)
+        ranged_bonus = gear["bonuses"]["ranged_str"]
+        max_hit_multiplier = 1.0
+        if player["gearSets"]["ranged"].get("selectedWeapon", {}).get("name", "").lower() == "twisted bow":
+            max_hit_multiplier = (250 + ((((10 * 3 * monster["skills"]["magic"]) / 10) - 14) / 100) - (((((3 * monster["skills"]["magic"]) / 10) - 140) ** 2) / 100)) / 100
+            max_hit_multiplier = max(1.0, min(max_hit_multiplier, 2.50))
+        max_hit = int(0.5 + (effective_ranged * (ranged_bonus + 64.0)) / 640.0)
+        max_hit = int(max_hit * max_hit_multiplier)
+        return max_hit, effective_ranged
+    # Add magic here if needed
+    else:
+        raise ValueError("Unsupported gear_type")
 
-def calculate_accuracy_for_style(player, monster, style, gear):
-    attack_level = player["combatStats"]["ranged"]
-    potion_bonus = 21.0
-    prayer_ranged_bonus = 1.20
-    style_bonus = style.get("ranged", 0)
-    void_bonus = 1.0
-    effective_attack = int(((attack_level + potion_bonus) * prayer_ranged_bonus + style_bonus + 8.0) * void_bonus)
-    attack_type = style.get("attack_type", "").lower()
-    equipment_bonus = {
-        "stab": gear["offensive"]["stab"],
-        "slash": gear["offensive"]["slash"],
-        "crush": gear["offensive"]["crush"],
-        "magic": gear["offensive"]["magic"],
-        "ranged": gear["offensive"]["ranged"],
-    }.get(attack_type, 0)
-    attack_bonus = equipment_bonus
-    max_attack_roll = effective_attack * (attack_bonus + 64)
-    defence_bonus = {
-        "stab": monster["defensive"]["stab"],
-        "slash": monster["defensive"]["slash"],
-        "crush": monster["defensive"]["crush"],
-        "magic": monster["defensive"]["magic"],
-        "ranged": monster["defensive"]["standard"],
-    }.get(attack_type, 0)
-    max_defence_roll = (monster["skills"]["def"] + 9) * (defence_bonus + 64)
-    accuracy_multiplier = 1.0
-    if player["gearSets"]["ranged"].get("selectedWeapon", {}).get("name", "").lower() == "twisted bow":
-        accuracy_multiplier = (140 + ((((10 * 3 * monster["skills"]["magic"]) / 10) - 10) / 100) - (((((3 * monster["skills"]["magic"]) / 10) - 100) ** 2) / 100)) / 100
-        accuracy_multiplier = max(1.0, min(accuracy_multiplier, 1.40))
-        print(f"Ranged accuracy multiplier: {accuracy_multiplier}")
-    max_attack_roll = int(max_attack_roll * accuracy_multiplier)
-    print(f"Ranged max attack roll: {max_attack_roll}, max defence roll: {max_defence_roll}")
+def calculate_accuracy_for_style(player, monster, style, gear, gear_type="ranged"):
+    if gear_type == "melee":
+        attack_level = player["combatStats"]["attack"]
+        potion_bonus = 8.0
+        prayer_bonus = 1.23
+        style_bonus = style.get("att", 0)
+        void_bonus = 1.1 if player.get("void_melee", False) else 1.0
+        effective_attack = int(((attack_level + potion_bonus) * prayer_bonus + style_bonus + 8.0) * void_bonus)
+        attack_type = style.get("attack_type", "").lower()
+        attack_bonus = gear["offensive"].get(attack_type, 0)
+        max_attack_roll = effective_attack * (attack_bonus + 64)
+        defence_bonus = monster["defensive"].get(attack_type, 0)
+        max_defence_roll = (monster["skills"]["def"] + 9) * (defence_bonus + 64)
+    elif gear_type == "ranged":
+        attack_level = player["combatStats"]["ranged"]
+        potion_bonus = 21.0
+        prayer_bonus = 1.20
+        style_bonus = style.get("ranged", 0)
+        void_bonus = 1.0
+        effective_attack = int(((attack_level + potion_bonus) * prayer_bonus + style_bonus + 8.0) * void_bonus)
+        attack_type = style.get("attack_type", "").lower()
+        attack_bonus = gear["offensive"].get(attack_type, 0)
+        max_attack_roll = effective_attack * (attack_bonus + 64)
+        defence_bonus = monster["defensive"].get(attack_type, 0)
+        max_defence_roll = (monster["skills"]["def"] + 9) * (defence_bonus + 64)
+        accuracy_multiplier = 1.0
+        if player["gearSets"]["ranged"].get("selectedWeapon", {}).get("name", "").lower() == "twisted bow":
+            accuracy_multiplier = (140 + ((((10 * 3 * monster["skills"]["magic"]) / 10) - 10) / 100) - (((((3 * monster["skills"]["magic"]) / 10) - 100) ** 2) / 100)) / 100
+            accuracy_multiplier = max(1.0, min(accuracy_multiplier, 1.40))
+            max_attack_roll = int(max_attack_roll * accuracy_multiplier)
+    else:
+        raise ValueError("Unsupported gear_type")
+
     if max_attack_roll > max_defence_roll:
         accuracy = 1.0 - (max_defence_roll + 2) / (2.0 * (max_attack_roll + 1))
     else:
         accuracy = max_attack_roll / (2.0 * (max_defence_roll + 1))
-    print(f"Ranged accuracy: {accuracy}")
     return accuracy, effective_attack, max_attack_roll, max_defence_roll
 
-def find_best_combat_style(player, monster):
+def find_best_combat_style(player, monster, gear_type):
     best_style = None
     best_dps = 0.0
-    ranged = player["gearSets"]["ranged"]
-    weapon = ranged.get("selectedWeapon")
-    if weapon:
-        for style in weapon["weapon_styles"]:
-            max_hit, effective_strength = calculate_max_hit_for_style(player, monster, style, ranged["gearStats"])
-            accuracy, effective_attack, max_attack_roll, max_defence_roll = calculate_accuracy_for_style(player, monster, style, ranged["gearStats"])
+    gear_set = player["gearSets"].get(gear_type)
+    if not gear_set:
+        return None
+    weapon = gear_set.get("selectedWeapon")
+    gear_stats = gear_set.get("gearStats")
+    if weapon and gear_stats:
+        for style in weapon.get("weapon_styles", []):
+            max_hit, effective_strength = calculate_max_hit_for_style(player, monster, style, gear_stats, gear_type=gear_type)
+            accuracy, effective_attack, max_attack_roll, max_defence_roll = calculate_accuracy_for_style(player, monster, style, gear_stats, gear_type=gear_type)
             effective_dps = max_hit * accuracy
             style_result = {
+                "gear_type": gear_type,
                 "combat_style": style.get("combat_style", ""),
                 "attack_type": style.get("attack_type", ""),
                 "max_hit": max_hit,
@@ -251,7 +269,7 @@ if __name__ == "__main__":
     start_time = time.time()
 
     # Load parameters from your Markov model's best style output
-    with open("test_vasa_payload.json", "r") as f:
+    with open("new_vasa_payload.json", "r") as f:
         payload = json.load(f)
     player = payload["player"]
     room = payload["room"]
@@ -259,10 +277,12 @@ if __name__ == "__main__":
 
     # You may want to use your find_best_combat_style logic here, but for demo:
     # Fill these in with your actual values or extract from your Markov code
-    best_style = find_best_combat_style(player, monsters[0])
+    best_style = find_best_combat_style(player, monsters[0], "ranged")
     monster_hp = monsters[0]["skills"]["hp"]
     max_hit = best_style["max_hit"]
+    print(max_hit)
     accuracy = best_style["accuracy"]
+    print(accuracy)
     attack_speed = 5
 
     # Print probability of 0 damage and expected damage per attack
@@ -274,49 +294,80 @@ if __name__ == "__main__":
     # Simulation for empirical TTK and cumulative kill probability
     trials = 100_000
     max_attacks = 100  # Reasonable upper bound for plotting
-    max_attacks_crystal = 17
-    teleport_attacks = 15
+    max_attacks_crystal = 68
+    teleport_attacks = 98
     kill_attack_counts = []
     for _ in range(trials):
         hp = monster_hp
         attacks = 0
+        total_attacks = 0
         while hp > 0 and attacks < max_attacks:
-            attacks += 1
+            attacks += 5
+            total_attacks += 1 * attack_speed
             crystal_attacks = 0
-            if attacks % 4 == 0:
-                best_style_crystal = find_best_combat_style(player, monsters[1])
+            if attacks == 20:
+                best_style_crystal = find_best_combat_style(player, monsters[1], "melee")
+                monster_hp_crystal = monsters[1]["skills"]["hp"]
+                max_hit_crystal = best_style_crystal["max_hit"]
+                accuracy_crystal = best_style_crystal["accuracy"]
+                # print(accuracy_crystal, max_hit_crystal)
+                attack_speed_crystal = 5
+                p_zero_crystal = (1 - accuracy_crystal) + accuracy_crystal / (max_hit_crystal + 1)
+                expected_damage_crystal = accuracy_crystal * (sum(i for i in range(0, max_hit_crystal + 1)) / (max_hit_crystal + 1))
+                while monster_hp_crystal > 0 and crystal_attacks < max_attacks_crystal or attacks + crystal_attacks < teleport_attacks:
+                    crystal_attacks += 4
+                    if np.random.rand() < accuracy_crystal:
+                        hit_crystal = np.random.randint(0, max_hit_crystal + 1)
+                    else:
+                        hit_crystal = 0
+                    monster_hp_crystal -= hit_crystal
+                total_attacks += crystal_attacks
+            elif (attacks - 20) % 7 == 0:
+                best_style_crystal = find_best_combat_style(player, monsters[1], "melee")
                 monster_hp_crystal = monsters[1]["skills"]["hp"]
                 max_hit_crystal = best_style_crystal["max_hit"]
                 accuracy_crystal = best_style_crystal["accuracy"]
                 attack_speed_crystal = 5
                 p_zero_crystal = (1 - accuracy_crystal) + accuracy_crystal / (max_hit_crystal + 1)
                 expected_damage_crystal = accuracy_crystal * (sum(i for i in range(0, max_hit_crystal + 1)) / (max_hit_crystal + 1))
-                while monster_hp_crystal > 0 and crystal_attacks < max_attacks_crystal or attacks < teleport_attacks:
-                    crystal_attacks += 1
-                    attacks += 1
+                while monster_hp_crystal > 0 and crystal_attacks < max_attacks_crystal or attacks + crystal_attacks < teleport_attacks:
+                    crystal_attacks += 4
                     if np.random.rand() < accuracy_crystal:
                         hit_crystal = np.random.randint(0, max_hit_crystal + 1)
                     else:
                         hit_crystal = 0
                     monster_hp_crystal -= hit_crystal
+                total_attacks += crystal_attacks
             if np.random.rand() < accuracy:
                 hit = np.random.randint(0, max_hit + 1)
             else:
                 hit = 0
             hp -= hit
-        kill_attack_counts.append(attacks)
+        kill_attack_counts.append(total_attacks)
+    
+    max_ticks = int(max(kill_attack_counts))
+    kill_prob = np.zeros(max_ticks + 1)
+    for ticks in kill_attack_counts:
+        idx = int(ticks)
+        if idx <= max_ticks:
+            kill_prob[idx:] += 1
+    kill_prob = kill_prob / trials
+    attack_ticks = np.arange(max_ticks + 1)
+
+    mean_ttk = np.mean(kill_attack_counts)
+    std_ttk = np.std(kill_attack_counts)
 
     # Empirical cumulative kill probability by attack number
-    kill_prob = np.zeros(max_attacks)
-    for a in kill_attack_counts:
-        if a <= max_attacks:
-            kill_prob[a-1:] += 1
-    kill_prob = kill_prob / trials
-    # Align the simulation so the first attack is at tick 0 (like Markov)
-    attack_ticks = [i * attack_speed for i in range(max_attacks)]
+    # kill_prob = np.zeros(max_attacks)
+    # for a in kill_attack_counts:
+    #     if a <= max_attacks:
+    #         kill_prob[a-1:] += 1
+    # kill_prob = kill_prob / trials
+    # # Align the simulation so the first attack is at tick 0 (like Markov)
+    # attack_ticks = [i * attack_speed for i in range(max_attacks)]
 
-    mean_ttk = np.mean([a * attack_speed for a in kill_attack_counts])
-    std_ttk = np.std([a * attack_speed for a in kill_attack_counts])
+    # mean_ttk = np.mean([a * attack_speed for a in kill_attack_counts])
+    # std_ttk = np.std([a * attack_speed for a in kill_attack_counts])
     print(f"Expected TTK: {mean_ttk:.2f} ticks ({mean_ttk * 0.6:.2f} seconds)")
     print(f"Expected hit count: {np.mean(kill_attack_counts):.2f}")
 
