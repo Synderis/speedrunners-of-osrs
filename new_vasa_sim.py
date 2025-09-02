@@ -183,10 +183,10 @@ def calculate_max_hit_for_style(player, monster, style, gear, gear_type="ranged"
 def calculate_accuracy_for_style(player, monster, style, gear, gear_type="ranged"):
     if gear_type == "melee":
         attack_level = player["combatStats"]["attack"]
-        potion_bonus = 8.0
-        prayer_bonus = 1.23
+        potion_bonus = 21.0
+        prayer_bonus = 1.20
         style_bonus = style.get("att", 0)
-        void_bonus = 1.1 if player.get("void_melee", False) else 1.0
+        void_bonus = 1.0
         effective_attack = int(((attack_level + potion_bonus) * prayer_bonus + style_bonus + 8.0) * void_bonus)
         attack_type = style.get("attack_type", "").lower()
         attack_bonus = gear["offensive"].get(attack_type, 0)
@@ -203,13 +203,16 @@ def calculate_accuracy_for_style(player, monster, style, gear, gear_type="ranged
         attack_type = style.get("attack_type", "").lower()
         attack_bonus = gear["offensive"].get(attack_type, 0)
         max_attack_roll = effective_attack * (attack_bonus + 64)
-        defence_bonus = monster["defensive"].get(attack_type, 0)
+        
+        defence_bonus = monster["defensive"].get('light', 0)
+        # print(f"Ranged defence bonus: {defence_bonus}")
         max_defence_roll = (monster["skills"]["def"] + 9) * (defence_bonus + 64)
         accuracy_multiplier = 1.0
         if player["gearSets"]["ranged"].get("selectedWeapon", {}).get("name", "").lower() == "twisted bow":
             accuracy_multiplier = (140 + ((((10 * 3 * monster["skills"]["magic"]) / 10) - 10) / 100) - (((((3 * monster["skills"]["magic"]) / 10) - 100) ** 2) / 100)) / 100
             accuracy_multiplier = max(1.0, min(accuracy_multiplier, 1.40))
             max_attack_roll = int(max_attack_roll * accuracy_multiplier)
+            # print(f"Ranged max attack roll: {max_attack_roll}")
     else:
         raise ValueError("Unsupported gear_type")
 
@@ -217,6 +220,7 @@ def calculate_accuracy_for_style(player, monster, style, gear, gear_type="ranged
         accuracy = 1.0 - (max_defence_roll + 2) / (2.0 * (max_attack_roll + 1))
     else:
         accuracy = max_attack_roll / (2.0 * (max_defence_roll + 1))
+    # print(f"Accuracy: {accuracy}, Effective Attack: {effective_attack}, Max Attack Roll: {max_attack_roll}, Max Defence Roll: {max_defence_roll}")
     return accuracy, effective_attack, max_attack_roll, max_defence_roll
 
 def find_best_combat_style(player, monster, gear_type):
@@ -290,86 +294,105 @@ if __name__ == "__main__":
     expected_damage = accuracy * (sum(i for i in range(0, max_hit + 1)) / (max_hit + 1))
     print(f"[Sim] Probability of 0 damage: {p_zero:.4f}")
     print(f"[Sim] Expected damage per attack: {expected_damage:.4f}")
+    best_style_crystal = find_best_combat_style(player, monsters[1], "melee")
+    hp_crystal = monsters[1]["skills"]["hp"]
+    max_hit_crystal = best_style_crystal["max_hit"]
+    accuracy_crystal = best_style_crystal["accuracy"]
+    # print(accuracy_crystal, max_hit_crystal)
+    attack_speed_crystal = player["gearSets"]["melee"]["selectedWeapon"].get("speed", 4)
+    p_zero_crystal = (1 - accuracy_crystal) + accuracy_crystal / (max_hit_crystal + 1)
+    expected_damage_crystal = accuracy_crystal * (sum(i for i in range(0, max_hit_crystal + 1)) / (max_hit_crystal + 1))
 
     # Simulation for empirical TTK and cumulative kill probability
-    trials = 100_000
+    trials = 100000
     max_attacks = 100  # Reasonable upper bound for plotting
-    max_attacks_crystal = 68
-    teleport_attacks = 98
-    kill_attack_counts = []
+    tick_counts = []
+    crystal_attacks_list = []
+    total_tick_list = []
+    crystal_avg = []
     for _ in range(trials):
         hp = monster_hp
-        attacks = 0
-        total_attacks = 0
-        while hp > 0 and attacks < max_attacks:
-            attacks += 5
-            total_attacks += 1 * attack_speed
-            crystal_attacks = 0
-            if attacks == 20:
-                best_style_crystal = find_best_combat_style(player, monsters[1], "melee")
-                monster_hp_crystal = monsters[1]["skills"]["hp"]
-                max_hit_crystal = best_style_crystal["max_hit"]
-                accuracy_crystal = best_style_crystal["accuracy"]
-                # print(accuracy_crystal, max_hit_crystal)
-                attack_speed_crystal = 5
-                p_zero_crystal = (1 - accuracy_crystal) + accuracy_crystal / (max_hit_crystal + 1)
-                expected_damage_crystal = accuracy_crystal * (sum(i for i in range(0, max_hit_crystal + 1)) / (max_hit_crystal + 1))
-                while monster_hp_crystal > 0 and crystal_attacks < max_attacks_crystal or attacks + crystal_attacks < teleport_attacks:
-                    crystal_attacks += 4
+        monster_hp_crystal = hp_crystal
+        base_max_attacks_crystal = 70
+        max_attacks_crystal = 70
+        vasa_attacks = 0
+        total_ticks = 0
+        crystal_attacks = 0
+        count_check = 0
+        crystal_count = 0
+        while hp > 0:
+            vasa_attacks += attack_speed
+            total_ticks += attack_speed
+            # print(vasa_attacks, total_ticks, crystal_attacks, monster_hp_crystal)
+            if vasa_attacks == 20:
+                crystal_count += 1
+                healing_ticks = 0
+                while monster_hp_crystal > 0:
+                    crystal_attacks += attack_speed_crystal
+                    healing_ticks += attack_speed_crystal
+                    if crystal_attacks >= max_attacks_crystal:
+                        break
                     if np.random.rand() < accuracy_crystal:
                         hit_crystal = np.random.randint(0, max_hit_crystal + 1)
                     else:
                         hit_crystal = 0
                     monster_hp_crystal -= hit_crystal
-                total_attacks += crystal_attacks
-            elif (attacks - 20) % 7 == 0:
-                best_style_crystal = find_best_combat_style(player, monsters[1], "melee")
-                monster_hp_crystal = monsters[1]["skills"]["hp"]
-                max_hit_crystal = best_style_crystal["max_hit"]
-                accuracy_crystal = best_style_crystal["accuracy"]
-                attack_speed_crystal = 5
-                p_zero_crystal = (1 - accuracy_crystal) + accuracy_crystal / (max_hit_crystal + 1)
-                expected_damage_crystal = accuracy_crystal * (sum(i for i in range(0, max_hit_crystal + 1)) / (max_hit_crystal + 1))
-                while monster_hp_crystal > 0 and crystal_attacks < max_attacks_crystal or attacks + crystal_attacks < teleport_attacks:
-                    crystal_attacks += 4
+                healing_ticks = healing_ticks // 2
+                hp += int(monster_hp * 0.01) * healing_ticks
+                hp = min(hp, monster_hp)
+                monster_hp_crystal = hp_crystal
+                total_ticks += crystal_attacks
+            elif (vasa_attacks - 20) % 7 == 0:
+                crystal_count += 1
+                healing_ticks = 0
+                while monster_hp_crystal > 0:
+                    crystal_attacks += attack_speed_crystal
+                    healing_ticks += attack_speed_crystal
+                    if crystal_attacks >= max_attacks_crystal:
+                        break
                     if np.random.rand() < accuracy_crystal:
                         hit_crystal = np.random.randint(0, max_hit_crystal + 1)
                     else:
                         hit_crystal = 0
                     monster_hp_crystal -= hit_crystal
-                total_attacks += crystal_attacks
+                healing_ticks = healing_ticks // 2
+                hp += int(monster_hp * 0.01) * healing_ticks
+                hp = min(hp, monster_hp)
+                monster_hp_crystal = hp_crystal
+                total_ticks += crystal_attacks
+            if crystal_attacks >= max_attacks_crystal:
+                count_check += 1
+            if count_check > 3:
+                total_ticks += 12
+                max_attacks_crystal += base_max_attacks_crystal
+                count_check = 0
             if np.random.rand() < accuracy:
                 hit = np.random.randint(0, max_hit + 1)
             else:
                 hit = 0
             hp -= hit
-        kill_attack_counts.append(total_attacks)
+        crystal_avg.append(crystal_count)
+        crystal_attacks_list.append(crystal_attacks)
+        tick_counts.append(total_ticks)
     
-    max_ticks = int(max(kill_attack_counts))
+    max_ticks = int(max(tick_counts))
     kill_prob = np.zeros(max_ticks + 1)
-    for ticks in kill_attack_counts:
+    for ticks in tick_counts:
         idx = int(ticks)
         if idx <= max_ticks:
             kill_prob[idx:] += 1
     kill_prob = kill_prob / trials
     attack_ticks = np.arange(max_ticks + 1)
 
-    mean_ttk = np.mean(kill_attack_counts)
-    std_ttk = np.std(kill_attack_counts)
+    crystal_count_avg = np.mean(crystal_avg)
+    crystal_ttk = np.mean(crystal_attacks_list)
+    mean_ttk = np.mean(tick_counts)
+    std_ttk = np.std(tick_counts)
 
-    # Empirical cumulative kill probability by attack number
-    # kill_prob = np.zeros(max_attacks)
-    # for a in kill_attack_counts:
-    #     if a <= max_attacks:
-    #         kill_prob[a-1:] += 1
-    # kill_prob = kill_prob / trials
-    # # Align the simulation so the first attack is at tick 0 (like Markov)
-    # attack_ticks = [i * attack_speed for i in range(max_attacks)]
-
-    # mean_ttk = np.mean([a * attack_speed for a in kill_attack_counts])
-    # std_ttk = np.std([a * attack_speed for a in kill_attack_counts])
+    print(f"[Sim] Trials: {trials}")
+    print(f"[Sim] Crystal Count Avg: {crystal_count_avg:.2f}")
+    print(f"[Sim] Crystal TTK: {crystal_ttk} ticks ({crystal_ttk * 0.6:.2f} seconds)")
     print(f"Expected TTK: {mean_ttk:.2f} ticks ({mean_ttk * 0.6:.2f} seconds)")
-    print(f"Expected hit count: {np.mean(kill_attack_counts):.2f}")
 
     elapsed = time.time() - start_time
     print(f"Elapsed simulation time: {elapsed:.2f} seconds")
@@ -379,22 +402,22 @@ if __name__ == "__main__":
     capped_idx = np.argmax(kill_prob >= cap) + 1 if np.any(kill_prob >= cap) else len(kill_prob)
 
     # Print the empirical kill probability distribution (cumulative)
-    print("\n[Sim] Empirical cumulative kill probability distribution (up to cap):")
+    # print("\n[Sim] Empirical cumulative kill probability distribution (up to cap):")
     for i in range(capped_idx):
-        print(f"Attack {i+1}: P(kill) = {kill_prob[i]:.5f}")
+        print(f"Tick {i+1}: P(kill) = {kill_prob[i]:.5f}")
 
-    # fig = go.Figure()
-    # fig.add_trace(go.Scatter(
-    #     x=attack_ticks[:capped_idx],
-    #     y=kill_prob[:capped_idx],
-    #     mode='lines',
-    #     name='Empirical Kill Probability'
-    # ))
-    # fig.update_layout(
-    #     title="Empirical Kill Probability Over Time (Simulation)",
-    #     xaxis_title="Tick",
-    #     yaxis_title="Cumulative Probability",
-    #     legend_title="Legend",
-    #     hovermode="x unified"
-    # )
-    # fig.show()
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=attack_ticks[:capped_idx],
+        y=kill_prob[:capped_idx],
+        mode='lines',
+        name='Empirical Kill Probability'
+    ))
+    fig.update_layout(
+        title="Empirical Kill Probability Over Time (Simulation)",
+        xaxis_title="Tick",
+        yaxis_title="Cumulative Probability",
+        legend_title="Legend",
+        hovermode="x unified"
+    )
+    fig.show()
