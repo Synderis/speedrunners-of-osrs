@@ -88,6 +88,7 @@ def run_vasa_crystal_markov(
     max_crystal_phase_ticks=70, pre_crystal_attacks=4, post_crystal_attacks=7,
     teleport_attacks=3, teleport_ticks=12, heal_percent=0.01, max_cycles=10
 ):
+    base_vasa_hp = vasa_hp
     vasa_mat = build_transition_matrix(vasa_hp, vasa_max_hit, vasa_accuracy)
     crystal_mat = build_transition_matrix(crystal_hp, crystal_max_hit, crystal_accuracy)
 
@@ -137,7 +138,7 @@ def run_vasa_crystal_markov(
         else:
             tick = final_tick
             # Heal Vasa if crystal survives
-            heal_amount = int(vasa_hp * heal_percent)
+            heal_amount = int(base_vasa_hp * heal_percent)
             healed_state = np.zeros_like(vasa_state)
             for i in range(len(vasa_state)):
                 if i == 0:
@@ -180,7 +181,7 @@ def run_vasa_crystal_markov(
             tick = weighted_tick
         else:
             tick = final_tick
-            heal_amount = int(vasa_hp * heal_percent)
+            heal_amount = int(base_vasa_hp * heal_percent)
             healed_state = np.zeros_like(vasa_state)
             for i in range(len(vasa_state)):
                 if i == 0:
@@ -220,7 +221,6 @@ def run_vasa_crystal_markov(
     expected_ttk = np.sum(tick_arr * kill_prob_increments)
     return kill_prob_arr, median_ttk, expected_ttk, tick_list
 
-
 if __name__ == "__main__":
     import time
     
@@ -236,15 +236,15 @@ if __name__ == "__main__":
     # Fill these in with your actual values or extract from your Markov code
     best_style = find_best_combat_style(player, monsters[0], "ranged")
     vasa_hp = monsters[0]["skills"]["hp"]
-    max_hit = best_style["max_hit"]
+    vasa_max_hit = best_style["max_hit"]
     # print(max_hit)
-    accuracy = best_style["accuracy"]
+    vasa_accuracy = best_style["accuracy"]
     # print(accuracy)
-    attack_speed = 5
+    vasa_attack_speed = 5
 
     # Print probability of 0 damage and expected damage per attack
-    p_zero = (1 - accuracy)
-    expected_damage = accuracy * (sum(i for i in range(1, max_hit + 1)) / max_hit)
+    vasa_p_zero = (1 - vasa_accuracy)
+    vasa_expected_damage = vasa_accuracy * (sum(i for i in range(0, vasa_max_hit + 1)) / (vasa_max_hit + 1))
     best_style_crystal = find_best_combat_style(player, monsters[1], "melee")
     crystal_hp = monsters[1]["skills"]["hp"]
     max_hit_crystal = best_style_crystal["max_hit"]
@@ -252,17 +252,17 @@ if __name__ == "__main__":
     attack_speed_crystal = player["gearSets"]["melee"]["selectedWeapon"].get("speed", 4)
     p_zero_crystal = (1 - accuracy_crystal)
     expected_damage_crystal = accuracy_crystal * (sum(i for i in range(1, max_hit_crystal + 1)) / max_hit_crystal)
-    print(f'Accuracy: {accuracy:.4f}, Max Hit: {max_hit:.4f}')
-    print(f"[Sim] Probability of 0 damage: {p_zero:.4f}")
-    print(f"[Sim] Expected damage per attack: {expected_damage:.4f}")
+    print(f'Accuracy: {vasa_accuracy:.4f}, Max Hit: {vasa_max_hit:.4f}')
+    print(f"[Markov] Probability of 0 damage: {vasa_p_zero:.4f}")
+    print(f"[Markov] Expected damage per attack: {vasa_expected_damage:.4f}")
     print(f'Accuracy (Crystal): {accuracy_crystal:.4f}, Max Hit (Crystal): {max_hit_crystal:.4f}')
-    print(f"[Sim] Probability of 0 damage (Crystal): {p_zero_crystal:.4f}")
-    print(f"[Sim] Expected damage per attack (Crystal): {expected_damage_crystal:.4f}")
+    print(f"[Markov] Probability of 0 damage (Crystal): {p_zero_crystal:.4f}")
+    print(f"[Markov] Expected damage per attack (Crystal): {expected_damage_crystal:.4f}")
 
     # vasa_hp = 2
     # max_hit = 2
     # accuracy = 1.0
-    # vasa_mat = build_transition_matrix(vasa_hp, max_hit, accuracy)
+    # vasa_mat = build_transition_matrix(vasa_hp, vasa_max_hit, vasa_accuracy)
     # print("Transition matrix:\n", vasa_mat)
     # vasa_state = np.zeros(vasa_hp + 1)
     # vasa_state[vasa_hp] = 1.0
@@ -275,7 +275,7 @@ if __name__ == "__main__":
     # vasa_hp = 450 Accuracy: 0.7652, Max Hit: 98.0000, Attack Speed: 5
     # crystal_hp = 120 Accuracy: 0.9082, Max Hit: 52.0000, Attack Speed: 4
     kill_prob, expected_ttk, kill_tick, tick_list = run_vasa_crystal_markov(
-        vasa_hp, max_hit, accuracy, attack_speed,
+        vasa_hp, vasa_max_hit, vasa_accuracy, vasa_attack_speed,
         crystal_hp, max_hit_crystal, accuracy_crystal, attack_speed_crystal
     )
     markov_end_time = time.time()
@@ -303,16 +303,16 @@ if __name__ == "__main__":
     # tick_arr = np.arange(1, len(kill_prob) + 1)  # If you don't have tick_list
     # Or, if you want to use the actual tick values:
     # tick_arr = tick_list[:capped_idx]  # Uncomment if you have tick_list
-    print("First 10 kill_prob_by_tick values:")
-    for i in range(min(10, len(kill_prob))):
-        print(f"{i}: {kill_prob[i]:.5f}")
+    # print("First 10 kill_prob_by_tick values:")
+    # for i in range(min(10, len(kill_prob))):
+    #     print(f"{i}: {kill_prob[i]:.5f}")
 
-    print("First 10 tick_list values:")
-    for i in range(min(10, len(tick_list))):
-        print(f"{i}: {tick_list[i]:.2f}")
-    for i in range(10):
-        print(f"tick={tick_arr[i]:.2f}, PDF={kill_prob_increments[i]:.6f}")
-    print("Sum of kill_prob_increments:", np.sum(kill_prob_increments))
+    # print("First 10 tick_list values:")
+    # for i in range(min(10, len(tick_list))):
+    #     print(f"{i}: {tick_list[i]:.2f}")
+    # for i in range(10):
+    #     print(f"tick={tick_arr[i]:.2f}, PDF={kill_prob_increments[i]:.6f}")
+    # print("Sum of kill_prob_increments:", np.sum(kill_prob_increments))
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(
@@ -328,5 +328,34 @@ if __name__ == "__main__":
         legend_title="Legend",
         hovermode="x unified"
     )
-    fig.show()
+    # fig.show()
+
+    # Interpolate Markov CDF to every tick
+    # all_ticks = np.arange(int(tick_arr[0]), int(tick_arr[-1]) + 1)
+    # cdf_interp = np.interp(all_ticks, tick_arr, kill_prob)
+    # pdf_interp = np.diff(np.insert(cdf_interp, 0, 0))
+    # print("\n[Markov] Probability of dying at each tick (PDF, used for expected TTK):")
+    # for i, tick in enumerate(all_ticks):
+    #     print(f"Tick {tick}: P(die at tick) = {pdf_interp[i]:.6f}, CDF = {cdf_interp[i]:.6f}")
+    
+
+    # cdf = np.cumsum(kill_prob)
+    # pdf = kill_prob  # Already incremental
+
+    # print("\n[Markov] Probability of dying at each tick (PDF, used for expected TTK):")
+    # for i in range(capped_idx):
+    #     print(f"Tick {int(tick_arr[i])}: P(die at tick) = {pdf[i]:.6f}, CDF = {cdf[i]:.6f}")
+    # print("Sum of kill_prob_by_tick (should be ~1):", np.sum(kill_prob))
+
+    # After you get kill_prob and tick_list from run_vasa_crystal_markov
+
+# max_tick = int(tick_list[-1]) if tick_list else 0
+# pdf_seq = np.zeros(max_tick + 1)
+# for t, p in zip(tick_list, kill_prob):
+#     pdf_seq[int(t)] += p
+# cdf_seq = np.cumsum(pdf_seq)
+
+# print("\n[Markov] Probability of dying at each sequential tick (PDF, used for expected TTK):")
+# for t in range(1, len(pdf_seq)):
+#     print(f"Tick {t}: P(die at tick) = {pdf_seq[t]:.6f}, CDF = {cdf_seq[t]:.6f}")
 

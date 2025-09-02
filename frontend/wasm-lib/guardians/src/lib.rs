@@ -265,6 +265,8 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
             "expected_hits": expected_hits,
             "expected_ticks": expected_ttk,
             "expected_seconds": expected_seconds,
+            "combat_type": best_style.attack_type,
+            "attack_style": best_style.combat_style,
             "kill_times": kill_times,
         });
         results.push(result);

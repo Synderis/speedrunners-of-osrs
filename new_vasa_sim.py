@@ -4,20 +4,6 @@ import json
 import plotly.graph_objs as go
 from helpers import *
 
-def simulate_ttk(monster_hp, max_hit, accuracy, attack_speed, trials=100_000):
-    ttks = []
-    for _ in range(trials):
-        hp = monster_hp
-        ticks = 0
-        while hp > 0:
-            ticks += attack_speed
-            if np.random.rand() < accuracy:
-                hit = np.random.randint(0, max_hit + 1)  # 0 to max_hit, inclusive
-            else:
-                hit = 0
-            hp -= hit
-        ttks.append(ticks)
-    return np.mean(ttks), np.std(ttks)
 
 if __name__ == "__main__":
     import time
@@ -32,19 +18,19 @@ if __name__ == "__main__":
 
     # You may want to use your find_best_combat_style logic here, but for demo:
     # Fill these in with your actual values or extract from your Markov code
-    best_style = find_best_combat_style(player, monsters[0], "ranged")
-    monster_hp = monsters[0]["skills"]["hp"]
-    max_hit = best_style["max_hit"]
-    print(max_hit)
-    accuracy = best_style["accuracy"]
-    print(accuracy)
-    attack_speed = 5
+    vasa_best_style = find_best_combat_style(player, monsters[0], "ranged")
+    base_vasa_hp = monsters[0]["skills"]["hp"]
+    vasa_max_hit = vasa_best_style["max_hit"]
+    print(vasa_max_hit)
+    vasa_accuracy = vasa_best_style["accuracy"]
+    print(vasa_accuracy)
+    vasa_attack_speed = 5
 
     # Print probability of 0 damage and expected damage per attack
-    p_zero = (1 - accuracy) + accuracy / (max_hit + 1)
-    expected_damage = accuracy * (sum(i for i in range(0, max_hit + 1)) / (max_hit + 1))
-    print(f"[Sim] Probability of 0 damage: {p_zero:.4f}")
-    print(f"[Sim] Expected damage per attack: {expected_damage:.4f}")
+    vasa_p_zero = (1 - vasa_accuracy) + vasa_accuracy / (vasa_max_hit + 1)
+    vasa_expected_damage = vasa_accuracy * (sum(i for i in range(0, vasa_max_hit + 1)) / (vasa_max_hit + 1))
+    print(f"[Sim] Probability of 0 damage: {vasa_p_zero:.4f}")
+    print(f"[Sim] Expected damage per attack: {vasa_expected_damage:.4f}")
     best_style_crystal = find_best_combat_style(player, monsters[1], "melee")
     hp_crystal = monsters[1]["skills"]["hp"]
     max_hit_crystal = best_style_crystal["max_hit"]
@@ -62,7 +48,7 @@ if __name__ == "__main__":
     total_tick_list = []
     crystal_avg = []
     for _ in range(trials):
-        hp = monster_hp
+        vasa_hp = base_vasa_hp
         monster_hp_crystal = hp_crystal
         base_max_attacks_crystal = 70
         max_attacks_crystal = 70
@@ -74,22 +60,19 @@ if __name__ == "__main__":
         vasa_attack_tick = 0
 
         while hp > 0:
-            vasa_attacks += attack_speed
-            total_ticks += attack_speed
-            # print(vasa_attacks, total_ticks, crystal_attacks, monster_hp_crystal)
-            if vasa_attacks == 20 or ((vasa_attacks - 20) % 8 == 0 and vasa_attacks > 20):
+            # print(f"[Sim] Vasa attack: tick={total_ticks}, hp={hp}")
+            # Crystal phase trigger
+            if vasa_attacks + vasa_attack_speed == 25 or ((vasa_attacks - 20) % 8 == 0 and vasa_attacks > 20):
+                # print(f"[Sim] Crystal phase start: tick={total_ticks}, crystal_hp={monster_hp_crystal}")
                 crystal_count += 1
                 healing_ticks = 0
                 crystal_attack_tick = 0
                 while monster_hp_crystal > 0:
                     crystal_attacks += attack_speed_crystal
                     healing_ticks += attack_speed_crystal
-                    # for tick in range(attack_speed_crystal):
-                    #     crystal_attack_tick += 1
-                    #     if crystal_attack_tick % 3 == 0:
-                    #         passive_hit = np.random.randint(0, 4)  # 0-3 inclusive
-                    #         monster_hp_crystal -= passive_hit
+                    # print(f"[Sim] Crystal attack: tick={total_ticks + crystal_attacks}, crystal_hp={monster_hp_crystal}")
                     if crystal_attacks >= max_attacks_crystal:
+                        # print(f"[Sim] Crystal phase max attacks reached: tick={total_ticks + crystal_attacks}")
                         break
                     if np.random.rand() < accuracy_crystal:
                         hit_crystal = np.random.randint(0, max_hit_crystal + 1)
@@ -98,25 +81,23 @@ if __name__ == "__main__":
                     monster_hp_crystal -= hit_crystal
                 if crystal_attacks >= max_attacks_crystal:
                     healing_ticks = healing_ticks // 2
-                    hp += int(monster_hp * 0.01) * healing_ticks
-                    hp = min(hp, monster_hp)
+                    heal_amount = int(base_vasa_hp * 0.01) * healing_ticks
+                    # print(f"[Sim] Healing applied: tick={total_ticks}, heal_amount={heal_amount}")
+                    vasa_hp += heal_amount
+                    vasa_hp = min(vasa_hp, base_vasa_hp)
                 monster_hp_crystal = hp_crystal
                 total_ticks += crystal_attacks
             if crystal_attacks >= max_attacks_crystal:
                 count_check += 1
             if count_check > 3:
                 total_ticks += 12
+                # print(f"[Sim] Teleport phase: tick={total_ticks}")
                 max_attacks_crystal += base_max_attacks_crystal
                 count_check = 0
-
-            # for tick in range(attack_speed):
-            #     vasa_attack_tick += 1
-            #     if vasa_attack_tick % 3 == 0:
-            #         passive_hit = np.random.randint(0, 4)  # 0-3 inclusive
-            #         hp -= passive_hit
-
-            if np.random.rand() < accuracy:
-                hit = np.random.randint(0, max_hit + 1)
+            vasa_attacks += vasa_attack_speed
+            total_ticks += vasa_attack_speed
+            if np.random.rand() < vasa_accuracy:
+                hit = np.random.randint(0, vasa_max_hit + 1)
             else:
                 hit = 0
             hp -= hit
@@ -149,11 +130,19 @@ if __name__ == "__main__":
     # Cap the plot at 0.99 cumulative probability
     cap = 0.99
     capped_idx = np.argmax(kill_prob >= cap) + 1 if np.any(kill_prob >= cap) else len(kill_prob)
+        # cap = 0.999
+    # capped_idx = np.argmax(kill_prob >= cap) + 1 if np.any(kill_prob >= cap) else len(kill_prob)
+    # tick_arr = attack_ticks[:capped_idx]
+    # Print the Markov kill probability distribution (cumulative)
+    kill_prob_increments = np.diff(np.insert(kill_prob, 0, 0))
+    # print("\n[Markov] Probability of dying at each tick (PDF, used for expected TTK):")
+    for i in range(capped_idx):
+        print(f"Tick {int(attack_ticks[i])}: P(die at tick) = {kill_prob_increments[i]:.6f}, CDF = {kill_prob[i]:.6f}")
 
     # Print the empirical kill probability distribution (cumulative)
     # print("\n[Sim] Empirical cumulative kill probability distribution (up to cap):")
-    for i in range(capped_idx):
-        print(f"Tick {i+1}: P(kill) = {kill_prob[i]:.5f}")
+    # for i in range(capped_idx):
+    #     print(f"Tick {i+1}: P(kill) = {kill_prob[i]:.5f}")
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(
@@ -169,4 +158,4 @@ if __name__ == "__main__":
         legend_title="Legend",
         hovermode="x unified"
     )
-    fig.show()
+    # fig.show()
