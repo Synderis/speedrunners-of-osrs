@@ -234,6 +234,8 @@ name = "vasa"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
+ "osrs_shared_functions",
+ "osrs_shared_types",
  "serde",
  "serde_json",
  "wasm-bindgen",

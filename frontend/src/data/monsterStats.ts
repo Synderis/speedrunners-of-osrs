@@ -143,6 +143,50 @@ export const cmMonsters: Monster[] = [
         "weakness": null
     },
     {
+        "id": 7568,
+        "name": "Glowing crystal",
+        "version": "Normal",
+        "image": "Glowing crystal.png",
+        "level": 0,
+        "size": 4,
+        "max_hit": 0,
+        "speed": 4,
+        "style": null,
+        "skills": {
+            "atk": 1,
+            "def": 100,
+            "hp": 120,
+            "magic": 100,
+            "ranged": 1,
+            "str": 1
+        },
+        "offensive": {
+            "atk": 0,
+            "magic": 0,
+            "magic_str": 0,
+            "ranged": 0,
+            "ranged_str": 0,
+            "str": 0
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "stab": -5,
+            "slash": 180,
+            "crush": 180,
+            "magic": 0,
+            "light": 0,
+            "standard": 0,
+            "heavy": 0
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "weakness": null,
+        "immunities": {
+            "burn": null
+        }
+    },
+    {
         "id": 7570,
         "name": "Guardian (Chambers of Xeric)",
         "version": "Challenge Mode",
@@ -404,7 +448,7 @@ export const rooms: Room[] = [
         name: 'Vasa',
         image: '/rooms/250px-Vasa_Nistirio.webp',
         description: 'God Wars Dungeon - Zamorak',
-        monsters: ['7566']
+        monsters: ['7566', '7568']
     },
     {
         id: 'mystics',

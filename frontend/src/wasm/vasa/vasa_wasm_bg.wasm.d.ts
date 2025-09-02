@@ -1,13 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
-export const greet: (a: number, b: number) => void;
 export const calculate_dps_with_objects_vasa: (a: number, b: number) => [number, number];
-export const single_matrix: (a: number, b: number, c: number) => [number, number];
-export const npc_state: (a: number) => [number, number];
-export const hitting_basic_npc: (a: number, b: number, c: number, d: number) => [number, number];
-export const distribution_of_hits_to_kill: (a: number, b: number, c: number, d: number) => [number, number];
-export const weapon_and_thrall_kill_times: (a: number, b: number, c: number, d: number) => [number, number];
 export const __wbindgen_export_0: WebAssembly.Table;
 export const __wbindgen_malloc: (a: number, b: number) => number;
 export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
