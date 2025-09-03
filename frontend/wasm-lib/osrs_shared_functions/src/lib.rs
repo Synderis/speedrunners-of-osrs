@@ -25,34 +25,34 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
 
         if let Some(weapon) = selected_weapon {
             if let Some(styles) = &weapon.weapon_styles {
-                console_log!(
-                    "Evaluating {} combat styles for {} weapon: {}",
-                    styles.len(),
-                    combat_type,
-                    weapon.name
-                );
+                // console_log!(
+                //     "Evaluating {} combat styles for {} weapon: {}",
+                //     styles.len(),
+                //     combat_type,
+                //     weapon.name
+                // );
                 for style in styles {
                     let (max_hit, _effective_level) = calculate_max_hit_for_style(player, monster, &combat_type, style, gear_stats);
                     let (accuracy, effective_level, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, &combat_type, style, gear_stats);
                     let effective_dps = (max_hit as f64 * accuracy) / (weapon.speed as f64 - style.att_spd_reduction as f64);
                     let effective_strength = 0; // Not used for mage/ranged
                     let effective_attack = effective_level;
-                    console_log!(
-                        "Style: {} ({}), effective_level: {}, max_attack_roll: {:.2}%, max_defence_roll: {:.2}%",
-                        style.combat_style,
-                        style.attack_type,
-                        effective_level,
-                        max_attack_roll,
-                        max_defence_roll
-                    );
-                    console_log!(
-                        "Style: {} ({}), Max Hit: {}, Accuracy: {:.2}%, Effective DPS: {:.2}",
-                        style.combat_style,
-                        style.attack_type,
-                        max_hit,
-                        accuracy * 100.0,
-                        effective_dps
-                    );
+                    // console_log!(
+                    //     "Style: {} ({}), effective_level: {}, max_attack_roll: {:.2}%, max_defence_roll: {:.2}%",
+                    //     style.combat_style,
+                    //     style.attack_type,
+                    //     effective_level,
+                    //     max_attack_roll,
+                    //     max_defence_roll
+                    // );
+                    // console_log!(
+                    //     "Style: {} ({}), Max Hit: {}, Accuracy: {:.2}%, Effective DPS: {:.2}",
+                    //     style.combat_style,
+                    //     style.attack_type,
+                    //     max_hit,
+                    //     accuracy * 100.0,
+                    //     effective_dps
+                    // );
                     let style_result = StyleResult {
                         combat_style: style.combat_style.clone(),
                         attack_type: style.attack_type.clone(),
@@ -74,12 +74,12 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
         }
     }
     let result = best_style.unwrap();
-    console_log!(
-        "🏆 Best combat style selected: {} ({}) with {:.2} effective DPS",
-        result.combat_style,
-        result.attack_type,
-        result.effective_dps
-    );
+    // console_log!(
+    //     "🏆 Best combat style selected: {} ({}) with {:.2} effective DPS",
+    //     result.combat_style,
+    //     result.attack_type,
+    //     result.effective_dps
+    // );
     result
 }
 
@@ -120,7 +120,12 @@ pub fn calculate_max_hit_for_style(
         _ => (0.0, 0.0, &player.gear_sets.mage, 0.0, 0.0, None),
     };
 
-    let potion_bonus = 21.0;
+    let potion_bonus = if monster.name == "Tekton" {
+        19.0
+    } else {
+        21.0
+    };
+
     let void_bonus = 0.0; // No void for now
 
     let mut effective_level = (level + potion_bonus).floor();
@@ -131,8 +136,8 @@ pub fn calculate_max_hit_for_style(
     let mut multiplier = 1.0;
     let mut max_hit = 0u32;
     let weapon = weapon.unwrap();
-    console_log!("Selected weapon: {} (combat type: {})", weapon.name, combat_type);
-    console_log!("Weapon category: {}", weapon.category);
+    // console_log!("Selected weapon: {} (combat type: {})", weapon.name, combat_type);
+    // console_log!("Weapon category: {}", weapon.category);
     let mut salve_bonus = 1.0;
     if gear_set.gear_items.iter().any(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name == "Salve amulet(ei)")
@@ -242,7 +247,11 @@ pub fn calculate_max_rolls_for_style(
         _ => (0.0, &player.gear_sets.mage, 0.0, 0.0, None),
     };
 
-    let potion_bonus = 21.0;
+    let potion_bonus = if monster.name == "Tekton" {
+        19.0
+    } else {
+        21.0
+    };
     let void_bonus = 1.0; // No void for now
 
     let effective_level = ((((level + potion_bonus) * prayer_bonus).floor() + style_bonus + 8.0) * void_bonus).floor() as u32;
@@ -291,7 +300,7 @@ pub fn calculate_max_rolls_for_style(
         max_attack_roll = (max_attack_roll as f64 * 1.15).floor() as u64;
         console_log!("Slayer helmet (i) bonus applied, new max_attack_roll: {}", max_attack_roll);
     };
-    console_log!("Monster def: {}, monster def bonus: {}", monster.skills.def, defence_bonus);
+    // console_log!("Monster def: {}, monster def bonus: {}", monster.skills.def, defence_bonus);
     let max_defence_roll;
     if combat_type == "magic" {
         max_defence_roll = (monster.skills.magic + 9) as u64 * (defence_bonus + 64) as u64;

@@ -1,7 +1,9 @@
 import json
+import math
 import numpy as np
 import json
 import plotly.graph_objs as go
+import copy
 from helpers_melee import *
 
 def ensure_weapon_swap(player, weapon, equip_offhand=None):
@@ -59,13 +61,11 @@ if __name__ == "__main__":
     monsters = room["monsters"]
 
     base_tekton_hp = monsters[0]["skills"]["hp"]
-    best_style_normal = None
-    best_style_enraged = None
     attack_speed_normal = player["gearSets"]["melee"]["selectedWeapon"].get("speed", 4)
     attack_speed_enraged = player["gearSets"]["melee"]["selectedWeapon"].get("speed", 4)
 
     player, swapped_weapon, swapped_offhand = ensure_weapon_swap(player, "Elder maul")
-    tekton_initial = monsters[0]
+    tekton_initial = copy.deepcopy(monsters[0])
     tekton_initial["skills"]["def"] = tekton_initial["skills"]["def"] * 0.65
     best_style_spec = find_best_combat_style(player, tekton_initial, "melee")
     max_hit_spec = best_style_spec["max_hit"]
@@ -73,42 +73,52 @@ if __name__ == "__main__":
     player, _, _ = ensure_weapon_swap(player, swapped_weapon, swapped_offhand)
 
     # Simulation for empirical TTK and cumulative kill probability
-    trials = 1000000
-    max_attacks = 100  # Reasonable upper bound for plotting
+    trials = 100000
+    max_attacks = 1000  # Reasonable upper bound for plotting
     tick_counts = np.zeros(trials)
     total_tick_list = []
     crystal_avg = []
     for i in range(trials):
         tekton_hp = base_tekton_hp
-        tekton_normal = monsters[0]
-        tekton_enraged = monsters[1]
+        tekton_normal = copy.deepcopy(monsters[0])
+        tekton_enraged = copy.deepcopy(monsters[1])
         total_ticks = 0
         spec_count = True
         pre_anvil = 6
+        first_pass = True
+        best_style_normal = None
+        best_style_enraged = None
 
         while tekton_hp > 0:
             if spec_count == True:
-                tekton_normal["skills"]["def"] = tekton_normal["skills"]["def"] * 0.65
-                tekton_enraged["skills"]["def"] = tekton_enraged["skills"]["def"] * 0.65
+                tekton_normal["skills"]["def"] = math.ceil(tekton_normal["skills"]["def"] * 0.65)
+                tekton_enraged["skills"]["def"] = math.ceil(tekton_enraged["skills"]["def"] * 0.65)
+                # print(tekton_normal["skills"]["def"], tekton_enraged["skills"]["def"])
                 total_ticks += 6
                 tekton_hp -= np.random.randint(0, max_hit_spec + 1)
                 if np.random.rand() < accuracy_spec:
+                    # print("Spec hit")
                     hit = np.random.randint(0, max_hit_spec + 1)
-                    tekton_normal["skills"]["def"] = tekton_normal["skills"]["def"] * 0.65
-                    tekton_enraged["skills"]["def"] = tekton_enraged["skills"]["def"] * 0.65
+                    tekton_normal["skills"]["def"] = math.ceil(tekton_normal["skills"]["def"] * 0.65)
+                    tekton_enraged["skills"]["def"] = math.ceil(tekton_enraged["skills"]["def"] * 0.65)
+                    # print(tekton_normal["skills"]["def"], tekton_enraged["skills"]["def"])
                 else:
-                    tekton_normal["skills"]["def"] = tekton_normal["skills"]["def"] * 0.95
-                    tekton_enraged["skills"]["def"] = tekton_enraged["skills"]["def"] * 0.95
+                    tekton_normal["skills"]["def"] = math.ceil(tekton_normal["skills"]["def"] * 0.95)
+                    tekton_enraged["skills"]["def"] = math.ceil(tekton_enraged["skills"]["def"] * 0.95)
+                    # print(tekton_normal["skills"]["def"], tekton_enraged["skills"]["def"])
                     hit = 0
                 total_ticks += 6
                 tekton_hp -= hit
                 spec_count = False
 
-            if not best_style_normal or best_style_enraged:
+            if not best_style_normal or not best_style_enraged:
                 best_style_normal = find_best_combat_style(player, tekton_normal, "melee")
+                # print("Normal best style:", best_style_normal, '\n')
                 max_hit_normal = best_style_normal["max_hit"]
                 accuracy_normal = best_style_normal["accuracy"]
                 best_style_enraged = find_best_combat_style(player, tekton_enraged, "melee")
+                # print('YEP')
+                # print("Enraged best style:", best_style_enraged, '\n')
                 max_hit_enraged = best_style_enraged["max_hit"]
                 accuracy_enraged = best_style_enraged["accuracy"]
 
@@ -124,13 +134,16 @@ if __name__ == "__main__":
             tekton_hp += anvil_cycle * 5
             total_ticks += anvil_cycle * 3
 
-            for _ in range(4):
+            for n in range(4):
                 if np.random.rand() < accuracy_enraged:
                     hit = np.random.randint(0, max_hit_enraged + 1)
                 else:
                     hit = 0
                 total_ticks += attack_speed_enraged
                 tekton_hp -= hit
+                if n == 0 and first_pass:
+                    tekton_hp -= math.floor(0.75 * np.random.randint(0, 87))
+                    first_pass = False
 
             for _ in range(8):
                 if np.random.rand() < accuracy_normal:

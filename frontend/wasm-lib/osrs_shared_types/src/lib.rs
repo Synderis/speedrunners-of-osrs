@@ -182,7 +182,7 @@ pub struct CalculationResult {
     pub max_defence_roll: u64,
 }
 
-#[derive(Serialize)]
+#[derive(Deserialize, Clone)]
 pub struct StyleResult {
     pub combat_style: String,
     pub attack_type: String,

@@ -15,6 +15,7 @@ export interface CalculationSummary {
     effectiveAttack: number;
     maxAttackRoll: number;
     maxDefenceRoll: number;
+    phaseResults: any[];
 }
 
 type WasmInit = (options: any) => Promise<void>;
@@ -39,8 +40,12 @@ export const createWasmDpsLoader = (
         const payload = { player, room, config: { cap } };
         try {
             const result = calcFn(JSON.stringify(payload));
+            console.log("WASM result string:", result);
             const parsedResult = JSON.parse(result);
-            if (parsedResult.error) throw new Error(parsedResult.error);
+            if (parsedResult.error) {
+                console.error("WASM error string:", parsedResult.error);
+                throw new Error(parsedResult.error);
+            }
 
             const tickData: PlotDataPoint[] = (parsedResult.encounter_kill_times || []).map((pt: any) => ({
                 time: pt.tick,
@@ -59,6 +64,7 @@ export const createWasmDpsLoader = (
                 effectiveAttack: 0,
                 maxAttackRoll: 0,
                 maxDefenceRoll: 0,
+                phaseResults: parsedResult.phase_results || [],
             };
 
             return { tickData, summary, perMonster: parsedResult.results };
@@ -77,6 +83,7 @@ export const createWasmDpsLoader = (
                     effectiveAttack: 0,
                     maxAttackRoll: 0,
                     maxDefenceRoll: 0,
+                    phaseResults: [],
                 }
             };
         }

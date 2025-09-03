@@ -80,6 +80,7 @@ type Stats = {
   // accuracy: number;
   total_expected_ticks: number;
   result?: any;
+  phase_results: any[]
 };
 
 // --- Helper Functions ---
@@ -231,6 +232,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   const plotData = plotDataDict[activeTab] || [];
   const defaultStats: Stats = {
     total_hits: 0,
+    phase_results: [],
     // total_expected_hits: 0,
     total_expected_ticks: 0,
   };
@@ -398,7 +400,8 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         statsUpdates[key] = {
           total_hits: result.summary.expectedHits,
           total_expected_ticks: result.summary.ticksTimeToKill,
-          result: result.perMonster
+          result: result.perMonster,
+          phase_results: result.summary.phaseResults
         };
       }
 
@@ -569,7 +572,17 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                     : '--';
                 })() },
               
-              { title: 'Total Hit Value', value: activeStats.total_hits > 0 ? activeStats.total_hits.toFixed(1) : '--' },
+              // { title: 'Total Hit Value', value: activeStats.total_hits > 0 ? activeStats.total_hits.toFixed(1) : '--' },
+              {
+                title: 'Avg Phase Result',
+                value: (() => {
+                  const phaseResults = activeStats.phase_results || [];
+                  console.log('phase_results for activeTab:', activeStats.phase_results);
+                  if (!phaseResults.length) return '--';
+                  const avg = phaseResults.reduce((sum, val) => sum + val, 0) / phaseResults.length;
+                  return avg.toFixed(2);
+                })()
+              },
               // { title: 'Total Hit Count', value: activeStats.total_expected_ticks > 0 ? activeStats.total_expected_ticks.toFixed(1) : '--' },
               // { title: 'Accuracy', value: activeStats.accuracy > 0 ? `${activeStats.accuracy.toFixed(1)}%` : '--', unit: 'hit rate' },
               { 

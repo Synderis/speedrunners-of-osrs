@@ -306,6 +306,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
         "total_hits": total_expected_hits,
         "total_expected_ticks": total_expected_ticks,
         "total_expected_seconds": total_expected_seconds,
-        "encounter_kill_times": encounter_kill_times_obj
+        "encounter_kill_times": encounter_kill_times_obj,
+        "phase_results": [],
     }).to_string()
 }

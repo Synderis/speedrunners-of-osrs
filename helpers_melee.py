@@ -195,7 +195,9 @@ def calculate_accuracy_for_style(player, monster, style, gear, gear_type="melee"
         max_attack_roll = effective_attack * (attack_bonus + 64)
         if player["gearSets"]["melee"].get("selectedWeapon", {}).get("name", "").lower() == "elder maul":
             max_attack_roll = int(max_attack_roll * 1.25)
+        # print(f"{player["gearSets"]["melee"].get("selectedWeapon", {}).get("name", "").lower()}")
         defence_bonus = monster["defensive"].get(attack_type, 0)
+        # print(monster["skills"]["def"])
         max_defence_roll = (monster["skills"]["def"] + 9) * (defence_bonus + 64)
     elif gear_type == "ranged":
         attack_level = player["combatStats"]["ranged"]
@@ -224,7 +226,7 @@ def calculate_accuracy_for_style(player, monster, style, gear, gear_type="melee"
         accuracy = 1.0 - (max_defence_roll + 2) / (2.0 * (max_attack_roll + 1))
     else:
         accuracy = max_attack_roll / (2.0 * (max_defence_roll + 1))
-    # print(f"Accuracy: {accuracy}, Effective Attack: {effective_attack}, Max Attack Roll: {max_attack_roll}, Max Defence Roll: {max_defence_roll}")
+    # print(f"Style: {style.get('combat_style', '')}, Accuracy: {accuracy}, Effective Attack: {effective_attack}, Max Attack Roll: {max_attack_roll}, Max Defence Roll: {max_defence_roll}")
     return accuracy, effective_attack, max_attack_roll, max_defence_roll
 
 def find_best_combat_style(player, monster, gear_type):

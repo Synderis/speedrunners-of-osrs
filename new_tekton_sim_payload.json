@@ -16,59 +16,59 @@
             "melee": {
                 "gearStats": {
                     "bonuses": {
-                        "str": 120,
+                        "str": 145,
                         "ranged_str": 63,
                         "magic_str": 2,
                         "prayer": 7
                     },
                     "offensive": {
-                        "stab": 118,
-                        "slash": 77,
-                        "crush": 110,
-                        "magic": -62,
-                        "ranged": -42
+                        "stab": 120,
+                        "slash": 175,
+                        "crush": 80,
+                        "magic": -63,
+                        "ranged": -38
                     },
                     "defensive": {
-                        "stab": 326,
-                        "slash": 316,
-                        "crush": 323,
-                        "magic": -5,
-                        "ranged": 319
+                        "stab": 294,
+                        "slash": 294,
+                        "crush": 305,
+                        "magic": 0,
+                        "ranged": 323
                     }
                 },
                 "selectedWeapon": {
-                    "name": "Dragon pickaxe",
-                    "id": 11920,
-                    "version": "",
+                    "name": "Scythe of vitur",
+                    "id": 22325,
+                    "version": "Charged",
                     "slot": "weapon",
-                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB0AAAAeCAMAAADn2eWTAAAAeFBMVEUAAACJgH9sZGRqYmJnYGBlXl1jXFthWlpdV1dbVVVYUlJWUFBUTU1RSkquJBVOSUioIhVMRkaiIhGfIhFIQ0OYIBFFQECVIBGLHRE/Ojo8NzeEGg2AGg18Gg14GA10GA1wGA1tFQ1pFQlkFQlgEQlbEQlWEQkAAAGh3nIjAAAAAXRSTlMAQObYZgAAAONJREFUeNp9kNtShDAQRKMSciMiygoqAXJZ+v//0HIVIdQy/ZTkVKd7hrFcAMDuvP1q/OofcEBhlZ+GvnvDjoUlbvLT0L1s1C9LiDH9ycpHN/ZbNBBi/I815ZMbJ3fZ8/WIWhWFG2c/9693qldlwd00++Bd93zAaDTnHIAPKYbukmNYwTluWemarvOwx2h1yUusXXzKt1LLFd6uY8y8RpQC+x1mVpXB4zhSyDOKRgvCapVQp9bWSHlurbVURCdFwMYoTXTSBGwrZYhOhrC+W10Rnarzf3+GrQj6QUCGT0tQhhP4Dce4HvahOw5ZAAAAAElFTkSuQmCC",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAbCAMAAABcI88jAAAAflBMVEUAAACYjo2WjIuViomTiIiQhoaHfn19dHR7cnJ5cXB3b251bWxza2tuZmZsZGRnYGBlXl1jXFtdV1dYUlJWUFBUTU1OSUhMRkZIQ0NFQEBjMCxgLiw/OjpzJB08NzdXKig5NDQ1MDBgHRgyLi5IIiAsKiooJiYkIiIgHR0AAAErnkU7AAAAAXRSTlMAQObYZgAAAKRJREFUeAF9wYtSwjAAAMGzKDRB8QWW+ihgTeH+/wcdmFE7YLLLL0/4lxpjDCnJJY2hruvZrN/LBWN9cz2pqupqd5BzxjCdevI+yBnnQeXI1y4pY85v5Ydv22EvI97JH10nGZMxWylwmSTLtb3kmT4+Jct+2EmebdtLnj6tpMBHKXAhJT5LgfdSYiMFPkiJjRQYBMlyoV+SZbdtNpLj6qWTPBW+AQ2XE+B7aqYXAAAAAElFTkSuQmCC",
                     "speed": 5,
-                    "category": "Pickaxe",
+                    "category": "Scythe",
                     "bonuses": {
-                        "str": 42,
+                        "str": 75,
                         "ranged_str": 0,
                         "magic_str": 0,
                         "prayer": 0
                     },
                     "offensive": {
-                        "stab": 38,
-                        "slash": -2,
-                        "crush": 32,
-                        "magic": 0,
+                        "stab": 70,
+                        "slash": 125,
+                        "crush": 30,
+                        "magic": -6,
                         "ranged": 0
                     },
                     "defensive": {
-                        "stab": 0,
-                        "slash": 1,
-                        "crush": 0,
+                        "stab": -2,
+                        "slash": 8,
+                        "crush": 10,
                         "magic": 0,
                         "ranged": 0
                     },
-                    "two_handed": false,
+                    "two_handed": true,
                     "weapon_styles": [
                         {
-                            "name": "Spike",
-                            "attack_type": "Stab",
+                            "name": "Reap",
+                            "attack_type": "Slash",
                             "combat_style": "Accurate",
                             "att": 3,
                             "str": 0,
@@ -78,8 +78,8 @@
                             "att_spd_reduction": 0
                         },
                         {
-                            "name": "Impale",
-                            "attack_type": "Stab",
+                            "name": "Chop",
+                            "attack_type": "Slash",
                             "combat_style": "Aggressive",
                             "att": 0,
                             "str": 3,
@@ -89,7 +89,7 @@
                             "att_spd_reduction": 0
                         },
                         {
-                            "name": "Smash",
+                            "name": "Jab",
                             "attack_type": "Crush",
                             "combat_style": "Aggressive",
                             "att": 0,
@@ -101,7 +101,7 @@
                         },
                         {
                             "name": "Block",
-                            "attack_type": "Stab",
+                            "attack_type": "Slash",
                             "combat_style": "Defensive",
                             "att": 0,
                             "str": 0,
@@ -115,34 +115,34 @@
                 "gearType": "melee",
                 "gearItems": [
                     {
-                        "name": "Dragon pickaxe",
-                        "id": 11920,
-                        "version": "",
+                        "name": "Scythe of vitur",
+                        "id": 22325,
+                        "version": "Charged",
                         "slot": "weapon",
-                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB0AAAAeCAMAAADn2eWTAAAAeFBMVEUAAACJgH9sZGRqYmJnYGBlXl1jXFthWlpdV1dbVVVYUlJWUFBUTU1RSkquJBVOSUioIhVMRkaiIhGfIhFIQ0OYIBFFQECVIBGLHRE/Ojo8NzeEGg2AGg18Gg14GA10GA1wGA1tFQ1pFQlkFQlgEQlbEQlWEQkAAAGh3nIjAAAAAXRSTlMAQObYZgAAAONJREFUeNp9kNtShDAQRKMSciMiygoqAXJZ+v//0HIVIdQy/ZTkVKd7hrFcAMDuvP1q/OofcEBhlZ+GvnvDjoUlbvLT0L1s1C9LiDH9ycpHN/ZbNBBi/I815ZMbJ3fZ8/WIWhWFG2c/9693qldlwd00++Bd93zAaDTnHIAPKYbukmNYwTluWemarvOwx2h1yUusXXzKt1LLFd6uY8y8RpQC+x1mVpXB4zhSyDOKRgvCapVQp9bWSHlurbVURCdFwMYoTXTSBGwrZYhOhrC+W10Rnarzf3+GrQj6QUCGT0tQhhP4Dce4HvahOw5ZAAAAAElFTkSuQmCC",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAbCAMAAABcI88jAAAAflBMVEUAAACYjo2WjIuViomTiIiQhoaHfn19dHR7cnJ5cXB3b251bWxza2tuZmZsZGRnYGBlXl1jXFtdV1dYUlJWUFBUTU1OSUhMRkZIQ0NFQEBjMCxgLiw/OjpzJB08NzdXKig5NDQ1MDBgHRgyLi5IIiAsKiooJiYkIiIgHR0AAAErnkU7AAAAAXRSTlMAQObYZgAAAKRJREFUeAF9wYtSwjAAAMGzKDRB8QWW+ihgTeH+/wcdmFE7YLLLL0/4lxpjDCnJJY2hruvZrN/LBWN9cz2pqupqd5BzxjCdevI+yBnnQeXI1y4pY85v5Ydv22EvI97JH10nGZMxWylwmSTLtb3kmT4+Jct+2EmebdtLnj6tpMBHKXAhJT5LgfdSYiMFPkiJjRQYBMlyoV+SZbdtNpLj6qWTPBW+AQ2XE+B7aqYXAAAAAElFTkSuQmCC",
                         "speed": 5,
-                        "category": "Pickaxe",
+                        "category": "Scythe",
                         "bonuses": {
-                            "str": 42,
+                            "str": 75,
                             "ranged_str": 0,
                             "magic_str": 0,
                             "prayer": 0
                         },
                         "offensive": {
-                            "stab": 38,
-                            "slash": -2,
-                            "crush": 32,
-                            "magic": 0,
+                            "stab": 70,
+                            "slash": 125,
+                            "crush": 30,
+                            "magic": -6,
                             "ranged": 0
                         },
                         "defensive": {
-                            "stab": 0,
-                            "slash": 1,
-                            "crush": 0,
+                            "stab": -2,
+                            "slash": 8,
+                            "crush": 10,
                             "magic": 0,
                             "ranged": 0
                         },
-                        "two_handed": false
+                        "two_handed": true
                     },
                     {
                         "name": "Torva full helm",
@@ -231,36 +231,6 @@
                             "crush": 12,
                             "magic": 12,
                             "ranged": 12
-                        },
-                        "two_handed": false
-                    },
-                    {
-                        "name": "Avernic defender",
-                        "id": 22322,
-                        "version": "Normal",
-                        "slot": "shield",
-                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB0AAAAdCAMAAABhTZc9AAAAkFBMVEUAAACBgXiFgWt/f3Z9fXSCfGZ7e3J5eXB9eGN3d257dmJ1dGx4c2Bzcmt2cV1wcGlxbVpwaWlsbGRqamJsZGRnZ2BqYmJlXl1hWlpRUUpOTkhRSkpMSkZMRkZIQ0NFQEA8OjA5OTQ5NDQ1NTA1MDAyMC4yLi4sLCosKiooKCYoJiYkIiIgHR0aGBgVEREAAAFp04FTAAAAAXRSTlMAQObYZgAAAMJJREFUeNqF0tkSgjAMBVBURBFx30CLAlJrt/v/f+cUfSOtecyZSdMkUeQLAAHTWsNnQpPqMhCCVrgUeK80OuYk9jlcKxKVsojATtwQHWklFbA9c0ug1VJycbgwhxi++oy51HdXHRUGDacTLo0FUA3QAPlIGWubaoBuflmmTN0yRmCE9FjUAGOMEZjsi9YhtTvEu7IFGnqtWJcd8c0f5rfOewzINi8/zlYBTObvwI1NQzh+BHAROt2l3/7gKoC+0X3jA7AuIwLtWtWWAAAAAElFTkSuQmCC",
-                        "speed": 0,
-                        "category": "",
-                        "bonuses": {
-                            "str": 8,
-                            "ranged_str": 0,
-                            "magic_str": 0,
-                            "prayer": 0
-                        },
-                        "offensive": {
-                            "stab": 30,
-                            "slash": 29,
-                            "crush": 28,
-                            "magic": -5,
-                            "ranged": -4
-                        },
-                        "defensive": {
-                            "stab": 30,
-                            "slash": 29,
-                            "crush": 28,
-                            "magic": -5,
-                            "ranged": -4
                         },
                         "two_handed": false
                     },
