@@ -119,7 +119,7 @@ pub struct Player {
     pub inventory: Vec<InventoryItem>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct MonsterSkills {
     pub atk: u32,
     pub def: u32,
@@ -129,7 +129,7 @@ pub struct MonsterSkills {
     pub str: u32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct MonsterOffensive {
     #[serde(rename = "ranged_str")]
     pub ranged_str: i32,
@@ -141,7 +141,7 @@ pub struct MonsterOffensive {
     pub str: i32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct MonsterDefensive {
     pub flat_armour: i32,
     pub crush: i32,
@@ -153,7 +153,7 @@ pub struct MonsterDefensive {
     pub stab: i32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Monster {
     pub id: u32,
     pub name: String,
@@ -222,6 +222,29 @@ pub struct Room {
     pub image: Option<String>,
     pub description: Option<String>,
     pub monsters: Vec<Monster>,
+}
+
+impl SelectedItem {
+    pub fn get_stat(&self, stat_type: &str, stat: &str) -> i32 {
+        match stat_type {
+            "bonuses" => self.bonuses.as_ref().and_then(|b| match stat {
+                "str" => Some(b.str),
+                "ranged_str" => Some(b.ranged_str),
+                "magic_str" => Some(b.magic_str),
+                "prayer" => Some(b.prayer),
+                _ => None,
+            }).unwrap_or(0),
+            "offensive" => self.offensive.as_ref().and_then(|o| match stat {
+                "stab" => Some(o.stab),
+                "slash" => Some(o.slash),
+                "crush" => Some(o.crush),
+                "magic" => Some(o.magic),
+                "ranged" => Some(o.ranged),
+                _ => None,
+            }).unwrap_or(0),
+            _ => 0,
+        }
+    }
 }
 
 use serde::de::{self, Deserializer};

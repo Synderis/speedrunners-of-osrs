@@ -199,6 +199,9 @@ pub fn calculate_max_hit_for_style(
         } else {
             max_hit = (0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor() as u32;
         };
+        if weapon.name == "Scythe of vitur" {
+            max_hit = max_hit + (max_hit / 2) + (max_hit / 4);
+        };
     };
     // console_log!("Gear items: {:?}", gear_set.gear_items);
     
