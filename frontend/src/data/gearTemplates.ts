@@ -63,7 +63,8 @@ export const gearSetPresets: GearSetPreset[] = [
             "12018",
             "11865",
             "11808",
-            "11920"
+            "11920",
+            "21003"
         ]
     },
     {

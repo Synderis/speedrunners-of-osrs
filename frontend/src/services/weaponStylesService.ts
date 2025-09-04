@@ -787,7 +787,7 @@ const weaponStyles: Record<string, WeaponStyles[]> = {
             att_spd_reduction: 0,
         },
     ],
-    "Two-handed sword": [
+    "2h Sword": [
         {
             name: "Chop",
             attack_type: "Slash",

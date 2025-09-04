@@ -136,7 +136,11 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     if monsters.len() < 2 {
         return "{\"error\": \"Tekton simulation requires two monsters (normal and enraged)\"}".to_string();
     }
-
+    if monsters[0].id != 7545 || monsters[1].id != 7544 {
+        return "{\"error\": \"First two monsters must be Tekton (normal and enraged)\"}".to_string();
+    }
+    let initial_best_style = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
+    let initial_best_style_enraged = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
     // --- SWAP TO ELDER MAUL BEFORE SIMULATION ---
     let swap_result = ensure_weapon_swap(&mut player, "Elder maul", None);
     let (swapped_weapon, swapped_offhand) = match swap_result {
@@ -162,8 +166,6 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     let mut tick_counts = vec![0usize; trials];
     let mut best_style_normal: Option<StyleResult> = None;
     let mut best_style_enraged: Option<StyleResult> = None;
-    let mut last_best_style_normal: Option<StyleResult> = None;
-    let mut last_best_style_enraged: Option<StyleResult> = None;
     let mut hp_pre_anvil: Vec<usize> = vec![0; trials];
     let mut phase_results: Vec<usize> = vec![0; trials];
 
@@ -171,7 +173,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         let mut tekton_hp = base_tekton_hp;
         let mut tekton_normal = monsters[0].clone();
         let mut tekton_enraged = monsters[1].clone();
-        let mut total_ticks = 0usize;
+        let mut total_ticks = 17;
         let mut spec_count = true;
         let mut pre_anvil = 6;
         let mut best_style_normal = None;
@@ -216,13 +218,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             // Find best styles if not already found
             if best_style_normal.is_none() || best_style_enraged.is_none() {
                 best_style_normal = Some(find_best_combat_style(&player, &tekton_normal, vec!["melee".to_string()]));
-                if let Some(ref style) = best_style_normal {
-                    last_best_style_normal = Some(style.clone());
-                }
                 best_style_enraged = Some(find_best_combat_style(&player, &tekton_enraged, vec!["melee".to_string()]));
-                if let Some(ref style) = best_style_enraged {
-                    last_best_style_enraged = Some(style.clone());
-                }
                 attack_speed_normal = player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.speed).unwrap_or(4) as usize;
                 attack_speed_enraged = attack_speed_normal;
             }
@@ -250,7 +246,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 total_ticks += attack_speed_normal;
                 tekton_hp -= hit;
                 if pre_anvil == 1 {
-                    hp_pre_anvil_val = tekton_hp;
+                    hp_pre_anvil_val = tekton_hp as usize;
                 }
                 pre_anvil -= 1;
             }
@@ -296,16 +292,6 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
     // --- SWAP BACK TO PREVIOUS WEAPON AFTER SIMULATION ---
     // let _ = ensure_weapon_swap(&mut player, &swapped_weapon, swapped_offhand);
-
-    // After the simulation loop
-    let best_style_normal = match last_best_style_normal {
-        Some(style) => style,
-        None => return "{\"error\": \"No best style found (normal)\"}".to_string(),
-    };
-    let best_style_enraged = match last_best_style_enraged {
-        Some(style) => style,
-        None => return "{\"error\": \"No best style found (enraged)\"}".to_string(),
-    };
 
     // Defensive: Check tick_counts
     if tick_counts.is_empty() {
@@ -357,31 +343,42 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     encounter_kill_times = kill_prob.clone();
 
     // Example: For Tekton (single monster)
-    let monster_normal = &monsters[0];
+
+    let monster_normal = &monsters[1];
     let result_normal = serde_json::json!({
         "monster_id": monster_normal.id,
         "monster_name": monster_normal.name,
         "expected_hits": expected_hits,
         "expected_ticks": expected_ttk,
         "expected_seconds": expected_seconds,
-        "combat_type": best_style_normal.attack_type,
-        "attack_style": best_style_normal.combat_style,
+        "combat_type": initial_best_style.attack_type,
+        "attack_style": initial_best_style.combat_style,
         "kill_times": kill_times,
     });
     results.push(result_normal);
 
-    let monster_enraged = &monsters[1];
+    let monster_enraged = &monsters[0];
     let result_enraged = serde_json::json!({
         "monster_id": monster_enraged.id,
         "monster_name": monster_enraged.name,
         "expected_hits": expected_hits,
         "expected_ticks": expected_ttk,
         "expected_seconds": expected_seconds,
-        "combat_type": best_style_enraged.attack_type,
-        "attack_style": best_style_enraged.combat_style,
+        "combat_type": initial_best_style_enraged.attack_type,
+        "attack_style": initial_best_style_enraged.combat_style,
         "kill_times": kill_times,
     });
     results.push(result_enraged);
+
+
+    // results.push(result_enraged);
+    if !results.is_empty() {
+        return serde_json::json!({ "results": results }).to_string();
+    }
+
+
+
+
     // Convert encounter_kill_times to JSON object array
     let attack_speed = encounter_attack_speed.unwrap_or(1);
     let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()

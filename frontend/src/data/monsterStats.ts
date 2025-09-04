@@ -97,7 +97,7 @@ export const cmMonsters: Monster[] = [
     },
     {
         "id": 7544,
-        "name": "Tekton",
+        "name": "Tekton (enraged)",
         "version": "Enraged (Challenge Mode)",
         "image": "Tekton (enraged).png",
         "level": 0,
@@ -733,7 +733,7 @@ export interface Room {
 
 export const rooms: Room[] = [
     {
-        id: '7545',
+        id: 'tekton',
         name: 'Tekton',
         image: '/rooms/220px-Tekton.webp',
         description: 'High-level boss encounter',

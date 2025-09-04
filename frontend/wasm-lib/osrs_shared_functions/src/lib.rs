@@ -11,6 +11,21 @@ extern "C" {
 macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
+
+fn tbow_scaling(magic: u32, mode: &str) -> f64 {
+    let (factor, base, clamp, denom) = if mode == "accuracy" {
+        (10.0, 140.0, 1.4, 1.0)
+    } else {
+        (14.0, 250.0, 2.5, 10.0)
+    };
+
+    let t2 = ((10.0 * 3.0 * magic as f64) / denom - factor) / 100.0;
+    let t3 = (((3.0 * magic as f64) / 10.0 - 10.0 * factor).powi(2)) / 100.0;
+    let mut tbow_mult = (base + t2 - t3) / 100.0;
+    tbow_mult = tbow_mult.clamp(1.0, clamp);
+    tbow_mult
+}
+
 pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: Vec<String>) -> StyleResult {
     let mut best_style: Option<StyleResult> = None;
     let mut best_dps = 0.0;
@@ -180,14 +195,11 @@ pub fn calculate_max_hit_for_style(
         let mut max_hit_multiplier = 1.0;
         if weapon.name == "Twisted bow" {
             // OSRS formula for Twisted Bow damage multiplier
-            let magic = monster.skills.magic as f64;
-            let tbow_mult = (
-                250.0
-                + ((((10.0 * 3.0 * magic) / 10.0) - 14.0) / 100.0)
-                - ((((3.0 * magic) / 10.0) - 140.0).powf(2.0) / 100.0)
-            ) / 100.0;
-            // console_log!("Twisted Bow damage multiplier: {}", tbow_mult);
-            max_hit_multiplier = tbow_mult.clamp(1.0, 2.5);
+            let magic = std::cmp::max(
+                monster.skills.magic.clamp(0, 350) as u32,
+                monster.offensive.magic.clamp(0, 350) as u32,
+            );
+            max_hit_multiplier = tbow_scaling(magic, "damage");
         };
         let effective_ranged = ((level + potion_bonus) * prayer_bonus + style_bonus + 8.0).floor();
         max_hit = (0.5 + (effective_ranged * (bonus + 64.0)) / 640.0).floor() as u32;
@@ -206,6 +218,9 @@ pub fn calculate_max_hit_for_style(
         };
         if weapon.name == "Scythe of vitur" {
             max_hit = max_hit + (max_hit / 2) + (max_hit / 4);
+        };
+        if weapon.name == "Zamorak godsword" && (style.combat_style == "Slash" || style.combat_style == "Crush") {
+            max_hit = (max_hit as f64 * 1.10).floor() as u32;
         };
     };
     // console_log!("Gear items: {:?}", gear_set.gear_items);
@@ -247,7 +262,7 @@ pub fn calculate_max_rolls_for_style(
         _ => (0.0, &player.gear_sets.mage, 0.0, 0.0, None),
     };
 
-    let potion_bonus = if monster.name == "Tekton" {
+    let potion_bonus = if monster.name.contains("Tekton") {
         19.0
     } else {
         21.0
@@ -272,16 +287,17 @@ pub fn calculate_max_rolls_for_style(
         bonus *= 3;
         max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
     };
+    if weapon.name == "Zamorak godsword" && (style.combat_style == "Slash" || style.combat_style == "Crush") {
+        max_attack_roll = max_attack_roll * 2;
+    };
 
     if weapon.name == "Twisted bow" {
         // OSRS Twisted Bow accuracy multiplier
-        let magic = monster.skills.magic as f64;
-        let tbow_mult = (
-            140.0
-            + (((10.0 * 3.0 * magic) - 10.0) / 100.0)
-            - (((3.0 * magic) / 10.0 - 100.0).powf(2.0) / 100.0)
-        ) / 100.0;
-        let tbow_mult = tbow_mult.clamp(1.0, 1.4);
+        let magic = std::cmp::max(
+            monster.skills.magic.clamp(0, 350) as u32,
+            monster.offensive.magic.clamp(0, 350) as u32,
+        );
+        let tbow_mult = tbow_scaling(magic, "accuracy");
         max_attack_roll = (max_attack_roll as f64 * tbow_mult).floor() as u64;
     };
     if gear_set.gear_items.iter().any(|item_opt| {

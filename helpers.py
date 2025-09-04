@@ -150,6 +150,18 @@ def extract_dps_payload(obj):
         "config": obj.get("config", {}),
     }
 
+def tbow_scaling(magic, mode="damage"):
+    if mode == "accuracy":
+        factor, base, clamp, denom = 10.0, 140.0, 1.4, 1.0
+    else:
+        factor, base, clamp, denom = 14.0, 250.0, 2.5, 10.0
+
+    t2 = ((10.0 * 3.0 * magic) / denom - factor) / 100.0
+    t3 = (((3.0 * magic) / 10.0 - 10.0 * factor) ** 2) / 100.0
+    tbow_mult = (base + t2 - t3) / 100.0
+    tbow_mult = max(1.0, min(tbow_mult, clamp))
+    return tbow_mult
+
 def calculate_max_hit_for_style(player, monster, style, gear, gear_type="ranged"):
     if gear_type == "melee":
         level = player["combatStats"]["strength"]
@@ -171,12 +183,32 @@ def calculate_max_hit_for_style(player, monster, style, gear, gear_type="ranged"
         ranged_bonus = gear["bonuses"]["ranged_str"]
         max_hit_multiplier = 1.0
         if player["gearSets"]["ranged"].get("selectedWeapon", {}).get("name", "").lower() == "twisted bow":
-            max_hit_multiplier = (250 + ((((10 * 3 * monster["skills"]["magic"]) / 10) - 14) / 100) - (((((3 * monster["skills"]["magic"]) / 10) - 140) ** 2) / 100)) / 100
-            max_hit_multiplier = max(1.0, min(max_hit_multiplier, 2.50))
+            magic = max(monster["offensive"]["magic"], monster["skills"]["magic"])
+            magic = min(magic, 350)
+            max_hit_multiplier = tbow_scaling(magic, "damage")
         max_hit = int(0.5 + (effective_ranged * (ranged_bonus + 64.0)) / 640.0)
         max_hit = int(max_hit * max_hit_multiplier)
         return max_hit, effective_ranged
-    # Add magic here if needed
+    elif gear_type == "mage":
+        level = player["combatStats"]["magic"]
+        potion_bonus = 21.0  # Flat addition for magic
+        style_bonus = style.get("magic", 0)
+        gear_bonus = gear["bonuses"]["magic_str"]
+        weapon = player["gearSets"]["mage"].get("selectedWeapon", {})
+        effective_level = int(level + potion_bonus)
+        base_damage = 0.0
+        multiplier = 1.0
+        if weapon.get("category") == "Powered Staff":
+            base_damage = int((effective_level / 3.0) - 1.0)
+        if weapon.get("name") == "Tumeken's shadow":
+            multiplier = 3.0
+            base_damage = int((effective_level / 3.0) + 1.0)
+        # Prayer bonus is a flat addition for magic
+        prayer_bonus = 4.0
+        # Salve/slayer/void bonuses can be added here if needed
+        magic_strength = min(gear_bonus * multiplier, 100.0) + prayer_bonus
+        max_hit = int(base_damage * (1.0 + (magic_strength / 100.0)))
+        return max_hit, effective_level
     else:
         raise ValueError("Unsupported gear_type")
 
@@ -209,10 +241,31 @@ def calculate_accuracy_for_style(player, monster, style, gear, gear_type="ranged
         max_defence_roll = (monster["skills"]["def"] + 9) * (defence_bonus + 64)
         accuracy_multiplier = 1.0
         if player["gearSets"]["ranged"].get("selectedWeapon", {}).get("name", "").lower() == "twisted bow":
-            accuracy_multiplier = (140 + ((((10 * 3 * monster["skills"]["magic"]) / 10) - 10) / 100) - (((((3 * monster["skills"]["magic"]) / 10) - 100) ** 2) / 100)) / 100
-            accuracy_multiplier = max(1.0, min(accuracy_multiplier, 1.40))
+            magic = max(monster["offensive"]["magic"], monster["skills"]["magic"])
+            magic = min(magic, 350)
+            accuracy_multiplier = tbow_scaling(magic, mode="accuracy")
             max_attack_roll = int(max_attack_roll * accuracy_multiplier)
             # print(f"Ranged max attack roll: {max_attack_roll}")
+    elif gear_type == "mage":
+        attack_level = player["combatStats"]["magic"]
+        potion_bonus = 21.0
+        prayer_bonus = 1.25
+        style_bonus = style.get("magic", 0)
+        effective_attack = int(((attack_level + potion_bonus) * prayer_bonus + style_bonus + 8.0))
+        attack_bonus = gear["offensive"].get("magic", 0)
+        print(f"Magic attack bonus: {attack_bonus}")
+        if player["gearSets"]["mage"].get("selectedWeapon", {}).get("name", "").lower() == "tumeken's shadow":
+            attack_bonus *= 3
+            print(f"Magic attack bonus (with Tumeken's Shadow): {attack_bonus}")
+        max_attack_roll = effective_attack * (attack_bonus + 64)
+        defence_bonus = monster["defensive"].get("magic", 0)
+        max_defence_roll = (monster["skills"]["magic"] + 9) * (defence_bonus + 64)
+        accuracy = (
+            1.0 - (max_defence_roll + 2) / (2.0 * (max_attack_roll + 1))
+            if max_attack_roll > max_defence_roll
+            else max_attack_roll / (2.0 * (max_defence_roll + 1))
+        )
+        return accuracy, effective_attack, max_attack_roll, max_defence_roll
     else:
         raise ValueError("Unsupported gear_type")
 
@@ -226,7 +279,9 @@ def calculate_accuracy_for_style(player, monster, style, gear, gear_type="ranged
 def find_best_combat_style(player, monster, gear_type):
     best_style = None
     best_dps = 0.0
+    
     gear_set = player["gearSets"].get(gear_type)
+    # print(gear_set)
     if not gear_set:
         return None
     weapon = gear_set.get("selectedWeapon")
