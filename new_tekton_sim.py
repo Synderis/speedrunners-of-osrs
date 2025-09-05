@@ -82,7 +82,7 @@ if __name__ == "__main__":
         tekton_hp = base_tekton_hp
         tekton_normal = copy.deepcopy(monsters[0])
         tekton_enraged = copy.deepcopy(monsters[1])
-        total_ticks = 0
+        total_ticks = 17
         spec_count = True
         pre_anvil = 6
         first_pass = True
@@ -130,7 +130,7 @@ if __name__ == "__main__":
                 total_ticks += attack_speed_normal
                 tekton_hp -= hit
                 pre_anvil -= 1
-            anvil_cycle = np.random.randint(3, 6)
+            anvil_cycle = np.random.randint(3, 7)
             tekton_hp += anvil_cycle * 5
             total_ticks += anvil_cycle * 3
 

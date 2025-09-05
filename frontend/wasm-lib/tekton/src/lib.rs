@@ -253,7 +253,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             phase += 1;
 
             // Anvil cycle
-            let anvil_cycle = rng.gen_range(3..=5);
+            let anvil_cycle = rng.gen_range(3..=6);
             tekton_hp += anvil_cycle * 5;
             total_ticks += (anvil_cycle * 3) as usize;
 
