@@ -49,6 +49,21 @@ def ensure_weapon_swap(player, weapon, equip_offhand=None):
                 gear_items.append(equip_offhand)
             return player, current_weapon["name"], current_offhand
 
+def phase_loop(hit_count, hit_count_bounds, tekton_hp, current_phase_ticks, attack_speed, accuracy, max_hit):
+    while tekton_hp > 0 and hit_count_bounds[0] <= hit_count <= hit_count_bounds[1]:
+        current_phase_ticks += 1
+        if current_phase_ticks == 1 or (current_phase_ticks - 1) % 4 == 0:
+            tekton_hp -= np.random.randint(0, 4)
+        if tekton_hp <= 0:
+            return tekton_hp, current_phase_ticks, hit_count, True  # signal to break outer loop
+        if current_phase_ticks == 1 or (current_phase_ticks - 1) % attack_speed == 0:
+            hit = 0
+            if np.random.rand() < accuracy:
+                hit = np.random.randint(0, max_hit + 1)
+            tekton_hp -= hit
+            hit_count += 1
+    return tekton_hp, current_phase_ticks, hit_count, False
+
 if __name__ == "__main__":
     import time
     start_time = time.time()
@@ -82,12 +97,15 @@ if __name__ == "__main__":
         tekton_hp = base_tekton_hp
         tekton_normal = copy.deepcopy(monsters[0])
         tekton_enraged = copy.deepcopy(monsters[1])
-        total_ticks = 17
+        total_ticks = 0
+        current_phase_ticks = 0
+        initial_delay = 17
         spec_count = True
-        pre_anvil = 6
+        pre_anvil = 0
         first_pass = True
         best_style_normal = None
         best_style_enraged = None
+        hit_count = 0
 
         while tekton_hp > 0:
             if spec_count == True:
@@ -122,38 +140,114 @@ if __name__ == "__main__":
                 max_hit_enraged = best_style_enraged["max_hit"]
                 accuracy_enraged = best_style_enraged["accuracy"]
 
-            while pre_anvil > 0:
-                if np.random.rand() < accuracy_normal:
-                    hit = np.random.randint(0, max_hit_normal + 1)
-                else:
-                    hit = 0
-                total_ticks += attack_speed_normal
-                tekton_hp -= hit
-                pre_anvil -= 1
+            tekton_hp, current_phase_ticks, pre_anvil, died = phase_loop(
+                hit_count, (0, 6), tekton_hp, current_phase_ticks, attack_speed_normal, accuracy_normal, max_hit_normal
+            )
+            if died:
+                total_ticks += current_phase_ticks - 1
+                break
+
+            if tekton_hp <= 0:
+                total_ticks += current_phase_ticks - 1
+                break
             anvil_cycle = np.random.randint(3, 7)
             tekton_hp += anvil_cycle * 5
             total_ticks += anvil_cycle * 3
+            if current_phase_ticks > 0:
+                total_ticks += current_phase_ticks - 1
+            current_phase_ticks = 0
 
-            for n in range(4):
-                if np.random.rand() < accuracy_enraged:
-                    hit = np.random.randint(0, max_hit_enraged + 1)
-                else:
-                    hit = 0
-                total_ticks += attack_speed_enraged
-                tekton_hp -= hit
-                if n == 0 and first_pass:
-                    tekton_hp -= math.floor(0.75 * np.random.randint(0, 87))
-                    first_pass = False
+            tekton_hp, current_phase_ticks, hit_count, died = phase_loop(
+                hit_count, (0, 4), tekton_hp, current_phase_ticks, attack_speed_normal, accuracy_normal, max_hit_normal
+            )
+            if died:
+                total_ticks += current_phase_ticks - 1
+                break
 
-            for _ in range(8):
-                if np.random.rand() < accuracy_normal:
-                    hit = np.random.randint(0, max_hit_normal + 1)
-                else:
-                    hit = 0
-                total_ticks += attack_speed_normal
-                tekton_hp -= hit
+            if tekton_hp <= 0:
+                total_ticks += current_phase_ticks - 1
+                break
+            current_phase_ticks -= 1
 
+            tekton_hp, current_phase_ticks, hit_count, died = phase_loop(
+                hit_count, (5, 8), tekton_hp, current_phase_ticks, attack_speed_enraged, accuracy_enraged, max_hit_enraged
+            )
+            if died:
+                total_ticks += current_phase_ticks - 1
+                break
+            total_ticks += current_phase_ticks - 1
+            current_phase_ticks = 0
+            hit_count = 0
+        total_ticks += initial_delay
+        if total_ticks % 4 != 0:
+            total_ticks += 4 - (total_ticks % 4)
         tick_counts[i] = total_ticks
+
+        # while tekton_hp > 0:
+        #     if spec_count == True:
+        #         tekton_normal["skills"]["def"] = math.ceil(tekton_normal["skills"]["def"] * 0.65)
+        #         tekton_enraged["skills"]["def"] = math.ceil(tekton_enraged["skills"]["def"] * 0.65)
+        #         # print(tekton_normal["skills"]["def"], tekton_enraged["skills"]["def"])
+        #         total_ticks += 6
+        #         tekton_hp -= np.random.randint(0, max_hit_spec + 1)
+        #         if np.random.rand() < accuracy_spec:
+        #             # print("Spec hit")
+        #             hit = np.random.randint(0, max_hit_spec + 1)
+        #             tekton_normal["skills"]["def"] = math.ceil(tekton_normal["skills"]["def"] * 0.65)
+        #             tekton_enraged["skills"]["def"] = math.ceil(tekton_enraged["skills"]["def"] * 0.65)
+        #             # print(tekton_normal["skills"]["def"], tekton_enraged["skills"]["def"])
+        #         else:
+        #             tekton_normal["skills"]["def"] = math.ceil(tekton_normal["skills"]["def"] * 0.95)
+        #             tekton_enraged["skills"]["def"] = math.ceil(tekton_enraged["skills"]["def"] * 0.95)
+        #             # print(tekton_normal["skills"]["def"], tekton_enraged["skills"]["def"])
+        #             hit = 0
+        #         total_ticks += 6
+        #         tekton_hp -= hit
+        #         spec_count = False
+
+        #     if not best_style_normal or not best_style_enraged:
+        #         best_style_normal = find_best_combat_style(player, tekton_normal, "melee")
+        #         # print("Normal best style:", best_style_normal, '\n')
+        #         max_hit_normal = best_style_normal["max_hit"]
+        #         accuracy_normal = best_style_normal["accuracy"]
+        #         best_style_enraged = find_best_combat_style(player, tekton_enraged, "melee")
+        #         # print('YEP')
+        #         # print("Enraged best style:", best_style_enraged, '\n')
+        #         max_hit_enraged = best_style_enraged["max_hit"]
+        #         accuracy_enraged = best_style_enraged["accuracy"]
+
+        #     while pre_anvil > 0:
+        #         if np.random.rand() < accuracy_normal:
+        #             hit = np.random.randint(0, max_hit_normal + 1)
+        #         else:
+        #             hit = 0
+        #         total_ticks += attack_speed_normal
+        #         tekton_hp -= hit
+        #         pre_anvil -= 1
+        #     anvil_cycle = np.random.randint(3, 7)
+        #     tekton_hp += anvil_cycle * 5
+        #     total_ticks += anvil_cycle * 3
+
+        #     for n in range(4):
+        #         if np.random.rand() < accuracy_enraged:
+        #             hit = np.random.randint(0, max_hit_enraged + 1)
+        #         else:
+        #             hit = 0
+        #         total_ticks += attack_speed_enraged
+        #         tekton_hp -= hit
+        #         if n == 0 and first_pass:
+        #             tekton_hp -= math.floor(0.75 * np.random.randint(0, 87))
+        #             first_pass = False
+
+        #     for _ in range(8):
+        #         if np.random.rand() < accuracy_normal:
+        #             hit = np.random.randint(0, max_hit_normal + 1)
+        #         else:
+        #             hit = 0
+        #         total_ticks += attack_speed_normal
+        #         tekton_hp -= hit
+
+        # tick_counts[i] = total_ticks
 
     max_ticks = int(max(tick_counts))
     kill_prob = np.zeros(max_ticks + 1)
@@ -165,10 +259,12 @@ if __name__ == "__main__":
     attack_ticks = np.arange(max_ticks + 1)
 
     mean_ttk = np.mean(tick_counts)
+    median_ttk = np.median(tick_counts)
     std_ttk = np.std(tick_counts)
 
     print(f"[Sim] Trials: {trials}")
     print(f"Expected TTK: {mean_ttk:.2f} ticks ({mean_ttk * 0.6:.2f} seconds)")
+    print(f"Median TTK: {median_ttk:.2f} ticks ({median_ttk * 0.6:.2f} seconds)")
 
     elapsed = time.time() - start_time
     print(f"Elapsed simulation time: {elapsed:.2f} seconds")
@@ -205,4 +301,4 @@ if __name__ == "__main__":
         legend_title="Legend",
         hovermode="x unified"
     )
-    # fig.show()
+    fig.show()
