@@ -222,6 +222,7 @@ pub struct Room {
     pub image: Option<String>,
     pub description: Option<String>,
     pub monsters: Vec<Monster>,
+    pub methods: Vec<String>,
 }
 
 impl SelectedItem {

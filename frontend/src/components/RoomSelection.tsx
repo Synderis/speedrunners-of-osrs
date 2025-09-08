@@ -9,15 +9,17 @@ interface SelectedRoomWithMonster extends Room {
 }
 
 interface RoomSelectionProps {
-    // setSelectedMonsters: React.Dispatch<React.SetStateAction<Monster[]>>;
     selectedRooms: Room[];
     setSelectedRooms: React.Dispatch<React.SetStateAction<Room[]>>;
+    selectedMethods: { [roomId: string]: string | null };
+    setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string | null }>>;
 }
 
 const RoomSelection: React.FC<RoomSelectionProps> = ({
-    // setSelectedMonsters,
     selectedRooms,
-    setSelectedRooms
+    setSelectedRooms,
+    selectedMethods,
+    setSelectedMethods
 }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -100,6 +102,27 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    // Handler for method selection
+    const handleMethodSelect = (room: Room, method: string) => {
+        setSelectedMethods(prev => ({
+            ...prev,
+            [room.id]: prev[room.id] === method ? null : method
+        }));
+
+        setSelectedRooms(prevRooms => prevRooms.map(r => {
+            if (r.id !== room.id) return r;
+            // If deselecting (toggle off), restore all methods
+            if (selectedMethods[room.id] === method) {
+                // Find the original room from the rooms list
+                const originalRoom = rooms.find(orig => orig.id === room.id);
+                return originalRoom ? { ...r, methods: originalRoom.methods } : r;
+            } else {
+                // Only keep the selected method
+                return { ...r, methods: [method] };
+            }
+        }));
+    };
 
     return (
         <section id="rooms" className="section">
@@ -193,6 +216,7 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                                                 </motion.div>
                                             ))}
                                         </AnimatePresence>
+
                                     </div>
                                 </motion.div>
                             ) : (
@@ -265,7 +289,25 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                             )}
                         </AnimatePresence>
                     </motion.div>
+                    {selectedRooms.map(room => (
+                        <div key={room.id} className="selected-room-methods">
+                            {room.methods && room.methods.length > 0 && (
+                                <div className="room-method-buttons">
+                                    {room.methods.map(method => (
+                                        <button
+                                            key={method}
+                                            className={`method-tab${selectedMethods[room.id] === method ? ' active' : ''}`}
+                                            onClick={() => handleMethodSelect(room, method)}
+                                        >
+                                            {method}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
                 </motion.div>
+                
             </div>
         </section>
     );

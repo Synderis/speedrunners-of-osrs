@@ -73,6 +73,7 @@ interface PlotSectionProps {
   combatStats?: CombatStats;
   selectedRooms?: Room[];
   selectedInventoryItems?: InventoryItem[];
+  selectedMethods?: { [roomId: string]: string | null };
 }
 
 type Stats = {
@@ -153,7 +154,8 @@ const PlotSection: React.FC<PlotSectionProps> = ({
     thieving: 99
   },
   selectedRooms = [],
-  selectedInventoryItems = []
+  selectedInventoryItems = [],
+  selectedMethods = {}
 }) => {
   // --- Theme & Chart Colors ---
   const { theme } = useTheme();
@@ -394,9 +396,15 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         }
         // Get the full monster objects for this room
         const monsters = getMonstersByRoom(room);
-        console.log('Sending to WASM:', { room, monsters });
-        // Pass the array of monster objects as the "monsters" property
-        const result = await loader(playerData, { ...room, monsters });
+        // Always create a shallow copy of the room with the correct methods array
+        const selectedMethod = selectedMethods && selectedMethods[room.id];
+        let filteredMethods = room.methods;
+        if (selectedMethod && typeof selectedMethod === 'string' && Array.isArray(room.methods)) {
+          filteredMethods = room.methods.filter(m => m === selectedMethod);
+        }
+        const roomPayload = { ...room, methods: filteredMethods, monsters };
+        console.log('Sending to WASM:', { room: roomPayload, monsters });
+        const result = await loader(playerData, roomPayload);
         const key = String(room.id || 'default');
         console.log(`WASM result for room ${room.name} (${key}):`, result, result.perMonster);
         plotDataUpdates[key] = result.tickData;

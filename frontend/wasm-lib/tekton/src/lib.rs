@@ -114,6 +114,37 @@ fn ensure_weapon_swap(
     None
 }
 
+fn phase_loop(
+    mut hit_count: usize,
+    hit_count_bounds: &[usize; 2],
+    tekton_hp: &mut i32,
+    current_phase_ticks: &mut usize,
+    attack_speed: usize,
+    accuracy: f64,
+    max_hit: i32,
+    rng: &mut ThreadRng,
+) -> (i32, usize, usize, bool) {
+    // Rust translation of the provided Python phase_loop
+    while *tekton_hp > 0 && hit_count >= hit_count_bounds[0] && hit_count <= hit_count_bounds[1] {
+        *current_phase_ticks += 1;
+        if *current_phase_ticks == 1 || (*current_phase_ticks - 1) % 4 == 0 {
+            *tekton_hp -= rng.gen_range(0..4);
+        }
+        if *tekton_hp <= 0 {
+            return (*tekton_hp, *current_phase_ticks, hit_count, true); // signal to break outer loop
+        }
+        if *current_phase_ticks == 1 || (*current_phase_ticks - 1) % attack_speed == 0 {
+            let mut hit = 0;
+            if rng.gen::<f64>() < accuracy {
+                hit = rng.gen_range(0..=max_hit);
+            }
+            *tekton_hp -= hit;
+            hit_count += 1;
+        }
+    }
+    (*tekton_hp, *current_phase_ticks, hit_count, false)
+}
+
 #[wasm_bindgen]
 pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     // Parse payload
@@ -126,6 +157,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
     let mut player = payload.player;
     let monsters = payload.room.monsters;
+    let room_methods = payload.room.methods;
     let trials = 100000;
     let mut rng = rand::thread_rng();
 
@@ -169,18 +201,27 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     let mut hp_pre_anvil: Vec<usize> = vec![0; trials];
     let mut phase_results: Vec<usize> = vec![0; trials];
 
+
+    let (delay, attack_pattern): (usize, Vec<[usize; 2]>) = if room_methods.len() > 0 && room_methods[0] == "Tekton Short Lure" {
+        // (12, vec![[0, 4], [0, 3], [4, 10]])
+        (12, vec![[0, 4], [0, 3], [4, 10]])
+    } else {
+        (17, vec![[0, 5], [0, 3], [4, 11]])
+    };
+    // let delay = 17;
+    // let attack_pattern = vec![[0, 5], [0, 3], [4, 11]];
+
     for i in 0..trials {
         let mut tekton_hp = base_tekton_hp;
         let mut tekton_normal = monsters[0].clone();
         let mut tekton_enraged = monsters[1].clone();
-        let mut total_ticks = 17;
+        let mut total_ticks = delay;
         let mut spec_count = true;
-        let mut pre_anvil = 6;
         let mut best_style_normal = None;
         let mut best_style_enraged = None;
         let mut first_pass = true;
         let mut phase: usize = 0;
-        let mut hp_pre_anvil_val: usize = 0;
+        let mut hp_pre_anvil_val: i32 = 0;
         let mut hit_count = 0;
         let mut current_phase_ticks = 0;
 
@@ -238,91 +279,94 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             let max_hit_enraged = best_style_enraged.max_hit as i32;
             let accuracy_enraged = best_style_enraged.accuracy;
 
-            // Pre-anvil phase
-            while pre_anvil > 0 && tekton_hp > 0 {
-                current_phase_ticks += 1;
-                if current_phase_ticks == 1 || (current_phase_ticks - 1) % 4 == 0 {
-                    tekton_hp -= rng.gen_range(0..=5);
-                }
-                if tekton_hp <= 0 {
-                    break;
-                }
-                if current_phase_ticks == 1 || (current_phase_ticks - 1) % attack_speed_normal != 0 {
-                    let hit = if rng.gen::<f64>() < accuracy_normal {
-                        rng.gen_range(0..=max_hit_normal)
-                    } else {
-                        0
-                    };
-                    tekton_hp -= hit;
-                    if pre_anvil == 1 {
-                        hp_pre_anvil_val = tekton_hp as usize;
-                    }
-                    pre_anvil -= 1;
-                }
+            // --- PHASE LOOP TRANSLATION ---
+            // Pre-anvil phase: (0, 5)
+            let (hp1, ticks1, _, died1) = phase_loop(
+                hit_count as usize,
+                &attack_pattern[0],
+                &mut tekton_hp,
+                &mut current_phase_ticks,
+                attack_speed_normal,
+                accuracy_normal,
+                max_hit_normal,
+                &mut rng,
+            );
+            tekton_hp = hp1;
+            current_phase_ticks = ticks1;
+
+            // Save hp_pre_anvil_val at the end of pre-anvil phase
+            if tekton_hp > 0 && first_pass {
+                hp_pre_anvil_val = tekton_hp;
+                first_pass = false;
+                phase += 1;
             }
-            if tekton_hp <= 0 {
-                total_ticks += current_phase_ticks;
+            if died1 || tekton_hp <= 0 {
+                total_ticks += current_phase_ticks - 1;
                 break;
             }
-            phase += 1;
 
-            // Anvil cycle
-            let anvil_cycle = rng.gen_range(3..=6);
-            tekton_hp += anvil_cycle * 5;
+            let anvil_cycle = rng.gen_range(3..7);
+            tekton_hp += (anvil_cycle * 5) as i32;
             total_ticks += (anvil_cycle * 3) as usize;
-            total_ticks += current_phase_ticks;
+            if current_phase_ticks > 0 {
+                total_ticks += current_phase_ticks - 1;
+            }
             current_phase_ticks = 0;
 
-            while hit_count < 5 && pre_anvil == 0 && tekton_hp > 0 {
-                current_phase_ticks += 1;
-                if current_phase_ticks == 1 || (current_phase_ticks - 1) % 4 == 0 {
-                    tekton_hp -= rng.gen_range(0..=5);
-                }
-                if tekton_hp <= 0 {
-                    break;
-                }
-                if current_phase_ticks == 1 || (current_phase_ticks - 1) % attack_speed_normal != 0 {
-                    let hit = if rng.gen::<f64>() < accuracy_normal {
-                        rng.gen_range(0..=max_hit_normal)
-                    } else {
-                        0
-                    };
-                    tekton_hp -= hit;
-                    hit_count += 1;
-                }
-            }
-            if tekton_hp <= 0 {
-                total_ticks += current_phase_ticks;
+            // Normal phase: (0, 3)
+            let (hp2, ticks2, hit_count2, died2) = phase_loop(
+                hit_count,
+                &attack_pattern[1],
+                &mut tekton_hp,
+                &mut current_phase_ticks,
+                attack_speed_normal,
+                accuracy_normal,
+                max_hit_normal,
+                &mut rng,
+            );
+            tekton_hp = hp2;
+            current_phase_ticks = ticks2;
+            hit_count = hit_count2;
+            if died2 || tekton_hp <= 0 {
+                total_ticks += current_phase_ticks - 1;
                 break;
             }
-            while hit_count > 4  && hit_count < 9 && pre_anvil == 0 && tekton_hp > 0 {
-                current_phase_ticks += 1;
-                if current_phase_ticks == 1 || (current_phase_ticks - 1) % 4 == 0 {
-                    tekton_hp -= rng.gen_range(0..=5);
-                }
-                if tekton_hp <= 0 {
-                    break;
-                }
-                if current_phase_ticks == 1 || (current_phase_ticks - 1) % attack_speed_enraged != 0 {
-                    let hit = if rng.gen::<f64>() < accuracy_enraged {
-                        rng.gen_range(0..=max_hit_enraged)
-                    } else {
-                        0
-                    };
-                    tekton_hp -= hit;
-                    hit_count += 1;
-                }
+            current_phase_ticks -= 1;
+
+            // Enraged phase: (4, 11)
+            let (hp3, ticks3, hit_count3, died3) = phase_loop(
+                hit_count,
+                &attack_pattern[2],
+                &mut tekton_hp,
+                &mut current_phase_ticks,
+                attack_speed_enraged,
+                accuracy_enraged,
+                max_hit_enraged,
+                &mut rng,
+            );
+            tekton_hp = hp3;
+            current_phase_ticks = ticks3;
+            hit_count = hit_count3;
+            if died3 || tekton_hp <= 0 {
+                total_ticks += current_phase_ticks - 1;
+                break;
             }
-            total_ticks += current_phase_ticks;
+            total_ticks += current_phase_ticks - 1;
             current_phase_ticks = 0;
+            hit_count = 0;
+            phase += 1;
         }
-        hp_pre_anvil[i] = hp_pre_anvil_val;
-        phase_results[i] = phase;
+        // Add initial delay and round up to next multiple of 4
+        let initial_delay = 0; // Set as needed
+        total_ticks += initial_delay;
+        if total_ticks % 4 != 0 {
+            total_ticks += 4 - (total_ticks % 4);
+        }
         tick_counts[i] = total_ticks;
+        phase_results[i] = phase;
+        hp_pre_anvil[i] = hp_pre_anvil_val as usize;
     }
 
-    // --- SWAP BACK TO PREVIOUS WEAPON AFTER SIMULATION ---
-    // let _ = ensure_weapon_swap(&mut player, &swapped_weapon, swapped_offhand);
 
     // Defensive: Check tick_counts
     if tick_counts.is_empty() {
@@ -403,9 +447,9 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
 
     // results.push(result_enraged);
-    if !results.is_empty() {
-        return serde_json::json!({ "results": results }).to_string();
-    }
+    // if !results.is_empty() {
+    //     return serde_json::json!({ "results": results }).to_string();
+    // }
 
 
 

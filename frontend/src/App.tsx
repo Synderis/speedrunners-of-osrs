@@ -39,6 +39,7 @@ function App() {
   });
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [selectedRooms, setSelectedRooms] = useState<Room[]>([]);
+  const [selectedMethods, setSelectedMethods] = useState<{ [roomId: string]: string | null }>({});
 
   useEffect(() => {
     // Prevent browser from restoring scroll position
@@ -135,12 +136,15 @@ function App() {
               <RoomSelection
                 selectedRooms={selectedRooms}
                 setSelectedRooms={setSelectedRooms}
+                selectedMethods={selectedMethods}
+                setSelectedMethods={setSelectedMethods}
               />
               <PlotSection
                 gearSets={gearSets}
                 combatStats={combatStats}
                 selectedRooms={selectedRooms}
                 selectedInventoryItems={selectedInventoryItems}
+                selectedMethods={selectedMethods}
               />
             </>
           )}

@@ -88,11 +88,13 @@ if __name__ == "__main__":
     player, _, _ = ensure_weapon_swap(player, swapped_weapon, swapped_offhand)
 
     # Simulation for empirical TTK and cumulative kill probability
-    trials = 100000
+    trials = 1
     max_attacks = 1000  # Reasonable upper bound for plotting
     tick_counts = np.zeros(trials)
     total_tick_list = []
     crystal_avg = []
+    anvil_count_list = np.zeros(trials)
+    hp_anvil_list = np.zeros(trials)
     for i in range(trials):
         tekton_hp = base_tekton_hp
         tekton_normal = copy.deepcopy(monsters[0])
@@ -106,6 +108,9 @@ if __name__ == "__main__":
         best_style_normal = None
         best_style_enraged = None
         hit_count = 0
+        first_pass = True
+        phase = 0
+        hp_pre_anvil = 0
 
         while tekton_hp > 0:
             if spec_count == True:
@@ -141,15 +146,17 @@ if __name__ == "__main__":
                 accuracy_enraged = best_style_enraged["accuracy"]
 
             tekton_hp, current_phase_ticks, pre_anvil, died = phase_loop(
-                hit_count, (0, 6), tekton_hp, current_phase_ticks, attack_speed_normal, accuracy_normal, max_hit_normal
+                hit_count, (0, 5), tekton_hp, current_phase_ticks, attack_speed_normal, accuracy_normal, max_hit_normal
             )
-            if died:
+            if died or tekton_hp <= 0:
                 total_ticks += current_phase_ticks - 1
                 break
 
-            if tekton_hp <= 0:
-                total_ticks += current_phase_ticks - 1
-                break
+            if tekton_hp > 0 and first_pass:
+                hp_pre_anvil = tekton_hp
+                first_pass = False
+                phase += 1
+                print("Phase:", phase, "Ticks so far:", total_ticks, "HP:", tekton_hp)
             anvil_cycle = np.random.randint(3, 7)
             tekton_hp += anvil_cycle * 5
             total_ticks += anvil_cycle * 3
@@ -158,96 +165,31 @@ if __name__ == "__main__":
             current_phase_ticks = 0
 
             tekton_hp, current_phase_ticks, hit_count, died = phase_loop(
-                hit_count, (0, 4), tekton_hp, current_phase_ticks, attack_speed_normal, accuracy_normal, max_hit_normal
+                hit_count, (0, 3), tekton_hp, current_phase_ticks, attack_speed_normal, accuracy_normal, max_hit_normal
             )
-            if died:
-                total_ticks += current_phase_ticks - 1
-                break
-
-            if tekton_hp <= 0:
+            if died or tekton_hp <= 0:
                 total_ticks += current_phase_ticks - 1
                 break
             current_phase_ticks -= 1
 
             tekton_hp, current_phase_ticks, hit_count, died = phase_loop(
-                hit_count, (5, 8), tekton_hp, current_phase_ticks, attack_speed_enraged, accuracy_enraged, max_hit_enraged
+                hit_count, (4, 11), tekton_hp, current_phase_ticks, attack_speed_enraged, accuracy_enraged, max_hit_enraged
             )
-            if died:
+            if died or tekton_hp <= 0:
                 total_ticks += current_phase_ticks - 1
                 break
             total_ticks += current_phase_ticks - 1
             current_phase_ticks = 0
             hit_count = 0
+            phase += 1
+            print("Phase:", phase, "Ticks so far:", total_ticks, "HP:", tekton_hp)
+        print("Defeated Tekton in", total_ticks, "ticks", "HP before anvil:", hp_pre_anvil, "Phases:", phase)
         total_ticks += initial_delay
         if total_ticks % 4 != 0:
             total_ticks += 4 - (total_ticks % 4)
+        anvil_count_list[i] = phase
+        hp_anvil_list[i] = hp_pre_anvil
         tick_counts[i] = total_ticks
-
-        # while tekton_hp > 0:
-        #     if spec_count == True:
-        #         tekton_normal["skills"]["def"] = math.ceil(tekton_normal["skills"]["def"] * 0.65)
-        #         tekton_enraged["skills"]["def"] = math.ceil(tekton_enraged["skills"]["def"] * 0.65)
-        #         # print(tekton_normal["skills"]["def"], tekton_enraged["skills"]["def"])
-        #         total_ticks += 6
-        #         tekton_hp -= np.random.randint(0, max_hit_spec + 1)
-        #         if np.random.rand() < accuracy_spec:
-        #             # print("Spec hit")
-        #             hit = np.random.randint(0, max_hit_spec + 1)
-        #             tekton_normal["skills"]["def"] = math.ceil(tekton_normal["skills"]["def"] * 0.65)
-        #             tekton_enraged["skills"]["def"] = math.ceil(tekton_enraged["skills"]["def"] * 0.65)
-        #             # print(tekton_normal["skills"]["def"], tekton_enraged["skills"]["def"])
-        #         else:
-        #             tekton_normal["skills"]["def"] = math.ceil(tekton_normal["skills"]["def"] * 0.95)
-        #             tekton_enraged["skills"]["def"] = math.ceil(tekton_enraged["skills"]["def"] * 0.95)
-        #             # print(tekton_normal["skills"]["def"], tekton_enraged["skills"]["def"])
-        #             hit = 0
-        #         total_ticks += 6
-        #         tekton_hp -= hit
-        #         spec_count = False
-
-        #     if not best_style_normal or not best_style_enraged:
-        #         best_style_normal = find_best_combat_style(player, tekton_normal, "melee")
-        #         # print("Normal best style:", best_style_normal, '\n')
-        #         max_hit_normal = best_style_normal["max_hit"]
-        #         accuracy_normal = best_style_normal["accuracy"]
-        #         best_style_enraged = find_best_combat_style(player, tekton_enraged, "melee")
-        #         # print('YEP')
-        #         # print("Enraged best style:", best_style_enraged, '\n')
-        #         max_hit_enraged = best_style_enraged["max_hit"]
-        #         accuracy_enraged = best_style_enraged["accuracy"]
-
-        #     while pre_anvil > 0:
-        #         if np.random.rand() < accuracy_normal:
-        #             hit = np.random.randint(0, max_hit_normal + 1)
-        #         else:
-        #             hit = 0
-        #         total_ticks += attack_speed_normal
-        #         tekton_hp -= hit
-        #         pre_anvil -= 1
-        #     anvil_cycle = np.random.randint(3, 7)
-        #     tekton_hp += anvil_cycle * 5
-        #     total_ticks += anvil_cycle * 3
-
-        #     for n in range(4):
-        #         if np.random.rand() < accuracy_enraged:
-        #             hit = np.random.randint(0, max_hit_enraged + 1)
-        #         else:
-        #             hit = 0
-        #         total_ticks += attack_speed_enraged
-        #         tekton_hp -= hit
-        #         if n == 0 and first_pass:
-        #             tekton_hp -= math.floor(0.75 * np.random.randint(0, 87))
-        #             first_pass = False
-
-        #     for _ in range(8):
-        #         if np.random.rand() < accuracy_normal:
-        #             hit = np.random.randint(0, max_hit_normal + 1)
-        #         else:
-        #             hit = 0
-        #         total_ticks += attack_speed_normal
-        #         tekton_hp -= hit
-
-        # tick_counts[i] = total_ticks
 
     max_ticks = int(max(tick_counts))
     kill_prob = np.zeros(max_ticks + 1)
@@ -258,6 +200,7 @@ if __name__ == "__main__":
     kill_prob = kill_prob / trials
     attack_ticks = np.arange(max_ticks + 1)
 
+    
     mean_ttk = np.mean(tick_counts)
     median_ttk = np.median(tick_counts)
     std_ttk = np.std(tick_counts)
@@ -266,6 +209,10 @@ if __name__ == "__main__":
     print(f"Expected TTK: {mean_ttk:.2f} ticks ({mean_ttk * 0.6:.2f} seconds)")
     print(f"Median TTK: {median_ttk:.2f} ticks ({median_ttk * 0.6:.2f} seconds)")
 
+    mean_anvils = np.mean(anvil_count_list)
+    mean_hp_pre_anvil = np.mean(hp_anvil_list)
+    print(f"Average number of anvils used: {mean_anvils:.2f}")
+    print(f"Average HP before first anvil: {mean_hp_pre_anvil:.2f}")
     elapsed = time.time() - start_time
     print(f"Elapsed simulation time: {elapsed:.2f} seconds")
 
@@ -287,6 +234,7 @@ if __name__ == "__main__":
     # for i in range(capped_idx):
     #     print(f"Tick {i+1}: P(kill) = {kill_prob[i]:.5f}")
 
+    # Plot cumulative kill probability (existing)
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=attack_ticks[:capped_idx],
@@ -301,4 +249,20 @@ if __name__ == "__main__":
         legend_title="Legend",
         hovermode="x unified"
     )
-    fig.show()
+    # fig.show()
+
+    # Plot histogram of tick counts (TTK distribution)
+    hist_fig = go.Figure()
+    hist_fig.add_trace(go.Histogram(
+        x=tick_counts,
+        nbinsx=50,
+        name='TTK Histogram',
+        marker_color='rgba(0, 123, 255, 0.7)'
+    ))
+    hist_fig.update_layout(
+        title="Histogram of TTK (Ticks to Kill)",
+        xaxis_title="Ticks to Kill",
+        yaxis_title="Frequency",
+        bargap=0.05
+    )
+    # hist_fig.show()
