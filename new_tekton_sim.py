@@ -82,17 +82,22 @@ if __name__ == "__main__":
     player, swapped_weapon, swapped_offhand = ensure_weapon_swap(player, "Elder maul")
     tekton_initial = copy.deepcopy(monsters[0])
     tekton_initial["skills"]["def"] = tekton_initial["skills"]["def"] * 0.65
+    tekton_missed = copy.deepcopy(monsters[0])
+    tekton_missed["skills"]["def"] = math.ceil(math.ceil(tekton_missed["skills"]["def"] * 0.65) * 0.95)
+    tekton_hit = copy.deepcopy(monsters[0])
+    tekton_hit["skills"]["def"] = math.ceil(math.ceil(tekton_hit["skills"]["def"] * 0.65) * 0.65)
     best_style_spec = find_best_combat_style(player, tekton_initial, "melee")
     max_hit_spec = best_style_spec["max_hit"]
     accuracy_spec = best_style_spec["accuracy"]
     player, _, _ = ensure_weapon_swap(player, swapped_weapon, swapped_offhand)
+    best_style_missed = find_best_combat_style(player, tekton_missed, "melee")
+    best_style_hit = find_best_combat_style(player, tekton_hit, "melee")
 
     # Simulation for empirical TTK and cumulative kill probability
-    trials = 1
+    trials = 100000
     max_attacks = 1000  # Reasonable upper bound for plotting
     tick_counts = np.zeros(trials)
     total_tick_list = []
-    crystal_avg = []
     anvil_count_list = np.zeros(trials)
     hp_anvil_list = np.zeros(trials)
     for i in range(trials):
@@ -101,7 +106,7 @@ if __name__ == "__main__":
         tekton_enraged = copy.deepcopy(monsters[1])
         total_ticks = 0
         current_phase_ticks = 0
-        initial_delay = 17
+        initial_delay = 12
         spec_count = True
         pre_anvil = 0
         first_pass = True
@@ -146,7 +151,7 @@ if __name__ == "__main__":
                 accuracy_enraged = best_style_enraged["accuracy"]
 
             tekton_hp, current_phase_ticks, pre_anvil, died = phase_loop(
-                hit_count, (0, 5), tekton_hp, current_phase_ticks, attack_speed_normal, accuracy_normal, max_hit_normal
+                hit_count, (0, 4), tekton_hp, current_phase_ticks, attack_speed_normal, accuracy_normal, max_hit_normal
             )
             if died or tekton_hp <= 0:
                 total_ticks += current_phase_ticks - 1
@@ -156,7 +161,7 @@ if __name__ == "__main__":
                 hp_pre_anvil = tekton_hp
                 first_pass = False
                 phase += 1
-                print("Phase:", phase, "Ticks so far:", total_ticks, "HP:", tekton_hp)
+                # print("Phase:", phase, "Ticks so far:", total_ticks, "HP:", tekton_hp)
             anvil_cycle = np.random.randint(3, 7)
             tekton_hp += anvil_cycle * 5
             total_ticks += anvil_cycle * 3
@@ -173,7 +178,7 @@ if __name__ == "__main__":
             current_phase_ticks -= 1
 
             tekton_hp, current_phase_ticks, hit_count, died = phase_loop(
-                hit_count, (4, 11), tekton_hp, current_phase_ticks, attack_speed_enraged, accuracy_enraged, max_hit_enraged
+                hit_count, (4, 10), tekton_hp, current_phase_ticks, attack_speed_enraged, accuracy_enraged, max_hit_enraged
             )
             if died or tekton_hp <= 0:
                 total_ticks += current_phase_ticks - 1
@@ -182,8 +187,8 @@ if __name__ == "__main__":
             current_phase_ticks = 0
             hit_count = 0
             phase += 1
-            print("Phase:", phase, "Ticks so far:", total_ticks, "HP:", tekton_hp)
-        print("Defeated Tekton in", total_ticks, "ticks", "HP before anvil:", hp_pre_anvil, "Phases:", phase)
+            # print("Phase:", phase, "Ticks so far:", total_ticks, "HP:", tekton_hp)
+        # print("Defeated Tekton in", total_ticks, "ticks", "HP before anvil:", hp_pre_anvil, "Phases:", phase)
         total_ticks += initial_delay
         if total_ticks % 4 != 0:
             total_ticks += 4 - (total_ticks % 4)
@@ -255,7 +260,7 @@ if __name__ == "__main__":
     hist_fig = go.Figure()
     hist_fig.add_trace(go.Histogram(
         x=tick_counts,
-        nbinsx=50,
+        nbinsx=100,
         name='TTK Histogram',
         marker_color='rgba(0, 123, 255, 0.7)'
     ))
@@ -265,4 +270,4 @@ if __name__ == "__main__":
         yaxis_title="Frequency",
         bargap=0.05
     )
-    # hist_fig.show()
+    hist_fig.show()

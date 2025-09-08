@@ -2,24 +2,27 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { fadeInOut, slideInOut, hoverEffects } from '../utils/animations';
 import { cmMonsters, rooms, type Monster, type Room } from '../data/monsterStats';
+import { gearSetPresets } from '../data/gearTemplates';
 import './RoomSelection.css';
 
-interface SelectedRoomWithMonster extends Room {
+export interface SelectedRoomWithMonster extends Room {
     monster?: Monster;
 }
 
 interface RoomSelectionProps {
-    selectedRooms: Room[];
-    setSelectedRooms: React.Dispatch<React.SetStateAction<Room[]>>;
+    selectedRooms: SelectedRoomWithMonster[];
+    setSelectedRooms: React.Dispatch<React.SetStateAction<SelectedRoomWithMonster[]>>;
     selectedMethods: { [roomId: string]: string | null };
     setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string | null }>>;
+    selectedPreset: string;
 }
 
 const RoomSelection: React.FC<RoomSelectionProps> = ({
     selectedRooms,
     setSelectedRooms,
     selectedMethods,
-    setSelectedMethods
+    setSelectedMethods,
+    selectedPreset
 }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -123,6 +126,34 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
             }
         }));
     };
+
+    useEffect(() => {
+        const selectedGearPreset = gearSetPresets.find(p => p.id === selectedPreset);
+        if (selectedGearPreset) {
+            const allowedRoomIds = selectedGearPreset.rooms.map(r => r.id);
+            const presetRooms: SelectedRoomWithMonster[] = rooms
+                .filter(room => allowedRoomIds.includes(room.id))
+                .map(room => {
+                    const presetRoom = selectedGearPreset.rooms.find(r => r.id === room.id);
+                    return {
+                        ...room,
+                        monster: getMonsterByRoom(room),
+                        methods: presetRoom?.method ? [presetRoom.method] : room.methods
+                    };
+                });
+            setSelectedRooms(presetRooms);
+
+            // Set selectedMethods if method is specified
+            const newSelectedMethods: { [roomId: string]: string | null } = {};
+            selectedGearPreset.rooms.forEach(r => {
+                if (r.method) newSelectedMethods[r.id] = r.method;
+            });
+            setSelectedMethods(newSelectedMethods);
+        } else {
+            setSelectedRooms([]);
+            setSelectedMethods({});
+        }
+    }, [selectedPreset]);
 
     return (
         <section id="rooms" className="section">

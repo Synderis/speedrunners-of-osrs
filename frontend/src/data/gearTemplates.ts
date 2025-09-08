@@ -1,3 +1,8 @@
+export interface PresetRoom {
+    id: string;
+    method?: string;
+}
+
 export interface GearSetPreset {
     id: string;
     name: string;
@@ -8,15 +13,16 @@ export interface GearSetPreset {
         ranged: Record<string, string>;
     };
     inventoryItems: string[]; // Array of inventory item IDs
+    rooms: PresetRoom[]; // Array of room IDs where this preset is applicable
 }
 
-export type GearSetType = 'melee' | 'mage' | 'ranged';
+export type GearSetType = "melee" | "mage" | "ranged";
 
 export const gearSetPresets: GearSetPreset[] = [
     {
-        id: 'CM',
-        name: 'CM',
-        description: 'Chambers of Xeric Challenge Mode',
+        id: "CM",
+        name: "CM",
+        description: "Chambers of Xeric Challenge Mode",
         gearSets: {
             melee: {
                 weapon: "22325",
@@ -65,28 +71,31 @@ export const gearSetPresets: GearSetPreset[] = [
             "11808",
             "11920",
             "21003"
-        ]
+        ],
+        rooms: [{ id: "tekton", method: "Tekton Short Lure" }]
     },
     {
-        id: 'sample1',
-        name: 'Sample Preset 1',
-        description: 'Sample preset for demo',
+        id: "sample1",
+        name: "Sample Preset 1",
+        description: "Sample preset for demo",
         gearSets: {
-            melee: { weapon: 'dragon_scimitar' },
-            mage: { weapon: 'trident_of_the_seas' },
-            ranged: { weapon: 'rune_crossbow' }
+            melee: { weapon: "dragon_scimitar" },
+            mage: { weapon: "trident_of_the_seas" },
+            ranged: { weapon: "rune_crossbow" }
         },
-    inventoryItems: []
+    inventoryItems: [],
+    rooms: [{ id: "all" }]
     },
     {
-        id: 'sample2',
-        name: 'Sample Preset 2',
-        description: 'Another sample preset',
+        id: "sample2",
+        name: "Sample Preset 2",
+        description: "Another sample preset",
         gearSets: {
-            melee: { weapon: 'granite_maul' },
-            mage: { weapon: 'mystic_staff' },
-            ranged: { weapon: 'blowpipe' }
+            melee: { weapon: "granite_maul" },
+            mage: { weapon: "mystic_staff" },
+            ranged: { weapon: "blowpipe" }
         },
-    inventoryItems: []
+    inventoryItems: [],
+    rooms: [{ id: "all" }]
     }
 ];

@@ -7,9 +7,9 @@ import PlotSection from './components/PlotSection';
 import FloatingBackground from './components/FloatingBackground';
 import { ThemeProvider } from './context/ThemeContext';
 // import { fetchMonstersFromWiki } from './services/monsterServiceTemp';
-import type { Room } from './data/monsterStats'; // <-- Add Room here
 import { fetchEquipmentFromWiki, fetchImageMapFromSupabase } from './services/gearServiceTemp';
 import type { GearSets, CombatStats, Equipment, InventoryItem } from './types/player';
+import type { SelectedRoomWithMonster } from './components/RoomSelection';
 import './App.css';
 
 function App() {
@@ -38,8 +38,9 @@ function App() {
     thieving: 99
   });
   const [equipment, setEquipment] = useState<Equipment[]>([]);
-  const [selectedRooms, setSelectedRooms] = useState<Room[]>([]);
+  const [selectedRooms, setSelectedRooms] = useState<SelectedRoomWithMonster[]>([]);
   const [selectedMethods, setSelectedMethods] = useState<{ [roomId: string]: string | null }>({});
+  const [selectedPreset, setSelectedPreset] = useState<string>('');
 
   useEffect(() => {
     // Prevent browser from restoring scroll position
@@ -130,6 +131,12 @@ function App() {
             setIsGearLoading={setIsGearLoading}
             isGearLoading={isGearLoading}
             equipment={equipment} // <-- Pass equipment here
+            setSelectedPreset={setSelectedPreset}
+            selectedPreset={selectedPreset}
+            selectedRooms={selectedRooms}
+            setSelectedRooms={setSelectedRooms}
+            selectedMethods={selectedMethods}
+            setSelectedMethods={setSelectedMethods}
           />
           {!isGearLoading && (
             <>
@@ -138,6 +145,7 @@ function App() {
                 setSelectedRooms={setSelectedRooms}
                 selectedMethods={selectedMethods}
                 setSelectedMethods={setSelectedMethods}
+                selectedPreset={selectedPreset}
               />
               <PlotSection
                 gearSets={gearSets}

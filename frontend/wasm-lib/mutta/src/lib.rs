@@ -247,8 +247,9 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
     let attack_speed_large_mutta = player.gear_sets.ranged.selected_weapon.as_ref().map(|w| w.speed).unwrap_or(4) as i32;
 
     // Tree
-    let tree_accuracy = 0.7852 as f64;
-    let base_tree_hp = player.combat_stats.woodcutting as i32 * 5;
+    let wc_level = player.combat_stats.woodcutting as i32;
+    let tree_accuracy = (1.0 + ((((50.0 * (99.0 - wc_level as f64)) / 98.0) + ((200.0 * (wc_level as f64 - 1.0)) / 98.0) + 0.5)).floor()) / 256.0;
+    let base_tree_hp = wc_level * 5;
 
     let mut tick_counts: Vec<i32> = vec![0; trials];
     let mut phase_results: Vec<i32> = vec![0; trials];
