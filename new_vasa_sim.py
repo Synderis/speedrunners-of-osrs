@@ -5,6 +5,28 @@ import plotly.graph_objs as go
 from helpers import *
 
 
+def phase_loop(vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, hit_counter_bounds, total_ticks):
+    hit_counter = 0
+    while hit_counter <= hit_counter_bounds[0] or hit_counter < hit_counter_bounds[1]:
+        vasa_attack_tick += 1
+        if vasa_attack_tick == 1 or (vasa_attack_tick - 1) % vasa_attack_speed == 0:
+            if np.random.rand() < vasa_accuracy:
+                hit = np.random.randint(0, vasa_max_hit + 1)
+            else:
+                hit = 0
+            vasa_hp -= hit
+            hit_counter += 1
+        if vasa_hp <= 0:
+            total_ticks += (vasa_attack_tick - 1)
+            break
+        if (vasa_attack_tick - 1) % 4 == 0:
+            hit = np.random.randint(0, 4)
+            vasa_hp -= hit
+        if vasa_hp <= 0:
+            total_ticks += (vasa_attack_tick - 1) 
+            break
+    return vasa_hp, vasa_attack_tick, hit_counter, total_ticks
+
 if __name__ == "__main__":
     import time
     start_time = time.time()
@@ -34,7 +56,9 @@ if __name__ == "__main__":
     best_style_crystal = find_best_combat_style(player, monsters[1], "melee")
     hp_crystal = monsters[1]["skills"]["hp"]
     max_hit_crystal = best_style_crystal["max_hit"]
+    # print(max_hit_crystal)
     accuracy_crystal = best_style_crystal["accuracy"]
+    # print(player["gearSets"]["melee"]["selectedWeapon"])
     # print(accuracy_crystal, max_hit_crystal)
     attack_speed_crystal = player["gearSets"]["melee"]["selectedWeapon"].get("speed", 4)
     p_zero_crystal = (1 - accuracy_crystal) + accuracy_crystal / (max_hit_crystal + 1)
@@ -58,52 +82,103 @@ if __name__ == "__main__":
         count_check = 0
         crystal_count = 0
         vasa_attack_tick = 0
+        attack_phase = 0
+        pre_crystal_attacks = 0
+        temp = 0
 
-        while hp > 0:
-            # print(f"[Sim] Vasa attack: tick={total_ticks}, hp={hp}")
-            # Crystal phase trigger
-            if vasa_attacks + vasa_attack_speed == 25 or ((vasa_attacks - 20) % 8 == 0 and vasa_attacks > 20):
-                # print(f"[Sim] Crystal phase start: tick={total_ticks}, crystal_hp={monster_hp_crystal}")
-                crystal_count += 1
-                healing_ticks = 0
-                crystal_attack_tick = 0
-                while monster_hp_crystal > 0:
-                    crystal_attacks += attack_speed_crystal
-                    healing_ticks += attack_speed_crystal
-                    # print(f"[Sim] Crystal attack: tick={total_ticks + crystal_attacks}, crystal_hp={monster_hp_crystal}")
-                    if crystal_attacks >= max_attacks_crystal:
-                        # print(f"[Sim] Crystal phase max attacks reached: tick={total_ticks + crystal_attacks}")
-                        break
-                    if np.random.rand() < accuracy_crystal:
-                        hit_crystal = np.random.randint(0, max_hit_crystal + 1)
-                    else:
-                        hit_crystal = 0
-                    monster_hp_crystal -= hit_crystal
+        while vasa_hp > 0:
+            monster_hp_crystal = hp_crystal
+            if pre_crystal_attacks < 4:
+                vasa_hp, vasa_attack_tick, pre_crystal_attacks, total_ticks = phase_loop(vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, [0, 4], total_ticks)
+            crystal_count += 1
+            healing_ticks = 0
+            crystal_attack_tick = 0
+            
+            while monster_hp_crystal > 0:
+                crystal_attacks += attack_speed_crystal
+                healing_ticks += attack_speed_crystal
+                # print(f"[Sim] Crystal attack: tick={total_ticks + crystal_attacks}, crystal_hp={monster_hp_crystal}")
+                # if crystal_attacks >= max_attacks_crystal:
+                #     # print(f"[Sim] Crystal phase max attacks reached: tick={total_ticks + crystal_attacks}")
+                #     break
+                if np.random.rand() < accuracy_crystal:
+                    hit_crystal = np.random.randint(0, max_hit_crystal + 1)
+                else:
+                    hit_crystal = 0
+                monster_hp_crystal -= hit_crystal
+
                 if crystal_attacks >= max_attacks_crystal:
                     healing_ticks = healing_ticks // 2
                     heal_amount = int(base_vasa_hp * 0.01) * healing_ticks
                     # print(f"[Sim] Healing applied: tick={total_ticks}, heal_amount={heal_amount}")
                     vasa_hp += heal_amount
                     vasa_hp = min(vasa_hp, base_vasa_hp)
-                monster_hp_crystal = hp_crystal
-                total_ticks += crystal_attacks
-            if crystal_attacks >= max_attacks_crystal:
-                count_check += 1
-            if count_check > 3:
-                total_ticks += 12
-                # print(f"[Sim] Teleport phase: tick={total_ticks}")
-                max_attacks_crystal += base_max_attacks_crystal
-                count_check = 0
-            vasa_attacks += vasa_attack_speed
-            total_ticks += vasa_attack_speed
-            if np.random.rand() < vasa_accuracy:
-                hit = np.random.randint(0, vasa_max_hit + 1)
-            else:
-                hit = 0
-            hp -= hit
+                    vasa_hp, vasa_attack_tick, _, total_ticks = phase_loop(vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, [0, 3], total_ticks)
+                    if vasa_hp <= 0:
+                        break
+                    total_ticks += 12
+                    max_attacks_crystal += base_max_attacks_crystal
+
+                if monster_hp_crystal <= 0:
+                    total_ticks += crystal_attacks
+                    break
+
+            if vasa_attack_tick > 0:
+                total_ticks += vasa_attack_tick - 1
+            vasa_attack_tick = 0
+            # vasa_attacks = 0
+            vasa_hp, vasa_attack_tick, _, total_ticks = phase_loop(vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, [0, 7], total_ticks)
+            if vasa_hp <= 0:
+                break
         crystal_avg.append(crystal_count)
         crystal_attacks_list.append(crystal_attacks)
         tick_counts.append(total_ticks)
+
+        # while vasa_hp > 0:
+        #     # print(f"[Sim] Vasa attack: tick={total_ticks}, hp={hp}")
+        #     # Crystal phase trigger
+        #     if vasa_attacks + vasa_attack_speed == 25 or ((vasa_attacks - 20) % 8 == 0 and vasa_attacks > 20):
+        #         # print(f"[Sim] Crystal phase start: tick={total_ticks}, crystal_hp={monster_hp_crystal}")
+        #         crystal_count += 1
+        #         healing_ticks = 0
+        #         crystal_attack_tick = 0
+        #         while monster_hp_crystal > 0:
+        #             crystal_attacks += attack_speed_crystal
+        #             healing_ticks += attack_speed_crystal
+        #             # print(f"[Sim] Crystal attack: tick={total_ticks + crystal_attacks}, crystal_hp={monster_hp_crystal}")
+        #             if crystal_attacks >= max_attacks_crystal:
+        #                 # print(f"[Sim] Crystal phase max attacks reached: tick={total_ticks + crystal_attacks}")
+        #                 break
+        #             if np.random.rand() < accuracy_crystal:
+        #                 hit_crystal = np.random.randint(0, max_hit_crystal + 1)
+        #             else:
+        #                 hit_crystal = 0
+        #             monster_hp_crystal -= hit_crystal
+        #         if crystal_attacks >= max_attacks_crystal:
+        #             healing_ticks = healing_ticks // 2
+        #             heal_amount = int(base_vasa_hp * 0.01) * healing_ticks
+        #             # print(f"[Sim] Healing applied: tick={total_ticks}, heal_amount={heal_amount}")
+        #             vasa_hp += heal_amount
+        #             vasa_hp = min(vasa_hp, base_vasa_hp)
+        #         monster_hp_crystal = hp_crystal
+        #         total_ticks += crystal_attacks
+        #     if crystal_attacks >= max_attacks_crystal:
+        #         count_check += 1
+        #     if count_check > 3:
+        #         total_ticks += 12
+        #         # print(f"[Sim] Teleport phase: tick={total_ticks}")
+        #         max_attacks_crystal += base_max_attacks_crystal
+        #         count_check = 0
+        #     vasa_attacks += vasa_attack_speed
+        #     total_ticks += vasa_attack_speed
+        #     if np.random.rand() < vasa_accuracy:
+        #         hit = np.random.randint(0, vasa_max_hit + 1)
+        #     else:
+        #         hit = 0
+        #     vasa_hp -= hit
+        # crystal_avg.append(crystal_count)
+        # crystal_attacks_list.append(crystal_attacks)
+        # tick_counts.append(total_ticks)
     
     max_ticks = int(max(tick_counts))
     kill_prob = np.zeros(max_ticks + 1)
@@ -118,11 +193,14 @@ if __name__ == "__main__":
     crystal_ttk = np.mean(crystal_attacks_list)
     mean_ttk = np.mean(tick_counts)
     std_ttk = np.std(tick_counts)
+    one_crystal_trials = sum(1 for c in crystal_avg if c <= 1)
+    odds_one_crystal = one_crystal_trials / trials
 
     print(f"[Sim] Trials: {trials}")
     print(f"[Sim] Crystal Count Avg: {crystal_count_avg:.2f}")
     print(f"[Sim] Crystal TTK: {crystal_ttk} ticks ({crystal_ttk * 0.6:.2f} seconds)")
     print(f"Expected TTK: {mean_ttk:.2f} ticks ({mean_ttk * 0.6:.2f} seconds)")
+    print(f"Odds of 1-crystal: {odds_one_crystal:.4%}")
 
     elapsed = time.time() - start_time
     print(f"Elapsed simulation time: {elapsed:.2f} seconds")
@@ -136,8 +214,8 @@ if __name__ == "__main__":
     # Print the Markov kill probability distribution (cumulative)
     kill_prob_increments = np.diff(np.insert(kill_prob, 0, 0))
     # print("\n[Markov] Probability of dying at each tick (PDF, used for expected TTK):")
-    for i in range(capped_idx):
-        print(f"Tick {int(attack_ticks[i])}: P(die at tick) = {kill_prob_increments[i]:.6f}, CDF = {kill_prob[i]:.6f}")
+    # for i in range(capped_idx):
+    #     print(f"Tick {int(attack_ticks[i])}: P(die at tick) = {kill_prob_increments[i]:.6f}, CDF = {kill_prob[i]:.6f}")
 
     # Print the empirical kill probability distribution (cumulative)
     # print("\n[Sim] Empirical cumulative kill probability distribution (up to cap):")
