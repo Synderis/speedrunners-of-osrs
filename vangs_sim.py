@@ -300,6 +300,7 @@ if __name__ == "__main__":
                         print(f"Tick {entry['tick']}: Vang HPs: {entry['vang_hps']}, cooldown: {entry['cooldown']}, immune: {entry['immune']}")
                     print(f"Reset at tick {tick}: {vang_hps}")
                     vang_hps = [full_hp, full_hp, full_hp]
+        combat_ticks_list.append(combat_ticks)
         total_immune_ticks.append(immune_ticks)
         teleports.append(teleport)
         tick_counts.append(tick)
