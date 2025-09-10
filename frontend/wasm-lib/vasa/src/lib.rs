@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
@@ -13,208 +14,44 @@ extern "C" {
     fn log(s: &str);
 }
 
-macro_rules! console_log {
-    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-}
-
-// --- Markov Matrix Helpers (Python-style, updated) ---
-fn build_transition_matrix(hp: usize, max_hit: usize, accuracy: f64) -> Vec<Vec<f64>> {
-    let n = hp + 1;
-    let mut mat = vec![vec![0.0; n]; n];
-    for src in 1..n {
-        // Miss: stays at src
-        mat[src][src] += 1.0 - accuracy;
-        let hit_range = std::cmp::min(src, max_hit);
-        if hit_range > 0 {
-            for dmg in 1..=hit_range {
-                let dest = src - dmg;
-                mat[dest][src] += accuracy / hit_range as f64;
+fn phase_loop(
+    mut vasa_hp: usize,
+    mut vasa_attack_tick: usize,
+    attack_speed: usize,
+    accuracy: f64,
+    max_hit: usize,
+    attack_pattern: &[usize; 2],
+    mut total_ticks: usize,
+    rng: &mut ThreadRng,
+) -> (usize, usize, usize, usize) {
+    let mut hit_counter = 0;
+    let mut pre_crystal_attacks = 0;
+    while hit_counter <= attack_pattern[0] || hit_counter < attack_pattern[1] {
+        vasa_attack_tick += 1;
+        if (vasa_attack_tick - 1) % attack_speed == 0 {
+            let mut hit = 0;
+            if rng.gen::<f64>() < accuracy {
+                hit = rng.gen_range(0..=max_hit);
             }
+            vasa_hp = vasa_hp.saturating_sub(hit);
+            hit_counter += 1;
+            pre_crystal_attacks += 1;
+        }
+        if vasa_hp == 0 {
+            total_ticks += vasa_attack_tick.saturating_sub(1);
+            break;
+        }
+        if (vasa_attack_tick - 1) % 4 == 0 {
+            vasa_hp = vasa_hp.saturating_sub(rng.gen_range(0..4));
+        }
+        if vasa_hp == 0 {
+            total_ticks += vasa_attack_tick.saturating_sub(1);
+            break;
         }
     }
-    mat[0][0] = 1.0;
-    // Normalize columns so each column sums to 1
-    for col in 0..n {
-        let sum: f64 = mat.iter().map(|row| row[col]).sum();
-        if sum > 0.0 {
-            for row in 0..n {
-                mat[row][col] /= sum;
-            }
-        }
-    }
-    mat
+    vasa_attack_tick += attack_speed;
+    (vasa_hp, vasa_attack_tick, pre_crystal_attacks, total_ticks)
 }
-
-fn propagate_markov(state: &[f64], mat: &[Vec<f64>]) -> Vec<f64> {
-    let n = state.len();
-    let mut new_state = vec![0.0; n];
-    for dest in 0..n {
-        for src in 0..n {
-            new_state[dest] += mat[dest][src] * state[src];
-        }
-    }
-    new_state
-}
-
-fn build_per_tick_matrix(hp: usize, max_hit: usize, accuracy: f64, attack_speed: usize) -> Vec<Vec<f64>> {
-    let attack_mat = build_transition_matrix(hp, max_hit, accuracy);
-    let n = hp + 1;
-    let mut wait_mat = vec![vec![0.0; n]; n];
-    for i in 0..n {
-        wait_mat[i][i] = 1.0;
-    }
-    let mut per_tick_mat = vec![vec![0.0; n]; n];
-    for i in 0..n {
-        for j in 0..n {
-            per_tick_mat[i][j] = (1.0 / attack_speed as f64) * attack_mat[i][j]
-                + ((attack_speed as f64 - 1.0) / attack_speed as f64) * wait_mat[i][j];
-        }
-    }
-    per_tick_mat
-}
-
-fn weapon_kill_times_markov_per_tick_with_delay(
-    vasa_hp: usize, vasa_max_hit: usize, vasa_accuracy: f64, vasa_attack_speed: usize,
-    crystal_hp: usize, crystal_max_hit: usize, crystal_accuracy: f64, crystal_attack_speed: usize,
-    max_crystal_phase_ticks: usize, pre_crystal_attacks: usize, post_crystal_attacks: usize,
-    teleport_attacks: usize, teleport_ticks: usize, heal_percent: f64, max_cycles: usize, cap: f64
-) -> (Vec<f64>, Vec<f64>, f64, f64) {
-    let vasa_per_tick_mat = build_per_tick_matrix(vasa_hp, vasa_max_hit, vasa_accuracy, vasa_attack_speed);
-    let crystal_per_tick_mat = build_per_tick_matrix(crystal_hp, crystal_max_hit, crystal_accuracy, crystal_attack_speed);
-
-    let mut vasa_state = vec![0.0; vasa_hp + 1];
-    vasa_state[vasa_hp] = 1.0;
-
-    let mut tick = 0.0;
-    let mut kill_prob_by_tick = Vec::new();
-    let mut tick_list = Vec::new();
-
-    let mut cycles = 0;
-    while cycles < max_cycles && vasa_state[0] < cap {
-        // --- Pre-crystal Vasa attacks ---
-        let total_pre_ticks = pre_crystal_attacks * vasa_attack_speed;
-        for _ in 0..total_pre_ticks {
-            kill_prob_by_tick.push(vasa_state[0]);
-            tick_list.push(tick);
-
-            vasa_state = propagate_markov(&vasa_state, &vasa_per_tick_mat);
-            tick += 1.0;
-            if vasa_state[0] >= cap { break; }
-        }
-        if vasa_state[0] >= cap { break; }
-
-        // --- Crystal phase ---
-        let mut crystal_state = vec![0.0; crystal_hp + 1];
-        crystal_state[crystal_hp] = 1.0;
-        for _ in 0..max_crystal_phase_ticks {
-            kill_prob_by_tick.push(vasa_state[0]);
-            tick_list.push(tick);
-
-            vasa_state = propagate_markov(&vasa_state, &vasa_per_tick_mat);
-            crystal_state = propagate_markov(&crystal_state, &crystal_per_tick_mat);
-            tick += 1.0;
-        }
-        // Heal Vasa if crystal survives
-        if crystal_state[0] < 1.0 {
-            let heal_amount = (vasa_hp as f64 * heal_percent).round() as usize;
-            let mut healed_state = vec![0.0; vasa_state.len()];
-            for i in 1..vasa_state.len() {
-                let dest = std::cmp::min(i + heal_amount, vasa_state.len() - 1);
-                healed_state[dest] += vasa_state[i];
-            }
-            healed_state[0] = vasa_state[0];
-            vasa_state = healed_state;
-        }
-
-        // --- Post-crystal Vasa attacks ---
-        let total_post_ticks = post_crystal_attacks * vasa_attack_speed;
-        for _ in 0..total_post_ticks {
-            kill_prob_by_tick.push(vasa_state[0]);
-            tick_list.push(tick);
-
-            vasa_state = propagate_markov(&vasa_state, &vasa_per_tick_mat);
-            tick += 1.0;
-            if vasa_state[0] >= cap { break; }
-        }
-        if vasa_state[0] >= cap { break; }
-
-        // --- Crystal phase again ---
-        let mut crystal_state = vec![0.0; crystal_hp + 1];
-        crystal_state[crystal_hp] = 1.0;
-        for _ in 0..max_crystal_phase_ticks {
-            kill_prob_by_tick.push(vasa_state[0]);
-            tick_list.push(tick);
-
-            vasa_state = propagate_markov(&vasa_state, &vasa_per_tick_mat);
-            crystal_state = propagate_markov(&crystal_state, &crystal_per_tick_mat);
-            tick += 1.0;
-        }
-        if crystal_state[0] < 1.0 {
-            let heal_amount = (vasa_hp as f64 * heal_percent).round() as usize;
-            let mut healed_state = vec![0.0; vasa_state.len()];
-            for i in 1..vasa_state.len() {
-                let dest = std::cmp::min(i + heal_amount, vasa_state.len() - 1);
-                healed_state[dest] += vasa_state[i];
-            }
-            healed_state[0] = vasa_state[0];
-            vasa_state = healed_state;
-        }
-
-        // --- Teleport attacks ---
-        let total_teleport_ticks = teleport_attacks * vasa_attack_speed;
-        for _ in 0..total_teleport_ticks {
-            kill_prob_by_tick.push(vasa_state[0]);
-            tick_list.push(tick);
-
-            vasa_state = propagate_markov(&vasa_state, &vasa_per_tick_mat);
-            tick += 1.0;
-            if vasa_state[0] >= cap { break; }
-        }
-        if vasa_state[0] >= cap { break; }
-
-        // --- Teleport phase (no attacks, just record state) ---
-        for _ in 0..teleport_ticks {
-            kill_prob_by_tick.push(vasa_state[0]);
-            tick_list.push(tick);
-            tick += 1.0;
-        }
-        cycles += 1;
-    }
-
-    // PDF: probability of dying at each tick
-    let mut kill_prob_increments = Vec::with_capacity(kill_prob_by_tick.len());
-    let mut prev = 0.0;
-    for &p in &kill_prob_by_tick {
-        kill_prob_increments.push(p - prev);
-        prev = p;
-    }
-
-    // Find capped index (where CDF >= cap)
-    let cap_val = 0.99;
-    let capped_idx = kill_prob_by_tick.iter()
-        .position(|&p| p >= cap_val)
-        .map(|idx| idx + 1)
-        .unwrap_or(kill_prob_by_tick.len());
-
-    console_log!("\n[Markov] Probability of dying at each tick (PDF, used for expected TTK):");
-    for i in 0..capped_idx {
-        console_log!(
-            "Tick {}: P(die at tick) = {:.6}, CDF = {:.6}",
-            tick_list[i] as usize,
-            kill_prob_increments[i],
-            kill_prob_by_tick[i]
-        );
-    }
-
-    // Weighted mean (expected TTK)
-    let expected_ttk: f64 = tick_list.iter()
-        .zip(kill_prob_increments.iter())
-        .map(|(&t, &dp)| t * dp)
-        .sum();
-
-    (kill_prob_by_tick, tick_list, 0.0, expected_ttk)
-}
-
 
 #[wasm_bindgen]
 pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
@@ -225,24 +62,21 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
             return format!("{{\"error\": \"Failed to parse payload data: {}\"}}", e);
         }
     };
-
+    let player = payload.player;
     let monsters = &payload.room.monsters;
+    let room_methods = &payload.room.methods;
+    let trials = 100000;
+    let mut rng = rand::thread_rng();
+
     if monsters.len() < 2 {
         return "{\"error\": \"Room must have at least two monsters (Vasa and Crystal)\"}".to_string();
     }
-
-    // Assign Vasa and Crystal
     let vasa = &monsters[0];
     let crystal = &monsters[1];
-    let mut player = payload.player;
+    let best_style_vasa = find_best_combat_style(&player, vasa, vec!["ranged".to_string()]);
+    let best_style_crystal = find_best_combat_style(&player, crystal, vec!["melee".to_string()]);
 
-    // Find best style for Vasa (first monster)
-    let best_style_vasa = find_best_combat_style(
-        &player,
-        vasa,
-        vec!["ranged".to_string()]
-    );
-    let vasa_hp = vasa.skills.hp as usize;
+    let vasa_base_hp = vasa.skills.hp as usize;
     let vasa_max_hit = best_style_vasa.max_hit as usize;
     let vasa_accuracy = best_style_vasa.accuracy;
     let vasa_attack_speed = if let Some(weapon) = &player.gear_sets.ranged.selected_weapon {
@@ -255,14 +89,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         5
     };
 
-
-    // Find best style for Crystal (second monster)
-    let best_style_crystal = find_best_combat_style(
-        &player,
-        crystal,
-        vec!["melee".to_string()]
-    );
-    let crystal_hp = crystal.skills.hp as usize;
+    let crystal_base_hp = crystal.skills.hp as usize;
     let crystal_max_hit = best_style_crystal.max_hit as usize;
     let crystal_accuracy = best_style_crystal.accuracy;
     let crystal_attack_speed = if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
@@ -270,84 +97,120 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
     } else {
         5
     };
+    let mut phase_results: Vec<usize> = vec![0; trials];
+    let mut tick_counts: Vec<usize> = vec![0; trials];
+    let base_max_attacks_crystal = 70;
+    let (initial_delay, attack_pattern): (usize, Vec<[usize; 2]>) = if room_methods.len() > 0 && room_methods[0] == "Flame Skip" {
+        (22, vec![[0, 5], [0, 3], [0, 7]])
+    } else {
+        (29, vec![[0, 4], [0, 3], [0, 7]])
+    };
+    for i in 0..trials {
+    let mut vasa_hp = vasa_base_hp;
+    let mut crystal_hp = crystal_base_hp;
+    let mut max_attacks_crystal = base_max_attacks_crystal;
+    let mut vasa_attack_tick = 0;
+    let mut crystal_attacks = 0;
+    let mut crystal_count = 0;
+    let mut healing_ticks = 0;
+    let mut total_ticks = 0;
+    let mut pre_crystal_attacks = 0;
 
-    // Markov simulation parameters
-    let cap = payload.config.cap;
-    let max_cycles = 10;
-    let max_crystal_phase_ticks = 70;
-    let pre_crystal_attacks = 4;
-    let post_crystal_attacks = 7;
-    let teleport_attacks = 3;
-    let teleport_ticks = 12;
-    let heal_percent = 0.01;
+        while vasa_hp > 0 {
+            crystal_hp = crystal_base_hp;
+            if pre_crystal_attacks < 4 {
+                let (new_vasa_hp, new_vasa_attack_tick, new_pre_crystal_attacks, new_total_ticks) = phase_loop(
+                    vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, &attack_pattern[0], total_ticks, &mut rng
+                );
+                vasa_hp = new_vasa_hp;
+                vasa_attack_tick = new_vasa_attack_tick;
+                pre_crystal_attacks = new_pre_crystal_attacks;
+                total_ticks = new_total_ticks;
+            }
+            crystal_count += 1;
+            healing_ticks = 0;
 
-    console_log!("Vasa HP: {}", vasa_hp);
-    console_log!("Vasa Max Hit: {}", vasa_max_hit);
-    console_log!("Vasa Accuracy: {:.5}", vasa_accuracy);
-    console_log!("Vasa Attack Speed: {}", vasa_attack_speed);
-
-    console_log!("Crystal HP: {}", crystal_hp);
-    console_log!("Crystal Max Hit: {}", crystal_max_hit);
-    console_log!("Crystal Accuracy: {:.5}", crystal_accuracy);
-    console_log!("Crystal Attack Speed: {}", crystal_attack_speed);
-
-    console_log!("cap: {:.5}, max_cycles: {}, max_crystal_phase_ticks: {}, pre_crystal_attacks: {}, post_crystal_attacks: {}, teleport_attacks: {}, teleport_ticks: {}, heal_percent: {:.5}",
-        cap, max_cycles, max_crystal_phase_ticks, pre_crystal_attacks, post_crystal_attacks, teleport_attacks, teleport_ticks, heal_percent
-    );
-
-    // Run Markov simulation
-    let (kill_prob_by_tick, tick_list, _unused, expected_ttk) = weapon_kill_times_markov_per_tick_with_delay(
-        vasa_hp, vasa_max_hit, vasa_accuracy, vasa_attack_speed,
-        crystal_hp, crystal_max_hit, crystal_accuracy, crystal_attack_speed,
-        max_crystal_phase_ticks, pre_crystal_attacks, post_crystal_attacks,
-        teleport_attacks, teleport_ticks, heal_percent, max_cycles, cap
-    );
-
-    console_log!("First 10 kill_prob_by_tick values:");
-    for i in 0..10.min(kill_prob_by_tick.len()) {
-        console_log!("{}: {:.5}", i, kill_prob_by_tick[i]);
+            while crystal_hp > 0 {
+                crystal_attacks += crystal_attack_speed;
+                healing_ticks += crystal_attack_speed;
+                let mut hit_crystal = 0;
+                if rng.gen::<f64>() < crystal_accuracy {
+                    hit_crystal = rng.gen_range(0..=crystal_max_hit);
+                }
+                crystal_hp = crystal_hp.saturating_sub(hit_crystal);
+                if crystal_attacks >= max_attacks_crystal {
+                    healing_ticks = healing_ticks / 2;
+                    let heal_amount = (vasa_base_hp as f64 * 0.01).floor() as usize * healing_ticks;
+                    vasa_hp += heal_amount;
+                    vasa_hp = std::cmp::min(vasa_hp, vasa_base_hp);
+                    let (new_vasa_hp, new_vasa_attack_tick, _, new_total_ticks) = phase_loop(
+                        vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, &attack_pattern[1], total_ticks, &mut rng
+                    );
+                    vasa_hp = new_vasa_hp;
+                    vasa_attack_tick = new_vasa_attack_tick;
+                    total_ticks = new_total_ticks;
+                    if vasa_hp <= 0 {
+                        break;
+                    }
+                    total_ticks += 12 + crystal_attacks - base_max_attacks_crystal;
+                    max_attacks_crystal += base_max_attacks_crystal;
+                    crystal_attacks = 0;
+                    healing_ticks = 0;
+                }
+                if crystal_hp <= 0 {
+                    total_ticks += crystal_attacks;
+                    break;
+                }
+            }
+            if vasa_attack_tick > 0 {
+                total_ticks += vasa_attack_tick - 1;
+            }
+            vasa_attack_tick = 0;
+            let (new_vasa_hp, new_vasa_attack_tick, _, new_total_ticks) = phase_loop(
+                vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, &attack_pattern[2], total_ticks, &mut rng
+            );
+            vasa_hp = new_vasa_hp;
+            vasa_attack_tick = new_vasa_attack_tick;
+            total_ticks = new_total_ticks;
+            if vasa_hp <= 0 {
+                break;
+            }
+        }
+        total_ticks += initial_delay;
+        if total_ticks % 4 != 0 {
+            total_ticks += 4 - (total_ticks % 4);
+        }
+        phase_results[i] = crystal_count;
+        tick_counts[i] = total_ticks;
+    }
+    let mean_ttk = tick_counts.iter().sum::<usize>() as f64 / trials as f64;
+    // let std_ttk = ... (unused)
+    let max_ticks = match tick_counts.iter().max().copied() {
+        Some(val) => val,
+        None => return "{\"error\": \"No max tick found\"}".to_string(),
+    };
+    let mut kill_prob = vec![0.0f64; max_ticks + 1];
+    for &ticks in &tick_counts {
+        for idx in ticks..=max_ticks {
+            kill_prob[idx] += 1.0;
+        }
+    }
+    for prob in &mut kill_prob {
+        *prob /= trials as f64;
     }
 
-    console_log!("First 10 tick_list values:");
-    for i in 0..10.min(tick_list.len()) {
-        console_log!("{}: {:.2}", i, tick_list[i]);
-    }
+    // For encounter_kill_times_obj
+    let kill_prob_by_tick = kill_prob.clone();
+    let tick_list: Vec<usize> = (0..=max_ticks).collect();
 
-    // PDF: probability of dying at each tick
-    let mut kill_prob_increments = Vec::with_capacity(kill_prob_by_tick.len());
-    let mut prev = 0.0;
-    for &p in &kill_prob_by_tick {
-        kill_prob_increments.push(p - prev);
-        prev = p;
-    }
 
-    // Find capped index (where CDF >= cap)
-    let cap_val = 0.99;
-    let capped_idx = kill_prob_by_tick.iter()
-        .position(|&p| p >= cap_val)
-        .map(|idx| idx + 1)
-        .unwrap_or(kill_prob_by_tick.len());
+    // Collect results for each monster (if you have more than one)
+    let encounter_attack_speed = vasa_attack_speed; // or whatever is appropriate
+    let kill_times = kill_prob.clone();
 
-    console_log!("\n[Markov] Probability of dying at each tick (PDF, used for expected TTK):");
-    for i in 0..capped_idx {
-        console_log!(
-            "Tick {}: P(die at tick) = {:.6}, CDF = {:.6}",
-            tick_list[i] as usize,
-            kill_prob_increments[i],
-            kill_prob_by_tick[i]
-        );
-    }
-
-    // Weighted mean (expected TTK)
-    let expected_ttk: f64 = tick_list.iter()
-        .zip(kill_prob_increments.iter())
-        .map(|(&t, &dp)| t * dp)
-        .sum();
-
-    // Results for Vasa
-    let expected_hits = expected_ttk / vasa_attack_speed as f64;
-    let expected_seconds = expected_ttk * 0.6;
-    let kill_times: Vec<f64> = kill_prob_by_tick.clone();
+    let expected_hits = mean_ttk / encounter_attack_speed as f64; // or however you calculate it
+    let expected_ttk = mean_ttk;
+    let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
 
     let vasa_result = serde_json::json!({
         "monster_id": vasa.id,
@@ -364,8 +227,8 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
     let crystal_result = serde_json::json!({
         "monster_id": crystal.id,
         "monster_name": crystal.name,
-        "expected_hits": 0, // Replace with actual expected hits for crystal if available
-        "expected_ticks": 0, // Replace with actual expected ticks for crystal if available
+        "expected_hits": 0.0, // Replace with actual expected hits for crystal if available
+        "expected_ticks": 0.0, // Replace with actual expected ticks for crystal if available
         "expected_seconds": 0.0, // Replace with actual expected seconds for crystal if available
         "combat_type": best_style_crystal.attack_type,
         "attack_style": best_style_crystal.combat_style,
@@ -394,6 +257,6 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         "total_expected_ticks": total_expected_ticks,
         "total_expected_seconds": total_expected_seconds,
         "encounter_kill_times": encounter_kill_times_obj,
-        "phase_results": [],
+        "phase_results": phase_results,
     }).to_string()
 }

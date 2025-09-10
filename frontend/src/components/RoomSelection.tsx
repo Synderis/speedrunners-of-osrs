@@ -66,9 +66,12 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                 return prev.filter(r => r.id !== room.id);
             } else {
                 const monster = getMonsterByRoom(room);
+                // If only one method, default to empty array unless selected
+                const methods = room.methods && room.methods.length === 1 ? [] : room.methods;
                 const roomWithMonster: SelectedRoomWithMonster = {
                     ...room,
-                    monster
+                    monster,
+                    methods
                 };
                 return [...prev, roomWithMonster];
             }
@@ -76,10 +79,15 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
     };
 
     const selectAll = () => {
-        const roomsWithMonsters: SelectedRoomWithMonster[] = rooms.map(room => ({
-            ...room,
-            monster: getMonsterByRoom(room)
-        }));
+        const roomsWithMonsters: SelectedRoomWithMonster[] = rooms.map(room => {
+            const monster = getMonsterByRoom(room);
+            const methods = room.methods && room.methods.length === 1 ? [] : room.methods;
+            return {
+                ...room,
+                monster,
+                methods
+            };
+        });
         setSelectedRooms(roomsWithMonsters);
     };
 
@@ -115,11 +123,17 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
 
         setSelectedRooms(prevRooms => prevRooms.map(r => {
             if (r.id !== room.id) return r;
-            // If deselecting (toggle off), restore all methods
+            const originalRoom = rooms.find(orig => orig.id === room.id);
+            const isSingleMethod = originalRoom && originalRoom.methods && originalRoom.methods.length === 1;
+            // If deselecting (toggle off)
             if (selectedMethods[room.id] === method) {
-                // Find the original room from the rooms list
-                const originalRoom = rooms.find(orig => orig.id === room.id);
-                return originalRoom ? { ...r, methods: originalRoom.methods } : r;
+                if (isSingleMethod) {
+                    // For single-method rooms, set methods to []
+                    return { ...r, methods: [] };
+                } else {
+                    // For multi-method rooms, restore all methods
+                    return originalRoom ? { ...r, methods: originalRoom.methods } : r;
+                }
             } else {
                 // Only keep the selected method
                 return { ...r, methods: [method] };
@@ -135,10 +149,16 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                 .filter(room => allowedRoomIds.includes(room.id))
                 .map(room => {
                     const presetRoom = selectedGearPreset.rooms.find(r => r.id === room.id);
+                    let methods: string[] = [];
+                    if (presetRoom?.method) {
+                        methods = [presetRoom.method];
+                    } else if (room.methods && room.methods.length > 1) {
+                        methods = room.methods;
+                    } // else leave as []
                     return {
                         ...room,
                         monster: getMonsterByRoom(room),
-                        methods: presetRoom?.method ? [presetRoom.method] : room.methods
+                        methods
                     };
                 });
             setSelectedRooms(presetRooms);
@@ -320,23 +340,32 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                             )}
                         </AnimatePresence>
                     </motion.div>
-                    {selectedRooms.map(room => (
-                        <div key={room.id} className="selected-room-methods">
-                            {room.methods && room.methods.length > 0 && (
-                                <div className="room-method-buttons">
-                                    {room.methods.map(method => (
-                                        <button
-                                            key={method}
-                                            className={`method-tab${selectedMethods[room.id] === method ? ' active' : ''}`}
-                                            onClick={() => handleMethodSelect(room, method)}
-                                        >
-                                            {method}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                    {selectedRooms.map(room => {
+                        // Find the original room definition
+                        const originalRoom = rooms.find(orig => orig.id === room.id);
+                        // If the original room has only one method, show the button for it even if methods is empty
+                        const showSingleMethod = originalRoom && originalRoom.methods && originalRoom.methods.length === 1;
+                        const methodsToShow = (room.methods && room.methods.length > 0)
+                            ? room.methods
+                            : (showSingleMethod ? originalRoom.methods : []);
+                        return (
+                            <div key={room.id} className="selected-room-methods">
+                                {methodsToShow && methodsToShow.length > 0 && (
+                                    <div className="room-method-buttons">
+                                        {methodsToShow.map(method => (
+                                            <button
+                                                key={method}
+                                                className={`method-tab${selectedMethods[room.id] === method ? ' active' : ''}`}
+                                                onClick={() => handleMethodSelect(room, method)}
+                                            >
+                                                {method}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </motion.div>
                 
             </div>

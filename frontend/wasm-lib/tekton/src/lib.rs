@@ -307,7 +307,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
             let anvil_cycle = rng.gen_range(3..7);
             tekton_hp += (anvil_cycle * 5) as i32;
-            total_ticks += (anvil_cycle * 3) as usize;
+            total_ticks += ((anvil_cycle * 3) - attack_speed_normal) as usize;
             if current_phase_ticks > 0 {
                 total_ticks += current_phase_ticks - 1;
             }
@@ -331,7 +331,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 total_ticks += current_phase_ticks - 1;
                 break;
             }
-            current_phase_ticks -= 1;
+            // Add attack speed to account for the final attack
+            current_phase_ticks += attack_speed_normal - 1;
 
             // Enraged phase: (4, 11)
             let (hp3, ticks3, hit_count3, died3) = phase_loop(
@@ -357,8 +358,9 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             phase += 1;
         }
         // Add initial delay and round up to next multiple of 4
-        let initial_delay = 0; // Set as needed
-        total_ticks += initial_delay;
+        let initial_delay = delay; // Set as needed
+        // Add attack speed to account for the final attack
+        total_ticks += initial_delay + attack_speed_normal;
         if total_ticks % 4 != 0 {
             total_ticks += 4 - (total_ticks % 4);
         }

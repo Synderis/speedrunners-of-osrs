@@ -53,15 +53,20 @@ def phase_loop(hit_count, hit_count_bounds, tekton_hp, current_phase_ticks, atta
     while tekton_hp > 0 and hit_count_bounds[0] <= hit_count <= hit_count_bounds[1]:
         current_phase_ticks += 1
         if current_phase_ticks == 1 or (current_phase_ticks - 1) % 4 == 0:
+        # if (current_phase_ticks - 1) % 4 == 0:
+            # print(f"[Sim] Thrall attack: tick={current_phase_ticks - 1}, hp={tekton_hp}")
             tekton_hp -= np.random.randint(0, 4)
         if tekton_hp <= 0:
             return tekton_hp, current_phase_ticks, hit_count, True  # signal to break outer loop
         if current_phase_ticks == 1 or (current_phase_ticks - 1) % attack_speed == 0:
+        # if (current_phase_ticks - 1) % attack_speed == 0:
             hit = 0
             if np.random.rand() < accuracy:
                 hit = np.random.randint(0, max_hit + 1)
+            # print(f"[Sim] Player attack: tick={current_phase_ticks - 1}, hp={tekton_hp}, hit={hit}")
             tekton_hp -= hit
             hit_count += 1
+    # current_phase_ticks += attack_speed
     return tekton_hp, current_phase_ticks, hit_count, False
 
 if __name__ == "__main__":
@@ -106,7 +111,7 @@ if __name__ == "__main__":
         tekton_enraged = copy.deepcopy(monsters[1])
         total_ticks = 0
         current_phase_ticks = 0
-        initial_delay = 12
+        initial_delay = 17
         spec_count = True
         pre_anvil = 0
         first_pass = True
@@ -151,7 +156,7 @@ if __name__ == "__main__":
                 accuracy_enraged = best_style_enraged["accuracy"]
 
             tekton_hp, current_phase_ticks, pre_anvil, died = phase_loop(
-                hit_count, (0, 4), tekton_hp, current_phase_ticks, attack_speed_normal, accuracy_normal, max_hit_normal
+                hit_count, (0, 7), tekton_hp, current_phase_ticks, attack_speed_normal, accuracy_normal, max_hit_normal
             )
             if died or tekton_hp <= 0:
                 total_ticks += current_phase_ticks - 1
@@ -164,32 +169,41 @@ if __name__ == "__main__":
                 # print("Phase:", phase, "Ticks so far:", total_ticks, "HP:", tekton_hp)
             anvil_cycle = np.random.randint(3, 7)
             tekton_hp += anvil_cycle * 5
-            total_ticks += anvil_cycle * 3
+
+            # This is to remove the cd on that final hit since hes on the anvil
+            total_ticks += (anvil_cycle * 3) - attack_speed_normal
+
             if current_phase_ticks > 0:
                 total_ticks += current_phase_ticks - 1
             current_phase_ticks = 0
-
+            # print("[Sim] Total ticks before phase", total_ticks, "Ticks from last phase:", current_phase_ticks - 1, "Actual last hit tick:", initial_delay + total_ticks + current_phase_ticks - 1)
             tekton_hp, current_phase_ticks, hit_count, died = phase_loop(
                 hit_count, (0, 3), tekton_hp, current_phase_ticks, attack_speed_normal, accuracy_normal, max_hit_normal
             )
             if died or tekton_hp <= 0:
+                # print("[Sim] Died in normal phase", tekton_hp, current_phase_ticks, hit_count, died)
                 total_ticks += current_phase_ticks - 1
                 break
-            current_phase_ticks -= 1
-
+            # This is to add back the cd on that final hit and adjust for the extra tick from phase loop
+            current_phase_ticks += attack_speed_normal - 1
+            # print("[Sim] Total ticks before enrage", total_ticks, "Ticks from last phase:", current_phase_ticks, "Actual last hit tick:", initial_delay + total_ticks + current_phase_ticks - 1)
             tekton_hp, current_phase_ticks, hit_count, died = phase_loop(
-                hit_count, (4, 10), tekton_hp, current_phase_ticks, attack_speed_enraged, accuracy_enraged, max_hit_enraged
+                hit_count, (4, 11), tekton_hp, current_phase_ticks, attack_speed_enraged, accuracy_enraged, max_hit_enraged
             )
+            # print("[Sim] Total ticks before after", total_ticks, "Ticks from last phase:", current_phase_ticks - 1, "Actual last hit tick:", initial_delay + total_ticks + current_phase_ticks - 1)
             if died or tekton_hp <= 0:
+                # print("[Sim] Died in enraged phase", tekton_hp, current_phase_ticks, hit_count, died)
                 total_ticks += current_phase_ticks - 1
                 break
+
+            # This is to add back the cd on that final hit and adjust for the extra tick from phase loop
             total_ticks += current_phase_ticks - 1
             current_phase_ticks = 0
             hit_count = 0
             phase += 1
             # print("Phase:", phase, "Ticks so far:", total_ticks, "HP:", tekton_hp)
         # print("Defeated Tekton in", total_ticks, "ticks", "HP before anvil:", hp_pre_anvil, "Phases:", phase)
-        total_ticks += initial_delay
+        total_ticks += initial_delay + attack_speed_normal
         if total_ticks % 4 != 0:
             total_ticks += 4 - (total_ticks % 4)
         anvil_count_list[i] = phase
@@ -270,4 +284,4 @@ if __name__ == "__main__":
         yaxis_title="Frequency",
         bargap=0.05
     )
-    hist_fig.show()
+    # hist_fig.show()
