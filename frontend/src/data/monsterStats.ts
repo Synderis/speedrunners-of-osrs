@@ -826,7 +826,7 @@ export const rooms: Room[] = [
         name: 'Olm',
         image: '/rooms/300px-Great_Olm.webp',
         description: 'High-level boss encounter',
-        monsters: ['olm'],
+        monsters: ['7553', '7555', '7554'],
         methods: []
     }
 ];

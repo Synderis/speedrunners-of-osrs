@@ -96,12 +96,64 @@ def phase_loop(hp, attack_tick, attack_speed, accuracy, max_hit, total_ticks):
     attack_tick += attack_speed - 1
     return attack_tick
 
+def can_attack_vang(vang_hps, idx, max_hit, threshold=0.4, hp_reset_threshold=108, base_hp=270):
+    # If all vangs are below the reset threshold, always allow
+    if all(hp < hp_reset_threshold for hp in vang_hps):
+        return True
+    # If only one vang is above the reset threshold, allow attacking it
+    above_thresh = [i for i, hp in enumerate(vang_hps) if hp >= hp_reset_threshold]
+    if len(above_thresh) == 1 and above_thresh[0] == idx:
+        return True
+    # For every possible hit that does NOT KO, check if it would violate the threshold
+    for hit in range(0, min(max_hit, vang_hps[idx])):
+        new_hp = vang_hps[idx] - hit
+        new_hps = vang_hps.copy()
+        new_hps[idx] = new_hp
+        min_hp = min(new_hps)
+        max_hp = max(new_hps)
+        reset_threshold = threshold * base_hp
+        if (max_hp - min_hp) > reset_threshold:
+            return False
+    # If all non-KO hits are safe, or only KO is possible, allow
+    return True
+
+# def vang_sim_loop(vang_hps, max_hit, accuracy, threshold=0.4, hp_reset_threshold=108):
+#     full_hp = max(vang_hps)
+#     tick = 0
+#     while any(hp > 0 for hp in vang_hps):
+#         # Choose which Vanguard to attack: try lowest HP above 0, but skip if would cause reset
+#         attack_idx = None
+#         for idx, hp in sorted(enumerate(vang_hps), key=lambda x: x[1]):
+#             if hp > 0 and can_attack_vang(vang_hps, idx, max_hit, threshold, hp_reset_threshold):
+#                 attack_idx = idx
+#                 break
+#         if attack_idx is None:
+#             # If no safe attack, just attack the lowest HP one
+#             attack_idx = min((i for i, hp in enumerate(vang_hps) if hp > 0), key=lambda i: vang_hps[i])
+#         # Perform attack
+#         if np.random.rand() < accuracy:
+#             hit = np.random.randint(0, max_hit + 1)
+#         else:
+#             hit = 0
+#         vang_hps[attack_idx] = max(0, vang_hps[attack_idx] - hit)
+#         tick += 1
+#         # After attack, check for reset (unless all are below threshold)
+#         if not all(hp < hp_reset_threshold for hp in vang_hps):
+#             min_hp = min(vang_hps)
+#             max_hp_val = max(vang_hps)
+#             if max_hp_val > 0 and (max_hp_val - min_hp) / max_hp_val > threshold:
+#                 vang_hps = [full_hp, full_hp, full_hp]
+#         # Optionally: break if infinite loop detected (shouldn't happen)
+#         if tick > 1000:
+#             break
+#     return tick
+
 if __name__ == "__main__":
     import time
     start_time = time.time()
 
     # Load parameters from your Markov model's best style output
-    with open("olm_payload.json", "r") as f:
+    with open("vangs_payload.json", "r") as f:
         payload = json.load(f)
     player = payload["player"]
     room = payload["room"]
@@ -128,60 +180,107 @@ if __name__ == "__main__":
     melee_list = []
     mage_list = []
     ranged_list = []
-    
+    max_hits = [
+        best_style_mage["max_hit"],
+        best_style_melee["max_hit"],
+        best_style_ranged["max_hit"]
+    ]
+    accuracies = [
+        best_style_mage["accuracy"],
+        best_style_melee["accuracy"],
+        best_style_ranged["accuracy"]
+    ]
+    attack_speeds = [
+        player['gearSets']['mage']['selectedWeapon']['speed'],
+        player['gearSets']['melee']['selectedWeapon']['speed'],
+        player['gearSets']['ranged']['selectedWeapon']['speed']
+    ]
+    print(f"Max Hits: {max_hits}")
+    print(f"Accuracies: {accuracies}")
+    print(f"Attack Speeds: {attack_speeds}")
+
     print(f"[Sim] Starting simulation with {trials} trials...")
     for _ in range(trials):
         encounter_ticks = 0
         total_ticks = 0
-        for phase in range(3):
-            phase_ticks = 0
-            mage_hp = monsters[0]["skills"]["hp"]
-            melee_hp = monsters[1]["skills"]["hp"]
-            attack_tick = 0
-            spec_hit = False
-            melee_ticks = 0
-            mage_ticks = 0
-            ranged_ticks = 0
-            delay_list = [22, 38, 39]  # Initial delay and intermission delays
-            mage_ticks = phase_loop(mage_hp, attack_tick, 5, best_style_mage["accuracy"], best_style_mage["max_hit"], total_ticks)
+        mage_hp = 270
+        melee_hp = 270
+        ranged_hp = 270
+        hp_reset_threshold = 108
+        # Each Vanguard gets its own style
+        vang_hps = [mage_hp, melee_hp, ranged_hp]
+        max_hits = [
+            best_style_mage["max_hit"],
+            best_style_melee["max_hit"],
+            best_style_ranged["max_hit"]
+        ]
+        accuracies = [
+            best_style_mage["accuracy"],
+            best_style_melee["accuracy"],
+            best_style_ranged["accuracy"]
+        ]
+        attack_speeds = [
+            player['gearSets']['mage']['selectedWeapon']['speed'],
+            player['gearSets']['melee']['selectedWeapon']['speed'],
+            5
+        ]
+        
+        tick = 0
+        cooldown = 0  # When the player can next attack
+        full_hp = max(vang_hps)
+        tick_history = []
+        while any(hp > 0 for hp in vang_hps):
+            ko_this_tick = False
+            prev_vang_hps = vang_hps.copy()
+            if tick >= cooldown:
+                ready_idxs = [i for i, hp in enumerate(vang_hps) if hp > 0]
+                attack_idx = None
+                for idx in sorted(ready_idxs, key=lambda i: -vang_hps[i]):  # Sort by highest HP first
+                    if can_attack_vang(vang_hps, idx, max_hits[idx], 0.4, hp_reset_threshold):
+                        attack_idx = idx
+                        break
+                if attack_idx is not None:
+                    if np.random.rand() < accuracies[attack_idx]:
+                        hit = np.random.randint(0, max_hits[attack_idx] + 1)
+                    else:
+                        hit = 0
+                    prev_hp = vang_hps[attack_idx]
+                    vang_hps[attack_idx] = max(0, vang_hps[attack_idx] - hit)
+                    if prev_hp > 0 and vang_hps[attack_idx] == 0:
+                        ko_this_tick = True
+                    cooldown = tick + attack_speeds[attack_idx]
 
-            if np.random.rand() < best_style_melee_spec["accuracy"]:
-                hit = np.random.randint(0, best_style_melee_spec["max_hit"] + 1)
-                spec_hit = True
-            else:
-                hit = 0
-            melee_hp -= hit
+            # Store the current tick state
+            tick_history.append({
+                "tick": tick,
+                "vang_hps": vang_hps.copy(),
+                "cooldown": cooldown
+            })
+            # Keep only the last 10 entries
+            if len(tick_history) > 10:
+                tick_history.pop(0)
 
-            if spec_hit == True:
-                melee_ticks = phase_loop(melee_hp, attack_tick, 5, best_style_melee_specced["accuracy"], best_style_melee_specced["max_hit"], total_ticks)
-            else:
-                melee_ticks = phase_loop(melee_hp, attack_tick, 5, best_style_melee["accuracy"], best_style_melee["max_hit"], total_ticks)
-            melee_ticks += 6
-            total_ticks += delay_list[phase]
+            tick += 1
 
-            if phase == 2:
+            if not all(hp < hp_reset_threshold for hp in vang_hps):
+                min_hp = min(vang_hps)
+                max_hp_val = max(vang_hps)
+                reset_threshold = 0.4 * 270
+                if max_hp_val > 0 and (max_hp_val - min_hp) > reset_threshold and not ko_this_tick:
+                    print("Previous 10 ticks before reset:")
+                    for entry in tick_history:
+                        print(f"Tick {entry['tick']}: Vang HPs: {entry['vang_hps']}, cooldown: {entry['cooldown']}")
+                    print(f"Reset at tick {tick}: {vang_hps}")
+                    vang_hps = [full_hp, full_hp, full_hp]
+            if tick > 1000:
                 break
+            # if tick % 10 == 0 or tick > 990:
+            #     print(f"Tick {tick}: Vang HPs: {vang_hps}, cooldown: {cooldown}")
+        tick_counts.append(tick)
 
-            phase_ticks = melee_ticks + mage_ticks
-            phase_list.append(phase_ticks)
-            mage_list.append(mage_ticks)
-            melee_list.append(melee_ticks)
-            total_ticks += phase_ticks
-
-
-
-        ranged_hp = monsters[2]["skills"]["hp"]
-        ranged_ticks = phase_loop(ranged_hp, attack_tick, 5, best_style_ranged["accuracy"], best_style_ranged["max_hit"], total_ticks)
-        phase_ticks = melee_ticks + mage_ticks + ranged_ticks
-        phase_list.append(phase_ticks)
-        melee_list.append(melee_ticks)
-        mage_list.append(mage_ticks)
-        ranged_list.append(ranged_ticks)
-        total_ticks += phase_ticks
-
-        if total_ticks % 4 != 0:
-            total_ticks += 4 - (total_ticks % 4)
-        tick_counts.append(total_ticks)
+        # if total_ticks % 4 != 0:
+        #     total_ticks += 4 - (total_ticks % 4)
+        # tick_counts.append(total_ticks)
     print(f"[Sim] Simulation complete.")
     
     max_ticks = int(max(tick_counts))
@@ -192,19 +291,19 @@ if __name__ == "__main__":
             kill_prob[idx:] += 1
     kill_prob = kill_prob / trials
     attack_ticks = np.arange(max_ticks + 1)
-    melee_list_mean = np.mean(melee_list)
-    mage_list_mean = np.mean(mage_list)
-    ranged_list_mean = np.mean(ranged_list)
-    phase_list_mean = np.mean(phase_list)
+    # melee_list_mean = np.mean(melee_list)
+    # mage_list_mean = np.mean(mage_list)
+    # ranged_list_mean = np.mean(ranged_list)
+    # phase_list_mean = np.mean(phase_list)
     mean_ttk = np.mean(tick_counts)
     std_ttk = np.std(tick_counts)
 
     print(f"[Sim] Trials: {trials}")
     print(f"Expected TTK: {mean_ttk:.2f} ticks ({mean_ttk * 0.6:.2f} seconds)")
-    print(f"Phase average ticks: {phase_list_mean:.2f} ticks ({phase_list_mean * 0.6:.2f} seconds)")
-    print(f"Melee average ticks: {melee_list_mean:.2f} ticks ({melee_list_mean * 0.6:.2f} seconds)")
-    print(f"Mage average ticks: {mage_list_mean:.2f} ticks ({mage_list_mean * 0.6:.2f} seconds)")
-    print(f"Ranged average ticks: {ranged_list_mean:.2f} ticks ({ranged_list_mean * 0.6:.2f} seconds)")
+    # print(f"Phase average ticks: {phase_list_mean:.2f} ticks ({phase_list_mean * 0.6:.2f} seconds)")
+    # print(f"Melee average ticks: {melee_list_mean:.2f} ticks ({melee_list_mean * 0.6:.2f} seconds)")
+    # print(f"Mage average ticks: {mage_list_mean:.2f} ticks ({mage_list_mean * 0.6:.2f} seconds)")
+    # print(f"Ranged average ticks: {ranged_list_mean:.2f} ticks ({ranged_list_mean * 0.6:.2f} seconds)")
 
     elapsed = time.time() - start_time
     print(f"Elapsed simulation time: {elapsed:.2f} seconds")

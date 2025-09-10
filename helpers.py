@@ -172,6 +172,8 @@ def calculate_max_hit_for_style(player, monster, style, gear, gear_type="ranged"
         effective_strength = int(((level + potion_bonus) * prayer_bonus + style_bonus + 8.0) * void_bonus)
         str_bonus = gear["bonuses"]["str"]
         max_hit = int(0.5 + (effective_strength * (str_bonus + 64.0)) / 640.0)
+        if player["gearSets"]["melee"].get("selectedWeapon", {}).get("name", "").lower() == "scythe of vitur":
+            max_hit = int(max_hit + (max_hit / 2) + (max_hit / 4))
         return max_hit, effective_strength
     elif gear_type == "ranged":
         level = player["combatStats"]["ranged"]
@@ -253,10 +255,10 @@ def calculate_accuracy_for_style(player, monster, style, gear, gear_type="ranged
         style_bonus = style.get("magic", 0)
         effective_attack = int(((attack_level + potion_bonus) * prayer_bonus + style_bonus + 8.0))
         attack_bonus = gear["offensive"].get("magic", 0)
-        print(f"Magic attack bonus: {attack_bonus}")
+        # print(f"Magic attack bonus: {attack_bonus}")
         if player["gearSets"]["mage"].get("selectedWeapon", {}).get("name", "").lower() == "tumeken's shadow":
             attack_bonus *= 3
-            print(f"Magic attack bonus (with Tumeken's Shadow): {attack_bonus}")
+            # print(f"Magic attack bonus (with Tumeken's Shadow): {attack_bonus}")
         max_attack_roll = effective_attack * (attack_bonus + 64)
         defence_bonus = monster["defensive"].get("magic", 0)
         max_defence_roll = (monster["skills"]["magic"] + 9) * (defence_bonus + 64)
