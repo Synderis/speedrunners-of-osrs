@@ -11,6 +11,21 @@ extern "C" {
 macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
+
+fn tbow_scaling(magic: u32, mode: &str) -> f64 {
+    let (factor, base, clamp, denom) = if mode == "accuracy" {
+        (10.0, 140.0, 1.4, 1.0)
+    } else {
+        (14.0, 250.0, 2.5, 10.0)
+    };
+
+    let t2 = ((10.0 * 3.0 * magic as f64) / denom - factor) / 100.0;
+    let t3 = (((3.0 * magic as f64) / 10.0 - 10.0 * factor).powi(2)) / 100.0;
+    let mut tbow_mult = (base + t2 - t3) / 100.0;
+    tbow_mult = tbow_mult.clamp(1.0, clamp);
+    tbow_mult
+}
+
 pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: Vec<String>) -> StyleResult {
     let mut best_style: Option<StyleResult> = None;
     let mut best_dps = 0.0;
@@ -25,34 +40,34 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
 
         if let Some(weapon) = selected_weapon {
             if let Some(styles) = &weapon.weapon_styles {
-                console_log!(
-                    "Evaluating {} combat styles for {} weapon: {}",
-                    styles.len(),
-                    combat_type,
-                    weapon.name
-                );
+                // console_log!(
+                //     "Evaluating {} combat styles for {} weapon: {}",
+                //     styles.len(),
+                //     combat_type,
+                //     weapon.name
+                // );
                 for style in styles {
                     let (max_hit, _effective_level) = calculate_max_hit_for_style(player, monster, &combat_type, style, gear_stats);
                     let (accuracy, effective_level, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, &combat_type, style, gear_stats);
                     let effective_dps = (max_hit as f64 * accuracy) / (weapon.speed as f64 - style.att_spd_reduction as f64);
                     let effective_strength = 0; // Not used for mage/ranged
                     let effective_attack = effective_level;
-                    console_log!(
-                        "Style: {} ({}), effective_level: {}, max_attack_roll: {:.2}%, max_defence_roll: {:.2}%",
-                        style.combat_style,
-                        style.attack_type,
-                        effective_level,
-                        max_attack_roll,
-                        max_defence_roll
-                    );
-                    console_log!(
-                        "Style: {} ({}), Max Hit: {}, Accuracy: {:.2}%, Effective DPS: {:.2}",
-                        style.combat_style,
-                        style.attack_type,
-                        max_hit,
-                        accuracy * 100.0,
-                        effective_dps
-                    );
+                    // console_log!(
+                    //     "Style: {} ({}), effective_level: {}, max_attack_roll: {:.2}%, max_defence_roll: {:.2}%",
+                    //     style.combat_style,
+                    //     style.attack_type,
+                    //     effective_level,
+                    //     max_attack_roll,
+                    //     max_defence_roll
+                    // );
+                    // console_log!(
+                    //     "Style: {} ({}), Max Hit: {}, Accuracy: {:.2}%, Effective DPS: {:.2}",
+                    //     style.combat_style,
+                    //     style.attack_type,
+                    //     max_hit,
+                    //     accuracy * 100.0,
+                    //     effective_dps
+                    // );
                     let style_result = StyleResult {
                         combat_style: style.combat_style.clone(),
                         attack_type: style.attack_type.clone(),
@@ -74,12 +89,12 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
         }
     }
     let result = best_style.unwrap();
-    console_log!(
-        "🏆 Best combat style selected: {} ({}) with {:.2} effective DPS",
-        result.combat_style,
-        result.attack_type,
-        result.effective_dps
-    );
+    // console_log!(
+    //     "🏆 Best combat style selected: {} ({}) with {:.2} effective DPS",
+    //     result.combat_style,
+    //     result.attack_type,
+    //     result.effective_dps
+    // );
     result
 }
 
@@ -120,7 +135,12 @@ pub fn calculate_max_hit_for_style(
         _ => (0.0, 0.0, &player.gear_sets.mage, 0.0, 0.0, None),
     };
 
-    let potion_bonus = 21.0;
+    let potion_bonus = if monster.name == "Tekton" {
+        19.0
+    } else {
+        21.0
+    };
+
     let void_bonus = 0.0; // No void for now
 
     let mut effective_level = (level + potion_bonus).floor();
@@ -131,8 +151,8 @@ pub fn calculate_max_hit_for_style(
     let mut multiplier = 1.0;
     let mut max_hit = 0u32;
     let weapon = weapon.unwrap();
-    console_log!("Selected weapon: {} (combat type: {})", weapon.name, combat_type);
-    console_log!("Weapon category: {}", weapon.category);
+    // console_log!("Selected weapon: {} (combat type: {})", weapon.name, combat_type);
+    // console_log!("Weapon category: {}", weapon.category);
     let mut salve_bonus = 1.0;
     if gear_set.gear_items.iter().any(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name == "Salve amulet(ei)")
@@ -175,14 +195,11 @@ pub fn calculate_max_hit_for_style(
         let mut max_hit_multiplier = 1.0;
         if weapon.name == "Twisted bow" {
             // OSRS formula for Twisted Bow damage multiplier
-            let magic = monster.skills.magic as f64;
-            let tbow_mult = (
-                250.0
-                + ((((10.0 * 3.0 * magic) / 10.0) - 14.0) / 100.0)
-                - ((((3.0 * magic) / 10.0) - 140.0).powf(2.0) / 100.0)
-            ) / 100.0;
-            // console_log!("Twisted Bow damage multiplier: {}", tbow_mult);
-            max_hit_multiplier = tbow_mult.clamp(1.0, 2.5);
+            let magic = std::cmp::max(
+                monster.skills.magic.clamp(0, 350) as u32,
+                monster.offensive.magic.clamp(0, 350) as u32,
+            );
+            max_hit_multiplier = tbow_scaling(magic, "damage");
         };
         let effective_ranged = ((level + potion_bonus) * prayer_bonus + style_bonus + 8.0).floor();
         max_hit = (0.5 + (effective_ranged * (bonus + 64.0)) / 640.0).floor() as u32;
@@ -198,6 +215,12 @@ pub fn calculate_max_hit_for_style(
             max_hit = (base_max_hit * damage_multiplier).ceil() as u32;
         } else {
             max_hit = (0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor() as u32;
+        };
+        if weapon.name == "Scythe of vitur" {
+            max_hit = max_hit + (max_hit / 2) + (max_hit / 4);
+        };
+        if weapon.name == "Zamorak godsword" && (style.combat_style == "Slash" || style.combat_style == "Crush") {
+            max_hit = (max_hit as f64 * 1.10).floor() as u32;
         };
     };
     // console_log!("Gear items: {:?}", gear_set.gear_items);
@@ -239,7 +262,11 @@ pub fn calculate_max_rolls_for_style(
         _ => (0.0, &player.gear_sets.mage, 0.0, 0.0, None),
     };
 
-    let potion_bonus = 21.0;
+    let potion_bonus = if monster.name.contains("Tekton") {
+        19.0
+    } else {
+        21.0
+    };
     let void_bonus = 1.0; // No void for now
 
     let effective_level = ((((level + potion_bonus) * prayer_bonus).floor() + style_bonus + 8.0) * void_bonus).floor() as u32;
@@ -260,16 +287,17 @@ pub fn calculate_max_rolls_for_style(
         bonus *= 3;
         max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
     };
+    if weapon.name == "Zamorak godsword" && (style.combat_style == "Slash" || style.combat_style == "Crush") {
+        max_attack_roll = max_attack_roll * 2;
+    };
 
     if weapon.name == "Twisted bow" {
         // OSRS Twisted Bow accuracy multiplier
-        let magic = monster.skills.magic as f64;
-        let tbow_mult = (
-            140.0
-            + (((10.0 * 3.0 * magic) - 10.0) / 100.0)
-            - (((3.0 * magic) / 10.0 - 100.0).powf(2.0) / 100.0)
-        ) / 100.0;
-        let tbow_mult = tbow_mult.clamp(1.0, 1.4);
+        let magic = std::cmp::max(
+            monster.skills.magic.clamp(0, 350) as u32,
+            monster.offensive.magic.clamp(0, 350) as u32,
+        );
+        let tbow_mult = tbow_scaling(magic, "accuracy");
         max_attack_roll = (max_attack_roll as f64 * tbow_mult).floor() as u64;
     };
     if gear_set.gear_items.iter().any(|item_opt| {
@@ -288,7 +316,7 @@ pub fn calculate_max_rolls_for_style(
         max_attack_roll = (max_attack_roll as f64 * 1.15).floor() as u64;
         console_log!("Slayer helmet (i) bonus applied, new max_attack_roll: {}", max_attack_roll);
     };
-    console_log!("Monster def: {}, monster def bonus: {}", monster.skills.def, defence_bonus);
+    // console_log!("Monster def: {}, monster def bonus: {}", monster.skills.def, defence_bonus);
     let max_defence_roll;
     if combat_type == "magic" {
         max_defence_roll = (monster.skills.magic + 9) as u64 * (defence_bonus + 64) as u64;

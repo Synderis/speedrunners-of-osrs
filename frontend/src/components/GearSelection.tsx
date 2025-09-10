@@ -6,6 +6,8 @@ import type { GearSets, CombatStats, Equipment, InventoryItem } from '../types/p
 import { statImages } from '../data/constants';
 import './GearSelection.css';
 import InventoryItems from './InventoryItems';
+import type { SelectedRoomWithMonster } from './RoomSelection';
+import { rooms } from '../data/monsterStats';
 
 interface GearSelectionProps {
   gearSets: GearSets;
@@ -17,6 +19,12 @@ interface GearSelectionProps {
   setIsGearLoading: React.Dispatch<React.SetStateAction<boolean>>;
   isGearLoading: boolean;
   equipment: Equipment[];
+  selectedPreset: string;
+  setSelectedPreset: React.Dispatch<React.SetStateAction<string>>;
+  selectedRooms: SelectedRoomWithMonster[];
+  setSelectedRooms: React.Dispatch<React.SetStateAction<SelectedRoomWithMonster[]>>; // <-- add this
+  selectedMethods: { [roomId: string]: string | null };
+  setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string | null }>>;
 }
 
 const GearSelection: React.FC<GearSelectionProps> = ({
@@ -28,11 +36,17 @@ const GearSelection: React.FC<GearSelectionProps> = ({
   setCombatStats,
   setIsGearLoading,
   isGearLoading,
-  equipment
+  equipment,
+  selectedPreset,        // <-- add this
+  setSelectedPreset,
+  selectedRooms,
+  setSelectedRooms,      // <-- add this
+  selectedMethods,
+  setSelectedMethods,
 }) => {
   // Use equipment as the source of gear data
   const [gearData, setGearData] = useState<Equipment[]>([]);
-  const [selectedPreset, setSelectedPreset] = useState('');
+  // const [selectedPreset, setSelectedPreset] = useState('');
   const [allPresets, setAllPresets] = useState<GearSetPreset[]>([...gearSetPresets]);
 
   // Load custom presets from localStorage on mount and merge with defaults
@@ -60,7 +74,13 @@ const GearSelection: React.FC<GearSelectionProps> = ({
     const name = prompt('Enter a name for your preset:');
     if (!name) return;
     const description = prompt('Enter a description (optional):') || '';
-    // Build the preset object
+
+    // Build the rooms array with method
+    const rooms = selectedRooms.map(room => ({
+      id: room.id,
+      method: selectedMethods[room.id] || undefined
+    }));
+
     const newPreset: GearSetPreset = {
       id: `custom_${Date.now()}`,
       name,
@@ -85,7 +105,8 @@ const GearSelection: React.FC<GearSelectionProps> = ({
           ])
         ) as Record<string, string>,
       },
-  inventoryItems: selectedInventoryItems.map(item => item.equipment?.id?.toString() || '')
+      inventoryItems: selectedInventoryItems.map(item => item.equipment?.id?.toString() || ''),
+      rooms // <-- Save rooms with method!
     };
     console.log('Saving preset:', newPreset);
     const custom = allPresets.filter(p => p.id.startsWith('custom_')).concat(newPreset);
@@ -184,23 +205,44 @@ const GearSelection: React.FC<GearSelectionProps> = ({
     requestAnimationFrame(() => {
       setGearSets(prev => {
         const updated = { ...prev };
-          // Reconstruct selectedInventoryItems from preset.inventoryItems (string[] of IDs)
-          setSelectedInventoryItems(
-            (preset.inventoryItems || [])
-              .map(id => {
-                // Search all equipment for a match
-                const eq = gearData.find(e => e.id.toString() === id);
-                return eq ? { name: eq.name, equipment: eq } : null;
-              })
-              .filter(Boolean) as InventoryItem[]
-          );
+        // Reconstruct selectedInventoryItems from preset.inventoryItems (string[] of IDs)
+        setSelectedInventoryItems(
+          (preset.inventoryItems || [])
+            .map(id => {
+              // Search all equipment for a match
+              const eq = gearData.find(e => e.id.toString() === id);
+              return eq ? { name: eq.name, equipment: eq } : null;
+            })
+            .filter(Boolean) as InventoryItem[]
+        );
+        // Restore rooms and methods from preset
+        if (preset.rooms) {
+          // Find the full room objects for each id
+          const presetRooms = preset.rooms
+            .map(r => {
+              const roomObj = rooms.find(room => room.id === r.id);
+              if (!roomObj) return null;
+              return {
+                ...roomObj,
+                monster: undefined, // or getMonsterByRoom(roomObj) if you want
+                methods: r.method ? [r.method] : roomObj.methods
+              };
+            })
+            .filter(Boolean);
+          setSelectedRooms(presetRooms as SelectedRoomWithMonster[]);
+          // Restore selectedMethods
+          const newSelectedMethods: { [roomId: string]: string | null } = {};
+          preset.rooms.forEach(r => {
+            if (r.method) newSelectedMethods[r.id] = r.method;
+          });
+          setSelectedMethods(newSelectedMethods);
+        }
         (['melee', 'mage', 'ranged'] as GearSetType[]).forEach(type => {
           updated[type] = prev[type].map(slot => {
             const slotKey = slot.slot.toLowerCase().replace('-', '');
             const gearId = preset.gearSets[type][slotKey];
             if (gearId) {
               const selectedItem = slot.items.find(item => item.id.toString() === gearId);
-              console.log('Selected item', type, '->', selectedItem);
               return { ...slot, selected: selectedItem };
             }
             return { ...slot, selected: undefined };

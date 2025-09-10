@@ -17,81 +17,6 @@ macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
 
-fn ensure_item_equipped(
-    gear_set: &mut GearSetData,
-    inventory: &[SelectedItem],
-    item_name: &str,
-) {
-    // Only proceed if a Salve item is present in inventory (case-insensitive)
-    let has_salve = inventory.iter().any(|item| item.name.to_lowercase().contains("salve"));
-    if !has_salve {
-        return;
-    };
-
-    // Find the item in inventory (case-insensitive)
-    let item = match inventory.iter().find(|item| item.name.to_lowercase().contains(item_name)) {
-        Some(item) => item,
-        None => return,
-    };
-
-    // Remove any existing head item from gear_items and subtract its bonuses
-    let mut i = 0;
-    while i < gear_set.gear_items.len() {
-        if let Some(existing) = &gear_set.gear_items[i] {
-            if existing.slot == "head" {
-                if let (Some(bonuses), Some(offensive), Some(defensive)) = (
-                    existing.bonuses.as_ref(),
-                    existing.offensive.as_ref(),
-                    existing.defensive.as_ref(),
-                ) {
-                    gear_set.gear_stats.bonuses.str -= bonuses.str;
-                    gear_set.gear_stats.bonuses.ranged_str -= bonuses.ranged_str;
-                    gear_set.gear_stats.bonuses.magic_str -= bonuses.magic_str / 10;
-                    gear_set.gear_stats.bonuses.prayer -= bonuses.prayer;
-                    gear_set.gear_stats.offensive.stab -= offensive.stab;
-                    gear_set.gear_stats.offensive.slash -= offensive.slash;
-                    gear_set.gear_stats.offensive.crush -= offensive.crush;
-                    gear_set.gear_stats.offensive.magic -= offensive.magic;
-                    gear_set.gear_stats.offensive.ranged -= offensive.ranged;
-                    gear_set.gear_stats.defensive.stab -= defensive.stab;
-                    gear_set.gear_stats.defensive.slash -= defensive.slash;
-                    gear_set.gear_stats.defensive.crush -= defensive.crush;
-                    gear_set.gear_stats.defensive.magic -= defensive.magic;
-                    gear_set.gear_stats.defensive.ranged -= defensive.ranged;
-                };
-                gear_set.gear_items.remove(i);
-                continue;
-            };
-        }
-        i += 1;
-    };
-
-    // Add the Salve item to gear_items as equipped
-    gear_set.gear_items.push(Some(item.clone()));
-
-    // Add item's bonuses to gear
-    if let (Some(bonuses), Some(offensive), Some(defensive)) = (
-        item.bonuses.as_ref(),
-        item.offensive.as_ref(),
-        item.defensive.as_ref(),
-    ) {
-        gear_set.gear_stats.bonuses.str += bonuses.str;
-        gear_set.gear_stats.bonuses.ranged_str += bonuses.ranged_str;
-        gear_set.gear_stats.bonuses.magic_str += bonuses.magic_str;
-        gear_set.gear_stats.bonuses.prayer += bonuses.prayer;
-        gear_set.gear_stats.offensive.stab += offensive.stab;
-        gear_set.gear_stats.offensive.slash += offensive.slash;
-        gear_set.gear_stats.offensive.crush += offensive.crush;
-        gear_set.gear_stats.offensive.magic += offensive.magic;
-        gear_set.gear_stats.offensive.ranged += offensive.ranged;
-        gear_set.gear_stats.defensive.stab += defensive.stab;
-        gear_set.gear_stats.defensive.slash += defensive.slash;
-        gear_set.gear_stats.defensive.crush += defensive.crush;
-        gear_set.gear_stats.defensive.magic += defensive.magic;
-        gear_set.gear_stats.defensive.ranged += defensive.ranged;
-    };
-}
-
 // --- Markov Matrix Helpers (Python-style, updated) ---
 fn build_transition_matrix(hp: usize, max_hit: usize, accuracy: f64) -> Vec<Vec<f64>> {
     let n = hp + 1;
@@ -171,7 +96,7 @@ fn weapon_kill_times_markov_per_tick_with_delay(
 }
 
 #[wasm_bindgen]
-pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
+pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     console_log!("Received payload JSON: {}", payload_json);
 
     let payload: DPSRoomPayload = match serde_json::from_str(payload_json) {
@@ -182,29 +107,11 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
         }
     };
 
-    let mut player = payload.player;
+    // Make copies for gear/inventory mutation (no mut needed)
+    let player = payload.player;
     let monsters = payload.room.monsters;
     let cap = payload.config.cap;
-    let inventory_items: Vec<SelectedItem> = player
-        .inventory
-        .iter()
-        .filter_map(|item| item.equipment.clone())
-        .collect();
-    let mut sets = [
-        ("magic", &mut player.gear_sets.mage),
-        ("ranged", &mut player.gear_sets.ranged),
-    ];
 
-    for (_, gear_set) in sets.iter_mut() {
-        ensure_item_equipped(gear_set, &inventory_items, "slayer");
-        console_log!("Using slayer helmet");
-    };
-
-    // if !salve {
-
-    // }
-
-    // let walk_delay = 24;
     let walk_delay = 0;
     let mut total_expected_hits = 0.0;
     let mut total_expected_ticks = 0.0;
@@ -216,19 +123,19 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
     let mut encounter_kill_times: Vec<f64> = Vec::new();
     let mut encounter_attack_speed: Option<usize> = None;
 
+
     for monster in monsters {
-        let best_style = find_best_combat_style(&player, &monster, vec!["magic".to_string(), "ranged".to_string()]);
+        let best_style = find_best_combat_style(&player, &monster, vec!["melee".to_string()]);
 
         let max_hit = best_style.max_hit as usize;
         let accuracy = best_style.accuracy;
         let hp = monster.skills.hp as usize;
 
-        let attack_speed = if let Some(weapon) = &player.gear_sets.mage.selected_weapon {
+        let attack_speed = if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
             weapon.speed as usize
         } else {
             5
         };
-
         if encounter_attack_speed.is_none() {
             encounter_attack_speed = Some(attack_speed);
         }
@@ -283,8 +190,6 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
             "expected_hits": expected_hits,
             "expected_ticks": expected_ttk,
             "expected_seconds": expected_seconds,
-            "combat_type": best_style.attack_type,
-            "attack_style": best_style.combat_style,
             "kill_times": kill_times,
         });
         results.push(result);
@@ -292,7 +197,6 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
         first = false;
     }
 
-    // Convert encounter_kill_times to JSON object array
     let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()
         .map(|(idx, &prob)| {
             serde_json::json!({
@@ -307,7 +211,6 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
         "total_hits": total_expected_hits,
         "total_expected_ticks": total_expected_ticks,
         "total_expected_seconds": total_expected_seconds,
-        "encounter_kill_times": encounter_kill_times_obj,
-        "phase_results": [],
+        "encounter_kill_times": encounter_kill_times_obj
     }).to_string()
 }

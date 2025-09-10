@@ -274,12 +274,31 @@ if __name__ == "__main__":
     # Simulation for empirical TTK and cumulative kill probability
     trials = 100_000
     max_attacks = 100  # Reasonable upper bound for plotting
+    max_attacks_crystal = 17
+    teleport_attacks = 15
     kill_attack_counts = []
     for _ in range(trials):
         hp = monster_hp
         attacks = 0
         while hp > 0 and attacks < max_attacks:
             attacks += 1
+            crystal_attacks = 0
+            if attacks % 4 == 0:
+                best_style_crystal = find_best_combat_style(player, monsters[1])
+                monster_hp_crystal = monsters[1]["skills"]["hp"]
+                max_hit_crystal = best_style_crystal["max_hit"]
+                accuracy_crystal = best_style_crystal["accuracy"]
+                attack_speed_crystal = 5
+                p_zero_crystal = (1 - accuracy_crystal) + accuracy_crystal / (max_hit_crystal + 1)
+                expected_damage_crystal = accuracy_crystal * (sum(i for i in range(0, max_hit_crystal + 1)) / (max_hit_crystal + 1))
+                while monster_hp_crystal > 0 and crystal_attacks < max_attacks_crystal or attacks < teleport_attacks:
+                    crystal_attacks += 1
+                    attacks += 1
+                    if np.random.rand() < accuracy_crystal:
+                        hit_crystal = np.random.randint(0, max_hit_crystal + 1)
+                    else:
+                        hit_crystal = 0
+                    monster_hp_crystal -= hit_crystal
             if np.random.rand() < accuracy:
                 hit = np.random.randint(0, max_hit + 1)
             else:

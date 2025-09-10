@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { fadeInOut } from '../utils/animations';
 import type { PlotDataPoint } from '../types/loaders';
 import type { Monster, Room } from '../data/monsterStats';
-import { miscIcons } from '../data/constants';
 import { calculateDPSWithObjectsTekton } from '../loaders/tektonWasm';
 import { calculateDPSWithObjectsVasa } from '../loaders/vasaWasm';
 import { calculateDPSWithObjectsVespula } from '../loaders/vespulaWasm';
 import { calculateDPSWithObjectsMystics } from '../loaders/mysticsWasm';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useTheme } from '../hooks/useTheme';
 import type { GearSets, CombatStats, Equipment, InventoryItem } from '../types/player';
 import './PlotSection.css';
@@ -16,30 +14,11 @@ import { getCombatStylesForCategory } from '../services/weaponStylesService';
 import { calculateDPSWithObjectsGuardians } from '../loaders/guardiansWasm';
 import { cmMonsters } from '../data/monsterStats';
 import { calculateDPSWithObjectsShamans } from '../loaders/shamansWasm';
+import { calculateDPSWithObjectsMutta } from '../loaders/muttaWasm';
+import ResultPlot from './ResultPlot';
+import ConfigColumns from './ConfigColumns';
 
-const defaultIcon = '/gear/default.webp'; // You can change this later
 
-const statIconMap: Record<string, keyof typeof miscIcons> = {
-  'combat': 'levels',
-  'attack': 'attack',
-  'strength': 'strength',
-  'defence': 'defense',
-  'ranged': 'ranged',
-  'hitpoints': 'hitpoints',
-  'magic': 'magic',
-  'stab': 'stab',
-  'slash': 'slash',
-  'crush': 'crush',
-  'ranged_strength': 'ranged_strength',
-  'magic_strength': 'magic_strength',
-  'max_hit': 'max_hit',
-  'flat_armor': 'flat_armor',
-  'magic_defence': 'magic_defence',
-  'ranged_defence': 'ranged_defence',
-  'light': 'light',
-  'standard': 'standard',
-  'heavy': 'heavy'
-};
 
 // --- Constants & Types ---
 const GEAR_TYPES = ['melee', 'mage', 'ranged'] as const;
@@ -72,6 +51,7 @@ interface PlotSectionProps {
   combatStats?: CombatStats;
   selectedRooms?: Room[];
   selectedInventoryItems?: InventoryItem[];
+  selectedMethods?: { [roomId: string]: string | null };
 }
 
 type Stats = {
@@ -79,6 +59,8 @@ type Stats = {
   // expectedHits: number;
   // accuracy: number;
   total_expected_ticks: number;
+  result?: any;
+  phase_results: any[]
 };
 
 // --- Helper Functions ---
@@ -126,7 +108,8 @@ const wasmModelLoaders: Record<string, (player: any, monster: any) => Promise<an
   'guardians': calculateDPSWithObjectsGuardians,
   'vespula': calculateDPSWithObjectsVespula,
   'mystics': calculateDPSWithObjectsMystics,
-  'lizardman_shamans': calculateDPSWithObjectsShamans
+  'lizardman_shamans': calculateDPSWithObjectsShamans,
+  'muttadile': calculateDPSWithObjectsMutta
 };
 
 // --- Main Component ---
@@ -149,7 +132,8 @@ const PlotSection: React.FC<PlotSectionProps> = ({
     thieving: 99
   },
   selectedRooms = [],
-  selectedInventoryItems = []
+  selectedInventoryItems = [],
+  selectedMethods = {}
 }) => {
   // --- Theme & Chart Colors ---
   const { theme } = useTheme();
@@ -177,6 +161,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   const [plotDataDict, setPlotDataDict] = useState<Record<string, PlotDataPoint[]>>({});
   const [statsDict, setStatsDict] = useState<Record<string, Stats>>({});
   const [showSeconds, setShowSeconds] = useState(false);
+  const [selectedMonsterIdx, setSelectedMonsterIdx] = useState(0);
 
   // --- Refs ---
   const titleRef = useRef(null);
@@ -202,8 +187,9 @@ const PlotSection: React.FC<PlotSectionProps> = ({
       !selectedRooms.some(r => r.id === activeTab)
     ) {
       setActiveTab(selectedRooms[0].id);
+      setSelectedMonsterIdx(0); // Reset monster selection as well
     }
-  }, [selectedRooms]);
+  }, [selectedRooms, activeTab]);
 
   function isNonEmptyGearStats(stats: typeof DEFAULT_GEAR_STATS) {
     return Object.values(stats).some(group =>
@@ -224,10 +210,11 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   // --- Current Monster ---
   const activeRoom = selectedRooms.find(r => r.id === activeTab);
   const monstersInRoom = activeRoom ? getMonstersByRoom(activeRoom) : [];
-  const currentMonster = monstersInRoom.length > 0 ? monstersInRoom[0] : null;
+  const currentMonster = monstersInRoom.length > 0 ? monstersInRoom[selectedMonsterIdx] : null;
   const plotData = plotDataDict[activeTab] || [];
   const defaultStats: Stats = {
     total_hits: 0,
+    phase_results: [],
     // total_expected_hits: 0,
     total_expected_ticks: 0,
   };
@@ -387,13 +374,23 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         }
         // Get the full monster objects for this room
         const monsters = getMonstersByRoom(room);
-        // Pass the array of monster objects as the "monsters" property
-        const result = await loader(playerData, { ...room, monsters });
+        // Always create a shallow copy of the room with the correct methods array
+        const selectedMethod = selectedMethods && selectedMethods[room.id];
+        let filteredMethods = room.methods;
+        if (selectedMethod && typeof selectedMethod === 'string' && Array.isArray(room.methods)) {
+          filteredMethods = room.methods.filter(m => m === selectedMethod);
+        }
+        const roomPayload = { ...room, methods: filteredMethods, monsters };
+        console.log('Sending to WASM:', { room: roomPayload, monsters });
+        const result = await loader(playerData, roomPayload);
         const key = String(room.id || 'default');
+        console.log(`WASM result for room ${room.name} (${key}):`, result, result.perMonster);
         plotDataUpdates[key] = result.tickData;
         statsUpdates[key] = {
           total_hits: result.summary.expectedHits,
-          total_expected_ticks: result.summary.ticksTimeToKill
+          total_expected_ticks: result.summary.ticksTimeToKill,
+          result: result.perMonster,
+          phase_results: result.summary.phaseResults
         };
       }
 
@@ -446,46 +443,57 @@ const PlotSection: React.FC<PlotSectionProps> = ({
             transition={{ duration: 0.5 }}
           >
             <div className="plot-tabs">
-              {selectedRooms.map(room => (
-                <button
-                  key={room.id}
-                  className={`plot-tab${activeTab === room.id ? ' active' : ''}`}
-                  onClick={() => setActiveTab(room.id)}
-                >
-                  {room.name}
-                </button>
-              ))}
+              {/* Room tabs (top row) */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '0.5rem' }}>
+                {selectedRooms.map(room => (
+                  <button
+                    key={room.id}
+                    className={`plot-tab${activeTab === room.id ? ' active' : ''}`}
+                    onClick={() => {
+                      setActiveTab(room.id);
+                      setSelectedMonsterIdx(0); // Reset to first monster when tab changes
+                    }}
+                  >
+                    {room.name}
+                  </button>
+                ))}
+              </div>
+              {/* Monster selector buttons (below) */}
+              {selectedRooms.map(room => {
+                const monsters = getMonstersByRoom(room);
+                // Get unique monster IDs
+                const uniqueIds = Array.from(new Set(monsters.map(m => m.id)));
+                return (
+                  activeTab === room.id && uniqueIds.length > 1 && (
+                    <div
+                      key={room.id}
+                      style={{
+                        marginLeft: 0,
+                        marginTop: 8,
+                        marginBottom: 8,
+                        display: 'flex',
+                        gap: '2rem',
+                        flexWrap: 'wrap',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      {monsters.map((monster, idx) => (
+                        <button
+                          key={monster.id}
+                          className={`plot-tab monster-tab${selectedMonsterIdx === idx ? ' active' : ''}`}
+                          style={{ padding: '8px 18px' }}
+                          onClick={() => setSelectedMonsterIdx(idx)}
+                          type="button"
+                        >
+                          {monster.name}
+                        </button>
+                      ))}
+                    </div>
+                  )
+                );
+              })}
             </div>
-            <div className="config-columns">
-              {configSections.map(section => (
-                <div className={`config-${section.key}`} key={section.key}>
-                  <h3>{section.title}</h3>
-                  <div className="config-info">
-                    {Object.entries(section.data).map(([group, data]) => (
-                      <div key={group} className="config-item">
-                        <strong>{group}:</strong>
-                        <div className="config-breakdown">
-                          {Object.entries(data as Record<string, any>).map(([label, value]) => {
-                            const iconKey = statIconMap[label] || '';
-                            const iconSrc = miscIcons[iconKey as keyof typeof miscIcons] || defaultIcon;
-                            return (
-                              <span key={label} className="config-type">
-                                <img
-                                  src={iconSrc}
-                                  alt={label}
-                                  title={label}
-                                />
-                                {value ?? '--'}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ConfigColumns configSections={configSections} />
           </motion.div>
 
           {/* Stats Cards */}
@@ -497,7 +505,43 @@ const PlotSection: React.FC<PlotSectionProps> = ({
             transition={{ duration: 0.6 }}
           >
             {[
-              { title: 'Total Hit Value', value: activeStats.total_hits > 0 ? activeStats.total_hits.toFixed(1) : '--' },
+              { title: 'Combat Type', value: (() => {
+                  if (!activeRoom) return '--';
+                  const monsters = getMonstersByRoom(activeRoom);
+                  const monster = monsters[selectedMonsterIdx];
+                  const perMonsterArr = activeStats.result || [];
+                  // Find the matching perMonster entry by monster_id
+                  const perMonster = monster
+                    ? perMonsterArr.find((pm: any) => String(pm.monster_id) === String(monster.id))
+                    : null;
+                  return perMonster
+                    ? `${perMonster.combat_type}`
+                    : '--';
+                })() },
+              { title: 'Attack Style', value: (() => {
+                  if (!activeRoom) return '--';
+                  const monsters = getMonstersByRoom(activeRoom);
+                  const monster = monsters[selectedMonsterIdx];
+                  const perMonsterArr = activeStats.result || [];
+                  // Find the matching perMonster entry by monster_id
+                  const perMonster = monster
+                    ? perMonsterArr.find((pm: any) => String(pm.monster_id) === String(monster.id))
+                    : null;
+                  return perMonster
+                    ? `${perMonster.attack_style}`
+                    : '--';
+                })() },
+              
+              // { title: 'Total Hit Value', value: activeStats.total_hits > 0 ? activeStats.total_hits.toFixed(1) : '--' },
+              {
+                title: 'Avg Phase Result',
+                value: (() => {
+                  const phaseResults = activeStats.phase_results || [];
+                  if (!phaseResults.length) return '--';
+                  const avg = phaseResults.reduce((sum, val) => sum + val, 0) / phaseResults.length;
+                  return avg.toFixed(2);
+                })()
+              },
               // { title: 'Total Hit Count', value: activeStats.total_expected_ticks > 0 ? activeStats.total_expected_ticks.toFixed(1) : '--' },
               // { title: 'Accuracy', value: activeStats.accuracy > 0 ? `${activeStats.accuracy.toFixed(1)}%` : '--', unit: 'hit rate' },
               { 
@@ -546,163 +590,21 @@ const PlotSection: React.FC<PlotSectionProps> = ({
           </motion.div>
 
           {/* Chart */}
-          <motion.div
-            ref={chartRef}
-            className="plot-container card"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={chartInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            {/* Chart type and unit toggle buttons above the chart */}
-            <div className="chart-controls">
-              <motion.button
-                className="btn"
-                onClick={handleRecalculate}
-                disabled={isLoading}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {isLoading ? 'Calculating...' : 'Calculate'}
-              </motion.button>
-              <motion.button
-                className="btn"
-                onClick={() => setShowSeconds(s => !s)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                style={{ marginLeft: 8 }}
-              >
-                Show in {showSeconds ? 'Ticks' : 'Seconds'}
-              </motion.button>
-              {['line', 'bar'].map((type) => (
-                <motion.button
-                  key={type}
-                  className={`chart-type-btn ${chartType === type ? 'active' : ''}`}
-                  onClick={() => setChartType(type as 'line' | 'bar')}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {type.charAt(0).toUpperCase() + type.slice(1)} Chart
-                </motion.button>
-              ))}
-            </div>
-
-            <AnimatePresence mode="wait">
-              {isLoading ? (
-                <motion.div
-                  className="loading-state"
-                  {...fadeInOut}
-                >
-                  <motion.div
-                    className="loading-spinner"
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 1,
-                      repeat: Infinity,
-                      ease: "linear"
-                    }}
-                  />
-                  <p>Calculating DPS...</p>
-                </motion.div>
-              ) : plotDataToShow.length > 0 ? (
-                <motion.div
-                  className="chart-wrapper"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <ResponsiveContainer width="100%" height={400}>
-                    {chartType === 'line' ? (
-                      <LineChart data={plotDataToShow} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
-                        <XAxis
-                          dataKey="time"
-                          stroke={chartColors.text}
-                          fontSize={12}
-                          type="number"
-                          domain={['dataMin', 'dataMax']}
-                          tickCount={plotDataToShow.length}
-                          label={{
-                            value: showSeconds ? 'Time (min:sec)' : 'Tick',
-                            position: 'insideBottom',
-                            offset: -10,
-                            style: { textAnchor: 'middle', fill: chartColors.text }
-                          }}
-                          tickFormatter={showSeconds ? formatSeconds : undefined}
-                        />
-                        <YAxis
-                          stroke={chartColors.text}
-                          fontSize={12}
-                          label={{ value: 'P(Dead)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: chartColors.text } }}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: theme === 'light' ? '#ffffff' : '#2a2a2a',
-                            border: `1px solid ${chartColors.grid}`,
-                            borderRadius: '8px',
-                            color: chartColors.text
-                          }}
-                          formatter={(value, name) => [
-                            value,
-                            name === "P(Dead)" ? "P(Dead)" : name
-                          ]}
-                          labelFormatter={label =>
-                            showSeconds ? formatSeconds(label as number) : `Tick ${label}`
-                          }
-                        />
-                        <Legend />
-                        <Line
-                          type="monotone"
-                          dataKey="dps"
-                          stroke={chartColors.primary}
-                          strokeWidth={2}
-                          dot={{ fill: chartColors.primary, strokeWidth: 2, r: 3 }}
-                          activeDot={{ r: 5, stroke: chartColors.primary, strokeWidth: 2 }}
-                          name="P(Dead)"
-                        />
-                      </LineChart>
-                    ) : (
-                      <BarChart data={plotDataToShow} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
-                        <XAxis
-                          dataKey="time"
-                          stroke={chartColors.text}
-                          fontSize={12}
-                          label={{ value: showSeconds ? 'Seconds' : 'Tick', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: chartColors.text } }}
-                        />
-                        <YAxis
-                          stroke={chartColors.text}
-                          fontSize={12}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: theme === 'light' ? '#ffffff' : '#2a2a2a',
-                            border: `1px solid ${chartColors.grid}`,
-                            borderRadius: '8px',
-                            color: chartColors.text
-                          }}
-                        />
-                        <Legend />
-                        <Bar
-                          dataKey="dps"
-                          fill={chartColors.primary}
-                          name="DPS"
-                          radius={[2, 2, 0, 0]}
-                        />
-                      </BarChart>
-                    )}
-                  </ResponsiveContainer>
-                </motion.div>
-              ) : (
-                <motion.div
-                  className="no-data-state"
-                  {...fadeInOut}
-                >
-                  <p>Click "Recalculate" to generate DPS analysis</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+        <ResultPlot
+          chartRef={chartRef}
+          chartInView={chartInView}
+          isLoading={isLoading}
+          handleRecalculate={handleRecalculate}
+          showSeconds={showSeconds}
+          setShowSeconds={setShowSeconds}
+          chartType={chartType}
+          setChartType={setChartType}
+          plotDataToShow={plotDataToShow}
+          chartColors={chartColors}
+          theme={theme}
+          formatSeconds={formatSeconds}
+          fadeInOut={fadeInOut}
+        />
         </div>
       </div>
     </motion.section>

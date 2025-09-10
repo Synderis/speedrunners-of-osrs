@@ -7,6 +7,7 @@ members = [
     "vespula",
     "mystics",
     "shamans",
+    "mutta",
     "osrs_shared_types",
     "osrs_shared_functions"
 ]

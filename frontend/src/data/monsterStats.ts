@@ -96,6 +96,54 @@ export const cmMonsters: Monster[] = [
         "weakness": null
     },
     {
+        "id": 7544,
+        "name": "Tekton (enraged)",
+        "version": "Enraged (Challenge Mode)",
+        "image": "Tekton (enraged).png",
+        "level": 0,
+        "speed": 3,
+        "style": [
+            "Stab",
+            "Slash",
+            "Crush"
+        ],
+        "size": 4,
+        "max_hit": 87,
+        "skills": {
+            "atk": 585,
+            "def": 246,
+            "hp": 450,
+            "magic": 246,
+            "ranged": 1,
+            "str": 585
+        },
+        "offensive": {
+            "atk": 64,
+            "magic": 0,
+            "magic_str": 0,
+            "ranged": 0,
+            "ranged_str": 0,
+            "str": 30
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 180,
+            "magic": 0,
+            "heavy": 0,
+            "standard": 0,
+            "light": 0,
+            "slash": 290,
+            "stab": 280
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": null
+    },
+    {
         "id": 7566,
         "name": "Vasa Nistirio",
         "version": "Challenge Mode",
@@ -141,6 +189,50 @@ export const cmMonsters: Monster[] = [
             "burn": null
         },
         "weakness": null
+    },
+    {
+        "id": 7568,
+        "name": "Glowing crystal",
+        "version": "Normal",
+        "image": "Glowing crystal.png",
+        "level": 0,
+        "size": 4,
+        "max_hit": 0,
+        "speed": 4,
+        "style": null,
+        "skills": {
+            "atk": 1,
+            "def": 100,
+            "hp": 120,
+            "magic": 100,
+            "ranged": 1,
+            "str": 1
+        },
+        "offensive": {
+            "atk": 0,
+            "magic": 0,
+            "magic_str": 0,
+            "ranged": 0,
+            "ranged_str": 0,
+            "str": 0
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "stab": -5,
+            "slash": 180,
+            "crush": 180,
+            "magic": 0,
+            "light": 0,
+            "standard": 0,
+            "heavy": 0
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "weakness": null,
+        "immunities": {
+            "burn": null
+        }
     },
     {
         "id": 7570,
@@ -332,6 +424,303 @@ export const cmMonsters: Monster[] = [
         },
         "weakness": null
     },
+    {
+        "id": 7561,
+        "name": "Large Muttadile",
+        "version": "Large (Challenge Mode)",
+        "image": "Muttadile.png",
+        "level": 0,
+        "speed": 4,
+        "style": [
+            "Melee",
+            "Magic",
+            "Ranged"
+        ],
+        "size": 5,
+        "max_hit": 71,
+        "skills": {
+            "atk": 375,
+            "def": 330,
+            "hp": 375,
+            "magic": 375,
+            "ranged": 375,
+            "str": 375
+        },
+        "offensive": {
+            "atk": 88,
+            "magic": 0,
+            "magic_str": -8,
+            "ranged": 82,
+            "ranged_str": 47,
+            "str": 55
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 60,
+            "magic": 75,
+            "heavy": 0,
+            "standard": 0,
+            "light": 0,
+            "slash": 82,
+            "stab": -5
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": null
+    },
+    {
+        "id": 7562,
+        "name": "Small Muttadile",
+        "version": "Small (Challenge Mode)",
+        "image": "Muttadile.png",
+        "level": 0,
+        "speed": 4,
+        "style": [
+            "Melee",
+            "Ranged"
+        ],
+        "size": 3,
+        "max_hit": 41,
+        "skills": {
+            "atk": 225,
+            "def": 207,
+            "hp": 375,
+            "magic": 1,
+            "ranged": 225,
+            "str": 225
+        },
+        "offensive": {
+            "atk": 71,
+            "magic": 0,
+            "magic_str": -8,
+            "ranged": 83,
+            "ranged_str": 56,
+            "str": 48
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 50,
+            "magic": 60,
+            "heavy": 0,
+            "standard": 0,
+            "light": 0,
+            "slash": 72,
+            "stab": -5
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": null
+    },
+    {
+        "id": 7585,
+        "name": "Ice demon",
+        "version": "Challenge Mode",
+        "image": "Ice demon.png",
+        "level": 0,
+        "speed": 3,
+        "style": [
+            "Ranged",
+            "Magic"
+        ],
+        "size": 2,
+        "max_hit": 0,
+        "skills": {
+            "atk": 1,
+            "def": 240,
+            "hp": 210,
+            "magic": 585,
+            "ranged": 585,
+            "str": 1
+        },
+        "offensive": {
+            "atk": 0,
+            "magic": 0,
+            "magic_str": 0,
+            "ranged": 0,
+            "ranged_str": 0,
+            "str": 0
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 110,
+            "magic": 40,
+            "heavy": 140,
+            "standard": 140,
+            "light": 140,
+            "slash": 70,
+            "stab": 70
+        },
+        "attributes": [
+            "demon",
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": {
+            "element": "fire",
+            "severity": 150
+        }
+    },
+    {
+        "id": 7554,
+        "name": "Great Olm",
+        "version": "Head (Challenge Mode)",
+        "image": "Great Olm.png",
+        "level": 1043,
+        "speed": 4,
+        "style": [
+            "Magic",
+            "Ranged"
+        ],
+        "size": 5,
+        "max_hit": 38,
+        "skills": {
+            "atk": 375,
+            "def": 225,
+            "hp": 800,
+            "magic": 375,
+            "ranged": 375,
+            "str": 375
+        },
+        "offensive": {
+            "atk": 0,
+            "magic": 60,
+            "magic_str": 0,
+            "ranged": 60,
+            "ranged_str": 0,
+            "str": 0
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 200,
+            "magic": 200,
+            "heavy": 50,
+            "standard": 50,
+            "light": 50,
+            "slash": 200,
+            "stab": 200
+        },
+        "attributes": [
+            "dragon",
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": {
+            "element": "earth",
+            "severity": 50
+        }
+    },
+    {
+        "id": 7555,
+        "name": "Great Olm",
+        "version": "Left claw (Challenge Mode)",
+        "image": "Great Olm.png",
+        "level": 750,
+        "speed": -1,
+        "style": [
+            "None"
+        ],
+        "size": 5,
+        "max_hit": 0,
+        "skills": {
+            "atk": 375,
+            "def": 262,
+            "hp": 600,
+            "magic": 262,
+            "ranged": 375,
+            "str": 375
+        },
+        "offensive": {
+            "atk": 0,
+            "magic": 60,
+            "magic_str": 0,
+            "ranged": 60,
+            "ranged_str": 0,
+            "str": 0
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 50,
+            "magic": 200,
+            "heavy": 200,
+            "standard": 200,
+            "light": 200,
+            "slash": 50,
+            "stab": 50
+        },
+        "attributes": [
+            "dragon",
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": {
+            "element": "earth",
+            "severity": 50
+        }
+    },
+    {
+        "id": 7553,
+        "name": "Great Olm",
+        "version": "Right claw (Challenge Mode)",
+        "image": "Great Olm.png",
+        "level": 549,
+        "speed": -1,
+        "style": [
+            "None"
+        ],
+        "size": 5,
+        "max_hit": 0,
+        "skills": {
+            "atk": 375,
+            "def": 262,
+            "hp": 600,
+            "magic": 130,
+            "ranged": 375,
+            "str": 375
+        },
+        "offensive": {
+            "atk": 0,
+            "magic": 60,
+            "magic_str": 0,
+            "ranged": 60,
+            "ranged_str": 0,
+            "str": 0
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 200,
+            "magic": 50,
+            "heavy": 200,
+            "standard": 200,
+            "light": 200,
+            "slash": 200,
+            "stab": 200
+        },
+        "attributes": [
+            "dragon",
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": {
+            "element": "earth",
+            "severity": 50
+        }
+    }
 ];
 
 export interface Room {
@@ -339,94 +728,106 @@ export interface Room {
     name: string;
     image: string;
     description: string;
-    monsters: string[]
+    monsters: string[];
+    methods: string[];
 }
 
 export const rooms: Room[] = [
     {
-        id: '7545',
+        id: 'tekton',
         name: 'Tekton',
         image: '/rooms/220px-Tekton.webp',
         description: 'High-level boss encounter',
-        monsters: ['7545']
+        monsters: ['7545', '7544'],
+        methods: ['Tekton Long Lure', 'Tekton Medium Lure', 'Tekton Short Lure']
     },
     {
         id: 'crabs',
         name: 'Crabs',
         image: '/rooms/150px-Jewelled_Crab.webp',
         description: 'Low-level training area',
-        monsters: ['crabs']
+        monsters: ['crabs'],
+        methods: []
     },
     {
         id: 'ice_demon',
         name: 'Ice Demon',
         image: '/rooms/170px-Ice_demon.webp',
         description: 'High-level boss encounter',
-        monsters: ['ice_demon']
+        monsters: ['7585'],
+        methods: []
     },
     {
         id: 'lizardman_shamans',
         name: 'Lizardman Shamans',
         image: '/rooms/200px-Lizardman_shaman.webp',
         description: 'High-level boss encounter',
-        monsters: ['7573']
+        monsters: ['7573', '7573', '7573'],
+        methods: []
     },
     {
         id: 'vanguards',
         name: 'Vanguards',
         image: '/rooms/280px-Vanguard_(magic).webp',
         description: 'God Wars Dungeon - Zamorak',
-        monsters: ['vanguard']
+        monsters: ['vanguard'],
+        methods: []
     },
     {
         id: 'vespula',
         name: 'Vespula',
         image: '/rooms/280px-Vespula.webp',
         description: 'Barrows Brothers minigame',
-        monsters: ['7533']
+        monsters: ['7533'],
+        methods: []
     },
     {
         id: 'tightrope',
         name: 'Tightrope',
         image: '/rooms/130px-Keystone_crystal_detail.webp',
         description: 'High-level agility course',
-        monsters: []
+        monsters: [],
+        methods: []
     },
     {
         id: 'guardians',
         name: 'Guardians',
         image: '/rooms/guardians.png',
         description: 'High-level boss encounter',
-        monsters: ['7570', '7570']
+        monsters: ['7570', '7570'],
+        methods: []
     },
     {
         id: 'vasa',
         name: 'Vasa',
         image: '/rooms/250px-Vasa_Nistirio.webp',
         description: 'God Wars Dungeon - Zamorak',
-        monsters: ['7566']
+        monsters: ['7566', '7568'],
+        methods: ['Flame Skip']
     },
     {
         id: 'mystics',
         name: 'Mystics',
         image: '/rooms/mystics.png',
         description: 'Barrows Brothers minigame',
-        // monsters: ['7604', '7604', '7604']
-        monsters: ['7604']
+        monsters: ['7604', '7604', '7604'],
+        methods: []
     },
     {
         id: 'muttadile',
         name: 'Muttadile',
         image: '/rooms/250px-Muttadile.webp',
         description: 'High-level boss encounter',
-        monsters: ['muttadile']
+        monsters: ['7562', '7561'],
+        methods: []
     },
     {
         id: 'olm',
         name: 'Olm',
         image: '/rooms/300px-Great_Olm.webp',
         description: 'High-level boss encounter',
-        monsters: ['olm']
+        monsters: ['olm'],
+        methods: []
     }
 ];
 

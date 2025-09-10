@@ -292,6 +292,7 @@ export interface Room {
     name: string;
     image: string;
     description: string;
+    methods: string[];
 }
 
 export const rooms: Room[] = [
@@ -299,73 +300,84 @@ export const rooms: Room[] = [
         id: '7545',
         name: 'Tekton',
         image: '/rooms/220px-Tekton.webp',
-        description: 'High-level boss encounter'
+        description: 'High-level boss encounter',
+        methods: ['Tekton Long Lure', 'Tekton Medium Lure', 'Tekton Short Lure']
     },
     {
         id: 'crabs',
         name: 'Crabs',
         image: '/rooms/150px-Jewelled_Crab.webp',
-        description: 'Low-level training area'
-        // No monsterId yet - add when you have crab monster data
+        description: 'Low-level training area',
+        methods: []
     },
     {
         id: 'ice_demon',
         name: 'Ice Demon',
         image: '/rooms/170px-Ice_demon.webp',
-        description: 'High-level boss encounter'
+        description: 'High-level boss encounter',
+        methods: []
     },
     {
         id: 'lizardman_shamans',
         name: 'Lizardman Shamans',
         image: '/rooms/200px-Lizardman_shaman.webp',
-        description: 'High-level boss encounter'
+        description: 'High-level boss encounter',
+        methods: []
     },
     {
         id: 'vanguards',
         name: 'Vanguards',
         image: '/rooms/280px-Vanguard_(magic).webp',
-        description: 'God Wars Dungeon - Zamorak'
+        description: 'God Wars Dungeon - Zamorak',
+        methods: []
     },
     {
         id: 'vespula',
         name: 'Vespula',
         image: '/rooms/280px-Vespula.webp',
-        description: 'Barrows Brothers minigame'
+        description: 'Barrows Brothers minigame',
+        methods: []
     },
     {
         id: 'tightrope',
         name: 'Tightrope',
         image: '/rooms/130px-Keystone_crystal_detail.webp',
-        description: 'High-level agility course'
+        description: 'High-level agility course',
+        methods: []
     },
     {
         id: '7570',
         name: 'Guardians',
         image: '/rooms/guardians.png',
-        description: 'High-level boss encounter'
+        description: 'High-level boss encounter',
+        methods: []
     },
     {
         id: '7566',
         name: 'Vasa',
         image: '/rooms/250px-Vasa_Nistirio.webp',
-        description: 'God Wars Dungeon - Zamorak'
+        description: 'God Wars Dungeon - Zamorak',
+        methods: []
     },
     {
         id: 'mystics',
         name: 'Mystics',
         image: '/rooms/mystics.png',
-        description: 'Barrows Brothers minigame'
+        description: 'Barrows Brothers minigame',
+        methods: []
     },
     {
         id: 'muttadile',
         name: 'Muttadile',
         image: '/rooms/250px-Muttadile.webp',
-        description: 'High-level boss encounter'
+        description: 'High-level boss encounter',
+        methods: []
     },
     {
         id: 'olm',
         name: 'Olm',
         image: '/rooms/300px-Great_Olm.webp',
-        description: 'High-level boss encounter'
+        description: 'High-level boss encounter',
+        methods: []
     }
 ];

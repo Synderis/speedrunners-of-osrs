@@ -1,8 +1,8 @@
+use rand::prelude::*;
 use wasm_bindgen::prelude::*;
-use serde::{Deserialize, Serialize};
+use osrs_shared_types::*;
+use osrs_shared_functions::*;
 
-// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-// allocator.
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
@@ -14,558 +14,249 @@ extern "C" {
     fn log(s: &str);
 }
 
-macro_rules! console_log {
-    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-}
-
-#[wasm_bindgen]
-pub fn greet(name: &str) {
-    alert(&format!("Hello, {}!", name));
-}
-
-#[derive(Deserialize)]
-pub struct CombatStats {
-    pub attack: u32,
-    pub strength: u32,
-    pub defense: u32,
-    pub ranged: u32,
-    pub magic: u32,
-    pub hitpoints: u32,
-    pub prayer: u32,
-    pub woodcutting: u32,
-    pub mining: u32,
-    pub thieving: u32,
-}
-
-#[derive(Deserialize)]
-pub struct GearBonuses {
-    #[serde(rename = "ranged_str")]
-    pub ranged_str: i32,
-    #[serde(rename = "magic_str")]
-    pub magic_str: i32,
-    pub str: i32,
-    pub prayer: i32,
-}
-
-#[derive(Deserialize)]
-pub struct GearOffensive {
-    pub stab: i32,
-    pub slash: i32,
-    pub crush: i32,
-    pub magic: i32,
-    pub ranged: i32,
-}
-
-#[derive(Deserialize)]
-pub struct GearDefensive {
-    pub stab: i32,
-    pub slash: i32,
-    pub crush: i32,
-    pub magic: i32,
-    pub ranged: i32,
-}
-
-#[derive(Deserialize)]
-pub struct GearStats {
-    pub bonuses: GearBonuses,
-    pub offensive: GearOffensive,
-    pub defensive: GearDefensive,
-}
-
-
-#[derive(Deserialize)]
-pub struct WeaponStyle {
-    pub name: String,
-    #[serde(rename = "attack_type")]
-    pub attack_type: String,
-    #[serde(rename = "combat_style")]
-    pub combat_style: String,
-    pub att: i32,
-    #[serde(rename = "str")]
-    pub str_: i32,
-    pub def: i32,
-    pub ranged: i32,
-    pub magic: i32,
-    #[serde(rename = "att_spd_reduction")]
-    pub att_spd_reduction: i32,
-}
-
-#[derive(Deserialize)]
-pub struct SelectedWeapon {
-    pub name: String,
-    #[serde(deserialize_with = "from_str_or_int")]
-    pub id: u32,
-    #[serde(rename = "weapon_styles")]
-    pub weapon_styles: Vec<WeaponStyle>,
-}
-
-
-// New struct for individual gear set data
-#[derive(Deserialize)]
-pub struct GearSetData {
-    #[serde(rename = "gearStats")]
-    pub gear_stats: GearStats,
-    #[serde(rename = "selectedWeapon")]
-    pub selected_weapon: Option<SelectedWeapon>,
-    #[serde(rename = "gearType")]
-    pub gear_type: String,
-}
-
-// New struct for all gear sets
-#[derive(Deserialize)]
-pub struct AllGearSets {
-    pub melee: GearSetData,
-    pub mage: GearSetData,
-    pub ranged: GearSetData,
-}
-
-// Updated Player struct to use new gear sets structure
-#[derive(Deserialize)]
-pub struct Player {
-    #[serde(rename = "combatStats")]
-    pub combat_stats: CombatStats,
-    #[serde(rename = "gearSets")]
-    pub gear_sets: AllGearSets,
-}
-
-
-#[derive(Deserialize)]
-pub struct MonsterSkills {
-    pub atk: u32,
-    pub def: u32,
-    pub hp: u32,
-    pub magic: u32,
-    pub ranged: u32,
-    pub str: u32,
-}
-
-#[derive(Deserialize)]
-pub struct MonsterOffensive {
-    #[serde(rename = "ranged_str")]
-    pub ranged_str: i32,
-    #[serde(rename = "magic_str")]
-    pub magic_str: i32,
-    pub atk: i32,
-    pub magic: i32,
-    pub ranged: i32,
-    pub str: i32,
-}
-
-#[derive(Deserialize)]
-pub struct MonsterDefensive {
-    pub flat_armour: i32,
-    pub crush: i32,
-    pub magic: i32,
-    pub heavy: i32,
-    pub standard: i32,
-    pub light: i32,
-    pub slash: i32,
-    pub stab: i32,
-}
-
-#[derive(Deserialize)]
-pub struct Monster {
-    pub id: u32,
-    pub name: String,
-    pub version: Option<String>,
-    pub image: Option<String>,
-    pub level: Option<u32>,
-    pub speed: Option<u32>,
-    pub style: Option<Vec<String>>,
-    pub size: Option<u32>,
-    pub max_hit: Option<u32>,
-    pub skills: MonsterSkills,
-    pub offensive: MonsterOffensive,
-    pub defensive: MonsterDefensive,
-    pub attributes: Option<Vec<String>>,
-    pub immunities: Option<serde_json::Value>,
-    pub weakness: Option<serde_json::Value>,
-}
-
-#[derive(Serialize)]
-pub struct CalculationResult {
-    pub max_hit: u32,
-    pub accuracy: f64,
-    pub effective_strength: u32,
-    pub effective_attack: u32,
-    pub max_attack_roll: u64,
-    pub max_defence_roll: u64,
-}
-
-// Updated calculation functions to use melee gear set
-fn calculate_max_hit_for_style(player: &Player, style: &WeaponStyle, gear: &GearStats) -> (u32, u32) {
-    let strength_level = player.combat_stats.strength;
-    let potion_bonus = 19; // Super strength potion
-    let prayer_strength_bonus = 1.23; // Piety
-    // Style bonus based on combat style
-    let style_bonus = style.str_;
-    let void_bonus = 1.0; // No void for now
-    let effective_strength = ((((strength_level + potion_bonus) as f64 * prayer_strength_bonus).floor() + style_bonus as f64 + 8.0) * void_bonus).floor() as u32;
-    let strength_bonus = gear.bonuses.str;
-    let max_hit = (0.5 + (effective_strength as f64 * (strength_bonus + 64) as f64) / 640.0).floor() as u32;
-    (max_hit, effective_strength)
-}
-
-fn calculate_accuracy_for_style(player: &Player, monster: &Monster, style: &WeaponStyle, gear: &GearStats) -> (f64, u32, u64, u64) {
-    let attack_level = player.combat_stats.attack;
-    let potion_bonus = 19; // Super attack potion
-    let prayer_attack_bonus = 1.20; // Piety
-    let style_bonus = style.att;
-    let void_bonus = 1.0; // No void for now
-    let effective_attack = ((((attack_level + potion_bonus) as f64 * prayer_attack_bonus).floor() + style_bonus as f64 + 8.0) * void_bonus).floor() as u32;
-    let equipment_bonus = match style.attack_type.to_lowercase().as_str() {
-        "stab" => gear.offensive.stab,
-        "slash" => gear.offensive.slash,
-        "crush" => gear.offensive.crush,
-        "magic" => gear.offensive.magic,
-        "ranged" => gear.offensive.ranged,
-        _ => 0,
-    };
-    let attack_bonus = equipment_bonus;
-    let max_attack_roll = effective_attack as u64 * (attack_bonus + 64) as u64;
-    let defence_bonus = match style.attack_type.to_lowercase().as_str() {
-        "stab" => monster.defensive.stab,
-        "slash" => monster.defensive.slash,
-        "crush" => monster.defensive.crush,
-        "magic" => monster.defensive.magic,
-        "ranged" => monster.defensive.standard,
-        _ => 0,
-    };
-    let max_defence_roll = (monster.skills.def + 9) as u64 * (defence_bonus + 64) as u64;
-    let accuracy = if max_attack_roll > max_defence_roll {
-        1.0 - (max_defence_roll + 2) as f64 / (2.0 * (max_attack_roll + 1) as f64)
-    } else {
-        max_attack_roll as f64 / (2.0 * (max_defence_roll + 1) as f64)
-    };
-    (accuracy, effective_attack, max_attack_roll, max_defence_roll)
-}
-
-#[derive(Serialize)]
-pub struct StyleResult {
-    pub combat_style: String,
-    pub attack_type: String,
-    pub max_hit: u32,
-    pub accuracy: f64,
-    pub effective_dps: f64,
-    pub effective_strength: u32,
-    pub effective_attack: u32,
-    pub max_attack_roll: u64,
-    pub max_defence_roll: u64,
-}
-
-fn find_best_combat_style(player: &Player, monster: &Monster) -> StyleResult {
-    let mut best_style: Option<StyleResult> = None;
-    let mut best_dps = 0.0;
-    // Use melee weapon from melee gear set
-    if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
-        console_log!("Evaluating {} combat styles for melee weapon: {}", weapon.weapon_styles.len(), weapon.name);
-        for style in &weapon.weapon_styles {
-            let (max_hit, effective_strength) = calculate_max_hit_for_style(player, style, &player.gear_sets.melee.gear_stats);
-            let (accuracy, effective_attack, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, style, &player.gear_sets.melee.gear_stats);
-            let effective_dps = max_hit as f64 * accuracy;
-            console_log!("Style: {} ({}), Max Hit: {}, Accuracy: {:.2}%, Effective DPS: {:.2}", style.combat_style, style.attack_type, max_hit, accuracy * 100.0, effective_dps);
-            let style_result = StyleResult {
-                combat_style: style.combat_style.clone(),
-                attack_type: style.attack_type.clone(),
-                max_hit,
-                accuracy,
-                effective_dps,
-                effective_strength,
-                effective_attack,
-                max_attack_roll,
-                max_defence_roll,
-            };
-            if effective_dps > best_dps {
-                best_dps = effective_dps;
-                best_style = Some(style_result);
+fn phase_loop(
+    mut vasa_hp: usize,
+    mut vasa_attack_tick: usize,
+    attack_speed: usize,
+    accuracy: f64,
+    max_hit: usize,
+    attack_pattern: &[usize; 2],
+    mut total_ticks: usize,
+    rng: &mut ThreadRng,
+) -> (usize, usize, usize, usize) {
+    let mut hit_counter = 0;
+    let mut pre_crystal_attacks = 0;
+    while hit_counter <= attack_pattern[0] || hit_counter < attack_pattern[1] {
+        vasa_attack_tick += 1;
+        if (vasa_attack_tick - 1) % attack_speed == 0 {
+            let mut hit = 0;
+            if rng.gen::<f64>() < accuracy {
+                hit = rng.gen_range(0..=max_hit);
             }
+            vasa_hp = vasa_hp.saturating_sub(hit);
+            hit_counter += 1;
+            pre_crystal_attacks += 1;
+        }
+        if vasa_hp == 0 {
+            total_ticks += vasa_attack_tick.saturating_sub(1);
+            break;
+        }
+        if (vasa_attack_tick - 1) % 4 == 0 {
+            vasa_hp = vasa_hp.saturating_sub(rng.gen_range(0..4));
+        }
+        if vasa_hp == 0 {
+            total_ticks += vasa_attack_tick.saturating_sub(1);
+            break;
         }
     }
-    // Fallback if no melee weapon or weapon styles
-    if best_style.is_none() {
-        console_log!("No melee weapon styles found, using fallback calculation");
-        let strength_level = player.combat_stats.strength;
-        let attack_level = player.combat_stats.attack;
-        let potion_bonus = 19;
-        let prayer_strength_bonus = 1.23;
-        let prayer_attack_bonus = 1.20;
-        let effective_strength = ((((strength_level + potion_bonus) as f64 * prayer_strength_bonus).floor() + 8.0)).floor() as u32;
-        let effective_attack = ((((attack_level + potion_bonus) as f64 * prayer_attack_bonus).floor() + 8.0)).floor() as u32;
-        let strength_bonus = player.gear_sets.melee.gear_stats.bonuses.str;
-        let attack_bonus = player.gear_sets.melee.gear_stats.offensive.stab;
-        let max_hit = (0.5 + (effective_strength as f64 * (strength_bonus + 64) as f64) / 640.0).floor() as u32;
-        let max_attack_roll = effective_attack as u64 * (attack_bonus + 64) as u64;
-    let max_defence_roll = (monster.skills.def + 9) as u64 * (monster.defensive.stab + 64) as u64;
-        let accuracy = if max_attack_roll > max_defence_roll {
-            1.0 - (max_defence_roll + 2) as f64 / (2.0 * (max_attack_roll + 1) as f64)
-        } else {
-            max_attack_roll as f64 / (2.0 * (max_defence_roll + 1) as f64)
-        };
-        best_style = Some(StyleResult {
-            combat_style: "fallback".to_string(),
-            attack_type: "stab".to_string(),
-            max_hit,
-            accuracy,
-            effective_dps: max_hit as f64 * accuracy,
-            effective_strength,
-            effective_attack,
-            max_attack_roll,
-            max_defence_roll,
-        });
-    }
-    let result = best_style.unwrap();
-    console_log!("🏆 Best melee combat style selected: {} ({}) with {:.2} effective DPS", result.combat_style, result.attack_type, result.effective_dps);
-    result
+    vasa_attack_tick += attack_speed;
+    (vasa_hp, vasa_attack_tick, pre_crystal_attacks, total_ticks)
 }
 
-/// Updated function that accepts new player object structure and uses melee gear set
 #[wasm_bindgen]
 pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
-    console_log!("Received payload JSON: {}", payload_json);
-    
-    let payload: DPSPayload = match serde_json::from_str(payload_json) {
+    // Parse payload
+    let payload: DPSRoomPayload = match serde_json::from_str(payload_json) {
         Ok(p) => p,
         Err(e) => {
-            console_log!("Failed to parse payload JSON: {}", e);
             return format!("{{\"error\": \"Failed to parse payload data: {}\"}}", e);
         }
     };
-    
-    // Extract player, monster, and config from payload
     let player = payload.player;
-    let monster = payload.monster;
-    let cap = payload.config.cap;
-    
-    console_log!("Extracted player combat stats - Attack: {}, Strength: {}", 
-        player.combat_stats.attack, player.combat_stats.strength);
-    console_log!("Extracted monster - Name: {}, HP: {}, CB: {:?}", 
-        monster.name, monster.skills.hp, monster.level);
-    console_log!("Config - Cap: {}", cap);
-    
-    console_log!("Using melee gear set for calculations");
-    console_log!("Melee gear stats - Attack Stab: {}, Melee Strength: {}", 
-        player.gear_sets.melee.gear_stats.offensive.stab, 
-        player.gear_sets.melee.gear_stats.bonuses.str);
-    
-    if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
-        console_log!("Melee weapon: {}", weapon.name);
+    let monsters = &payload.room.monsters;
+    let room_methods = &payload.room.methods;
+    let trials = 100000;
+    let mut rng = rand::thread_rng();
+
+    if monsters.len() < 2 {
+        return "{\"error\": \"Room must have at least two monsters (Vasa and Crystal)\"}".to_string();
+    }
+    let vasa = &monsters[0];
+    let crystal = &monsters[1];
+    let best_style_vasa = find_best_combat_style(&player, vasa, vec!["ranged".to_string()]);
+    let best_style_crystal = find_best_combat_style(&player, crystal, vec!["melee".to_string()]);
+
+    let vasa_base_hp = vasa.skills.hp as usize;
+    let vasa_max_hit = best_style_vasa.max_hit as usize;
+    let vasa_accuracy = best_style_vasa.accuracy;
+    let vasa_attack_speed = if let Some(weapon) = &player.gear_sets.ranged.selected_weapon {
+        if best_style_vasa.combat_style == "Aggressive" {
+            (weapon.speed - 1) as usize
+        } else {
+            5
+        }
     } else {
-        console_log!("No melee weapon selected");
-    }
-    
-    // Find the best combat style using melee gear set
-    let best_style = find_best_combat_style(&player, &monster);
-    
-    console_log!("Using best melee style - Max Hit: {}, Accuracy: {:.2}%", best_style.max_hit, best_style.accuracy * 100.0);
-    
-    // Generate kill time distribution using the best style
-    let kill_times = weapon_and_thrall_kill_times_internal(monster.skills.hp as usize, best_style.max_hit as usize, best_style.accuracy, cap);
-    
-    let result = CalculationResult {
-        max_hit: best_style.max_hit,
-        accuracy: best_style.accuracy,
-        effective_strength: best_style.effective_strength,
-        effective_attack: best_style.effective_attack,
-        max_attack_roll: best_style.max_attack_roll,
-        max_defence_roll: best_style.max_defence_roll,
+        5
     };
-    
-    let response = serde_json::json!({
-        "calculation": result,
-        "best_style": {
-            "combat_style": best_style.combat_style,
-            "attack_type": best_style.attack_type,
-            "effective_dps": best_style.effective_dps,
-            "gear_type": "melee"
-        },
-        "kill_times": kill_times
+
+    let crystal_base_hp = crystal.skills.hp as usize;
+    let crystal_max_hit = best_style_crystal.max_hit as usize;
+    let crystal_accuracy = best_style_crystal.accuracy;
+    let crystal_attack_speed = if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
+        weapon.speed as usize
+    } else {
+        5
+    };
+    let mut phase_results: Vec<usize> = vec![0; trials];
+    let mut tick_counts: Vec<usize> = vec![0; trials];
+    let base_max_attacks_crystal = 70;
+    let (initial_delay, attack_pattern): (usize, Vec<[usize; 2]>) = if room_methods.len() > 0 && room_methods[0] == "Flame Skip" {
+        (22, vec![[0, 5], [0, 3], [0, 7]])
+    } else {
+        (29, vec![[0, 4], [0, 3], [0, 7]])
+    };
+    for i in 0..trials {
+    let mut vasa_hp = vasa_base_hp;
+    let mut crystal_hp = crystal_base_hp;
+    let mut max_attacks_crystal = base_max_attacks_crystal;
+    let mut vasa_attack_tick = 0;
+    let mut crystal_attacks = 0;
+    let mut crystal_count = 0;
+    let mut healing_ticks = 0;
+    let mut total_ticks = 0;
+    let mut pre_crystal_attacks = 0;
+
+        while vasa_hp > 0 {
+            crystal_hp = crystal_base_hp;
+            if pre_crystal_attacks < 4 {
+                let (new_vasa_hp, new_vasa_attack_tick, new_pre_crystal_attacks, new_total_ticks) = phase_loop(
+                    vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, &attack_pattern[0], total_ticks, &mut rng
+                );
+                vasa_hp = new_vasa_hp;
+                vasa_attack_tick = new_vasa_attack_tick;
+                pre_crystal_attacks = new_pre_crystal_attacks;
+                total_ticks = new_total_ticks;
+            }
+            crystal_count += 1;
+            healing_ticks = 0;
+
+            while crystal_hp > 0 {
+                crystal_attacks += crystal_attack_speed;
+                healing_ticks += crystal_attack_speed;
+                let mut hit_crystal = 0;
+                if rng.gen::<f64>() < crystal_accuracy {
+                    hit_crystal = rng.gen_range(0..=crystal_max_hit);
+                }
+                crystal_hp = crystal_hp.saturating_sub(hit_crystal);
+                if crystal_attacks >= max_attacks_crystal {
+                    healing_ticks = healing_ticks / 2;
+                    let heal_amount = (vasa_base_hp as f64 * 0.01).floor() as usize * healing_ticks;
+                    vasa_hp += heal_amount;
+                    vasa_hp = std::cmp::min(vasa_hp, vasa_base_hp);
+                    let (new_vasa_hp, new_vasa_attack_tick, _, new_total_ticks) = phase_loop(
+                        vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, &attack_pattern[1], total_ticks, &mut rng
+                    );
+                    vasa_hp = new_vasa_hp;
+                    vasa_attack_tick = new_vasa_attack_tick;
+                    total_ticks = new_total_ticks;
+                    if vasa_hp <= 0 {
+                        break;
+                    }
+                    total_ticks += 12 + crystal_attacks - base_max_attacks_crystal;
+                    max_attacks_crystal += base_max_attacks_crystal;
+                    crystal_attacks = 0;
+                    healing_ticks = 0;
+                }
+                if crystal_hp <= 0 {
+                    total_ticks += crystal_attacks;
+                    break;
+                }
+            }
+            if vasa_attack_tick > 0 {
+                total_ticks += vasa_attack_tick - 1;
+            }
+            vasa_attack_tick = 0;
+            let (new_vasa_hp, new_vasa_attack_tick, _, new_total_ticks) = phase_loop(
+                vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, &attack_pattern[2], total_ticks, &mut rng
+            );
+            vasa_hp = new_vasa_hp;
+            vasa_attack_tick = new_vasa_attack_tick;
+            total_ticks = new_total_ticks;
+            if vasa_hp <= 0 {
+                break;
+            }
+        }
+        total_ticks += initial_delay;
+        if total_ticks % 4 != 0 {
+            total_ticks += 4 - (total_ticks % 4);
+        }
+        phase_results[i] = crystal_count;
+        tick_counts[i] = total_ticks;
+    }
+    let mean_ttk = tick_counts.iter().sum::<usize>() as f64 / trials as f64;
+    // let std_ttk = ... (unused)
+    let max_ticks = match tick_counts.iter().max().copied() {
+        Some(val) => val,
+        None => return "{\"error\": \"No max tick found\"}".to_string(),
+    };
+    let mut kill_prob = vec![0.0f64; max_ticks + 1];
+    for &ticks in &tick_counts {
+        for idx in ticks..=max_ticks {
+            kill_prob[idx] += 1.0;
+        }
+    }
+    for prob in &mut kill_prob {
+        *prob /= trials as f64;
+    }
+
+    // For encounter_kill_times_obj
+    let kill_prob_by_tick = kill_prob.clone();
+    let tick_list: Vec<usize> = (0..=max_ticks).collect();
+
+
+    // Collect results for each monster (if you have more than one)
+    let encounter_attack_speed = vasa_attack_speed; // or whatever is appropriate
+    let kill_times = kill_prob.clone();
+
+    let expected_hits = mean_ttk / encounter_attack_speed as f64; // or however you calculate it
+    let expected_ttk = mean_ttk;
+    let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
+
+    let vasa_result = serde_json::json!({
+        "monster_id": vasa.id,
+        "monster_name": vasa.name,
+        "expected_hits": expected_hits,
+        "expected_ticks": expected_ttk,
+        "expected_seconds": expected_seconds,
+        "combat_type": best_style_vasa.attack_type,
+        "attack_style": best_style_vasa.combat_style,
+        "kill_times": kill_times,
     });
-    
-    response.to_string()
-}
 
-/// Multiply a 1xN row vector by an NxN matrix (both row-major).
-fn row_vec_times_square_mat(row: &[f64], mat: &[f64], n: usize) -> Vec<f64> {
-    let mut out = vec![0.0; n];
-    // out[j] = sum_i row[i] * mat[i,j]
-    for i in 0..n {
-        let r = row[i];
-        if r == 0.0 { continue; }
-        let row_start = i * n;
-        for j in 0..n {
-            out[j] += r * mat[row_start + j];
-        }
-    }
-    out
-}
+    // Results for Crystal (example, you may want to use actual values for crystal)
+    let crystal_result = serde_json::json!({
+        "monster_id": crystal.id,
+        "monster_name": crystal.name,
+        "expected_hits": 0.0, // Replace with actual expected hits for crystal if available
+        "expected_ticks": 0.0, // Replace with actual expected ticks for crystal if available
+        "expected_seconds": 0.0, // Replace with actual expected seconds for crystal if available
+        "combat_type": best_style_crystal.attack_type,
+        "attack_style": best_style_crystal.combat_style,
+        "kill_times": Vec::<f64>::new(), // Replace with actual kill times for crystal if available
+    });
 
-/// Build transition matrix for a single-hit weapon:
-/// accuracy=a, max hit=m, hp.
-/// Returns row-major (hp+1) x (hp+1).
-fn single_matrix_internal(a: f64, m: usize, hp: usize) -> Vec<f64> {
-    let n = hp + 1;
-    let mut mat = vec![0.0f64; n * n];
+    let results = vec![vasa_result, crystal_result];
 
-    for i in 0..n {
-        let row_start = i * n;
+    // Encounter kill times (for plotting, etc.)
+    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob_by_tick.iter().enumerate()
+        .map(|(idx, &prob)| {
+            serde_json::json!({
+                "tick": tick_list[idx],
+                "probability": prob
+            })
+        })
+        .collect();
 
-        for j in 0..n {
-            // Diagonal: stay in same state on miss (except absorbing last column)
-            if j == i && j != hp {
-                mat[row_start + j] = 1.0 - a;
-            }
-            // Past diagonal up to i+m: uniform damage distribution (except absorbing col)
-            if j > i && j <= i + m && j != hp {
-                mat[row_start + j] = a / (m as f64);
-            }
-        }
+    let total_expected_hits = expected_hits;
+    let total_expected_ticks = expected_ttk;
+    let total_expected_seconds = expected_seconds;
 
-        // Final column j=hp gets the remaining probability mass, making rows sum to 1.
-        let mut sum = 0.0;
-        for j in 0..n {
-            sum += mat[row_start + j];
-        }
-        mat[row_start + (n - 1)] = 1.0 - sum;
-    }
-
-    mat
-}
-
-fn npc_state_internal(hp: usize) -> Vec<f64> {
-    let mut v = vec![0.0f64; hp + 1];
-    v[0] = 1.0;
-    v
-}
-
-/// Apply transition matrix `no_hits` times.
-fn hitting_basic_npc_internal(hp: usize, max_hit: usize, acc: f64, no_hits: usize) -> Vec<f64> {
-    let n = hp + 1;
-    let t = single_matrix_internal(acc, max_hit, hp);
-    let mut state = npc_state_internal(hp);
-    for _ in 0..no_hits {
-        state = row_vec_times_square_mat(&state, &t, n);
-    }
-    state
-}
-
-/// Distribution of P(dead) by number of hits, until cap is reached.
-/// Returns a Vec of cumulative death probabilities per hit index (0-based: after i hits).
-fn distribution_of_hits_to_kill_internal(hp: usize, max_hit: usize, acc: f64, cap: f64) -> Vec<f64> {
-    let n = hp + 1;
-    let t = single_matrix_internal(acc, max_hit, hp);
-    let mut state = npc_state_internal(hp);
-
-    let mut out = Vec::with_capacity(128);
-    let mut p_dead = state[n - 1];
-    out.push(p_dead);
-
-    while p_dead < cap {
-        state = row_vec_times_square_mat(&state, &t, n);
-        p_dead = state[n - 1];
-        out.push(p_dead);
-    }
-
-    out
-}
-
-/// Thrall matrix: accuracy 0.75, max hit 3
-fn thrall_matrix_internal(hp: usize) -> Vec<f64> {
-    single_matrix_internal(0.75, 3, hp)
-}
-
-/// Weapon+Thrall tick simulation:
-/// - weapon hits every 5th tick, starting at tick 1 (ticks: 1,6,11,...)
-/// - thrall hits every 4th tick, starting at tick 2 (ticks: 2,6,10,...)
-/// Returns cumulative P(dead) per tick, until cap hit.
-fn weapon_and_thrall_kill_times_internal(hp: usize, max_hit: usize, acc: f64, cap: f64) -> Vec<f64> {
-    let n = hp + 1;
-    let weapon = single_matrix_internal(acc, max_hit, hp);
-    let thrall = thrall_matrix_internal(hp);
-    let mut state = npc_state_internal(hp);
-
-    let mut out = Vec::with_capacity(512);
-    let mut p_dead = state[n - 1];
-    let mut tick: usize = 0;
-
-    while p_dead < cap {
-        tick += 1;
-
-        // weapon on ticks 1,6,11,... => tick % 5 == 1
-        if tick % 5 == 1 {
-            state = row_vec_times_square_mat(&state, &weapon, n);
-        }
-        // thrall on ticks 2,6,10,... => tick % 4 == 2
-        if tick % 4 == 2 {
-            state = row_vec_times_square_mat(&state, &thrall, n);
-        }
-
-        p_dead = state[n - 1];
-        out.push(p_dead);
-    }
-    out
-}
-
-// Keep existing functions for backward compatibility
-#[wasm_bindgen]
-pub fn single_matrix(a: f64, m: usize, hp: usize) -> Vec<f64> {
-    single_matrix_internal(a, m, hp)
-}
-
-#[wasm_bindgen]
-pub fn npc_state(hp: usize) -> Vec<f64> {
-    npc_state_internal(hp)
-}
-
-#[wasm_bindgen]
-pub fn hitting_basic_npc(hp: usize, max_hit: usize, acc: f64, no_hits: usize) -> Vec<f64> {
-    hitting_basic_npc_internal(hp, max_hit, acc, no_hits)
-}
-
-#[wasm_bindgen]
-pub fn distribution_of_hits_to_kill(hp: usize, max_hit: usize, acc: f64, cap: f64) -> Vec<f64> {
-    distribution_of_hits_to_kill_internal(hp, max_hit, acc, cap)
-}
-
-#[wasm_bindgen]
-pub fn weapon_and_thrall_kill_times(hp: usize, max_hit: usize, acc: f64, cap: f64) -> Vec<f64> {
-    weapon_and_thrall_kill_times_internal(hp, max_hit, acc, cap)
-}
-
-#[derive(Deserialize)]
-pub struct DPSPayload {
-    pub player: Player,
-    pub monster: Monster,
-    pub config: DPSConfig,
-}
-
-#[derive(Deserialize)]
-pub struct DPSConfig {
-    pub cap: f64,
-}
-// Custom deserializer for u32 that accepts string or int
-use serde::de::{self, Deserializer};
-fn from_str_or_int<'de, D>(deserializer: D) -> Result<u32, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    struct StringOrIntVisitor;
-    impl<'de> de::Visitor<'de> for StringOrIntVisitor {
-        type Value = u32;
-        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            formatter.write_str("a string or integer representing a u32")
-        }
-        fn visit_u64<E>(self, value: u64) -> Result<u32, E>
-        where
-            E: de::Error,
-        {
-            Ok(value as u32)
-        }
-        fn visit_str<E>(self, value: &str) -> Result<u32, E>
-        where
-            E: de::Error,
-        {
-            value.parse::<u32>().map_err(E::custom)
-        }
-    }
-    deserializer.deserialize_any(StringOrIntVisitor)
+    serde_json::json!({
+        "results": results,
+        "total_hits": total_expected_hits,
+        "total_expected_ticks": total_expected_ticks,
+        "total_expected_seconds": total_expected_seconds,
+        "encounter_kill_times": encounter_kill_times_obj,
+        "phase_results": phase_results,
+    }).to_string()
 }

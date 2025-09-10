@@ -2,22 +2,27 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { fadeInOut, slideInOut, hoverEffects } from '../utils/animations';
 import { cmMonsters, rooms, type Monster, type Room } from '../data/monsterStats';
+import { gearSetPresets } from '../data/gearTemplates';
 import './RoomSelection.css';
 
-interface SelectedRoomWithMonster extends Room {
+export interface SelectedRoomWithMonster extends Room {
     monster?: Monster;
 }
 
 interface RoomSelectionProps {
-    // setSelectedMonsters: React.Dispatch<React.SetStateAction<Monster[]>>;
-    selectedRooms: Room[];
-    setSelectedRooms: React.Dispatch<React.SetStateAction<Room[]>>;
+    selectedRooms: SelectedRoomWithMonster[];
+    setSelectedRooms: React.Dispatch<React.SetStateAction<SelectedRoomWithMonster[]>>;
+    selectedMethods: { [roomId: string]: string | null };
+    setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string | null }>>;
+    selectedPreset: string;
 }
 
 const RoomSelection: React.FC<RoomSelectionProps> = ({
-    // setSelectedMonsters,
     selectedRooms,
-    setSelectedRooms
+    setSelectedRooms,
+    selectedMethods,
+    setSelectedMethods,
+    selectedPreset
 }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -61,9 +66,12 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                 return prev.filter(r => r.id !== room.id);
             } else {
                 const monster = getMonsterByRoom(room);
+                // If only one method, default to empty array unless selected
+                const methods = room.methods && room.methods.length === 1 ? [] : room.methods;
                 const roomWithMonster: SelectedRoomWithMonster = {
                     ...room,
-                    monster
+                    monster,
+                    methods
                 };
                 return [...prev, roomWithMonster];
             }
@@ -71,10 +79,15 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
     };
 
     const selectAll = () => {
-        const roomsWithMonsters: SelectedRoomWithMonster[] = rooms.map(room => ({
-            ...room,
-            monster: getMonsterByRoom(room)
-        }));
+        const roomsWithMonsters: SelectedRoomWithMonster[] = rooms.map(room => {
+            const monster = getMonsterByRoom(room);
+            const methods = room.methods && room.methods.length === 1 ? [] : room.methods;
+            return {
+                ...room,
+                monster,
+                methods
+            };
+        });
         setSelectedRooms(roomsWithMonsters);
     };
 
@@ -100,6 +113,67 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    // Handler for method selection
+    const handleMethodSelect = (room: Room, method: string) => {
+        setSelectedMethods(prev => ({
+            ...prev,
+            [room.id]: prev[room.id] === method ? null : method
+        }));
+
+        setSelectedRooms(prevRooms => prevRooms.map(r => {
+            if (r.id !== room.id) return r;
+            const originalRoom = rooms.find(orig => orig.id === room.id);
+            const isSingleMethod = originalRoom && originalRoom.methods && originalRoom.methods.length === 1;
+            // If deselecting (toggle off)
+            if (selectedMethods[room.id] === method) {
+                if (isSingleMethod) {
+                    // For single-method rooms, set methods to []
+                    return { ...r, methods: [] };
+                } else {
+                    // For multi-method rooms, restore all methods
+                    return originalRoom ? { ...r, methods: originalRoom.methods } : r;
+                }
+            } else {
+                // Only keep the selected method
+                return { ...r, methods: [method] };
+            }
+        }));
+    };
+
+    useEffect(() => {
+        const selectedGearPreset = gearSetPresets.find(p => p.id === selectedPreset);
+        if (selectedGearPreset) {
+            const allowedRoomIds = selectedGearPreset.rooms.map(r => r.id);
+            const presetRooms: SelectedRoomWithMonster[] = rooms
+                .filter(room => allowedRoomIds.includes(room.id))
+                .map(room => {
+                    const presetRoom = selectedGearPreset.rooms.find(r => r.id === room.id);
+                    let methods: string[] = [];
+                    if (presetRoom?.method) {
+                        methods = [presetRoom.method];
+                    } else if (room.methods && room.methods.length > 1) {
+                        methods = room.methods;
+                    } // else leave as []
+                    return {
+                        ...room,
+                        monster: getMonsterByRoom(room),
+                        methods
+                    };
+                });
+            setSelectedRooms(presetRooms);
+
+            // Set selectedMethods if method is specified
+            const newSelectedMethods: { [roomId: string]: string | null } = {};
+            selectedGearPreset.rooms.forEach(r => {
+                if (r.method) newSelectedMethods[r.id] = r.method;
+            });
+            setSelectedMethods(newSelectedMethods);
+        } else {
+            setSelectedRooms([]);
+            setSelectedMethods({});
+        }
+    }, [selectedPreset]);
 
     return (
         <section id="rooms" className="section">
@@ -193,6 +267,7 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                                                 </motion.div>
                                             ))}
                                         </AnimatePresence>
+
                                     </div>
                                 </motion.div>
                             ) : (
@@ -265,7 +340,34 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                             )}
                         </AnimatePresence>
                     </motion.div>
+                    {selectedRooms.map(room => {
+                        // Find the original room definition
+                        const originalRoom = rooms.find(orig => orig.id === room.id);
+                        // If the original room has only one method, show the button for it even if methods is empty
+                        const showSingleMethod = originalRoom && originalRoom.methods && originalRoom.methods.length === 1;
+                        const methodsToShow = (room.methods && room.methods.length > 0)
+                            ? room.methods
+                            : (showSingleMethod ? originalRoom.methods : []);
+                        return (
+                            <div key={room.id} className="selected-room-methods">
+                                {methodsToShow && methodsToShow.length > 0 && (
+                                    <div className="room-method-buttons">
+                                        {methodsToShow.map(method => (
+                                            <button
+                                                key={method}
+                                                className={`method-tab${selectedMethods[room.id] === method ? ' active' : ''}`}
+                                                onClick={() => handleMethodSelect(room, method)}
+                                            >
+                                                {method}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </motion.div>
+                
             </div>
         </section>
     );

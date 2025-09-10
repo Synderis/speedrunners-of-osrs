@@ -241,7 +241,7 @@
 }
 
 .plot-tabs {
-  display: flex;
+  display: block;
   justify-content: center;
   gap: 2rem;
   margin: 0 0 1rem 0;
@@ -308,4 +308,21 @@
   .config-type {
     text-align: center;
   }
+}
+
+
+.monster-tab {
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 4.8px;
+    background: rgba(255, 255, 255, 0.1);
+    font-weight: 500;
+    color: inherit;
+    cursor: pointer;
+    transition: border 0.2s, background 0.2s, color 0.2s;
+}
+
+.monster-tab.active {
+    border: 2px solid #3b82f6;
+    background: rgba(59, 130, 246, 0.08);
+    color: #3b82f6;
 }
