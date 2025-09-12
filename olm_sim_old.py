@@ -48,50 +48,53 @@ def ensure_weapon_swap(player, weapon, equip_offhand=None):
                 gear_items.append(equip_offhand)
             return player, current_weapon["name"], current_offhand
 
-def phase_loop(hp, phase_type, attack_tick, attack_speed, style_dict, total_ticks, burning_ticks):
-    burn_cd = 0
+
+# def phase_loop(hp, attack_tick, attack_speed, accuracy, max_hit, hit_counter_bounds, total_ticks):
+#     hit_counter = 0
+#     while hit_counter <= hit_counter_bounds[0] or hit_counter < hit_counter_bounds[1]:
+#         attack_tick += 1
+#         if (attack_tick - 1) % attack_speed == 0:
+#             # print(f"[Sim] Vasa attack: tick={attack_tick - 1}, hp={hp}")
+#             if np.random.rand() < accuracy:
+#                 hit = np.random.randint(0, max_hit + 1)
+#             else:
+#                 hit = 0
+#             hp -= hit
+#             hit_counter += 1
+#             # print(f"[Sim] Vasa hits for {hit}, hp={hp}, hit_counter={hit_counter}")
+#         if hp <= 0:
+#             total_ticks += (attack_tick - 1)
+#             break
+#         if (attack_tick - 1) % 4 == 0:
+#             # print(f"[Sim] Thrall attack: tick={attack_tick - 1}, hp={hp}")
+#             hit = np.random.randint(0, 4)
+#             hp -= hit
+#         if hp <= 0:
+#             total_ticks += (attack_tick - 1) 
+#             break
+#     attack_tick += attack_speed
+#     return hp, attack_tick, hit_counter, total_ticks
+
+def phase_loop(hp, attack_tick, attack_speed, accuracy, max_hit, total_ticks):
     while hp > 0:
         attack_tick += 1
-        if burn_cd > 0 and burning_ticks == 0:
-            burn_cd -= 1
-        if burning_ticks > 0:
-            burning_ticks -= 1
-        if burning_ticks > 0:
-            probs = [0.18045, 0.40308, 0.2966, 0.11987]
-            values = [99, 97, 95, 93]
-            selected_value = np.random.choice(values, p=probs)
-        else:
-            selected_value = 99
         if (attack_tick - 1) % attack_speed == 0:
-            if np.random.rand() < style_dict[selected_value]["accuracy"]:
-                hit = np.random.randint(0, style_dict[selected_value]["max_hit"] + 1)
+            if np.random.rand() < accuracy:
+                hit = np.random.randint(0, max_hit + 1)
             else:
                 hit = 0
             hp -= hit
-            
         if hp <= 0:
             total_ticks += (attack_tick - 1)
             break
         if (attack_tick - 1) % 4 == 0:
-            if phase_type == 'flame' and burn_cd == 0:
-                if np.random.randint(1, 13) == 1:
-                    burning_ticks = 48
-                    burn_cd = 24
-                else:
-                    burn_cd = 24
-            if phase_type == 'p3' and burn_cd == 0:
-                if np.random.randint(1, 49) == 1:
-                    burning_ticks = 48
-                    burn_cd = 24
-                else:
-                    burn_cd = 24
             hit = np.random.randint(0, 4)
             hp -= hit
         if hp <= 0:
             total_ticks += (attack_tick - 1) 
             break
     attack_tick += attack_speed - 1
-    return attack_tick, burning_ticks
+    return attack_tick
 
 if __name__ == "__main__":
     import time
@@ -103,35 +106,16 @@ if __name__ == "__main__":
     player = payload["player"]
     room = payload["room"]
     monsters = room["monsters"]
-    melee_style_dict = {}
-    mage_style_dict = {}
-    ranged_style_dict = {}
-    melee_specced_style_dict = {}
-    
     best_style_mage = find_best_combat_style(player, monsters[0], "mage")
-    # melee_style_dict[99] = find_best_combat_style(player, monsters[1], "melee")
-    for lvl in [99, 97, 95, 93]:
-        temp_player = copy.deepcopy(player)
-        for stat in temp_player['combatStats']:
-            temp_player["combatStats"][stat] = lvl
-        melee_style_dict[lvl] = find_best_combat_style(temp_player, monsters[1], "melee")
-        mage_style_dict[lvl] = find_best_combat_style(temp_player, monsters[0], "mage")
-        ranged_style_dict[lvl] = find_best_combat_style(temp_player, monsters[2], "ranged")
+    best_style_melee = find_best_combat_style(player, monsters[1], "melee")
     melee_hand = copy.deepcopy(monsters[1])
     melee_hand_specced = copy.deepcopy(monsters[1])
     melee_hand_specced['skills']['def'] = melee_hand_specced['skills']['def'] * 0.65
     player, swapped_weapon, swapped_offhand = ensure_weapon_swap(player, "Elder maul")
     best_style_melee_spec = find_best_combat_style(player, melee_hand, "melee")
     player, _, _ = ensure_weapon_swap(player, swapped_weapon, swapped_offhand)
-    # best_style_melee_specced = find_best_combat_style(player, melee_hand_specced, "melee")
-    for lvl in [99, 97, 95, 93]:
-        temp_player = copy.deepcopy(player)
-        for stat in temp_player['combatStats']:
-            temp_player["combatStats"][stat] = lvl
-        melee_specced_style_dict[lvl] = find_best_combat_style(temp_player, melee_hand_specced, "melee")
-    # best_style_ranged = find_best_combat_style(player, monsters[2], "ranged")
-    print(f"[Sim] Best styles determined:")
-    # exit()
+    best_style_melee_specced = find_best_combat_style(player, melee_hand_specced, "melee")
+    best_style_ranged = find_best_combat_style(player, monsters[2], "ranged")
 
 
 
@@ -149,20 +133,7 @@ if __name__ == "__main__":
     for _ in range(trials):
         encounter_ticks = 0
         total_ticks = 0
-        burning_ticks = 0
         for phase in range(3):
-            phase_dict = {}
-            if np.random.rand() < 0.5:
-                phase_dict['side'] = 'east'
-            else:
-                phase_dict['side'] = 'west'
-            if phase == 2:
-                phase_type = "p3"
-            else:
-                if np.random.rand() < 1/3:
-                    phase_type = "flame"
-                else:
-                    phase_type = "other"
             phase_ticks = 0
             mage_hp = monsters[0]["skills"]["hp"]
             melee_hp = monsters[1]["skills"]["hp"]
@@ -172,10 +143,7 @@ if __name__ == "__main__":
             mage_ticks = 0
             ranged_ticks = 0
             delay_list = [22, 38, 39]  # Initial delay and intermission delays
-            if phase_dict['side'] == 'east':
-                mage_ticks, burning_ticks = phase_loop(mage_hp, 'other', attack_tick, 5, mage_style_dict, total_ticks, burning_ticks)
-            else:
-                mage_ticks, burning_ticks = phase_loop(mage_hp, 'other', attack_tick, 5, mage_style_dict, total_ticks, burning_ticks)
+            mage_ticks = phase_loop(mage_hp, attack_tick, 5, best_style_mage["accuracy"], best_style_mage["max_hit"], total_ticks)
 
             if np.random.rand() < best_style_melee_spec["accuracy"]:
                 hit = np.random.randint(0, best_style_melee_spec["max_hit"] + 1)
@@ -185,9 +153,9 @@ if __name__ == "__main__":
             melee_hp -= hit
 
             if spec_hit == True:
-                melee_ticks, burning_ticks = phase_loop(melee_hp, phase_type, attack_tick, 5, melee_specced_style_dict, total_ticks, burning_ticks)
+                melee_ticks = phase_loop(melee_hp, attack_tick, 5, best_style_melee_specced["accuracy"], best_style_melee_specced["max_hit"], total_ticks)
             else:
-                melee_ticks, burning_ticks = phase_loop(melee_hp, phase_type, attack_tick, 5, melee_style_dict, total_ticks, burning_ticks)
+                melee_ticks = phase_loop(melee_hp, attack_tick, 5, best_style_melee["accuracy"], best_style_melee["max_hit"], total_ticks)
             melee_ticks += 6
             total_ticks += delay_list[phase]
 
@@ -203,13 +171,13 @@ if __name__ == "__main__":
 
 
         ranged_hp = monsters[2]["skills"]["hp"]
-        ranged_ticks, burning_ticks = phase_loop(ranged_hp, 'other', attack_tick, 5, ranged_style_dict, total_ticks, burning_ticks)
-        phase_ticks = melee_ticks + mage_ticks + ranged_ticks
+        ranged_ticks = phase_loop(ranged_hp, attack_tick, 5, best_style_ranged["accuracy"], best_style_ranged["max_hit"], total_ticks)
+        phase_ticks = melee_ticks + mage_ticks
         phase_list.append(phase_ticks)
         melee_list.append(melee_ticks)
         mage_list.append(mage_ticks)
         ranged_list.append(ranged_ticks)
-        total_ticks += phase_ticks
+        total_ticks += phase_ticks + ranged_ticks
 
         if total_ticks % 4 != 0:
             total_ticks += 4 - (total_ticks % 4)

@@ -217,7 +217,7 @@ def calculate_max_hit_for_style(player, monster, style, gear, gear_type="ranged"
 def calculate_accuracy_for_style(player, monster, style, gear, gear_type="ranged"):
     if gear_type == "melee":
         attack_level = player["combatStats"]["attack"]
-        potion_bonus = 21.0
+        potion_bonus = int(attack_level * (16/100)) + 6
         prayer_bonus = 1.20
         style_bonus = style.get("att", 0)
         void_bonus = 1.0
@@ -229,7 +229,7 @@ def calculate_accuracy_for_style(player, monster, style, gear, gear_type="ranged
         max_defence_roll = (monster["skills"]["def"] + 9) * (defence_bonus + 64)
     elif gear_type == "ranged":
         attack_level = player["combatStats"]["ranged"]
-        potion_bonus = 21.0
+        potion_bonus = int(attack_level * (16/100)) + 6
         prayer_bonus = 1.20
         style_bonus = style.get("ranged", 0)
         void_bonus = 1.0
@@ -250,7 +250,7 @@ def calculate_accuracy_for_style(player, monster, style, gear, gear_type="ranged
             # print(f"Ranged max attack roll: {max_attack_roll}")
     elif gear_type == "mage":
         attack_level = player["combatStats"]["magic"]
-        potion_bonus = 21.0
+        potion_bonus = int(attack_level * (16/100)) + 6
         prayer_bonus = 1.25
         style_bonus = style.get("magic", 0)
         effective_attack = int(((attack_level + potion_bonus) * prayer_bonus + style_bonus + 8.0))

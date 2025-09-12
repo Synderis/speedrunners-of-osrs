@@ -572,7 +572,7 @@ export const cmMonsters: Monster[] = [
     },
     {
         "id": 7554,
-        "name": "Great Olm",
+        "name": "Head",
         "version": "Head (Challenge Mode)",
         "image": "Great Olm.png",
         "level": 1043,
@@ -623,11 +623,11 @@ export const cmMonsters: Monster[] = [
     },
     {
         "id": 7555,
-        "name": "Great Olm",
+        "name": "Melee Hand",
         "version": "Left claw (Challenge Mode)",
         "image": "Great Olm.png",
         "level": 750,
-        "speed": -1,
+        "speed": 0,
         "style": [
             "None"
         ],
@@ -673,11 +673,11 @@ export const cmMonsters: Monster[] = [
     },
     {
         "id": 7553,
-        "name": "Great Olm",
+        "name": "Mage Hand",
         "version": "Right claw (Challenge Mode)",
         "image": "Great Olm.png",
         "level": 549,
-        "speed": -1,
+        "speed": 0,
         "style": [
             "None"
         ],
