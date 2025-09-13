@@ -720,6 +720,144 @@ export const cmMonsters: Monster[] = [
             "element": "earth",
             "severity": 50
         }
+    },
+    {
+        "id": 7529,
+        "name": "Vanguard (magic)",
+        "version": "Magic",
+        "image": "Vanguard (magic).png",
+        "level": 0,
+        "speed": 4,
+        "style": [
+            "Magic"
+        ],
+        "size": 3,
+        "max_hit": 22,
+        "skills": {
+            "atk": 225,
+            "def": 240,
+            "hp": 270,
+            "magic": 225,
+            "ranged": 225,
+            "str": 225
+        },
+        "offensive": {
+            "atk": 0,
+            "magic": 40,
+            "magic_str": 25,
+            "ranged": 0,
+            "ranged_str": 0,
+            "str": 0
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 400,
+            "magic": 110,
+            "heavy": 50,
+            "standard": 50,
+            "light": 50,
+            "slash": 340,
+            "stab": 315
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": null
+    },
+    {
+        "id": 7527,
+        "name": "Vanguard (melee)",
+        "version": "Melee",
+        "image": "Vanguard (melee).png",
+        "level": 0,
+        "speed": 4,
+        "style": [
+            "Melee"
+        ],
+        "size": 3,
+        "max_hit": 18,
+        "skills": {
+            "atk": 225,
+            "def": 240,
+            "hp": 270,
+            "magic": 225,
+            "ranged": 225,
+            "str": 225
+        },
+        "offensive": {
+            "atk": 20,
+            "magic": 0,
+            "magic_str": 0,
+            "ranged": 0,
+            "ranged_str": 0,
+            "str": 10
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 150,
+            "magic": 20,
+            "heavy": 400,
+            "standard": 400,
+            "light": 400,
+            "slash": 150,
+            "stab": 150
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": null
+    },
+    {
+        "id": 7528,
+        "name": "Vanguard (ranged)",
+        "version": "Ranged",
+        "image": "Vanguard (ranged).png",
+        "level": 0,
+        "speed": 4,
+        "style": [
+            "Ranged"
+        ],
+        "size": 3,
+        "max_hit": 22,
+        "skills": {
+            "atk": 225,
+            "def": 240,
+            "hp": 270,
+            "magic": 225,
+            "ranged": 225,
+            "str": 225
+        },
+        "offensive": {
+            "atk": 0,
+            "magic": 0,
+            "magic_str": 0,
+            "ranged": 40,
+            "ranged_str": 25,
+            "str": 0
+        },
+        "defensive": {
+            "flat_armour": 0,
+            "crush": 100,
+            "magic": 400,
+            "heavy": 300,
+            "standard": 300,
+            "light": 300,
+            "slash": 60,
+            "stab": 55
+        },
+        "attributes": [
+            "xerician"
+        ],
+        "immunities": {
+            "burn": null
+        },
+        "weakness": null
     }
 ];
 
@@ -766,11 +904,11 @@ export const rooms: Room[] = [
         methods: []
     },
     {
-        id: 'vanguards',
+        id: 'vangs',
         name: 'Vanguards',
         image: '/rooms/280px-Vanguard_(magic).webp',
         description: 'God Wars Dungeon - Zamorak',
-        monsters: ['vanguard'],
+        monsters: ['7527', '7528', '7529'],
         methods: []
     },
     {

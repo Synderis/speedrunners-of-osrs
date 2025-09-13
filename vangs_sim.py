@@ -112,37 +112,6 @@ def can_attack_vang(vang_hps, idx, max_hit, threshold=0.4, hp_reset_threshold=10
         return False
     return True
 
-# def vang_sim_loop(vang_hps, max_hit, accuracy, threshold=0.4, hp_reset_threshold=108):
-#     full_hp = max(vang_hps)
-#     tick = 0
-#     while any(hp > 0 for hp in vang_hps):
-#         # Choose which Vanguard to attack: try lowest HP above 0, but skip if would cause reset
-#         attack_idx = None
-#         for idx, hp in sorted(enumerate(vang_hps), key=lambda x: x[1]):
-#             if hp > 0 and can_attack_vang(vang_hps, idx, max_hit, threshold, hp_reset_threshold):
-#                 attack_idx = idx
-#                 break
-#         if attack_idx is None:
-#             # If no safe attack, just attack the lowest HP one
-#             attack_idx = min((i for i, hp in enumerate(vang_hps) if hp > 0), key=lambda i: vang_hps[i])
-#         # Perform attack
-#         if np.random.rand() < accuracy:
-#             hit = np.random.randint(0, max_hit + 1)
-#         else:
-#             hit = 0
-#         vang_hps[attack_idx] = max(0, vang_hps[attack_idx] - hit)
-#         tick += 1
-#         # After attack, check for reset (unless all are below threshold)
-#         if not all(hp < hp_reset_threshold for hp in vang_hps):
-#             min_hp = min(vang_hps)
-#             max_hp_val = max(vang_hps)
-#             if max_hp_val > 0 and (max_hp_val - min_hp) / max_hp_val > threshold:
-#                 vang_hps = [full_hp, full_hp, full_hp]
-#         # Optionally: break if infinite loop detected (shouldn't happen)
-#         if tick > 1000:
-#             break
-#     return tick
-
 if __name__ == "__main__":
     import time
     start_time = time.time()
@@ -155,16 +124,7 @@ if __name__ == "__main__":
     monsters = room["monsters"]
     best_style_mage = find_best_combat_style(player, monsters[0], "mage")
     best_style_melee = find_best_combat_style(player, monsters[1], "melee")
-    melee_hand = copy.deepcopy(monsters[1])
-    melee_hand_specced = copy.deepcopy(monsters[1])
-    melee_hand_specced['skills']['def'] = melee_hand_specced['skills']['def'] * 0.65
-    player, swapped_weapon, swapped_offhand = ensure_weapon_swap(player, "Elder maul")
-    best_style_melee_spec = find_best_combat_style(player, melee_hand, "melee")
-    player, _, _ = ensure_weapon_swap(player, swapped_weapon, swapped_offhand)
-    best_style_melee_specced = find_best_combat_style(player, melee_hand_specced, "melee")
     best_style_ranged = find_best_combat_style(player, monsters[2], "ranged")
-
-
 
     # Simulation for empirical TTK and cumulative kill probability
     trials = 100000
@@ -177,35 +137,18 @@ if __name__ == "__main__":
     ranged_list = []
     teleports = []
     total_immune_ticks = []
-    combat_ticks_list = []
-    max_hits = [
-        best_style_mage["max_hit"],
-        best_style_melee["max_hit"],
-        best_style_ranged["max_hit"]
-    ]
-    accuracies = [
-        best_style_mage["accuracy"],
-        best_style_melee["accuracy"],
-        best_style_ranged["accuracy"]
-    ]
-    attack_speeds = [
-        player['gearSets']['mage']['selectedWeapon']['speed'],
-        player['gearSets']['melee']['selectedWeapon']['speed'],
-        player['gearSets']['ranged']['selectedWeapon']['speed']
-    ]
-    print(f"Max Hits: {max_hits}")
-    print(f"Accuracies: {accuracies}")
-    print(f"Attack Speeds: {attack_speeds}")
+    # combat_ticks_list = []
 
     print(f"[Sim] Starting simulation with {trials} trials...")
-    for _ in range(trials):
+    debug_trials = []
+    debug_trial_count = 3
+    for trial_idx in range(trials):
         encounter_ticks = 0
         total_ticks = 0
         mage_hp = 270
         melee_hp = 270
         ranged_hp = 270
         hp_reset_threshold = 108
-        # Each Vanguard gets its own style
         vang_hps = [mage_hp, melee_hp, ranged_hp]
         max_hits = [
             best_style_mage["max_hit"],
@@ -218,51 +161,56 @@ if __name__ == "__main__":
             best_style_ranged["accuracy"]
         ]
         attack_speeds = [
-            player['gearSets']['mage']['selectedWeapon']['speed'],
-            player['gearSets']['melee']['selectedWeapon']['speed'],
-            5
+            best_style_mage["attack_speed"],
+            best_style_melee["attack_speed"],
+            best_style_ranged["attack_speed"]
         ]
-        
+        initial_delay = 24
         tick = 0
-        cooldown = 0  # When the player can next attack
+        cooldown = 0
         full_hp = max(vang_hps)
-        tick_history = []
         immune_ticks_left = 0
         next_teleport = 20
         teleport = 0
         immune_ticks = 0
-        combat_ticks = 0
-        
+        debug_tick_log = []
         while any(hp > 0 for hp in vang_hps):
             ko_this_tick = False
             prev_vang_hps = vang_hps.copy()
-
             # Handle teleport/immune phase
             if immune_ticks_left > 0:
+                debug_tick_log.append({
+                    "tick": tick,
+                    "vang_hps": vang_hps.copy(),
+                    "immune_ticks_left": immune_ticks_left,
+                    "next_teleport": next_teleport,
+                    "teleport": teleport,
+                    "cooldown": cooldown,
+                    "event": "immune"
+                })
                 immune_ticks_left -= 1
                 immune_ticks += 1
                 tick += 1
-                tick_history.append({
-                    "tick": tick,
-                    "vang_hps": vang_hps.copy(),
-                    "cooldown": cooldown,
-                    "immune": True
-                })
-                if len(tick_history) > 10:
-                    tick_history.pop(0)
                 continue
-
             # Only check for teleport if not in immune phase
             if tick >= next_teleport:
+                debug_tick_log.append({
+                    "tick": tick,
+                    "vang_hps": vang_hps.copy(),
+                    "immune_ticks_left": immune_ticks_left,
+                    "next_teleport": next_teleport,
+                    "teleport": teleport,
+                    "cooldown": cooldown,
+                    "event": "teleport"
+                })
                 teleport += 1
-                # print(f"Teleport at tick {tick}, Vang HPs: {vang_hps}")
                 immune_ticks_left = 11
                 next_teleport += immune_ticks_left + np.random.randint(20, 37)
-                continue  # Start immune phase, skip combat this tick
-            
+                continue
+            attack_idx = None
+            hit = 0
             if tick >= cooldown:
                 ready_idxs = [i for i, hp in enumerate(vang_hps) if hp > 0]
-                attack_idx = None
                 for idx in sorted(ready_idxs, key=lambda i: -vang_hps[i]):
                     if can_attack_vang(vang_hps, idx, max_hits[idx], 0.4, hp_reset_threshold):
                         attack_idx = idx
@@ -277,33 +225,26 @@ if __name__ == "__main__":
                     if prev_hp > 0 and vang_hps[attack_idx] == 0:
                         ko_this_tick = True
                     cooldown = tick + attack_speeds[attack_idx]
-
-            tick_history.append({
+            debug_tick_log.append({
                 "tick": tick,
                 "vang_hps": vang_hps.copy(),
+                "immune_ticks_left": immune_ticks_left,
+                "next_teleport": next_teleport,
+                "teleport": teleport,
                 "cooldown": cooldown,
-                "immune": False
+                "attack_idx": attack_idx,
+                "hit": hit,
+                "event": "attack_or_idle"
             })
-            if len(tick_history) > 10:
-                tick_history.pop(0)
-
             tick += 1
-            combat_ticks += 1
-
-            if not all(hp < hp_reset_threshold for hp in vang_hps):
-                min_hp = min(vang_hps)
-                max_hp_val = max(vang_hps)
-                reset_threshold = 0.4 * 270
-                if max_hp_val > 0 and (max_hp_val - min_hp) > reset_threshold and not ko_this_tick:
-                    print("Previous 10 ticks before reset:")
-                    for entry in tick_history:
-                        print(f"Tick {entry['tick']}: Vang HPs: {entry['vang_hps']}, cooldown: {entry['cooldown']}, immune: {entry['immune']}")
-                    print(f"Reset at tick {tick}: {vang_hps}")
-                    vang_hps = [full_hp, full_hp, full_hp]
-        combat_ticks_list.append(combat_ticks)
         total_immune_ticks.append(immune_ticks)
         teleports.append(teleport)
-        tick_counts.append(tick)
+        tick_counts.append(tick + initial_delay)
+        if trial_idx < debug_trial_count:
+            debug_trials.append(debug_tick_log)
+    # Save debug output for first 3 trials
+    # with open("vangs_debug_trials_from_PYTHON.json", "w") as f:
+    #     json.dump(debug_trials, f, indent=2)
 
         # if total_ticks % 4 != 0:
         #     total_ticks += 4 - (total_ticks % 4)
@@ -322,7 +263,7 @@ if __name__ == "__main__":
     # mage_list_mean = np.mean(mage_list)
     # ranged_list_mean = np.mean(ranged_list)
     # phase_list_mean = np.mean(phase_list)
-    combat_ticks_list_mean = np.mean(combat_ticks_list)
+    # combat_ticks_list_mean = np.mean(combat_ticks_list)
     immune_ticks_mean = np.mean(total_immune_ticks)
     teleports_mean = np.mean(teleports)
     mean_ttk = np.mean(tick_counts)
@@ -330,8 +271,8 @@ if __name__ == "__main__":
 
     print(f"[Sim] Trials: {trials}")
     print(f"Expected TTK: {mean_ttk:.2f} ticks ({mean_ttk * 0.6:.2f} seconds)")
-    print(f"Combat ticks: {combat_ticks_list_mean:.2f} ticks ({combat_ticks_list_mean * 0.6:.2f} seconds)")
-    print(f"Teleports: {teleports_mean:.2f} ticks ({teleports_mean * 0.6:.2f} seconds)")
+    # print(f"Combat ticks: {combat_ticks_list_mean:.2f} ticks ({combat_ticks_list_mean * 0.6:.2f} seconds)")
+    print(f"Teleports: {teleports_mean:.2f}")
     print(f"Immune ticks: {immune_ticks_mean:.2f} ticks ({immune_ticks_mean * 0.6:.2f} seconds)")
     # print(f"Phase average ticks: {phase_list_mean:.2f} ticks ({phase_list_mean * 0.6:.2f} seconds)")
     # print(f"Melee average ticks: {melee_list_mean:.2f} ticks ({melee_list_mean * 0.6:.2f} seconds)")

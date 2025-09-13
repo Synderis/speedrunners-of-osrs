@@ -118,7 +118,6 @@ fn sim_freeze_mutta(
         mut total_ticks: i32,
         mut hp_mutta: i32,
         mutta: &Monster,
-        attack_small_mutta: i32,
         best_style_mutta: &StyleResult,
         zgs_best_style: &StyleResult,
         rng: &mut ThreadRng,
@@ -129,7 +128,7 @@ fn sim_freeze_mutta(
         } else {
             0
         };
-        total_ticks += attack_small_mutta;
+        total_ticks += best_style_mutta.attack_speed as i32;
         hp_mutta -= hit;
     }
 
@@ -148,7 +147,7 @@ fn sim_freeze_mutta(
         } else {
             0
         };
-        total_ticks += attack_small_mutta;
+        total_ticks += best_style_mutta.attack_speed as i32;
         hp_mutta -= hit;
     }
     total_ticks
@@ -158,7 +157,6 @@ fn sim_chop_tree(
         mut total_ticks: i32, 
         mut tree_hp: i32, 
         tree_accuracy: f64, 
-        attack_speed_small_mutta: i32, 
         mut hp_small_mutta: i32, 
         base_small_mutta_hp: i32, 
         best_style_small_mutta: &StyleResult, 
@@ -183,10 +181,10 @@ fn sim_chop_tree(
         if tree_hp < 0 {
             break;
         }
-        total_ticks += attack_speed_small_mutta;
+        total_ticks += best_style_small_mutta.attack_speed as i32;
     }
     let phase_ticks = total_ticks;
-    total_ticks += attack_speed_small_mutta;
+    total_ticks += best_style_small_mutta.attack_speed as i32;
     // Finish off small mutta
     while hp_small_mutta > 0 {
         let hit = if rng.gen::<f64>() < best_style_small_mutta.accuracy {
@@ -194,7 +192,7 @@ fn sim_chop_tree(
         } else {
             0
         };
-        total_ticks += attack_speed_small_mutta;
+        total_ticks += best_style_small_mutta.attack_speed as i32;
         hp_small_mutta -= hit;
     }
     (total_ticks, (phase_ticks + 1) as i32)
@@ -260,12 +258,12 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
         let mut tree_hp = base_tree_hp;
         let mut total_ticks = 0;
         if has_zgs {
-            total_ticks = sim_freeze_mutta(&player, total_ticks, hp_small_mutta, &monsters[0], attack_speed_small_mutta, &best_style_small_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
+            total_ticks = sim_freeze_mutta(&player, total_ticks, hp_small_mutta, &monsters[0], &best_style_small_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
             total_ticks += 9;
-            total_ticks = sim_freeze_mutta(&player, total_ticks, hp_large_mutta, &monsters[1], attack_speed_large_mutta, &best_style_large_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
+            total_ticks = sim_freeze_mutta(&player, total_ticks, hp_large_mutta, &monsters[1], &best_style_large_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
             phase_results[i] = 0;
         } else {
-            let (new_total_ticks, phase_ticks) = sim_chop_tree(&player, total_ticks, tree_hp, tree_accuracy, attack_speed_small_mutta, hp_small_mutta, base_small_mutta_hp, &best_style_small_mutta, &mut rng);
+            let (new_total_ticks, phase_ticks) = sim_chop_tree(&player, total_ticks, tree_hp, tree_accuracy, hp_small_mutta, base_small_mutta_hp, &best_style_small_mutta, &mut rng);
             phase_results[i] = phase_ticks;
             total_ticks = new_total_ticks;
             total_ticks += 9;

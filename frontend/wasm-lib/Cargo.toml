@@ -8,6 +8,7 @@ members = [
     "mystics",
     "shamans",
     "mutta",
+    "vangs",
     "olm",
     "osrs_shared_types",
     "osrs_shared_functions"

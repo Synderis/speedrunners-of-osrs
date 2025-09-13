@@ -79,24 +79,12 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
     let vasa_base_hp = vasa.skills.hp as usize;
     let vasa_max_hit = best_style_vasa.max_hit as usize;
     let vasa_accuracy = best_style_vasa.accuracy;
-    let vasa_attack_speed = if let Some(weapon) = &player.gear_sets.ranged.selected_weapon {
-        if best_style_vasa.combat_style == "Aggressive" {
-            (weapon.speed - 1) as usize
-        } else {
-            5
-        }
-    } else {
-        5
-    };
+    let vasa_attack_speed = best_style_vasa.attack_speed as usize;
 
     let crystal_base_hp = crystal.skills.hp as usize;
     let crystal_max_hit = best_style_crystal.max_hit as usize;
     let crystal_accuracy = best_style_crystal.accuracy;
-    let crystal_attack_speed = if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
-        weapon.speed as usize
-    } else {
-        5
-    };
+    let crystal_attack_speed = best_style_crystal.attack_speed as usize;
     let mut phase_results: Vec<usize> = vec![0; trials];
     let mut tick_counts: Vec<usize> = vec![0; trials];
     let base_max_attacks_crystal = 70;

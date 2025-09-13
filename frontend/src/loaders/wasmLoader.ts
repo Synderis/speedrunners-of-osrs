@@ -47,6 +47,7 @@ export const createWasmDpsLoader = (
                 throw new Error(parsedResult.error);
             }
             console.log("WASM parsed result:", parsedResult.results);
+            // console.log("WASM parsed encounter kill times:", parsedResult.debug_trials);
 
             const tickData: PlotDataPoint[] = (parsedResult.encounter_kill_times || []).map((pt: any) => ({
                 time: pt.tick,

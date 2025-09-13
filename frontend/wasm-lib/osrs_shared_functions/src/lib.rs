@@ -137,9 +137,9 @@ pub fn calculate_max_hit_for_style(
     };
 
     let potion_bonus = if monster.name == "Tekton" {
-        19.0
+        (level * 15.0 / 100.0).floor() as f64 + 5.0
     } else {
-        21.0
+        (level * 16.0 / 100.0).floor() as f64 + 6.0
     };
 
     let void_bonus = 0.0; // No void for now

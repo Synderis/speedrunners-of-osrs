@@ -1533,161 +1533,148 @@
         ]
     },
     "room": {
-        "id": "olm",
-        "name": "Olm",
-        "image": "/rooms/300px-Great_Olm.webp",
-        "description": "High-level boss encounter",
+        "id": "vangs",
+        "name": "Vanguards",
+        "image": "/rooms/280px-Vanguard_(magic).webp",
+        "description": "God Wars Dungeon - Zamorak",
         "monsters": [
             {
-                "id": 7553,
-                "name": "Great Olm",
-                "version": "Right claw (Challenge Mode)",
-                "image": "Great Olm.png",
-                "level": 549,
-                "speed": -1,
+                "id": 7527,
+                "name": "Vanguard",
+                "version": "Melee",
+                "image": "Vanguard (melee).png",
+                "level": 0,
+                "speed": 4,
                 "style": [
-                    "None"
+                    "Melee"
                 ],
-                "size": 5,
-                "max_hit": 0,
+                "size": 3,
+                "max_hit": 18,
                 "skills": {
-                    "atk": 375,
+                    "atk": 225,
                     "def": 240,
-                    "hp": 600,
+                    "hp": 270,
                     "magic": 225,
-                    "ranged": 375,
-                    "str": 375
+                    "ranged": 225,
+                    "str": 225
                 },
                 "offensive": {
-                    "atk": 0,
-                    "magic": 60,
+                    "atk": 20,
+                    "magic": 0,
                     "magic_str": 0,
-                    "ranged": 60,
+                    "ranged": 0,
                     "ranged_str": 0,
-                    "str": 0
+                    "str": 10
                 },
                 "defensive": {
                     "flat_armour": 0,
-                    "crush": 200,
+                    "crush": 150,
                     "magic": 20,
-                    "heavy": 200,
-                    "standard": 200,
-                    "light": 150,
+                    "heavy": 400,
+                    "standard": 400,
+                    "light": 400,
                     "slash": 150,
                     "stab": 150
                 },
                 "attributes": [
-                    "dragon",
                     "xerician"
                 ],
                 "immunities": {
                     "burn": null
                 },
-                "weakness": {
-                    "element": "earth",
-                    "severity": 50
-                }
+                "weakness": null
             },
             {
-                "id": 7555,
-                "name": "Great Olm",
-                "version": "Left claw (Challenge Mode)",
-                "image": "Great Olm.png",
-                "level": 750,
-                "speed": -1,
+                "id": 7528,
+                "name": "Vanguard",
+                "version": "Ranged",
+                "image": "Vanguard (ranged).png",
+                "level": 0,
+                "speed": 4,
                 "style": [
-                    "None"
+                    "Ranged"
                 ],
-                "size": 5,
-                "max_hit": 0,
+                "size": 3,
+                "max_hit": 22,
                 "skills": {
-                    "atk": 375,
+                    "atk": 225,
                     "def": 240,
-                    "hp": 600,
-                    "magic": 262,
-                    "ranged": 375,
-                    "str": 375
+                    "hp": 270,
+                    "magic": 225,
+                    "ranged": 225,
+                    "str": 225
                 },
                 "offensive": {
                     "atk": 0,
-                    "magic": 60,
+                    "magic": 0,
                     "magic_str": 0,
-                    "ranged": 60,
-                    "ranged_str": 0,
+                    "ranged": 40,
+                    "ranged_str": 25,
                     "str": 0
                 },
                 "defensive": {
                     "flat_armour": 0,
                     "crush": 100,
-                    "magic": 200,
-                    "heavy": 200,
-                    "standard": 200,
-                    "light": 200,
+                    "magic": 400,
+                    "heavy": 300,
+                    "standard": 300,
+                    "light": 300,
                     "slash": 60,
                     "stab": 55
                 },
                 "attributes": [
-                    "dragon",
                     "xerician"
                 ],
                 "immunities": {
                     "burn": null
                 },
-                "weakness": {
-                    "element": "earth",
-                    "severity": 50
-                }
+                "weakness": null
             },
             {
-                "id": 7554,
-                "name": "Great Olm",
-                "version": "Head (Challenge Mode)",
-                "image": "Great Olm.png",
-                "level": 1043,
+                "id": 7529,
+                "name": "Vanguard",
+                "version": "Magic",
+                "image": "Vanguard (magic).png",
+                "level": 0,
                 "speed": 4,
                 "style": [
-                    "Magic",
-                    "Ranged"
+                    "Magic"
                 ],
-                "size": 5,
-                "max_hit": 38,
+                "size": 3,
+                "max_hit": 22,
                 "skills": {
-                    "atk": 375,
+                    "atk": 225,
                     "def": 240,
-                    "hp": 800,
+                    "hp": 270,
                     "magic": 225,
-                    "ranged": 375,
-                    "str": 375
+                    "ranged": 225,
+                    "str": 225
                 },
                 "offensive": {
                     "atk": 0,
-                    "magic": 60,
-                    "magic_str": 0,
-                    "ranged": 60,
+                    "magic": 40,
+                    "magic_str": 25,
+                    "ranged": 0,
                     "ranged_str": 0,
                     "str": 0
                 },
                 "defensive": {
                     "flat_armour": 0,
-                    "crush": 200,
-                    "magic": 200,
+                    "crush": 400,
+                    "magic": 110,
                     "heavy": 50,
                     "standard": 50,
                     "light": 50,
-                    "slash": 200,
-                    "stab": 200
+                    "slash": 340,
+                    "stab": 315
                 },
                 "attributes": [
-                    "dragon",
                     "xerician"
                 ],
                 "immunities": {
                     "burn": null
                 },
-                "weakness": {
-                    "element": "earth",
-                    "severity": 50
-                }
+                "weakness": null
             }
         ],
         "methods": []
