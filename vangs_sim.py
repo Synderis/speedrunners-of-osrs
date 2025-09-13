@@ -75,26 +75,26 @@ def ensure_weapon_swap(player, weapon, equip_offhand=None):
 #     attack_tick += attack_speed
 #     return hp, attack_tick, hit_counter, total_ticks
 
-def phase_loop(hp, attack_tick, attack_speed, accuracy, max_hit, total_ticks):
-    while hp > 0:
-        attack_tick += 1
-        if (attack_tick - 1) % attack_speed == 0:
-            if np.random.rand() < accuracy:
-                hit = np.random.randint(0, max_hit + 1)
-            else:
-                hit = 0
-            hp -= hit
-        if hp <= 0:
-            total_ticks += (attack_tick - 1)
-            break
-        if (attack_tick - 1) % 4 == 0:
-            hit = np.random.randint(0, 4)
-            hp -= hit
-        if hp <= 0:
-            total_ticks += (attack_tick - 1) 
-            break
-    attack_tick += attack_speed - 1
-    return attack_tick
+# def phase_loop(hp, attack_tick, attack_speed, accuracy, max_hit, total_ticks):
+#     while hp > 0:
+#         attack_tick += 1
+#         if (attack_tick - 1) % attack_speed == 0:
+#             if np.random.rand() < accuracy:
+#                 hit = np.random.randint(0, max_hit + 1)
+#             else:
+#                 hit = 0
+#             hp -= hit
+#         if hp <= 0:
+#             total_ticks += (attack_tick - 1)
+#             break
+#         if (attack_tick - 1) % 4 == 0:
+#             hit = np.random.randint(0, 4)
+#             hp -= hit
+#         if hp <= 0:
+#             total_ticks += (attack_tick - 1) 
+#             break
+#     attack_tick += attack_speed - 1
+#     return attack_tick
 
 def can_attack_vang(vang_hps, idx, max_hit, threshold=0.4, hp_reset_threshold=108, base_hp=270):
     # If all vangs are below the reset threshold, always allow

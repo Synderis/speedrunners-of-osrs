@@ -251,8 +251,8 @@ const PlotSection: React.FC<PlotSectionProps> = ({
           'stab': allGearStats[type].defensive.stab || 0,
           'slash': allGearStats[type].defensive.slash || 0,
           'crush': allGearStats[type].defensive.crush || 0,
-          'magic': allGearStats[type].defensive.magic || 0,
-          'ranged': allGearStats[type].defensive.ranged || 0
+          'magic_defence': allGearStats[type].defensive.magic || 0,
+          'ranged_defence': allGearStats[type].defensive.ranged || 0
         }
       }
     }));
