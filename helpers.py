@@ -169,9 +169,11 @@ def calculate_max_hit_for_style(player, monster, style, gear, gear_type="ranged"
         prayer_bonus = 1.23  # piety
         style_bonus = style.get("str", 0)
         void_bonus = 1.1 if player.get("void_melee", False) else 1.0
-        effective_strength = int(((level + potion_bonus) * prayer_bonus + style_bonus + 8.0) * void_bonus)
+        effective_strength = int((int((level + potion_bonus) * prayer_bonus) + style_bonus + 8.0) * void_bonus)
         str_bonus = gear["bonuses"]["str"]
         max_hit = int(0.5 + (effective_strength * (str_bonus + 64.0)) / 640.0)
+        if player["gearSets"]["melee"].get("selectedWeapon", {}).get("name", "").lower() == "scythe of vitur":
+            max_hit = int(max_hit + (max_hit / 2) + (max_hit / 4))
         return max_hit, effective_strength
     elif gear_type == "ranged":
         level = player["combatStats"]["ranged"]
@@ -179,7 +181,7 @@ def calculate_max_hit_for_style(player, monster, style, gear, gear_type="ranged"
         prayer_bonus = 1.23
         style_bonus = style.get("ranged", 0)
         void_bonus = 1.0
-        effective_ranged = int(((level + potion_bonus) * prayer_bonus + style_bonus + 8.0) * void_bonus)
+        effective_ranged = int((int((level + potion_bonus) * prayer_bonus) + style_bonus + 8.0) * void_bonus)
         ranged_bonus = gear["bonuses"]["ranged_str"]
         max_hit_multiplier = 1.0
         if player["gearSets"]["ranged"].get("selectedWeapon", {}).get("name", "").lower() == "twisted bow":
@@ -215,7 +217,7 @@ def calculate_max_hit_for_style(player, monster, style, gear, gear_type="ranged"
 def calculate_accuracy_for_style(player, monster, style, gear, gear_type="ranged"):
     if gear_type == "melee":
         attack_level = player["combatStats"]["attack"]
-        potion_bonus = 21.0
+        potion_bonus = int(attack_level * (16/100)) + 6
         prayer_bonus = 1.20
         style_bonus = style.get("att", 0)
         void_bonus = 1.0
@@ -227,7 +229,7 @@ def calculate_accuracy_for_style(player, monster, style, gear, gear_type="ranged
         max_defence_roll = (monster["skills"]["def"] + 9) * (defence_bonus + 64)
     elif gear_type == "ranged":
         attack_level = player["combatStats"]["ranged"]
-        potion_bonus = 21.0
+        potion_bonus = int(attack_level * (16/100)) + 6
         prayer_bonus = 1.20
         style_bonus = style.get("ranged", 0)
         void_bonus = 1.0
@@ -248,15 +250,15 @@ def calculate_accuracy_for_style(player, monster, style, gear, gear_type="ranged
             # print(f"Ranged max attack roll: {max_attack_roll}")
     elif gear_type == "mage":
         attack_level = player["combatStats"]["magic"]
-        potion_bonus = 21.0
+        potion_bonus = int(attack_level * (16/100)) + 6
         prayer_bonus = 1.25
         style_bonus = style.get("magic", 0)
         effective_attack = int(((attack_level + potion_bonus) * prayer_bonus + style_bonus + 8.0))
         attack_bonus = gear["offensive"].get("magic", 0)
-        print(f"Magic attack bonus: {attack_bonus}")
+        # print(f"Magic attack bonus: {attack_bonus}")
         if player["gearSets"]["mage"].get("selectedWeapon", {}).get("name", "").lower() == "tumeken's shadow":
             attack_bonus *= 3
-            print(f"Magic attack bonus (with Tumeken's Shadow): {attack_bonus}")
+            # print(f"Magic attack bonus (with Tumeken's Shadow): {attack_bonus}")
         max_attack_roll = effective_attack * (attack_bonus + 64)
         defence_bonus = monster["defensive"].get("magic", 0)
         max_defence_roll = (monster["skills"]["magic"] + 9) * (defence_bonus + 64)
@@ -290,7 +292,7 @@ def find_best_combat_style(player, monster, gear_type):
         for style in weapon.get("weapon_styles", []):
             max_hit, effective_strength = calculate_max_hit_for_style(player, monster, style, gear_stats, gear_type=gear_type)
             accuracy, effective_attack, max_attack_roll, max_defence_roll = calculate_accuracy_for_style(player, monster, style, gear_stats, gear_type=gear_type)
-            effective_dps = max_hit * accuracy
+            effective_dps = max_hit * accuracy / (gear_set["selectedWeapon"]["speed"] - style.get("att_spd_reduction", 0))  # Default attack speed is 4 ticks
             style_result = {
                 "gear_type": gear_type,
                 "combat_style": style.get("combat_style", ""),
@@ -302,6 +304,7 @@ def find_best_combat_style(player, monster, gear_type):
                 "effective_attack": effective_attack,
                 "max_attack_roll": max_attack_roll,
                 "max_defence_roll": max_defence_roll,
+                "attack_speed": gear_set["selectedWeapon"]["speed"] - style.get("att_spd_reduction", 0)  # Default attack speed is 4 ticks
             }
             if effective_dps > best_dps:
                 best_dps = effective_dps

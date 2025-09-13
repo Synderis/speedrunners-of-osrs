@@ -2,6 +2,7 @@ use rand::prelude::*;
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
+
 fn ensure_weapon_swap(
     player: &mut Player,
     weapon_name: &str,
@@ -113,95 +114,44 @@ fn ensure_weapon_swap(
     None
 }
 
-fn sim_freeze_mutta(
-        player: &Player,
-        mut total_ticks: i32,
-        mut hp_mutta: i32,
-        mutta: &Monster,
-        best_style_mutta: &StyleResult,
-        zgs_best_style: &StyleResult,
-        rng: &mut ThreadRng,
-    ) -> i32 {
-    while hp_mutta > (mutta.skills.hp as f64 * 0.4) as i32 {
-        let hit = if rng.gen::<f64>() < best_style_mutta.accuracy {
-            rng.gen_range(0..=best_style_mutta.max_hit as u32) as i32
-        } else {
-            0
-        };
-        total_ticks += best_style_mutta.attack_speed as i32;
-        hp_mutta -= hit;
-    }
-
-    // Attempt to freeze with ZGS if miss add ticks and heal mutta
-    if rng.gen::<f64>() > zgs_best_style.accuracy {
-        hp_mutta += (mutta.skills.hp as i32 / 2).min(mutta.skills.hp as i32 - hp_mutta);
-    } else {
-        let hit = rng.gen_range(0..=zgs_best_style.max_hit as u32) as i32;
-        hp_mutta -= hit;
-    }
-    total_ticks += 6;
-    // Continue attacking until dead
-    while hp_mutta > 0 {
-        let hit = if rng.gen::<f64>() < best_style_mutta.accuracy {
-            rng.gen_range(0..=best_style_mutta.max_hit as u32) as i32
-        } else {
-            0
-        };
-        total_ticks += best_style_mutta.attack_speed as i32;
-        hp_mutta -= hit;
-    }
-    total_ticks
-}
-fn sim_chop_tree(
-        player: &Player, 
-        mut total_ticks: i32, 
-        mut tree_hp: i32, 
-        tree_accuracy: f64, 
-        mut hp_small_mutta: i32, 
-        base_small_mutta_hp: i32, 
-        best_style_small_mutta: &StyleResult, 
-        rng: &mut ThreadRng,
-    ) -> (i32, i32) {
-    while tree_hp > 0 {
-        let mut hit = 0;
-        let mut tree_hit = 0;
-        if rng.gen::<f64>() < tree_accuracy {
-            tree_hit = rng.gen_range(0..=player.combat_stats.woodcutting as u32) as i32;
+fn phase_loop(
+    hp: &mut i32,
+    current_phase_ticks: &mut usize,
+    attack_speed: usize,
+    accuracy: f64,
+    max_hit: i32,
+    rng: &mut ThreadRng,
+) -> usize {
+    let mut ticks_spent = 0;
+    // Rust translation of the provided Python phase_loop
+    while *hp > 0 {
+        ticks_spent += 1;
+        *current_phase_ticks += 1;
+        if (*current_phase_ticks - 1) % attack_speed == 0 {
+            let mut hit = 0;
+            if rng.gen::<f64>() < accuracy {
+                hit = rng.gen_range(0..=max_hit);
+            };
+            *hp -= hit;
         }
-        // Small mutta can be hit if it's above half HP
-        if base_small_mutta_hp / 2 < best_style_small_mutta.max_hit as i32 + hp_small_mutta {
-            if rng.gen::<f64>() < best_style_small_mutta.accuracy {
-                hit = rng.gen_range(0..=best_style_small_mutta.max_hit as u32) as i32;
-            } else {
-                hit = 0;
-            }
-            hp_small_mutta -= hit;
-        }
-        tree_hp -= tree_hit;
-        if tree_hp < 0 {
+        if *hp <= 0 {
             break;
         }
-        total_ticks += best_style_small_mutta.attack_speed as i32;
+        if (*current_phase_ticks - 1) % 4 == 0 {
+            *hp -= rng.gen_range(0..=3);
+        }
+        if *hp <= 0 {
+            break;
+        }
     }
-    let phase_ticks = total_ticks;
-    total_ticks += best_style_small_mutta.attack_speed as i32;
-    // Finish off small mutta
-    while hp_small_mutta > 0 {
-        let hit = if rng.gen::<f64>() < best_style_small_mutta.accuracy {
-            rng.gen_range(0..=best_style_small_mutta.max_hit as u32) as i32
-        } else {
-            0
-        };
-        total_ticks += best_style_small_mutta.attack_speed as i32;
-        hp_small_mutta -= hit;
-    }
-    (total_ticks, (phase_ticks + 1) as i32)
+    *current_phase_ticks += attack_speed - 1;
+    ticks_spent += attack_speed - 1;
+    ticks_spent
 }
 
 #[wasm_bindgen]
-pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
-    use rand::Rng;
-
+pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
+    // Parse payload
     let payload: DPSRoomPayload = match serde_json::from_str(payload_json) {
         Ok(p) => p,
         Err(e) => {
@@ -211,92 +161,118 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
 
     let mut player = payload.player;
     let monsters = payload.room.monsters;
-    let trials = 100_000;
+    let room_methods = payload.room.methods;
+    let trials = 100000;
     let mut rng = rand::thread_rng();
-    
 
     // Defensive: Check monsters
-    if monsters.len() < 2 {
-        return "{\"error\": \"Muttadile simulation requires two monsters (small and large)}\"".to_string();
+    if monsters.is_empty() {
+        return "{\"error\": \"No monsters in payload\"}".to_string();
     }
-    let mut zgs_best_style = None;
-    let has_zgs = player.inventory.iter().any(|item| item.name.to_lowercase().contains("zamorak godsword"));
-    if has_zgs {
-        let swap_result = ensure_weapon_swap(&mut player, "Zamorak godsword", None);
-        let (swapped_weapon, swapped_offhand) = match swap_result {
-            Some((w, o)) => (w, o),
-            None => {
-                return "{\"error\": \"Elder maul not found in inventory\"}".to_string();
-            }
-        };
-        zgs_best_style = Some(find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]));
+
+    let best_style_mage = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string()]);
+    let best_style_melee = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
+    let best_style_ranged = find_best_combat_style(&player, &monsters[2], vec!["ranged".to_string()]);
+
+
+    let swap_result = ensure_weapon_swap(&mut player, "Elder maul", None);
+    let (swapped_weapon, swapped_offhand) = match swap_result {
+        Some((w, o)) => (w, o),
+        None => {
+            return "{\"error\": \"Elder maul not found in inventory\"}".to_string();
+        }
+    };
+    let best_style_spec = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
+
+    if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some("Elder maul") {
         ensure_weapon_swap(&mut player, &swapped_weapon, swapped_offhand.clone());
     }
+    let mut olm_melee_hand_specced = monsters[1].clone();
+    olm_melee_hand_specced.skills.def = (olm_melee_hand_specced.skills.def as f64 * 0.65) as u32;
+    let best_style_specced = find_best_combat_style(&player, &olm_melee_hand_specced, vec!["melee".to_string()]);
 
+    let max_hit_spec = best_style_spec.max_hit as i32;
+    let accuracy_spec = best_style_spec.accuracy;
 
-    // Small Mutta (magic)
-    let best_style_small_mutta = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string()]);
-    let base_small_mutta_hp = monsters[0].skills.hp as i32;
-    let attack_speed_small_mutta = player.gear_sets.mage.selected_weapon.as_ref().map(|w| w.speed).unwrap_or(4) as i32;
+    // Prepare simulation
+    let mut tick_counts = vec![0usize; trials];
+    let mut phase_results: Vec<usize> = Vec::new();
 
-    // Large Mutta (ranged)
-    let best_style_large_mutta = find_best_combat_style(&player, &monsters[1], vec!["ranged".to_string()]);
-    let base_large_mutta_hp = monsters[1].skills.hp as i32;
-    let attack_speed_large_mutta = player.gear_sets.ranged.selected_weapon.as_ref().map(|w| w.speed).unwrap_or(4) as i32;
-
-    // Tree
-    let wc_level = player.combat_stats.woodcutting as i32;
-    let tree_accuracy = (1.0 + ((((50.0 * (99.0 - wc_level as f64)) / 98.0) + ((200.0 * (wc_level as f64 - 1.0)) / 98.0) + 0.5)).floor()) / 256.0;
-    let base_tree_hp = wc_level * 5;
-
-    let mut tick_counts: Vec<i32> = vec![0; trials];
-    let mut phase_results: Vec<i32> = vec![0; trials];
+    let delay_list = vec![22, 38, 39];
 
     for i in 0..trials {
-        let mut hp_large_mutta = base_large_mutta_hp;
-        let mut hp_small_mutta = base_small_mutta_hp;
-        let mut tree_hp = base_tree_hp;
         let mut total_ticks = 0;
-        if has_zgs {
-            total_ticks = sim_freeze_mutta(&player, total_ticks, hp_small_mutta, &monsters[0], &best_style_small_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
-            total_ticks += 9;
-            total_ticks = sim_freeze_mutta(&player, total_ticks, hp_large_mutta, &monsters[1], &best_style_large_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
-            phase_results[i] = 0;
-        } else {
-            let (new_total_ticks, phase_ticks) = sim_chop_tree(&player, total_ticks, tree_hp, tree_accuracy, hp_small_mutta, base_small_mutta_hp, &best_style_small_mutta, &mut rng);
-            phase_results[i] = phase_ticks;
-            total_ticks = new_total_ticks;
-            total_ticks += 9;
-            while hp_large_mutta > 0 {
-                let hit = if rng.gen::<f64>() < best_style_large_mutta.accuracy {
-                    rng.gen_range(0..=best_style_large_mutta.max_hit as u32) as i32
-                } else {
-                    0
-                };
-                total_ticks += attack_speed_large_mutta;
-                hp_large_mutta -= hit;
-            }
-        }
+        let mut ranged_ticks = 0;
+        let mut ranged_hp = monsters[2].skills.hp as i32;
+        let mut current_phase_ticks = 0;
+        for phase in 0..3 {
+            let mut mage_hp = monsters[0].skills.hp as i32;
+            let mut melee_hp = monsters[1].skills.hp as i32;
+            let mut mage_ticks = 0;
+            let mut melee_ticks = 0;
+            let mut spec_hit = false;
+            current_phase_ticks = 0;
 
-        // Round up to next multiple of 4
+            mage_ticks = phase_loop(
+                &mut mage_hp,
+                &mut current_phase_ticks,
+                best_style_mage.attack_speed as usize,
+                best_style_mage.accuracy,
+                best_style_mage.max_hit as i32,
+                &mut rng,
+            );
+            if rng.gen::<f64>() < best_style_spec.accuracy {
+                spec_hit = true;
+                melee_hp -= rng.gen_range(0..=best_style_spec.max_hit as i32);
+            };
+            if spec_hit {
+                melee_ticks = phase_loop(
+                    &mut melee_hp,
+                    &mut current_phase_ticks,
+                    best_style_specced.attack_speed as usize,
+                    best_style_specced.accuracy,
+                    best_style_specced.max_hit as i32,
+                    &mut rng,
+                );
+            }
+            else {
+                melee_ticks = phase_loop(
+                    &mut melee_hp,
+                    &mut current_phase_ticks,
+                    best_style_melee.attack_speed as usize,
+                    best_style_melee.accuracy,
+                    best_style_melee.max_hit as i32,
+                    &mut rng,
+                );
+            };
+            melee_ticks += 6; // Add 6 ticks for spec delay
+            total_ticks += mage_ticks + melee_ticks;
+            total_ticks += delay_list[phase];
+            phase_results.push(melee_ticks + mage_ticks);
+        };
+        ranged_ticks = phase_loop(
+            &mut ranged_hp,
+            &mut current_phase_ticks,
+            best_style_ranged.attack_speed as usize,
+            best_style_ranged.accuracy,
+            best_style_ranged.max_hit as i32,
+            &mut rng,
+        );
+        total_ticks += ranged_ticks;
         if total_ticks % 4 != 0 {
             total_ticks += 4 - (total_ticks % 4);
-        }
+        };
         tick_counts[i] = total_ticks;
     }
 
-    // Calculate kill probability and stats
-    let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
-    let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
-    for &ticks in &tick_counts {
-        for idx in ticks..=max_ticks {
-            kill_prob[idx as usize] += 1.0;
-        }
+
+    // Defensive: Check tick_counts
+    if tick_counts.is_empty() {
+        return "{\"error\": \"No tick counts generated\"}".to_string();
     }
-    for prob in &mut kill_prob {
-        *prob /= trials as f64;
-    }
-    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
+
+    // Compute statistics
+    let mean_ttk = tick_counts.iter().sum::<usize>() as f64 / trials as f64;
     let std_ttk = {
         let mean = mean_ttk;
         let var = tick_counts.iter().map(|&x| {
@@ -306,16 +282,30 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
         var.sqrt()
     };
 
+    // Build cumulative kill probability
+    let max_ticks = match tick_counts.iter().max().copied() {
+        Some(val) => val,
+        None => return "{\"error\": \"No max tick found\"}".to_string(),
+    };
+    let mut kill_prob = vec![0.0f64; max_ticks + 1];
+    for &ticks in &tick_counts {
+        for idx in ticks..=max_ticks {
+            kill_prob[idx] += 1.0;
+        }
+    }
+    for prob in &mut kill_prob {
+        *prob /= trials as f64;
+    }
+
     // Collect results for each monster (if you have more than one)
     let mut results = Vec::new();
     let mut total_expected_hits = 0.0;
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
     let mut encounter_kill_times = Vec::new();
-    // let encounter_attack_speed = Some(attack_speed_small_mutta); // or whatever is appropriate
+    let encounter_attack_speed = 5; // or whatever is appropriate
     let kill_times = kill_prob.clone();
-
-    let expected_hits = mean_ttk / attack_speed_small_mutta as f64; // or however you calculate it
+    let expected_hits = mean_ttk / encounter_attack_speed as f64; // or however you calculate it
     let expected_ttk = mean_ttk;
     let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
 
@@ -326,33 +316,47 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
 
     // Example: For Tekton (single monster)
 
+    let mage_hand = &monsters[0];
+    let result_mage = serde_json::json!({
+        "monster_id": mage_hand.id,
+        "monster_name": mage_hand.name,
+        "expected_hits": expected_hits,
+        "expected_ticks": expected_ttk,
+        "expected_seconds": expected_seconds,
+        "combat_type": best_style_mage.attack_type,
+        "attack_style": best_style_mage.combat_style,
+        "kill_times": kill_times,
+    });
+    results.push(result_mage);
 
-    let monster_enraged = &monsters[1];
-    let result_enraged = serde_json::json!({
-        "monster_id": monster_enraged.id,
-        "monster_name": monster_enraged.name,
+    let melee_hand = &monsters[1];
+    let result_melee = serde_json::json!({
+        "monster_id": melee_hand.id,
+        "monster_name": melee_hand.name,
         "expected_hits": expected_hits,
         "expected_ticks": expected_ttk,
         "expected_seconds": expected_seconds,
-        "combat_type": best_style_large_mutta.attack_type,
-        "attack_style": best_style_large_mutta.combat_style,
+        "combat_type": best_style_melee.attack_type,
+        "attack_style": best_style_melee.combat_style,
         "kill_times": kill_times,
     });
-    results.push(result_enraged);
-    let monster_normal = &monsters[0];
-    let result_normal = serde_json::json!({
-        "monster_id": monster_normal.id,
-        "monster_name": monster_normal.name,
+    results.push(result_melee);
+
+    let ranged_hand = &monsters[2];
+    let result_ranged = serde_json::json!({
+        "monster_id": ranged_hand.id,
+        "monster_name": ranged_hand.name,
         "expected_hits": expected_hits,
         "expected_ticks": expected_ttk,
         "expected_seconds": expected_seconds,
-        "combat_type": best_style_small_mutta.attack_type,
-        "attack_style": best_style_small_mutta.combat_style,
+        "combat_type": best_style_ranged.attack_type,
+        "attack_style": best_style_ranged.combat_style,
         "kill_times": kill_times,
     });
-    results.push(result_normal);
+    results.push(result_ranged);
+
     // Convert encounter_kill_times to JSON object array
-    // let attack_speed = small_mutta_attack_speed;
+    let attack_speed = 5;
     let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()
         .map(|(idx, &prob)| {
             serde_json::json!({

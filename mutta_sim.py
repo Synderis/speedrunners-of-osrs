@@ -46,7 +46,7 @@ if __name__ == "__main__":
     base_tree_hp = player['combatStats']['woodcutting'] * 5
 
     # Simulation for empirical TTK and cumulative kill probability
-    trials = 100000
+    trials = 1
     max_attacks = 100  # Reasonable upper bound for plotting
     tick_counts = []
     crystal_attacks_list = []

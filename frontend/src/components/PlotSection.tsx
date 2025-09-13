@@ -15,8 +15,10 @@ import { calculateDPSWithObjectsGuardians } from '../loaders/guardiansWasm';
 import { cmMonsters } from '../data/monsterStats';
 import { calculateDPSWithObjectsShamans } from '../loaders/shamansWasm';
 import { calculateDPSWithObjectsMutta } from '../loaders/muttaWasm';
+import { calculateDPSWithObjectsVangs } from '../loaders/vangsWasm';
 import ResultPlot from './ResultPlot';
 import ConfigColumns from './ConfigColumns';
+import { calculateDPSWithObjectsOlm } from '../loaders/olmWasm';
 
 
 
@@ -109,7 +111,9 @@ const wasmModelLoaders: Record<string, (player: any, monster: any) => Promise<an
   'vespula': calculateDPSWithObjectsVespula,
   'mystics': calculateDPSWithObjectsMystics,
   'lizardman_shamans': calculateDPSWithObjectsShamans,
-  'muttadile': calculateDPSWithObjectsMutta
+  'muttadile': calculateDPSWithObjectsMutta,
+  "olm": calculateDPSWithObjectsOlm,
+  "vangs": calculateDPSWithObjectsVangs,
 };
 
 // --- Main Component ---

@@ -1,0 +1,4248 @@
+[
+  [
+    {
+      "attack_idx": 0,
+      "cooldown": 5,
+      "event": "attack_or_idle",
+      "hit": 50,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 0,
+      "vang_hps": [
+        220,
+        270,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 5,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 1,
+      "vang_hps": [
+        220,
+        270,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 5,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 2,
+      "vang_hps": [
+        220,
+        270,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 5,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 3,
+      "vang_hps": [
+        220,
+        270,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 5,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 4,
+      "vang_hps": [
+        220,
+        270,
+        270
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 10,
+      "event": "attack_or_idle",
+      "hit": 75,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 5,
+      "vang_hps": [
+        220,
+        195,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 10,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 6,
+      "vang_hps": [
+        220,
+        195,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 10,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 7,
+      "vang_hps": [
+        220,
+        195,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 10,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 8,
+      "vang_hps": [
+        220,
+        195,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 10,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 9,
+      "vang_hps": [
+        220,
+        195,
+        270
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 15,
+      "event": "attack_or_idle",
+      "hit": 33,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 10,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 15,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 11,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 15,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 12,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 15,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 13,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 15,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 14,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 20,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 15,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 20,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 16,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 20,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 17,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 20,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 18,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 20,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 19,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "teleport",
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 20,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 11,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 20,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 10,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 21,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 9,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 22,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 8,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 23,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 7,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 24,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 6,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 25,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 5,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 26,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 4,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 27,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 3,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 28,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 2,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 29,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 1,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 30,
+      "vang_hps": [
+        220,
+        195,
+        237
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 36,
+      "event": "attack_or_idle",
+      "hit": 56,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 31,
+      "vang_hps": [
+        220,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 36,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 32,
+      "vang_hps": [
+        220,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 36,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 33,
+      "vang_hps": [
+        220,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 36,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 34,
+      "vang_hps": [
+        220,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 36,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 35,
+      "vang_hps": [
+        220,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 41,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 36,
+      "vang_hps": [
+        220,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 41,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 37,
+      "vang_hps": [
+        220,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 41,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 38,
+      "vang_hps": [
+        220,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 41,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 39,
+      "vang_hps": [
+        220,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 41,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 40,
+      "vang_hps": [
+        220,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 46,
+      "event": "attack_or_idle",
+      "hit": 15,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 41,
+      "vang_hps": [
+        205,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 46,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 42,
+      "vang_hps": [
+        205,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 46,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 43,
+      "vang_hps": [
+        205,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 46,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 44,
+      "vang_hps": [
+        205,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 46,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 45,
+      "vang_hps": [
+        205,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 51,
+      "event": "attack_or_idle",
+      "hit": 33,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 46,
+      "vang_hps": [
+        172,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 51,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 47,
+      "vang_hps": [
+        172,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 51,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 48,
+      "vang_hps": [
+        172,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 51,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 49,
+      "vang_hps": [
+        172,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 51,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 50,
+      "vang_hps": [
+        172,
+        195,
+        181
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 56,
+      "event": "attack_or_idle",
+      "hit": 79,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 51,
+      "vang_hps": [
+        172,
+        116,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 56,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 52,
+      "vang_hps": [
+        172,
+        116,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 56,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 53,
+      "vang_hps": [
+        172,
+        116,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 56,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 54,
+      "vang_hps": [
+        172,
+        116,
+        181
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 56,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 55,
+      "vang_hps": [
+        172,
+        116,
+        181
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 61,
+      "event": "attack_or_idle",
+      "hit": 66,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 56,
+      "vang_hps": [
+        172,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 61,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 57,
+      "vang_hps": [
+        172,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 61,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 58,
+      "vang_hps": [
+        172,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 61,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 59,
+      "vang_hps": [
+        172,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 61,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 60,
+      "vang_hps": [
+        172,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 66,
+      "event": "attack_or_idle",
+      "hit": 21,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 61,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 66,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 62,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 66,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 63,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "cooldown": 66,
+      "event": "teleport",
+      "immune_ticks_left": 0,
+      "next_teleport": 64,
+      "teleport": 1,
+      "tick": 64,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "cooldown": 66,
+      "event": "immune",
+      "immune_ticks_left": 11,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 64,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "cooldown": 66,
+      "event": "immune",
+      "immune_ticks_left": 10,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 65,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "cooldown": 66,
+      "event": "immune",
+      "immune_ticks_left": 9,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 66,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "cooldown": 66,
+      "event": "immune",
+      "immune_ticks_left": 8,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 67,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "cooldown": 66,
+      "event": "immune",
+      "immune_ticks_left": 7,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 68,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "cooldown": 66,
+      "event": "immune",
+      "immune_ticks_left": 6,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 69,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "cooldown": 66,
+      "event": "immune",
+      "immune_ticks_left": 5,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 70,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "cooldown": 66,
+      "event": "immune",
+      "immune_ticks_left": 4,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 71,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "cooldown": 66,
+      "event": "immune",
+      "immune_ticks_left": 3,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 72,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "cooldown": 66,
+      "event": "immune",
+      "immune_ticks_left": 2,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 73,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "cooldown": 66,
+      "event": "immune",
+      "immune_ticks_left": 1,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 74,
+      "vang_hps": [
+        151,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 80,
+      "event": "attack_or_idle",
+      "hit": 60,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 75,
+      "vang_hps": [
+        91,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 80,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 76,
+      "vang_hps": [
+        91,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 80,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 77,
+      "vang_hps": [
+        91,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 80,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 78,
+      "vang_hps": [
+        91,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 80,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 79,
+      "vang_hps": [
+        91,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 85,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 80,
+      "vang_hps": [
+        91,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 85,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 81,
+      "vang_hps": [
+        91,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 85,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 82,
+      "vang_hps": [
+        91,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 85,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 83,
+      "vang_hps": [
+        91,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 85,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 84,
+      "vang_hps": [
+        91,
+        116,
+        115
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 90,
+      "event": "attack_or_idle",
+      "hit": 47,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 85,
+      "vang_hps": [
+        91,
+        69,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 90,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 86,
+      "vang_hps": [
+        91,
+        69,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 90,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 87,
+      "vang_hps": [
+        91,
+        69,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 90,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 88,
+      "vang_hps": [
+        91,
+        69,
+        115
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 90,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 89,
+      "vang_hps": [
+        91,
+        69,
+        115
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 95,
+      "event": "attack_or_idle",
+      "hit": 37,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 90,
+      "vang_hps": [
+        91,
+        69,
+        78
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 95,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 91,
+      "vang_hps": [
+        91,
+        69,
+        78
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 95,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 92,
+      "vang_hps": [
+        91,
+        69,
+        78
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 95,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 93,
+      "vang_hps": [
+        91,
+        69,
+        78
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 95,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 94,
+      "vang_hps": [
+        91,
+        69,
+        78
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 100,
+      "event": "attack_or_idle",
+      "hit": 41,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 95,
+      "vang_hps": [
+        50,
+        69,
+        78
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 100,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 96,
+      "vang_hps": [
+        50,
+        69,
+        78
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 100,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 97,
+      "vang_hps": [
+        50,
+        69,
+        78
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 100,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 98,
+      "vang_hps": [
+        50,
+        69,
+        78
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 100,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 99,
+      "vang_hps": [
+        50,
+        69,
+        78
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 105,
+      "event": "attack_or_idle",
+      "hit": 54,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 100,
+      "vang_hps": [
+        50,
+        69,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 105,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 101,
+      "vang_hps": [
+        50,
+        69,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 105,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 102,
+      "vang_hps": [
+        50,
+        69,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 105,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 103,
+      "vang_hps": [
+        50,
+        69,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 105,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 104,
+      "vang_hps": [
+        50,
+        69,
+        24
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 110,
+      "event": "attack_or_idle",
+      "hit": 12,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 105,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 110,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 106,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "cooldown": 110,
+      "event": "teleport",
+      "immune_ticks_left": 0,
+      "next_teleport": 107,
+      "teleport": 2,
+      "tick": 107,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "cooldown": 110,
+      "event": "immune",
+      "immune_ticks_left": 11,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 107,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "cooldown": 110,
+      "event": "immune",
+      "immune_ticks_left": 10,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 108,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "cooldown": 110,
+      "event": "immune",
+      "immune_ticks_left": 9,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 109,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "cooldown": 110,
+      "event": "immune",
+      "immune_ticks_left": 8,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 110,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "cooldown": 110,
+      "event": "immune",
+      "immune_ticks_left": 7,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 111,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "cooldown": 110,
+      "event": "immune",
+      "immune_ticks_left": 6,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 112,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "cooldown": 110,
+      "event": "immune",
+      "immune_ticks_left": 5,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 113,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "cooldown": 110,
+      "event": "immune",
+      "immune_ticks_left": 4,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 114,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "cooldown": 110,
+      "event": "immune",
+      "immune_ticks_left": 3,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 115,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "cooldown": 110,
+      "event": "immune",
+      "immune_ticks_left": 2,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 116,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "cooldown": 110,
+      "event": "immune",
+      "immune_ticks_left": 1,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 117,
+      "vang_hps": [
+        50,
+        57,
+        24
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 123,
+      "event": "attack_or_idle",
+      "hit": 71,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 118,
+      "vang_hps": [
+        50,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 123,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 119,
+      "vang_hps": [
+        50,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 123,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 120,
+      "vang_hps": [
+        50,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 123,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 121,
+      "vang_hps": [
+        50,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 123,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 122,
+      "vang_hps": [
+        50,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 128,
+      "event": "attack_or_idle",
+      "hit": 9,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 123,
+      "vang_hps": [
+        41,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 128,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 124,
+      "vang_hps": [
+        41,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 128,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 125,
+      "vang_hps": [
+        41,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 128,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 126,
+      "vang_hps": [
+        41,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 128,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 127,
+      "vang_hps": [
+        41,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 133,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 128,
+      "vang_hps": [
+        41,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 133,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 129,
+      "vang_hps": [
+        41,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 133,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 130,
+      "vang_hps": [
+        41,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 133,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 131,
+      "vang_hps": [
+        41,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 133,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 132,
+      "vang_hps": [
+        41,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 138,
+      "event": "attack_or_idle",
+      "hit": 41,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 133,
+      "vang_hps": [
+        0,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 138,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 134,
+      "vang_hps": [
+        0,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 138,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 135,
+      "vang_hps": [
+        0,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 138,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 136,
+      "vang_hps": [
+        0,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 138,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 137,
+      "vang_hps": [
+        0,
+        0,
+        24
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 143,
+      "event": "attack_or_idle",
+      "hit": 54,
+      "immune_ticks_left": 0,
+      "next_teleport": 139,
+      "teleport": 3,
+      "tick": 138,
+      "vang_hps": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  [
+    {
+      "attack_idx": 0,
+      "cooldown": 5,
+      "event": "attack_or_idle",
+      "hit": 32,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 0,
+      "vang_hps": [
+        238,
+        270,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 5,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 1,
+      "vang_hps": [
+        238,
+        270,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 5,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 2,
+      "vang_hps": [
+        238,
+        270,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 5,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 3,
+      "vang_hps": [
+        238,
+        270,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 5,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 4,
+      "vang_hps": [
+        238,
+        270,
+        270
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 10,
+      "event": "attack_or_idle",
+      "hit": 12,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 5,
+      "vang_hps": [
+        238,
+        258,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 10,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 6,
+      "vang_hps": [
+        238,
+        258,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 10,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 7,
+      "vang_hps": [
+        238,
+        258,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 10,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 8,
+      "vang_hps": [
+        238,
+        258,
+        270
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 10,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 9,
+      "vang_hps": [
+        238,
+        258,
+        270
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 15,
+      "event": "attack_or_idle",
+      "hit": 39,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 10,
+      "vang_hps": [
+        238,
+        258,
+        231
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 15,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 11,
+      "vang_hps": [
+        238,
+        258,
+        231
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 15,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 12,
+      "vang_hps": [
+        238,
+        258,
+        231
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 15,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 13,
+      "vang_hps": [
+        238,
+        258,
+        231
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 15,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 14,
+      "vang_hps": [
+        238,
+        258,
+        231
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 20,
+      "event": "attack_or_idle",
+      "hit": 90,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 15,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 20,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 16,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 20,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 17,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 20,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 18,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 20,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 19,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "teleport",
+      "immune_ticks_left": 0,
+      "next_teleport": 20,
+      "teleport": 0,
+      "tick": 20,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 11,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 20,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 10,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 21,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 9,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 22,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 8,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 23,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 7,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 24,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 6,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 25,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 5,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 26,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 4,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 27,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 3,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 28,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 2,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 29,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "cooldown": 20,
+      "event": "immune",
+      "immune_ticks_left": 1,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 30,
+      "vang_hps": [
+        238,
+        168,
+        231
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 36,
+      "event": "attack_or_idle",
+      "hit": 42,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 31,
+      "vang_hps": [
+        196,
+        168,
+        231
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 36,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 32,
+      "vang_hps": [
+        196,
+        168,
+        231
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 36,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 33,
+      "vang_hps": [
+        196,
+        168,
+        231
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 36,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 34,
+      "vang_hps": [
+        196,
+        168,
+        231
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 36,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 35,
+      "vang_hps": [
+        196,
+        168,
+        231
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 41,
+      "event": "attack_or_idle",
+      "hit": 66,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 36,
+      "vang_hps": [
+        196,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 41,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 37,
+      "vang_hps": [
+        196,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 41,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 38,
+      "vang_hps": [
+        196,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 41,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 39,
+      "vang_hps": [
+        196,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 41,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 40,
+      "vang_hps": [
+        196,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 46,
+      "event": "attack_or_idle",
+      "hit": 63,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 41,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 46,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 42,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 46,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 43,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 46,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 44,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 46,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 45,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 51,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 46,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 51,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 47,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 51,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 48,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 51,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 49,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 51,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 50,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 56,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 51,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "cooldown": 56,
+      "event": "teleport",
+      "immune_ticks_left": 0,
+      "next_teleport": 52,
+      "teleport": 1,
+      "tick": 52,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "cooldown": 56,
+      "event": "immune",
+      "immune_ticks_left": 11,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 52,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "cooldown": 56,
+      "event": "immune",
+      "immune_ticks_left": 10,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 53,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "cooldown": 56,
+      "event": "immune",
+      "immune_ticks_left": 9,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 54,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "cooldown": 56,
+      "event": "immune",
+      "immune_ticks_left": 8,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 55,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "cooldown": 56,
+      "event": "immune",
+      "immune_ticks_left": 7,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 56,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "cooldown": 56,
+      "event": "immune",
+      "immune_ticks_left": 6,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 57,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "cooldown": 56,
+      "event": "immune",
+      "immune_ticks_left": 5,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 58,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "cooldown": 56,
+      "event": "immune",
+      "immune_ticks_left": 4,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 59,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "cooldown": 56,
+      "event": "immune",
+      "immune_ticks_left": 3,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 60,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "cooldown": 56,
+      "event": "immune",
+      "immune_ticks_left": 2,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 61,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "cooldown": 56,
+      "event": "immune",
+      "immune_ticks_left": 1,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 62,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 68,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 63,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 68,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 64,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 68,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 65,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 68,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 66,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 68,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 67,
+      "vang_hps": [
+        133,
+        168,
+        165
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 73,
+      "event": "attack_or_idle",
+      "hit": 42,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 68,
+      "vang_hps": [
+        133,
+        126,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 73,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 69,
+      "vang_hps": [
+        133,
+        126,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 73,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 70,
+      "vang_hps": [
+        133,
+        126,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 73,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 71,
+      "vang_hps": [
+        133,
+        126,
+        165
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 73,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 72,
+      "vang_hps": [
+        133,
+        126,
+        165
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 78,
+      "event": "attack_or_idle",
+      "hit": 73,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 73,
+      "vang_hps": [
+        133,
+        126,
+        92
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 78,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 74,
+      "vang_hps": [
+        133,
+        126,
+        92
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 78,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 75,
+      "vang_hps": [
+        133,
+        126,
+        92
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 78,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 76,
+      "vang_hps": [
+        133,
+        126,
+        92
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 78,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 77,
+      "vang_hps": [
+        133,
+        126,
+        92
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 83,
+      "event": "attack_or_idle",
+      "hit": 52,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 78,
+      "vang_hps": [
+        81,
+        126,
+        92
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 83,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 79,
+      "vang_hps": [
+        81,
+        126,
+        92
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 83,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 80,
+      "vang_hps": [
+        81,
+        126,
+        92
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 83,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 81,
+      "vang_hps": [
+        81,
+        126,
+        92
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 83,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 82,
+      "vang_hps": [
+        81,
+        126,
+        92
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 88,
+      "event": "attack_or_idle",
+      "hit": 51,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 83,
+      "vang_hps": [
+        81,
+        75,
+        92
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 88,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 84,
+      "vang_hps": [
+        81,
+        75,
+        92
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 88,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 85,
+      "vang_hps": [
+        81,
+        75,
+        92
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 88,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 86,
+      "vang_hps": [
+        81,
+        75,
+        92
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 88,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 87,
+      "vang_hps": [
+        81,
+        75,
+        92
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 93,
+      "event": "attack_or_idle",
+      "hit": 60,
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 88,
+      "vang_hps": [
+        81,
+        75,
+        32
+      ]
+    },
+    {
+      "cooldown": 93,
+      "event": "teleport",
+      "immune_ticks_left": 0,
+      "next_teleport": 89,
+      "teleport": 2,
+      "tick": 89,
+      "vang_hps": [
+        81,
+        75,
+        32
+      ]
+    },
+    {
+      "cooldown": 93,
+      "event": "immune",
+      "immune_ticks_left": 11,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 89,
+      "vang_hps": [
+        81,
+        75,
+        32
+      ]
+    },
+    {
+      "cooldown": 93,
+      "event": "immune",
+      "immune_ticks_left": 10,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 90,
+      "vang_hps": [
+        81,
+        75,
+        32
+      ]
+    },
+    {
+      "cooldown": 93,
+      "event": "immune",
+      "immune_ticks_left": 9,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 91,
+      "vang_hps": [
+        81,
+        75,
+        32
+      ]
+    },
+    {
+      "cooldown": 93,
+      "event": "immune",
+      "immune_ticks_left": 8,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 92,
+      "vang_hps": [
+        81,
+        75,
+        32
+      ]
+    },
+    {
+      "cooldown": 93,
+      "event": "immune",
+      "immune_ticks_left": 7,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 93,
+      "vang_hps": [
+        81,
+        75,
+        32
+      ]
+    },
+    {
+      "cooldown": 93,
+      "event": "immune",
+      "immune_ticks_left": 6,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 94,
+      "vang_hps": [
+        81,
+        75,
+        32
+      ]
+    },
+    {
+      "cooldown": 93,
+      "event": "immune",
+      "immune_ticks_left": 5,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 95,
+      "vang_hps": [
+        81,
+        75,
+        32
+      ]
+    },
+    {
+      "cooldown": 93,
+      "event": "immune",
+      "immune_ticks_left": 4,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 96,
+      "vang_hps": [
+        81,
+        75,
+        32
+      ]
+    },
+    {
+      "cooldown": 93,
+      "event": "immune",
+      "immune_ticks_left": 3,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 97,
+      "vang_hps": [
+        81,
+        75,
+        32
+      ]
+    },
+    {
+      "cooldown": 93,
+      "event": "immune",
+      "immune_ticks_left": 2,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 98,
+      "vang_hps": [
+        81,
+        75,
+        32
+      ]
+    },
+    {
+      "cooldown": 93,
+      "event": "immune",
+      "immune_ticks_left": 1,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 99,
+      "vang_hps": [
+        81,
+        75,
+        32
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 105,
+      "event": "attack_or_idle",
+      "hit": 71,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 100,
+      "vang_hps": [
+        10,
+        75,
+        32
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 105,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 101,
+      "vang_hps": [
+        10,
+        75,
+        32
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 105,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 102,
+      "vang_hps": [
+        10,
+        75,
+        32
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 105,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 103,
+      "vang_hps": [
+        10,
+        75,
+        32
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 105,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 104,
+      "vang_hps": [
+        10,
+        75,
+        32
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 110,
+      "event": "attack_or_idle",
+      "hit": 48,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 105,
+      "vang_hps": [
+        10,
+        27,
+        32
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 110,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 106,
+      "vang_hps": [
+        10,
+        27,
+        32
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 110,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 107,
+      "vang_hps": [
+        10,
+        27,
+        32
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 110,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 108,
+      "vang_hps": [
+        10,
+        27,
+        32
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 110,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 109,
+      "vang_hps": [
+        10,
+        27,
+        32
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 115,
+      "event": "attack_or_idle",
+      "hit": 5,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 110,
+      "vang_hps": [
+        10,
+        27,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 115,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 111,
+      "vang_hps": [
+        10,
+        27,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 115,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 112,
+      "vang_hps": [
+        10,
+        27,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 115,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 113,
+      "vang_hps": [
+        10,
+        27,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 115,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 114,
+      "vang_hps": [
+        10,
+        27,
+        27
+      ]
+    },
+    {
+      "attack_idx": 1,
+      "cooldown": 120,
+      "event": "attack_or_idle",
+      "hit": 71,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 115,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 120,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 116,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 120,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 117,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 120,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 118,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 120,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 119,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 125,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 120,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 125,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 121,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 125,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 122,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 125,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 123,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 125,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 124,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 130,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 125,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 130,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 126,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 130,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 127,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 130,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 128,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 130,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 129,
+      "vang_hps": [
+        10,
+        0,
+        27
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 135,
+      "event": "attack_or_idle",
+      "hit": 11,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 130,
+      "vang_hps": [
+        10,
+        0,
+        16
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 135,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 131,
+      "vang_hps": [
+        10,
+        0,
+        16
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 135,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 132,
+      "vang_hps": [
+        10,
+        0,
+        16
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 135,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 133,
+      "vang_hps": [
+        10,
+        0,
+        16
+      ]
+    },
+    {
+      "attack_idx": null,
+      "cooldown": 135,
+      "event": "attack_or_idle",
+      "hit": 0,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 134,
+      "vang_hps": [
+        10,
+        0,
+        16
+      ]
+    },
+    {
+      "attack_idx": 2,
+      "cooldown": 140,
+      "event": "attack_or_idle",
+      "hit": 42,
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 135,
+      "vang_hps": [
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "cooldown": 140,
+      "event": "teleport",
+      "immune_ticks_left": 0,
+      "next_teleport": 136,
+      "teleport": 3,
+      "tick": 136,
+      "vang_hps": [
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "cooldown": 140,
+      "event": "immune",
+      "immune_ticks_left": 11,
+      "next_teleport": 170,
+      "teleport": 4,
+      "tick": 136,
+      "vang_hps": [
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "cooldown": 140,
+      "event": "immune",
+      "immune_ticks_left": 10,
+      "next_teleport": 170,
+      "teleport": 4,
+      "tick": 137,
+      "vang_hps": [
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "cooldown": 140,
+      "event": "immune",
+      "immune_ticks_left": 9,
+      "next_teleport": 170,
+      "teleport": 4,
+      "tick": 138,
+      "vang_hps": [
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "cooldown": 140,
+      "event": "immune",
+      "immune_ticks_left": 8,
+      "next_teleport": 170,
+      "teleport": 4,
+      "tick": 139,
+      "vang_hps": [
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "cooldown": 140,
+      "event": "immune",
+      "immune_ticks_left": 7,
+      "next_teleport": 170,
+      "teleport": 4,
+      "tick": 140,
+      "vang_hps": [
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "cooldown": 140,
+      "event": "immune",
+      "immune_ticks_left": 6,
+      "next_teleport": 170,
+      "teleport": 4,
+      "tick": 141,
+      "vang_hps": [
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "cooldown": 140,
+      "event": "immune",
+      "immune_ticks_left": 5,
+      "next_teleport": 170,
+      "teleport": 4,
+      "tick": 142,
+      "vang_hps": [
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "cooldown": 140,
+      "event": "immune",
+      "immune_ticks_left": 4,
+      "next_teleport": 170,
+      "teleport": 4,
+      "tick": 143,
+      "vang_hps": [
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "cooldown": 140,
+      "event": "immune",
+      "immune_ticks_left": 3,
+      "next_teleport": 170,
+      "teleport": 4,
+      "tick": 144,
+      "vang_hps": [
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "cooldown": 140,
+      "event": "immune",
+      "immune_ticks_left": 2,
+      "next_teleport": 170,
+      "teleport": 4,
+      "tick": 145,
+      "vang_hps": [
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "cooldown": 140,
+      "event": "immune",
+      "immune_ticks_left": 1,
+      "next_teleport": 170,
+      "teleport": 4,
+      "tick": 146,
+      "vang_hps": [
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "attack_idx": 0,
+      "cooldown": 152,
+      "event": "attack_or_idle",
+      "hit": 75,
+      "immune_ticks_left": 0,
+      "next_teleport": 170,
+      "teleport": 4,
+      "tick": 147,
+      "vang_hps": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+]

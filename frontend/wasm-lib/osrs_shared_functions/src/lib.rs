@@ -78,6 +78,7 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                         effective_attack,
                         max_attack_roll,
                         max_defence_roll,
+                        attack_speed: weapon.speed - style.att_spd_reduction,
                         att_spd_reduction: style.att_spd_reduction,
                     };
                     if effective_dps > best_dps {
@@ -136,9 +137,9 @@ pub fn calculate_max_hit_for_style(
     };
 
     let potion_bonus = if monster.name == "Tekton" {
-        19.0
+        (level * 15.0 / 100.0).floor() as f64 + 5.0
     } else {
-        21.0
+        (level * 16.0 / 100.0).floor() as f64 + 6.0
     };
 
     let void_bonus = 0.0; // No void for now

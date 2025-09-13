@@ -193,6 +193,7 @@ pub struct StyleResult {
     pub effective_attack: u32,
     pub max_attack_roll: u64,
     pub max_defence_roll: u64,
+    pub attack_speed: i32,
     pub att_spd_reduction: i32,
 }
 

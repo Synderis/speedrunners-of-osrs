@@ -205,12 +205,7 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
         let max_hit = best_style.max_hit as usize;
         let accuracy = best_style.accuracy;
         let hp = monster.skills.hp as usize;
-
-        let attack_speed = if let Some(weapon) = &player.gear_sets.melee.selected_weapon {
-            weapon.speed as usize
-        } else {
-            5
-        };
+        let attack_speed = best_style.attack_speed as usize;
         if encounter_attack_speed.is_none() {
             encounter_attack_speed = Some(attack_speed);
         }
