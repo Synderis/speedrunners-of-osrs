@@ -216,7 +216,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             mage_ticks = phase_loop(
                 &mut mage_hp,
                 &mut current_phase_ticks,
-                5,
+                best_style_mage.attack_speed as usize,
                 best_style_mage.accuracy,
                 best_style_mage.max_hit as i32,
                 &mut rng,
@@ -229,7 +229,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                 melee_ticks = phase_loop(
                     &mut melee_hp,
                     &mut current_phase_ticks,
-                    5,
+                    best_style_specced.attack_speed as usize,
                     best_style_specced.accuracy,
                     best_style_specced.max_hit as i32,
                     &mut rng,
@@ -239,7 +239,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                 melee_ticks = phase_loop(
                     &mut melee_hp,
                     &mut current_phase_ticks,
-                    5,
+                    best_style_melee.attack_speed as usize,
                     best_style_melee.accuracy,
                     best_style_melee.max_hit as i32,
                     &mut rng,
@@ -253,7 +253,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
         ranged_ticks = phase_loop(
             &mut ranged_hp,
             &mut current_phase_ticks,
-            5,
+            best_style_ranged.attack_speed as usize,
             best_style_ranged.accuracy,
             best_style_ranged.max_hit as i32,
             &mut rng,

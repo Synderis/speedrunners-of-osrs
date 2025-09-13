@@ -78,6 +78,7 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                         effective_attack,
                         max_attack_roll,
                         max_defence_roll,
+                        attack_speed: weapon.speed - style.att_spd_reduction,
                         att_spd_reduction: style.att_spd_reduction,
                     };
                     if effective_dps > best_dps {
