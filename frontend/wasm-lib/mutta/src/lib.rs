@@ -114,7 +114,6 @@ fn ensure_weapon_swap(
 }
 
 fn sim_freeze_mutta(
-        player: &Player,
         mut total_ticks: i32,
         mut hp_mutta: i32,
         mutta: &Monster,
@@ -163,18 +162,17 @@ fn sim_chop_tree(
         rng: &mut ThreadRng,
     ) -> (i32, i32) {
     while tree_hp > 0 {
-        let mut hit = 0;
         let mut tree_hit = 0;
         if rng.gen::<f64>() < tree_accuracy {
             tree_hit = rng.gen_range(0..=player.combat_stats.woodcutting as u32) as i32;
         }
         // Small mutta can be hit if it's above half HP
         if base_small_mutta_hp / 2 < best_style_small_mutta.max_hit as i32 + hp_small_mutta {
-            if rng.gen::<f64>() < best_style_small_mutta.accuracy {
-                hit = rng.gen_range(0..=best_style_small_mutta.max_hit as u32) as i32;
+            let hit = if rng.gen::<f64>() < best_style_small_mutta.accuracy {
+                rng.gen_range(0..=best_style_small_mutta.max_hit as u32) as i32
             } else {
-                hit = 0;
-            }
+                0
+            };
             hp_small_mutta -= hit;
         }
         tree_hp -= tree_hit;
@@ -254,13 +252,13 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
 
     for i in 0..trials {
         let mut hp_large_mutta = base_large_mutta_hp;
-        let mut hp_small_mutta = base_small_mutta_hp;
-        let mut tree_hp = base_tree_hp;
+        let hp_small_mutta = base_small_mutta_hp;
+        let tree_hp = base_tree_hp;
         let mut total_ticks = 0;
         if has_zgs {
-            total_ticks = sim_freeze_mutta(&player, total_ticks, hp_small_mutta, &monsters[0], &best_style_small_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
+            total_ticks = sim_freeze_mutta(total_ticks, hp_small_mutta, &monsters[0], &best_style_small_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
             total_ticks += 9;
-            total_ticks = sim_freeze_mutta(&player, total_ticks, hp_large_mutta, &monsters[1], &best_style_large_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
+            total_ticks = sim_freeze_mutta(total_ticks, hp_large_mutta, &monsters[1], &best_style_large_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
             phase_results[i] = 0;
         } else {
             let (new_total_ticks, phase_ticks) = sim_chop_tree(&player, total_ticks, tree_hp, tree_accuracy, hp_small_mutta, base_small_mutta_hp, &best_style_small_mutta, &mut rng);
@@ -297,21 +295,21 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
         *prob /= trials as f64;
     }
     let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
-    let std_ttk = {
-        let mean = mean_ttk;
-        let var = tick_counts.iter().map(|&x| {
-            let diff = x as f64 - mean;
-            diff * diff
-        }).sum::<f64>() / trials as f64;
-        var.sqrt()
-    };
+    // let std_ttk = {
+    //     let mean = mean_ttk;
+    //     let var = tick_counts.iter().map(|&x| {
+    //         let diff = x as f64 - mean;
+    //         diff * diff
+    //     }).sum::<f64>() / trials as f64;
+    //     var.sqrt()
+    // };
 
     // Collect results for each monster (if you have more than one)
     let mut results = Vec::new();
     let mut total_expected_hits = 0.0;
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
-    let mut encounter_kill_times = Vec::new();
+    let encounter_kill_times = kill_prob.clone();
     // let encounter_attack_speed = Some(attack_speed_small_mutta); // or whatever is appropriate
     let kill_times = kill_prob.clone();
 
@@ -322,7 +320,6 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
     total_expected_hits += expected_hits;
     total_expected_ticks += expected_ttk;
     total_expected_seconds += expected_seconds;
-    encounter_kill_times = kill_prob.clone();
 
     // Example: For Tekton (single monster)
 

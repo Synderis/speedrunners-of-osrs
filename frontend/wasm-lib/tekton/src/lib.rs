@@ -184,8 +184,6 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
     // Extract Tekton stats
     let base_tekton_hp = monsters[0].skills.hp as i32;
-    let mut attack_speed_normal = player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.speed).unwrap_or(4) as usize;
-    let mut attack_speed_enraged = attack_speed_normal;
 
     // Find best style for spec
     let mut tekton_initial = monsters[0].clone();
@@ -196,20 +194,15 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
     // Prepare simulation
     let mut tick_counts = vec![0usize; trials];
-    let mut best_style_normal: Option<StyleResult> = None;
-    let mut best_style_enraged: Option<StyleResult> = None;
     let mut hp_pre_anvil: Vec<usize> = vec![0; trials];
     let mut phase_results: Vec<usize> = vec![0; trials];
 
 
     let (delay, attack_pattern): (usize, Vec<[usize; 2]>) = if room_methods.len() > 0 && room_methods[0] == "Tekton Short Lure" {
-        // (12, vec![[0, 4], [0, 3], [4, 10]])
         (12, vec![[0, 4], [0, 3], [4, 10]])
     } else {
         (17, vec![[0, 5], [0, 3], [4, 11]])
     };
-    // let delay = 17;
-    // let attack_pattern = vec![[0, 5], [0, 3], [4, 11]];
 
     for i in 0..trials {
         let mut tekton_hp = base_tekton_hp;
@@ -262,8 +255,6 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             if best_style_normal.is_none() || best_style_enraged.is_none() {
                 best_style_normal = Some(find_best_combat_style(&player, &tekton_normal, vec!["melee".to_string()]));
                 best_style_enraged = Some(find_best_combat_style(&player, &tekton_enraged, vec!["melee".to_string()]));
-                attack_speed_normal = best_style_normal.as_ref().unwrap().attack_speed as usize;
-                attack_speed_enraged = best_style_enraged.as_ref().unwrap().attack_speed as usize;
             }
 
             let best_style_normal = match best_style_normal.as_ref() {
@@ -328,10 +319,10 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 break;
             }
             // Add attack speed to account for the final attack
-            current_phase_ticks += attack_speed_normal - 1;
+            current_phase_ticks += best_style_normal.attack_speed as usize - 1;
 
             // Enraged phase: (4, 11)
-            let (hp3, ticks3, hit_count3, died3) = phase_loop(
+            let (hp3, ticks3, _, died3) = phase_loop(
                 hit_count,
                 &attack_pattern[2],
                 &mut tekton_hp,
@@ -343,7 +334,6 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             );
             tekton_hp = hp3;
             current_phase_ticks = ticks3;
-            hit_count = hit_count3;
             if died3 || tekton_hp <= 0 {
                 total_ticks += current_phase_ticks - 1;
                 break;
@@ -373,14 +363,14 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
     // Compute statistics
     let mean_ttk = tick_counts.iter().sum::<usize>() as f64 / trials as f64;
-    let std_ttk = {
-        let mean = mean_ttk;
-        let var = tick_counts.iter().map(|&x| {
-            let diff = x as f64 - mean;
-            diff * diff
-        }).sum::<f64>() / trials as f64;
-        var.sqrt()
-    };
+    // let std_ttk = {
+    //     let mean = mean_ttk;
+    //     let var = tick_counts.iter().map(|&x| {
+    //         let diff = x as f64 - mean;
+    //         diff * diff
+    //     }).sum::<f64>() / trials as f64;
+    //     var.sqrt()
+    // };
 
     // Build cumulative kill probability
     let max_ticks = match tick_counts.iter().max().copied() {
@@ -399,21 +389,16 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
     // Collect results for each monster (if you have more than one)
     let mut results = Vec::new();
-    let mut total_expected_hits = 0.0;
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
-    let mut encounter_kill_times = Vec::new();
-    // let encounter_attack_speed = Some(best_style_normal.as_ref().unwrap().attack_speed as usize);
+    let encounter_kill_times = kill_prob.clone();
     let kill_times = kill_prob.clone();
 
-    // let expected_hits = mean_ttk / best_style_normal.as_ref().unwrap().attack_speed as f64; // or however you calculate it
     let expected_ttk = mean_ttk;
     let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
 
-    // total_expected_hits += expected_hits;
     total_expected_ticks += expected_ttk;
     total_expected_seconds += expected_seconds;
-    encounter_kill_times = kill_prob.clone();
 
     // Example: For Tekton (single monster)
 
@@ -453,7 +438,6 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
 
     // Convert encounter_kill_times to JSON object array
-    // let attack_speed = encounter_attack_speed.unwrap_or(1);
     let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()
         .map(|(idx, &prob)| {
             serde_json::json!({

@@ -58,10 +58,9 @@ interface PlotSectionProps {
 
 type Stats = {
   total_hits: number;
-  // expectedHits: number;
-  // accuracy: number;
   total_expected_ticks: number;
   result?: any;
+  phase_time_results?: any[];
   phase_results: any[]
 };
 
@@ -166,6 +165,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   const [statsDict, setStatsDict] = useState<Record<string, Stats>>({});
   const [showSeconds, setShowSeconds] = useState(false);
   const [selectedMonsterIdx, setSelectedMonsterIdx] = useState(0);
+  const [showConfig, setShowConfig] = useState(false);
 
   // --- Refs ---
   const titleRef = useRef(null);
@@ -218,8 +218,8 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   const plotData = plotDataDict[activeTab] || [];
   const defaultStats: Stats = {
     total_hits: 0,
+    phase_time_results: [],
     phase_results: [],
-    // total_expected_hits: 0,
     total_expected_ticks: 0,
   };
   const activeStats = statsDict[activeTab] || defaultStats;
@@ -394,7 +394,8 @@ const PlotSection: React.FC<PlotSectionProps> = ({
           total_hits: result.summary.expectedHits,
           total_expected_ticks: result.summary.ticksTimeToKill,
           result: result.perMonster,
-          phase_results: result.summary.phaseResults
+          phase_time_results: result.summary.phaseTimeResults || [],
+          phase_results: result.summary.phaseResults || [],
         };
       }
 
@@ -418,6 +419,85 @@ const PlotSection: React.FC<PlotSectionProps> = ({
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  const statCards = [
+    { title: 'Combat Type', value: (() => {
+        if (!activeRoom) return '--';
+        const monsters = getMonstersByRoom(activeRoom);
+        const monster = monsters[selectedMonsterIdx];
+        const perMonsterArr = activeStats.result || [];
+        // Find the matching perMonster entry by monster_id
+        const perMonster = monster
+          ? perMonsterArr.find((pm: any) => String(pm.monster_id) === String(monster.id))
+          : null;
+        return perMonster
+          ? `${perMonster.combat_type}`
+          : '--';
+      })() },
+    { title: 'Attack Style', value: (() => {
+        if (!activeRoom) return '--';
+        const monsters = getMonstersByRoom(activeRoom);
+        const monster = monsters[selectedMonsterIdx];
+        const perMonsterArr = activeStats.result || [];
+        // Find the matching perMonster entry by monster_id
+        const perMonster = monster
+          ? perMonsterArr.find((pm: any) => String(pm.monster_id) === String(monster.id))
+          : null;
+        return perMonster
+          ? `${perMonster.attack_style}`
+          : '--';
+      })() },
+    
+    // { title: 'Total Hit Value', value: activeStats.total_hits > 0 ? activeStats.total_hits.toFixed(1) : '--' },
+    {
+      title: 'Avg Phase Count',
+      value: (() => {
+        const phaseResults = activeStats.phase_results || [];
+        if (!phaseResults.length) return null;
+        const avg = phaseResults.reduce((sum, val) => sum + val, 0) / phaseResults.length;
+        if (!avg || avg <= 0) return null;
+        return avg.toFixed(2);
+      })(),
+      unit: activeRoom?.units || 'units'
+    },
+    {
+      title: 'One Phase Odds',
+      value: (() => {
+        const phaseResults = activeStats.phase_results || [];
+        if (!phaseResults.length) return null;
+        const onePhaseCount = phaseResults.filter(val => val <= 1).length;
+        const odds = onePhaseCount / phaseResults.length;
+        if (!odds || odds <= 0) return null;
+        return (odds * 100).toFixed(2) + '%';
+      })(),
+      unit: activeRoom?.units || 'units'
+    },
+    {
+      title: 'Avg Phase Time',
+      value: (() => {
+        const phaseTimeResults = activeStats.phase_time_results || [];
+        if (!phaseTimeResults.length) return null;
+        const avg = phaseTimeResults.reduce((sum, val) => sum + val, 0) / phaseTimeResults.length;
+        if (showSeconds) {
+          return formatSeconds(avg * 0.6);
+        } else {
+          return avg.toFixed(1);
+        }
+      })(),
+      unit: showSeconds ? 'min:sec' : 'ticks'
+    },
+    // { title: 'Total Hit Count', value: activeStats.total_expected_ticks > 0 ? activeStats.total_expected_ticks.toFixed(1) : '--' },
+    // { title: 'Accuracy', value: activeStats.accuracy > 0 ? `${activeStats.accuracy.toFixed(1)}%` : '--', unit: 'hit rate' },
+    { 
+      title: 'Time to Kill', 
+      value: activeStats.total_expected_ticks > 0
+        ? (showSeconds
+            ? formatSeconds(activeStats.total_expected_ticks * 0.6)
+            : activeStats.total_expected_ticks.toFixed(1))
+        : '--',
+      unit: showSeconds ? 'min:sec' : 'ticks' 
+    },
+  ].filter(stat => stat.value !== null);
 
   return (
     <motion.section
@@ -497,7 +577,17 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                 );
               })}
             </div>
-            <ConfigColumns configSections={configSections} />
+            <button
+              className="config-toggle-btn"
+              style={{ margin: '0.5rem 0' }}
+              onClick={() => setShowConfig(v => !v)}
+              type="button"
+            >
+              {showConfig ? 'Hide Gear/Monster Config' : 'Show Gear/Monster Config'}
+            </button>
+            {showConfig && (
+              <ConfigColumns configSections={configSections} />
+            )}
           </motion.div>
 
           {/* Stats Cards */}
@@ -508,56 +598,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
             animate={statsInView ? { opacity: 1 } : { opacity: 0 }}
             transition={{ duration: 0.6 }}
           >
-            {[
-              { title: 'Combat Type', value: (() => {
-                  if (!activeRoom) return '--';
-                  const monsters = getMonstersByRoom(activeRoom);
-                  const monster = monsters[selectedMonsterIdx];
-                  const perMonsterArr = activeStats.result || [];
-                  // Find the matching perMonster entry by monster_id
-                  const perMonster = monster
-                    ? perMonsterArr.find((pm: any) => String(pm.monster_id) === String(monster.id))
-                    : null;
-                  return perMonster
-                    ? `${perMonster.combat_type}`
-                    : '--';
-                })() },
-              { title: 'Attack Style', value: (() => {
-                  if (!activeRoom) return '--';
-                  const monsters = getMonstersByRoom(activeRoom);
-                  const monster = monsters[selectedMonsterIdx];
-                  const perMonsterArr = activeStats.result || [];
-                  // Find the matching perMonster entry by monster_id
-                  const perMonster = monster
-                    ? perMonsterArr.find((pm: any) => String(pm.monster_id) === String(monster.id))
-                    : null;
-                  return perMonster
-                    ? `${perMonster.attack_style}`
-                    : '--';
-                })() },
-              
-              // { title: 'Total Hit Value', value: activeStats.total_hits > 0 ? activeStats.total_hits.toFixed(1) : '--' },
-              {
-                title: 'Avg Phase Result',
-                value: (() => {
-                  const phaseResults = activeStats.phase_results || [];
-                  if (!phaseResults.length) return '--';
-                  const avg = phaseResults.reduce((sum, val) => sum + val, 0) / phaseResults.length;
-                  return avg.toFixed(2);
-                })()
-              },
-              // { title: 'Total Hit Count', value: activeStats.total_expected_ticks > 0 ? activeStats.total_expected_ticks.toFixed(1) : '--' },
-              // { title: 'Accuracy', value: activeStats.accuracy > 0 ? `${activeStats.accuracy.toFixed(1)}%` : '--', unit: 'hit rate' },
-              { 
-                title: 'Time to Kill', 
-                value: activeStats.total_expected_ticks > 0
-                  ? (showSeconds
-                      ? formatSeconds(activeStats.total_expected_ticks * 0.6)
-                      : activeStats.total_expected_ticks.toFixed(1))
-                  : '--',
-                unit: showSeconds ? 'min:sec' : 'ticks' 
-              },
-            ].map((stat, index) => (
+            {statCards.map((stat, index) => (
               <motion.div
                 key={stat.title}
                 className="stat-card card"
@@ -608,6 +649,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
           theme={theme}
           formatSeconds={formatSeconds}
           fadeInOut={fadeInOut}
+          expectedTTK={showSeconds ? (activeStats.total_expected_ticks * 0.6).toFixed(1) : activeStats.total_expected_ticks.toFixed(1)}
         />
         </div>
       </div>

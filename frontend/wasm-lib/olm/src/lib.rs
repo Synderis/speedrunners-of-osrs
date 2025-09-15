@@ -161,7 +161,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
 
     let mut player = payload.player;
     let monsters = payload.room.monsters;
-    let room_methods = payload.room.methods;
+    let _room_methods = payload.room.methods;
     let trials = 100000;
     let mut rng = rand::thread_rng();
 
@@ -191,9 +191,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     olm_melee_hand_specced.skills.def = (olm_melee_hand_specced.skills.def as f64 * 0.65) as u32;
     let best_style_specced = find_best_combat_style(&player, &olm_melee_hand_specced, vec!["melee".to_string()]);
 
-    let max_hit_spec = best_style_spec.max_hit as i32;
-    let accuracy_spec = best_style_spec.accuracy;
-
     // Prepare simulation
     let mut tick_counts = vec![0usize; trials];
     let mut phase_results: Vec<usize> = Vec::new();
@@ -202,14 +199,14 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
 
     for i in 0..trials {
         let mut total_ticks = 0;
-        let mut ranged_ticks = 0;
+        let ranged_ticks;
         let mut ranged_hp = monsters[2].skills.hp as i32;
         let mut current_phase_ticks = 0;
         for phase in 0..3 {
             let mut mage_hp = monsters[0].skills.hp as i32;
             let mut melee_hp = monsters[1].skills.hp as i32;
-            let mut mage_ticks = 0;
-            let mut melee_ticks = 0;
+            let mage_ticks;
+            let mut melee_ticks;
             let mut spec_hit = false;
             current_phase_ticks = 0;
 
@@ -273,14 +270,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
 
     // Compute statistics
     let mean_ttk = tick_counts.iter().sum::<usize>() as f64 / trials as f64;
-    let std_ttk = {
-        let mean = mean_ttk;
-        let var = tick_counts.iter().map(|&x| {
-            let diff = x as f64 - mean;
-            diff * diff
-        }).sum::<f64>() / trials as f64;
-        var.sqrt()
-    };
 
     // Build cumulative kill probability
     let max_ticks = match tick_counts.iter().max().copied() {
@@ -302,7 +291,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     let mut total_expected_hits = 0.0;
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
-    let mut encounter_kill_times = Vec::new();
+    let encounter_kill_times = kill_prob.clone();
     let encounter_attack_speed = 5; // or whatever is appropriate
     let kill_times = kill_prob.clone();
     let expected_hits = mean_ttk / encounter_attack_speed as f64; // or however you calculate it
@@ -312,7 +301,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     total_expected_hits += expected_hits;
     total_expected_ticks += expected_ttk;
     total_expected_seconds += expected_seconds;
-    encounter_kill_times = kill_prob.clone();
 
     // Example: For Tekton (single monster)
 
@@ -356,7 +344,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     results.push(result_ranged);
 
     // Convert encounter_kill_times to JSON object array
-    let attack_speed = 5;
     let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()
         .map(|(idx, &prob)| {
             serde_json::json!({
@@ -373,7 +360,8 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
         "total_expected_ticks": total_expected_ticks,
         "total_expected_seconds": total_expected_seconds,
         "encounter_kill_times": encounter_kill_times_obj,
-        "phase_results": phase_results,
+        "phase_time_results": phase_results,
+        "phase_results": [],
     }).to_string()
 }
 
