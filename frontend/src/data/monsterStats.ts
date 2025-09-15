@@ -881,15 +881,15 @@ export const rooms: Room[] = [
         units: 'Anvils',
         methods: ['Tekton Long Lure', 'Tekton Medium Lure', 'Tekton Short Lure']
     },
-    {
-        id: 'crabs',
-        name: 'Crabs',
-        image: '/rooms/150px-Jewelled_Crab.webp',
-        description: 'Low-level training area',
-        monsters: ['crabs'],
-        units: 'Crabs',
-        methods: []
-    },
+    // {
+    //     id: 'crabs',
+    //     name: 'Crabs',
+    //     image: '/rooms/150px-Jewelled_Crab.webp',
+    //     description: 'Low-level training area',
+    //     monsters: ['crabs'],
+    //     units: 'Crabs',
+    //     methods: []
+    // },
     {
         id: 'ice_demon',
         name: 'Ice Demon',
@@ -927,9 +927,9 @@ export const rooms: Room[] = [
         methods: []
     },
     {
-        id: 'tightrope',
-        name: 'Tightrope',
-        image: '/rooms/130px-Keystone_crystal_detail.webp',
+        id: 'thieving',
+        name: 'Thieving',
+        image: '/rooms/250px-Chest_(Chambers_of_Xeric,_closed).webp',
         description: 'High-level agility course',
         monsters: [],
         units: 'Keystones',

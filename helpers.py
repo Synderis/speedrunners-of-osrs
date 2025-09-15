@@ -174,6 +174,8 @@ def calculate_max_hit_for_style(player, monster, style, gear, gear_type="ranged"
         max_hit = int(0.5 + (effective_strength * (str_bonus + 64.0)) / 640.0)
         if player["gearSets"]["melee"].get("selectedWeapon", {}).get("name", "").lower() == "scythe of vitur":
             max_hit = int(max_hit + (max_hit / 2) + (max_hit / 4))
+        if player["gearSets"]["melee"].get("selectedWeapon", {}).get("name", "").lower() == "burning claws":
+            max_hit = int(max_hit * 1.15)
         return max_hit, effective_strength
     elif gear_type == "ranged":
         level = player["combatStats"]["ranged"]
