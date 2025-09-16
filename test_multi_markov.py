@@ -285,15 +285,27 @@ def weapon_kill_times(hp, max_hit, acc, cap):
     weapon = build_transition_matrix(hp, max_hit, acc)
     state = npc_state(hp)
     out = []
-    p_dead = state[0]  # Probability of being dead is state[0]
-    tick = 0  # Start at tick 0 to match sim
+    p_dead = state[0]
+    tick = 0
     attack_speed = 5
-    while p_dead < cap:
-        # Each step is an attack (like the sim)
-        state = row_vec_times_square_mat(state, weapon, n)
-        p_dead = state[0]
+    ticks_since_attack = 0
+    last_death_tick = None
+    # Tick-accurate Markov propagation
+    while True:
         out.append(p_dead)
-        tick += attack_speed
+        tick += 1
+        ticks_since_attack += 1
+        # Only apply weapon matrix on attack ticks
+        if ticks_since_attack == attack_speed:
+            state = row_vec_times_square_mat(state, weapon, n)
+            p_dead = state[0]
+            ticks_since_attack = 0
+        # Record the tick when monster dies
+        if last_death_tick is None and p_dead >= cap:
+            last_death_tick = tick
+        # After death, continue for attack_speed ticks (cooldown)
+        if last_death_tick is not None and tick >= last_death_tick + attack_speed:
+            break
     return out, attack_speed
 
 def kill_time_distribution_matrix(hp, max_hit, accuracy, cap=0.99, max_steps=512):
@@ -355,34 +367,35 @@ if __name__ == "__main__":
     all_attack_ticks = []
     all_kill_times = []
     start_time = time.time()
-    for idx, monster in enumerate(monsters):
-        best_style = find_best_combat_style(player, monster, mining_level)
-        print(f"[Monster {idx+1}] Best style: {best_style}")
-        max_hit = best_style["max_hit"]
-        accuracy = best_style["accuracy"]
-        p_zero = (1 - accuracy) + accuracy / (max_hit + 1)
-        expected_damage = accuracy * (sum(i for i in range(0, max_hit + 1)) / (max_hit + 1))
-        print(f"[Monster {idx+1}] Probability of 0 damage: {p_zero:.4f}")
-        print(f"[Monster {idx+1}] Expected damage per attack: {expected_damage:.4f}")
 
-        kill_times, attack_speed = weapon_kill_times(
-            monster["skills"]["hp"],
-            max_hit,
-            accuracy,
-            cap
-        )
-        attack_ticks = [i * attack_speed for i in range(len(kill_times))]
-        expected_tick = sum(
-            tick * (kill_times[i] - kill_times[i - 1] if i > 0 else kill_times[0])
-            for i, tick in enumerate(attack_ticks)
-        )
-        expected_seconds = expected_tick * 0.6
-        print(f"[Monster {idx+1}] Expected TTK: {expected_tick:.2f} ticks ({expected_seconds:.2f} seconds)")
-        total_expected_tick += expected_tick
-        total_expected_seconds += expected_seconds
-        # For plotting, just plot the last monster
-        all_attack_ticks = attack_ticks
-        all_kill_times = kill_times
+    best_style = find_best_combat_style(player, monsters[0], mining_level)
+    # print(f"[Monster {idx+1}] Best style: {best_style}")
+    max_hit = best_style["max_hit"]
+    accuracy = best_style["accuracy"]
+    p_zero = (1 - accuracy) + accuracy / (max_hit + 1)
+    expected_damage = accuracy * (sum(i for i in range(0, max_hit + 1)) / (max_hit + 1))
+    # print(f"[Monster {idx+1}] Probability of 0 damage: {p_zero:.4f}")
+    # print(f"[Monster {idx+1}] Expected damage per attack: {expected_damage:.4f}")
+
+    kill_times, attack_speed = weapon_kill_times(
+        monsters[0]["skills"]["hp"] * 2,
+        max_hit,
+        accuracy,
+        cap
+    )
+    # Calculate PMF from tick-accurate CDF
+    kill_pmf = [kill_times[0]] + [kill_times[i] - kill_times[i - 1] for i in range(1, len(kill_times))]
+    attack_ticks = list(range(len(kill_times)))
+    kill_cdf = kill_times
+    # Calculate mean using tick-accurate axis and PMF
+    expected_tick = sum(tick * p for tick, p in zip(attack_ticks, kill_pmf))
+    expected_seconds = expected_tick * 0.6
+    # print(f"[Monster {idx+1}] Expected TTK: {expected_tick:.2f} ticks ({expected_seconds:.2f} seconds)")
+    total_expected_tick += expected_tick
+    total_expected_seconds += expected_seconds
+    # For plotting, use the corrected tick axis and CDF
+    all_attack_ticks = attack_ticks
+    all_kill_times = kill_cdf
 
     elapsed = time.time() - start_time
     print(f"Total Expected TTK for {len(monsters)} monsters: {total_expected_tick:.2f} ticks ({total_expected_seconds:.2f} seconds)")
@@ -397,10 +410,11 @@ if __name__ == "__main__":
         name='Kill Probability'
     ))
     fig.update_layout(
-        title="Kill Probability Over Time (Last Monster)",
+        title="Kill Probability Over Time (Single Monster, cooldown included)",
         xaxis_title="Tick",
         yaxis_title="Cumulative Probability",
         legend_title="Legend",
         hovermode="x unified"
     )
     fig.show()
+    print(f"Mean (expected value) of total run time: {expected_tick:.2f} ticks")

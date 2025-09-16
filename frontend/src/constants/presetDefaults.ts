@@ -50,7 +50,10 @@ export const GEAR_SET_PRESET_DEFAULTS: GearSetPreset[] = [
             "25975",
             "12018",
             "11865",
-            "11808"
+            "11808",
+            "11920",
+            "21003",
+            "22322"
         ]
     },
     {

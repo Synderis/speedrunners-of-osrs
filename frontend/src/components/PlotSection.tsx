@@ -466,6 +466,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         const phaseResults = activeStats.phase_results || [];
         if (!phaseResults.length) return null;
         const onePhaseCount = phaseResults.filter(val => val <= 1).length;
+        if (phaseResults.filter(val => val > 0).length === 0) return null;
         const odds = onePhaseCount / phaseResults.length;
         if (!odds || odds <= 0) return null;
         return (odds * 100).toFixed(2) + '%';

@@ -48,8 +48,10 @@ name = "guardians"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
+ "getrandom",
  "osrs_shared_functions",
  "osrs_shared_types",
+ "rand",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -118,8 +120,10 @@ name = "mystics"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
+ "getrandom",
  "osrs_shared_functions",
  "osrs_shared_types",
+ "rand",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -273,8 +277,10 @@ name = "shamans"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
+ "getrandom",
  "osrs_shared_functions",
  "osrs_shared_types",
+ "rand",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -352,8 +358,10 @@ name = "vespula"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
+ "getrandom",
  "osrs_shared_functions",
  "osrs_shared_types",
+ "rand",
  "serde",
  "serde_json",
  "wasm-bindgen",

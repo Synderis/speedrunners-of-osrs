@@ -70,7 +70,8 @@ export const gearSetPresets: GearSetPreset[] = [
             "11865",
             "11808",
             "11920",
-            "21003"
+            "21003",
+            "22322"
         ],
         rooms: [{ id: "tekton", method: "Tekton Short Lure" }]
     },
