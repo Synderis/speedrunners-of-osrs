@@ -88,9 +88,10 @@ def burning_barrage_special(max_hit, accuracy):
     burns = []
     for i, hit in enumerate(hits):
         if burn_chance[i] > 0 and np.random.rand() < burn_chance[i]:
-            burns.append(True)
-        else:
-            burns.append(False)
+            if i == 2:
+                burns.append(9)
+            else:
+                burns.append(10)
     return hits, burns
 
 def ember_light_kill(hp, max_hit, accuracy, attack_speed, total_ticks):
@@ -103,7 +104,7 @@ def ember_light_kill(hp, max_hit, accuracy, attack_speed, total_ticks):
             # print(hit_count, attack_tick - 1, ice_demon_hp)
             if np.random.rand() < accuracy_val:
                 # spec_count += 1
-                hit = np.random.randint(0, 64 + 1)
+                hit = np.random.randint(0, max_hit + 1)
                 if accuracy_val == accuracy[1]:
                     accuracy_val = accuracy[2]
                 else:
@@ -117,7 +118,7 @@ def ember_light_kill(hp, max_hit, accuracy, attack_speed, total_ticks):
         if (attack_tick - 1) % attack_speed == 0:
             hit = 0
             if np.random.rand() < accuracy_val:
-                hit = np.random.randint(0, 64 + 1)
+                hit = np.random.randint(0, max_hit + 1)
             hp -= hit
             hit_count += 1
         if hp <= 0:
@@ -132,30 +133,30 @@ def ember_light_kill(hp, max_hit, accuracy, attack_speed, total_ticks):
 def burning_claws_kill(hp, max_hit, accuracy, attack_speed, total_ticks):
     attack_tick = 0
     hit_count = 0
-    burn_amount = 0
-    burn_count = 1
-    burn_dict = {}
+    burn_list = []
     hit_count = 0
 
     while hit_count < 4:
         attack_tick += 1
         if (attack_tick - 1) % attack_speed == 0:
-            hit = burning_barrage_special(43, 0.4018)
-            hp -= sum(hit[0])
-            if burn_dict:
-                keys = list(burn_dict.keys())
-                for burn in keys:
-                    hp -= burn_dict[burn] / 4
-                    burn_dict[burn] -= burn_dict[burn] / 4
-                    if burn_dict[burn] <= 0:
-                        del burn_dict[burn]
-            if hit_count not in burn_dict:
-                burn_dict[hit_count] = 0
-            burn_dict[hit_count] += sum([10 if burn else 0 for burn in hit[1]])
-            # burn_count += 1 if any(hit[1]) else 0
+            hit, burns = burning_barrage_special(max_hit, accuracy)
+            hp -= sum(hit)
+            if burn_list or burns:
+                for i in range(len(burns)):
+                    if burns and burns[i] > 0 and len(burn_list) < 5:
+                        burn_list.append(burns[i])
+                remove_list = []
+                for i in range(len(burn_list)):
+                    if burn_list[i] > 0:
+                        hp -= 1
+                        burn_list[i] -= 1
+                    if burn_list[i] <= 0:
+                        remove_list.append(i)
+                for i in reversed(remove_list):
+                    del burn_list[i]
+                remove_list = []
             hit_count += 1
         if hp <= 0:
-            # total_ticks
             break
     # tick_counts_pre.append(attack_tick - 1)
     # hp_remaining_list.append(hp)
@@ -173,20 +174,20 @@ def burning_claws_kill(hp, max_hit, accuracy, attack_speed, total_ticks):
             hit = 0
             if np.random.rand() < 0.4018:
                 hit = np.random.randint(0, 43 + 1)
-            if burn_dict:
-                keys = list(burn_dict.keys())
-                for burn in keys:
-                    hp -= burn_dict[burn] / 4
-                    burn_dict[burn] -= burn_dict[burn] / 4
-                    if burn_dict[burn] <= 0:
-                        del burn_dict[burn]
+            if burn_list:
+                remove_list = []
+                for i in range(len(burn_list)):
+                    if burn_list[i] > 0:
+                        hp -= 1
+                        burn_list[i] -= 1
+                    if burn_list[i] <= 0:
+                        remove_list.append(i)
+                for i in reversed(remove_list):
+                    del burn_list[i]
+                remove_list = []
             hp -= hit
             hit_count += 1
         if hp <= 0:
-            # if hit_count < 4:
-            #     early_death.append(1)
-            # else:
-            #     early_death.append(0)
             total_ticks += (attack_tick + attack_speed - 1)
             break
     return total_ticks
@@ -225,7 +226,7 @@ if __name__ == "__main__":
         ice_demon_hp = 210
         attack_tick = 0
         attack_speed = 4  # in ticks
-        emberlight = False
+        emberlight = True
         if emberlight:
             total_ticks = ember_light_kill(ice_demon_hp, 64, [0.6925, 0.7382, 0.7839], attack_speed, total_ticks)
         else:
@@ -245,15 +246,15 @@ if __name__ == "__main__":
     kill_prob = kill_prob / trials
     mean_ttk = np.mean(tick_counts)
     median_ttk = np.median(tick_counts)
-    hp_remaining_mean = np.mean(hp_remaining_list)
-    tick_counts_pre_mean = np.mean(tick_counts_pre)
+    # hp_remaining_mean = np.mean(hp_remaining_list)
+    # tick_counts_pre_mean = np.mean(tick_counts_pre)
     std_ttk = np.std(tick_counts)
 
     print(f"[Sim] Trials: {trials}")
     print(f"Expected TTK: {mean_ttk:.2f} ticks ({mean_ttk * 0.6:.2f} seconds)")
     print(f"Median TTK: {median_ttk:.2f} ticks ({median_ttk * 0.6:.2f} seconds)")
-    early_death_sum = sum(early_death) / len(early_death)
-    print(f"Early Death: {early_death_sum:.2f}")
+    # early_death_sum = sum(early_death) / len(early_death)
+    # print(f"Early Death: {early_death_sum:.2f}")
     # print(f"Mean HP Remaining: {hp_remaining_mean:.2f}")
     # print(f"Mean Pre-Burn Ticks: {tick_counts_pre_mean:.2f} ticks ({tick_counts_pre_mean * 0.6:.2f} seconds)")
     # print(f"Spec Attacks hit: {np.mean(spec_count_list):.2f}")
@@ -291,4 +292,4 @@ if __name__ == "__main__":
         legend_title="Legend",
         hovermode="x unified"
     )
-    fig.show()
+    # fig.show()
