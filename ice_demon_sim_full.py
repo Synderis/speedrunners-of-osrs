@@ -48,10 +48,118 @@ def ensure_weapon_swap(player, weapon, equip_offhand=None):
                 gear_items.append(equip_offhand)
             return player, current_weapon["name"], current_offhand
 
+def get_drain_and_heal(kindling):
+    if kindling == 0:
+        return 0.01, 0.0   # heal 1%, drain 0%
+    elif 1 <= kindling <= 3:
+        return 0.01, 0.01  # heal 1%, drain 1%
+    elif 4 <= kindling <= 8:
+        return 0.01, 0.02  # heal 1%, drain 2%
+    elif 9 <= kindling <= 16:
+        return 0.01, 0.03  # heal 1%, drain 3%
+    elif 17 <= kindling <= 24:
+        return 0.01, 0.04  # heal 1%, drain 4%
+    else:  # 25+
+        return 0.01, 0.05  # heal 1%, drain 5%
+
+def chop_simulation(total_ticks, base_hp):
+    initial_delay = 34
+    chop_hp = base_hp
+    # Phase 1: Chop until you have at least 25 kindling, then dump into burner 1
+    kindling_count = 0
+    time_before_dump = 0
+    while kindling_count < 23:
+        time_before_dump += 1
+        if (time_before_dump - 1) % 5 == 0:
+            kindling_count += np.random.randint(1, 9)  # 1 to 8 inclusive
+
+    total_ticks += time_before_dump + 14 - 1
+    burner_1_count = kindling_count
+    kindling_count = 0
+    burner_2_count = 0
+    burner_3_count = 0
+    third_burner_lit = False
+    time_after_dump = 0
+
+    # Phase 2: Burn phase, possibly add second and third burners
+    while chop_hp > 0:
+        time_after_dump += 1
+
+        # Simulate chopping for second burner
+        if burner_2_count == 0 and kindling_count < 23:
+            if (time_after_dump - 1) % 5 == 0:
+                kindling_count += np.random.randint(1, 9)
+            if kindling_count >= 23:
+                burner_2_count = kindling_count
+                kindling_count = 0
+                time_after_dump += 16  # time to dump into second burner
+
+        # Simulate chopping for third burner (after second is lit, only get 3-4 instances)
+        if burner_2_count > 0 and not third_burner_lit:
+            target_chops = np.random.randint(3, 5)  # 3 or 4 instances
+            third_burner_chops = 0
+            third_burner_kindling = 0
+            while third_burner_chops < target_chops:
+                third_burner_chops += 1
+                third_burner_kindling += np.random.randint(1, 9)
+                if third_burner_kindling >= 8:
+                    break
+            time_after_dump += 8
+            burner_3_count = third_burner_kindling
+            third_burner_lit = True
+            time_after_dump += third_burner_chops * 5
+
+        # Every 6 ticks, kindling is used up and heal/drain is applied
+        if (time_after_dump - 1) % 6 == 0:
+            # Calculate heal/drain for each burner
+            burner_heals = []
+            burner_drains = []
+
+            if burner_1_count > 0:
+                heal1, drain1 = get_drain_and_heal(burner_1_count)
+                burner_heals.append(heal1)
+                burner_drains.append(drain1)
+                burner_1_count -= 1
+            if burner_2_count > 0:
+                heal2, drain2 = get_drain_and_heal(burner_2_count)
+                burner_drains.append(drain2)
+                burner_2_count -= 1
+            if burner_3_count > 0:
+                heal3, drain3 = get_drain_and_heal(burner_3_count)
+                burner_drains.append(drain3)
+                burner_3_count -= 1
+
+            # Only apply heal once (take the max heal from all burners, or just 0.01 if any burner is lit)
+            heal_total = max(burner_heals) if burner_heals else 0.0
+            drain_total = sum(burner_drains)
+
+            chop_hp += heal_total * base_hp
+            chop_hp -= drain_total * base_hp
+            if chop_hp > base_hp:
+                chop_hp = base_hp
+
+        if chop_hp <= 0:
+            break
+
+    total_ticks += time_after_dump + initial_delay - 1
+    return total_ticks
+
+def thrall_hit(hp):
+    hit_thrall = np.random.randint(0, 4)
+    if hit_thrall != 3:
+        hit_thrall = 0
+    else:
+        hit_thrall = 1
+    hp -= hit_thrall
+    return hp
+
 def burning_barrage_special(max_hit, accuracy):
     # First accuracy roll
     if np.random.rand() < accuracy:
-        dmg = int(np.random.uniform(0.75, 1.75) * max_hit)
+        max_hit_low = int(max_hit * 0.75)
+        max_hit_high = int(max_hit * 1.75)
+        dmg = np.random.randint(max_hit_low, max_hit_high + 1)
+        # dmg = int(np.random.uniform(0.75, 1.75) * max_hit)
         hit1 = int(0.25 * dmg)
         hit2 = int(0.25 * dmg)
         hit3 = int(0.5 * dmg)
@@ -59,7 +167,10 @@ def burning_barrage_special(max_hit, accuracy):
         burn_chance = [0.15, 0.15, 0.15]
     # Second accuracy roll
     elif np.random.rand() < accuracy:
-        dmg = int(np.random.uniform(0.5, 1.5) * max_hit)
+        max_hit_low = int(max_hit * 0.5)
+        max_hit_high = int(max_hit * 1.5)
+        dmg = np.random.randint(max_hit_low, max_hit_high + 1)
+        # dmg = int(np.random.uniform(0.5, 1.5) * max_hit)
         hit1 = int(0.5 * dmg) - 1
         hit2 = int(0.5 * dmg) - 1
         hit3 = dmg - (hit1 + hit2)
@@ -67,7 +178,10 @@ def burning_barrage_special(max_hit, accuracy):
         burn_chance = [0.30, 0.30, 0.30]
     # Third accuracy roll
     elif np.random.rand() < accuracy:
-        dmg = int(np.random.uniform(0.25, 1.25) * max_hit)
+        max_hit_low = int(max_hit * 0.25)
+        max_hit_high = int(max_hit * 0.75)
+        dmg = np.random.randint(max_hit_low, max_hit_high + 1)
+        # dmg = int(np.random.uniform(0.25, 1.25) * max_hit)
         hit3 = dmg - 2
         hit1 = 1 if dmg >= 2 else 0
         hit2 = 1 if dmg >= 2 else 0
@@ -110,10 +224,11 @@ def ember_light_kill(hp, max_hit, accuracy, attack_speed, total_ticks):
                 else:
                     accuracy_val = accuracy[1]
                 hp -= hit
+            hp = thrall_hit(hp)
             hit_count += 1
     total_ticks += (attack_tick + attack_speed - 1)
     attack_tick = 0
-    while hp > 0:
+    while True:
         attack_tick += 1
         if (attack_tick - 1) % attack_speed == 0:
             hit = 0
@@ -121,6 +236,7 @@ def ember_light_kill(hp, max_hit, accuracy, attack_speed, total_ticks):
                 hit = np.random.randint(0, max_hit + 1)
             hp -= hit
             hit_count += 1
+            hp = thrall_hit(hp)
         if hp <= 0:
             if hit_count < 5:
                 early_death.append(1)
@@ -130,63 +246,54 @@ def ember_light_kill(hp, max_hit, accuracy, attack_speed, total_ticks):
             break
     return total_ticks
 
+def apply_burns(hp, burn_list):
+    # Apply burn damage and update burn durations
+    new_burn_list = []
+    for burn in burn_list:
+        if burn > 0:
+            hp -= 1
+            burn -= 1
+        if burn > 0:
+            new_burn_list.append(burn)
+    return hp, new_burn_list
+
 def burning_claws_kill(hp, max_hit, accuracy, attack_speed, total_ticks):
     attack_tick = 0
     hit_count = 0
     burn_list = []
-    hit_count = 0
 
-    while hit_count < 4:
+    # First phase: 4 special attacks
+    while hit_count < 4 and hp > 0:
         attack_tick += 1
         if (attack_tick - 1) % attack_speed == 0:
             hit, burns = burning_barrage_special(max_hit, accuracy)
             hp -= sum(hit)
-            if burn_list or burns:
-                for i in range(len(burns)):
-                    if burns and burns[i] > 0 and len(burn_list) < 5:
-                        burn_list.append(burns[i])
-                remove_list = []
-                for i in range(len(burn_list)):
-                    if burn_list[i] > 0:
-                        hp -= 1
-                        burn_list[i] -= 1
-                    if burn_list[i] <= 0:
-                        remove_list.append(i)
-                for i in reversed(remove_list):
-                    del burn_list[i]
-                remove_list = []
+            # Add new burns, max 5 at a time
+            for burn in burns:
+                if burn > 0 and len(burn_list) < 5:
+                    burn_list.append(burn)
+            hp, burn_list = apply_burns(hp, burn_list)
             hit_count += 1
-        if hp <= 0:
-            break
-    # tick_counts_pre.append(attack_tick - 1)
-    # hp_remaining_list.append(hp)
+            hp = thrall_hit(hp)
+
     if hp <= 0:
         early_death.append(1)
         total_ticks += (attack_tick + attack_speed - 1)
         return total_ticks
+
     early_death.append(0)
     total_ticks += (attack_tick + attack_speed - 1)
     attack_tick = 0
-    
-    while hp > 0:
+
+    # Second phase: regular attacks
+    while True:
         attack_tick += 1
         if (attack_tick - 1) % attack_speed == 0:
-            hit = 0
-            if np.random.rand() < 0.4018:
-                hit = np.random.randint(0, 43 + 1)
-            if burn_list:
-                remove_list = []
-                for i in range(len(burn_list)):
-                    if burn_list[i] > 0:
-                        hp -= 1
-                        burn_list[i] -= 1
-                    if burn_list[i] <= 0:
-                        remove_list.append(i)
-                for i in reversed(remove_list):
-                    del burn_list[i]
-                remove_list = []
+            hit = np.random.randint(0, max_hit + 1) if np.random.rand() < accuracy else 0
+            hp, burn_list = apply_burns(hp, burn_list)
             hp -= hit
             hit_count += 1
+            hp = thrall_hit(hp)
         if hp <= 0:
             total_ticks += (attack_tick + attack_speed - 1)
             break
@@ -219,21 +326,27 @@ if __name__ == "__main__":
     spec_count_list = []
     tick_counts_post = []
     early_death = []
+    ice_demon_pop_time = []
     
     print(f"[Sim] Starting simulation with {trials} trials...")
     for _ in range(trials):
         total_ticks = 0
         ice_demon_hp = 210
+        total_ticks = chop_simulation(total_ticks, ice_demon_hp)
+        ice_demon_pop_time.append(total_ticks)
+        post_chop_delay = 10
+        post_death_delay = 6
         attack_tick = 0
         attack_speed = 4  # in ticks
-        emberlight = True
+        emberlight = False
         if emberlight:
             total_ticks = ember_light_kill(ice_demon_hp, 64, [0.6925, 0.7382, 0.7839], attack_speed, total_ticks)
         else:
-            total_ticks = burning_claws_kill(ice_demon_hp, 43, 0.4018, attack_speed, total_ticks)
-
+            total_ticks = burning_claws_kill(ice_demon_hp, 42, 0.4927, attack_speed, total_ticks)
+        total_ticks += post_chop_delay
         if total_ticks % 4 != 0:
             total_ticks += 4 - (total_ticks % 4)
+        total_ticks += post_death_delay
         tick_counts.append(total_ticks)
     print(f"[Sim] Simulation complete.")
     
@@ -252,6 +365,7 @@ if __name__ == "__main__":
 
     print(f"[Sim] Trials: {trials}")
     print(f"Expected TTK: {mean_ttk:.2f} ticks ({mean_ttk * 0.6:.2f} seconds)")
+    print(f"Expected Pop Time: {np.mean(ice_demon_pop_time):.2f} ticks ({np.mean(ice_demon_pop_time) * 0.6:.2f} seconds)")
     print(f"Median TTK: {median_ttk:.2f} ticks ({median_ttk * 0.6:.2f} seconds)")
     # early_death_sum = sum(early_death) / len(early_death)
     # print(f"Early Death: {early_death_sum:.2f}")

@@ -896,7 +896,7 @@ export const rooms: Room[] = [
         image: '/rooms/170px-Ice_demon.webp',
         description: 'High-level boss encounter',
         monsters: ['7585'],
-        units: 'Ice Demons',
+        units: 'Pop Time',
         methods: []
     },
     {
@@ -904,7 +904,7 @@ export const rooms: Room[] = [
         name: 'Lizardman Shamans',
         image: '/rooms/200px-Lizardman_shaman.webp',
         description: 'High-level boss encounter',
-        monsters: ['7573', '7573', '7573'],
+        monsters: ['7573', '7573'],
         units: 'Lizardman Shamans',
         methods: []
     },

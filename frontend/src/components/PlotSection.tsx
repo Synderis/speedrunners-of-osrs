@@ -19,6 +19,7 @@ import { calculateDPSWithObjectsVangs } from '../loaders/vangsWasm';
 import ResultPlot from './ResultPlot';
 import ConfigColumns from './ConfigColumns';
 import { calculateDPSWithObjectsOlm } from '../loaders/olmWasm';
+import { calculateDPSWithObjectsIceDemon } from '../loaders/iceDemonWasm';
 
 
 
@@ -113,6 +114,7 @@ const wasmModelLoaders: Record<string, (player: any, monster: any) => Promise<an
   'muttadile': calculateDPSWithObjectsMutta,
   "olm": calculateDPSWithObjectsOlm,
   "vangs": calculateDPSWithObjectsVangs,
+  "ice_demon": calculateDPSWithObjectsIceDemon
 };
 
 // --- Main Component ---

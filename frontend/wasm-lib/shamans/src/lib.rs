@@ -129,7 +129,8 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
 
     // let walk_delay = 24;
     let trials = 100000;
-    let walk_delay = 0;
+    let walk_delay = 14;
+    let barneys = 6;
     let mut tick_counts = vec![0usize; trials];
     let mut rng = rand::thread_rng();
 
@@ -178,7 +179,7 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
         if (tick - 1) % 4 != 0 {
             tick += 4 - ((tick - 1) % 4);
         }
-        tick_counts[i] = tick;
+        tick_counts[i] = tick + walk_delay + barneys;
     }
     // Defensive: Check tick_counts
     if tick_counts.is_empty() {

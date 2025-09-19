@@ -221,6 +221,12 @@ pub fn calculate_max_hit_for_style(
         if weapon.name == "Scythe of vitur" {
             max_hit = max_hit + (max_hit / 2) + (max_hit / 4);
         };
+        if weapon.name == "Emberlight" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
+            max_hit = (max_hit as f64 * 1.70).floor() as u32;
+        }
+        if weapon.name == "Burning claws" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
+            max_hit = (max_hit as f64 * 1.05).floor() as u32;
+        };
         if weapon.name == "Zamorak godsword" && (style.combat_style == "Slash" || style.combat_style == "Crush") {
             max_hit = (max_hit as f64 * 1.10).floor() as u32;
         };
@@ -287,8 +293,14 @@ pub fn calculate_max_rolls_for_style(
     let mut tbow_mult = 1.0;
 
     let mut max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
-    
+
     let weapon = selected_weapon.unwrap();
+    if weapon.name == "Emberlight" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
+        max_attack_roll = (max_attack_roll as f64 * 1.70).floor() as u64;
+    };
+    if weapon.name == "Burning claws" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
+        max_attack_roll = (max_attack_roll as f64 * 1.05).floor() as u64;
+    };
     if weapon.name == "Tumeken's shadow" {
         bonus *= 3;
         max_attack_roll = effective_level as u64 * (bonus + 64) as u64;

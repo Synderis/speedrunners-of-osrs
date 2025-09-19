@@ -20,7 +20,8 @@ base_hp = 210
 trials = 100000
 tick_counts = []
 for i in range(trials):
-    hp = base_hp
+    chop_hp = base_hp
+    initial_delay = 34
     total_ticks = 0
     # Phase 1: Chop until you have at least 25 kindling, then dump into burner 1
     kindling_count = 0
@@ -30,7 +31,7 @@ for i in range(trials):
         if (time_before_dump - 1) % 5 == 0:
             kindling_count += np.random.randint(1, 9)  # 1 to 8 inclusive
 
-    total_ticks += time_before_dump + 14 - 1
+    total_ticks += time_before_dump + 16 - 1
     burner_1_count = kindling_count
     kindling_count = 0
     burner_2_count = 0
@@ -39,7 +40,7 @@ for i in range(trials):
     time_after_dump = 0
 
     # Phase 2: Burn phase, possibly add second and third burners
-    while hp > 0:
+    while chop_hp > 0:
         time_after_dump += 1
 
         # Simulate chopping for second burner
@@ -49,7 +50,7 @@ for i in range(trials):
             if kindling_count >= 23:
                 burner_2_count = kindling_count
                 kindling_count = 0
-                time_after_dump += 12  # time to dump into second burner
+                time_after_dump += 14  # time to dump into second burner
 
         # Simulate chopping for third burner (after second is lit, only get 3-4 instances)
         if burner_2_count > 0 and not third_burner_lit:
@@ -61,7 +62,7 @@ for i in range(trials):
                 third_burner_kindling += np.random.randint(1, 9)
                 if third_burner_kindling >= 8:
                     break
-            time_after_dump += 6
+            time_after_dump += 8
             burner_3_count = third_burner_kindling
             third_burner_lit = True
             time_after_dump += third_burner_chops * 5
@@ -90,15 +91,15 @@ for i in range(trials):
             heal_total = max(burner_heals) if burner_heals else 0.0
             drain_total = sum(burner_drains)
 
-            hp += heal_total * base_hp
-            hp -= drain_total * base_hp
-            if hp > base_hp:
-                hp = base_hp
+            chop_hp += heal_total * base_hp
+            chop_hp -= drain_total * base_hp
+            if chop_hp > base_hp:
+                chop_hp = base_hp
 
-        if hp <= 0:
+        if chop_hp <= 0:
             break
 
-    total_ticks += time_after_dump - 1
+    total_ticks += time_after_dump + initial_delay - 1
     tick_counts.append(total_ticks)
 
 # print(f"Total ticks: {total_ticks}")
