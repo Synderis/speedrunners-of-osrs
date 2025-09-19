@@ -455,10 +455,10 @@ output = {
 }
 
 # print(json.dumps(output))
-
+x_ticks = list(range(1, len(kill_times) + 1))
 fig = go.Figure()
 fig.add_trace(go.Scatter(
-    x=list(range(len(kill_times))),
+    x=x_ticks,
     y=kill_times,
     mode='lines',
     name='Kill Probability'

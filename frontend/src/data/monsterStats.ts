@@ -867,6 +867,7 @@ export interface Room {
     image: string;
     description: string;
     monsters: string[];
+    units: string;
     methods: string[];
 }
 
@@ -877,22 +878,25 @@ export const rooms: Room[] = [
         image: '/rooms/220px-Tekton.webp',
         description: 'High-level boss encounter',
         monsters: ['7545', '7544'],
+        units: 'Anvils',
         methods: ['Tekton Long Lure', 'Tekton Medium Lure', 'Tekton Short Lure']
     },
-    {
-        id: 'crabs',
-        name: 'Crabs',
-        image: '/rooms/150px-Jewelled_Crab.webp',
-        description: 'Low-level training area',
-        monsters: ['crabs'],
-        methods: []
-    },
+    // {
+    //     id: 'crabs',
+    //     name: 'Crabs',
+    //     image: '/rooms/150px-Jewelled_Crab.webp',
+    //     description: 'Low-level training area',
+    //     monsters: ['crabs'],
+    //     units: 'Crabs',
+    //     methods: []
+    // },
     {
         id: 'ice_demon',
         name: 'Ice Demon',
         image: '/rooms/170px-Ice_demon.webp',
         description: 'High-level boss encounter',
         monsters: ['7585'],
+        units: 'Pop Time',
         methods: []
     },
     {
@@ -900,7 +904,8 @@ export const rooms: Room[] = [
         name: 'Lizardman Shamans',
         image: '/rooms/200px-Lizardman_shaman.webp',
         description: 'High-level boss encounter',
-        monsters: ['7573', '7573', '7573'],
+        monsters: ['7573', '7573'],
+        units: 'Lizardman Shamans',
         methods: []
     },
     {
@@ -909,6 +914,7 @@ export const rooms: Room[] = [
         image: '/rooms/280px-Vanguard_(magic).webp',
         description: 'God Wars Dungeon - Zamorak',
         monsters: ['7527', '7528', '7529'],
+        units: 'Digs',
         methods: []
     },
     {
@@ -917,14 +923,16 @@ export const rooms: Room[] = [
         image: '/rooms/280px-Vespula.webp',
         description: 'Barrows Brothers minigame',
         monsters: ['7533'],
+        units: 'Portals',
         methods: []
     },
     {
-        id: 'tightrope',
-        name: 'Tightrope',
-        image: '/rooms/130px-Keystone_crystal_detail.webp',
+        id: 'thieving',
+        name: 'Thieving',
+        image: '/rooms/250px-Chest_(Chambers_of_Xeric,_closed).webp',
         description: 'High-level agility course',
         monsters: [],
+        units: 'Keystones',
         methods: []
     },
     {
@@ -933,6 +941,7 @@ export const rooms: Room[] = [
         image: '/rooms/guardians.png',
         description: 'High-level boss encounter',
         monsters: ['7570', '7570'],
+        units: 'Guardians',
         methods: []
     },
     {
@@ -941,6 +950,7 @@ export const rooms: Room[] = [
         image: '/rooms/250px-Vasa_Nistirio.webp',
         description: 'God Wars Dungeon - Zamorak',
         monsters: ['7566', '7568'],
+        units: 'Crystals',
         methods: ['Flame Skip']
     },
     {
@@ -949,6 +959,7 @@ export const rooms: Room[] = [
         image: '/rooms/mystics.png',
         description: 'Barrows Brothers minigame',
         monsters: ['7604', '7604', '7604'],
+        units: 'Mystics',
         methods: []
     },
     {
@@ -957,6 +968,7 @@ export const rooms: Room[] = [
         image: '/rooms/250px-Muttadile.webp',
         description: 'High-level boss encounter',
         monsters: ['7562', '7561'],
+        units: 'Muttadiles',
         methods: []
     },
     {
@@ -965,6 +977,7 @@ export const rooms: Room[] = [
         image: '/rooms/300px-Great_Olm.webp',
         description: 'High-level boss encounter',
         monsters: ['7553', '7555', '7554'],
+        units: 'Olm',
         methods: []
     }
 ];

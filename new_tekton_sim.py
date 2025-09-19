@@ -223,6 +223,21 @@ if __name__ == "__main__":
     mean_ttk = np.mean(tick_counts)
     median_ttk = np.median(tick_counts)
     std_ttk = np.std(tick_counts)
+    # Find max time for 1-anvil and min time for 2-anvil
+    one_anvil_times = tick_counts[anvil_count_list == 1]
+    two_anvil_times = tick_counts[anvil_count_list == 2]
+
+    if len(one_anvil_times) > 0:
+        max_one_anvil = np.max(one_anvil_times)
+        print(f"Max time for 1-anvil: {max_one_anvil:.2f} ticks ({max_one_anvil * 0.6:.2f} seconds)")
+    else:
+        print("No 1-anvil kills found.")
+
+    if len(two_anvil_times) > 0:
+        min_two_anvil = np.min(two_anvil_times)
+        print(f"Min time for 2-anvil: {min_two_anvil:.2f} ticks ({min_two_anvil * 0.6:.2f} seconds)")
+    else:
+        print("No 2-anvil kills found.")
 
     print(f"[Sim] Trials: {trials}")
     print(f"Expected TTK: {mean_ttk:.2f} ticks ({mean_ttk * 0.6:.2f} seconds)")

@@ -15,6 +15,7 @@ export interface CalculationSummary {
     effectiveAttack: number;
     maxAttackRoll: number;
     maxDefenceRoll: number;
+    phaseTimeResults?: any[];
     phaseResults: any[];
 }
 
@@ -66,6 +67,7 @@ export const createWasmDpsLoader = (
                 effectiveAttack: 0,
                 maxAttackRoll: 0,
                 maxDefenceRoll: 0,
+                phaseTimeResults: parsedResult.phase_time_results || [],
                 phaseResults: parsedResult.phase_results || [],
             };
 

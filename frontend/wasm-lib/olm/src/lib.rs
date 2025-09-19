@@ -3,117 +3,6 @@ use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
 
-fn ensure_weapon_swap(
-    player: &mut Player,
-    weapon_name: &str,
-    equip_offhand: Option<SelectedItem>,
-) -> Option<(String, Option<SelectedItem>)> {
-    let gear_stats = &mut player.gear_sets.melee.gear_stats;
-    let gear_items = &mut player.gear_sets.melee.gear_items;
-    let selected_weapon = player.gear_sets.melee.selected_weapon.as_mut()?;
-
-    // Find weapon in inventory
-    let inventory_weapon_idx = player.inventory.iter().position(|item| item.name.contains(weapon_name));
-    if let Some(idx) = inventory_weapon_idx {
-        let inventory_weapon = player.inventory.remove(idx);
-
-        // Find current offhand
-        let current_offhand_idx = gear_items.iter().position(|item| {
-            item.as_ref().map_or(false, |i| i.slot == "shield")
-        });
-        let current_offhand = current_offhand_idx
-            .and_then(|i| gear_items.remove(i))
-            .and_then(|i| Some(i.clone()));
-
-        // Update bonuses
-        if let Some(bonuses) = &selected_weapon.bonuses {
-            if let Some(inv_bonuses) = inventory_weapon.equipment.as_ref().and_then(|eq| eq.bonuses.as_ref()) {
-                gear_stats.bonuses.str -= bonuses.str;
-                gear_stats.bonuses.str += inv_bonuses.str;
-                gear_stats.bonuses.ranged_str -= bonuses.ranged_str;
-                gear_stats.bonuses.ranged_str += inv_bonuses.ranged_str;
-                gear_stats.bonuses.magic_str -= bonuses.magic_str;
-                gear_stats.bonuses.magic_str += inv_bonuses.magic_str;
-                gear_stats.bonuses.prayer -= bonuses.prayer;
-                gear_stats.bonuses.prayer += inv_bonuses.prayer;
-
-                if let Some(ref offhand) = current_offhand {
-                    if let Some(off_bonuses) = offhand.bonuses.as_ref() {
-                        gear_stats.bonuses.str -= off_bonuses.str;
-                        gear_stats.bonuses.ranged_str -= off_bonuses.ranged_str;
-                        gear_stats.bonuses.magic_str -= off_bonuses.magic_str;
-                        gear_stats.bonuses.prayer -= off_bonuses.prayer;
-                    }
-                }
-                if let Some(ref offhand) = equip_offhand {
-                    if let Some(off_bonuses) = offhand.bonuses.as_ref() {
-                        gear_stats.bonuses.str += off_bonuses.str;
-                        gear_stats.bonuses.ranged_str += off_bonuses.ranged_str;
-                        gear_stats.bonuses.magic_str += off_bonuses.magic_str;
-                        gear_stats.bonuses.prayer += off_bonuses.prayer;
-                    }
-                }
-            }
-        }
-        // Update offensive
-        if let Some(offensive) = &selected_weapon.offensive {
-            if let Some(inv_offensive) = inventory_weapon.equipment.as_ref().and_then(|eq| eq.offensive.as_ref()) {
-                gear_stats.offensive.stab -= offensive.stab;
-                gear_stats.offensive.stab += inv_offensive.stab;
-                gear_stats.offensive.slash -= offensive.slash;
-                gear_stats.offensive.slash += inv_offensive.slash;
-                gear_stats.offensive.crush -= offensive.crush;
-                gear_stats.offensive.crush += inv_offensive.crush;
-                gear_stats.offensive.magic -= offensive.magic;
-                gear_stats.offensive.magic += inv_offensive.magic;
-                gear_stats.offensive.ranged -= offensive.ranged;
-                gear_stats.offensive.ranged += inv_offensive.ranged;
-
-                if let Some(ref offhand) = current_offhand {
-                    if let Some(off_offensive) = offhand.offensive.as_ref() {
-                        gear_stats.offensive.stab -= off_offensive.stab;
-                        gear_stats.offensive.slash -= off_offensive.slash;
-                        gear_stats.offensive.crush -= off_offensive.crush;
-                        gear_stats.offensive.magic -= off_offensive.magic;
-                        gear_stats.offensive.ranged -= off_offensive.ranged;
-                    }
-                }
-                if let Some(ref offhand) = equip_offhand {
-                    if let Some(off_offensive) = offhand.offensive.as_ref() {
-                        gear_stats.offensive.stab += off_offensive.stab;
-                        gear_stats.offensive.slash += off_offensive.slash;
-                        gear_stats.offensive.crush += off_offensive.crush;
-                        gear_stats.offensive.magic += off_offensive.magic;
-                        gear_stats.offensive.ranged += off_offensive.ranged;
-                    }
-                }
-            }
-        }
-
-        // Swap weapon
-        let prev_weapon = std::mem::replace(selected_weapon, inventory_weapon.equipment.clone()?);
-
-        player.inventory.push(InventoryItem {
-            name: prev_weapon.name.clone(),
-            equipment: Some(prev_weapon.clone()),
-        });
-
-        // Handle offhand swap
-        if let Some(offhand) = current_offhand.clone() {
-            player.inventory.push(InventoryItem {
-                name: offhand.name.clone(),
-                equipment: Some(offhand.clone()),
-            });
-            return Some((prev_weapon.name.clone(), Some(offhand)));
-        }
-        if let Some(offhand) = equip_offhand.clone() {
-            gear_items.push(Some(offhand.clone()));
-        }
-        return Some((prev_weapon.name.clone(), current_offhand));
-    }
-    None
-}
-
 fn phase_loop(
     hp: &mut i32,
     current_phase_ticks: &mut usize,
@@ -161,7 +50,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
 
     let mut player = payload.player;
     let monsters = payload.room.monsters;
-    let room_methods = payload.room.methods;
+    let _room_methods = payload.room.methods;
     let trials = 100000;
     let mut rng = rand::thread_rng();
 
@@ -191,9 +80,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     olm_melee_hand_specced.skills.def = (olm_melee_hand_specced.skills.def as f64 * 0.65) as u32;
     let best_style_specced = find_best_combat_style(&player, &olm_melee_hand_specced, vec!["melee".to_string()]);
 
-    let max_hit_spec = best_style_spec.max_hit as i32;
-    let accuracy_spec = best_style_spec.accuracy;
-
     // Prepare simulation
     let mut tick_counts = vec![0usize; trials];
     let mut phase_results: Vec<usize> = Vec::new();
@@ -202,14 +88,14 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
 
     for i in 0..trials {
         let mut total_ticks = 0;
-        let mut ranged_ticks = 0;
+        let ranged_ticks;
         let mut ranged_hp = monsters[2].skills.hp as i32;
         let mut current_phase_ticks = 0;
         for phase in 0..3 {
             let mut mage_hp = monsters[0].skills.hp as i32;
             let mut melee_hp = monsters[1].skills.hp as i32;
-            let mut mage_ticks = 0;
-            let mut melee_ticks = 0;
+            let mage_ticks;
+            let mut melee_ticks;
             let mut spec_hit = false;
             current_phase_ticks = 0;
 
@@ -273,14 +159,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
 
     // Compute statistics
     let mean_ttk = tick_counts.iter().sum::<usize>() as f64 / trials as f64;
-    let std_ttk = {
-        let mean = mean_ttk;
-        let var = tick_counts.iter().map(|&x| {
-            let diff = x as f64 - mean;
-            diff * diff
-        }).sum::<f64>() / trials as f64;
-        var.sqrt()
-    };
 
     // Build cumulative kill probability
     let max_ticks = match tick_counts.iter().max().copied() {
@@ -302,7 +180,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     let mut total_expected_hits = 0.0;
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
-    let mut encounter_kill_times = Vec::new();
+    let encounter_kill_times = kill_prob.clone();
     let encounter_attack_speed = 5; // or whatever is appropriate
     let kill_times = kill_prob.clone();
     let expected_hits = mean_ttk / encounter_attack_speed as f64; // or however you calculate it
@@ -312,7 +190,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     total_expected_hits += expected_hits;
     total_expected_ticks += expected_ttk;
     total_expected_seconds += expected_seconds;
-    encounter_kill_times = kill_prob.clone();
 
     // Example: For Tekton (single monster)
 
@@ -356,7 +233,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     results.push(result_ranged);
 
     // Convert encounter_kill_times to JSON object array
-    let attack_speed = 5;
     let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()
         .map(|(idx, &prob)| {
             serde_json::json!({
@@ -373,7 +249,8 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
         "total_expected_ticks": total_expected_ticks,
         "total_expected_seconds": total_expected_seconds,
         "encounter_kill_times": encounter_kill_times_obj,
-        "phase_results": phase_results,
+        "phase_time_results": phase_results,
+        "phase_results": [],
     }).to_string()
 }
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, ReferenceLine } from 'recharts';
 
 interface ResultPlotProps {
     chartRef: React.RefObject<HTMLDivElement>;
@@ -16,6 +16,7 @@ interface ResultPlotProps {
     theme: string;
     formatSeconds: (seconds: number) => string;
     fadeInOut: any;
+    expectedTTK: string;
 }
 
 const ResultPlot: React.FC<ResultPlotProps> = ({
@@ -32,6 +33,7 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
     theme,
     formatSeconds,
     fadeInOut,
+    expectedTTK
 }) => (
     <motion.div
         ref={chartRef}
@@ -138,6 +140,18 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
                                     }
                                 />
                                 <Legend />
+                                <ReferenceLine
+                                    x={expectedTTK}
+                                    stroke={chartColors.primary}
+                                    strokeDasharray="4 4"
+                                    label={{
+                                        value: 'Expected TTK',
+                                        position: 'top',
+                                        fill: chartColors.primary,
+                                    fontWeight: 'bold',
+                                    fontSize: 12,
+                                    }}
+                                />
                                 <Line
                                     type="monotone"
                                     dataKey="dps"
@@ -147,6 +161,7 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
                                     activeDot={{ r: 5, stroke: chartColors.primary, strokeWidth: 2 }}
                                     name="P(Dead)"
                                 />
+
                             </LineChart>
                         ) : (
                             <BarChart data={plotDataToShow} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>

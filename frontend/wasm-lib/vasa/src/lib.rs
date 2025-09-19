@@ -94,15 +94,15 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         (29, vec![[0, 4], [0, 3], [0, 7]])
     };
     for i in 0..trials {
-    let mut vasa_hp = vasa_base_hp;
-    let mut crystal_hp = crystal_base_hp;
-    let mut max_attacks_crystal = base_max_attacks_crystal;
-    let mut vasa_attack_tick = 0;
-    let mut crystal_attacks = 0;
-    let mut crystal_count = 0;
-    let mut healing_ticks = 0;
-    let mut total_ticks = 0;
-    let mut pre_crystal_attacks = 0;
+        let mut vasa_hp = vasa_base_hp;
+        let mut crystal_hp;
+        let mut max_attacks_crystal = base_max_attacks_crystal;
+        let mut vasa_attack_tick = 0;
+        let mut crystal_attacks = 0;
+        let mut crystal_count = 0;
+        let mut healing_ticks;
+        let mut total_ticks = 0;
+        let mut pre_crystal_attacks = 0;
 
         while vasa_hp > 0 {
             crystal_hp = crystal_base_hp;

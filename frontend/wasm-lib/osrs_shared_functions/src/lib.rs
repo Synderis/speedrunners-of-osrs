@@ -13,18 +13,25 @@ macro_rules! console_log {
 }
 
 fn tbow_scaling(magic: u32, mode: &str) -> f64 {
-    let (factor, base, clamp, denom) = if mode == "accuracy" {
-        (10.0, 140.0, 1.4, 1.0)
+    let (factor, base, clamp) = if mode == "accuracy" {
+        (10.0, 140.0, 1.4)
     } else {
-        (14.0, 250.0, 2.5, 10.0)
+        (14.0, 250.0, 2.5)
     };
 
-    let t2 = ((10.0 * 3.0 * magic as f64) / denom - factor) / 100.0;
-    let t3 = (((3.0 * magic as f64) / 10.0 - 10.0 * factor).powi(2)) / 100.0;
-    let mut tbow_mult = (base + t2 - t3) / 100.0;
-    tbow_mult = tbow_mult.clamp(1.0, clamp);
-    tbow_mult
+    // t2: trunc((3*magic - factor)/100)
+    let t2 = (((3.0 * magic as f64) - factor) / 100.0).trunc();
+
+    // t3: trunc((trunc(3*magic/10) - 10*factor)^2 / 100)
+    let inner = ((3.0 * magic as f64) / 10.0).trunc() - 10.0 * factor;
+    let t3 = ((inner * inner) / 100.0).trunc();
+
+    // (base + t2 - t3) is already an integer once t2/t3 are truncated,
+    // so truncating here is redundant, but harmless.
+    let mult = ((base + t2 - t3) / 100.0).clamp(1.0, clamp);
+    mult
 }
+
 
 pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: Vec<String>) -> StyleResult {
     let mut best_style: Option<StyleResult> = None;
@@ -161,7 +168,6 @@ pub fn calculate_max_hit_for_style(
         if let Some(attributes) = &monster.attributes {
             if attributes.contains(&"undead".to_string()) {
                 salve_bonus = 1.2;
-                console_log!("Salve amulet(ei) bonus applied, new salve_bonus: {}", salve_bonus);
             }
         }
     };
@@ -170,7 +176,6 @@ pub fn calculate_max_hit_for_style(
         item_opt.as_ref().map_or(false, |item| item.name == "Slayer helmet (i)")
     }) {
         slayer_bonus = 1.15;
-        console_log!("Slayer helmet (i) bonus applied, new slayer_bonus: {}", slayer_bonus);
     };
 
     if combat_type == "magic" {
@@ -185,11 +190,9 @@ pub fn calculate_max_hit_for_style(
             effective_level = (level + potion_bonus).floor();
             base_damage = ((effective_level / 3.0) + 1.0).floor();
         };
-        console_log!("Base magic damage before bonuses: {}, bonus: {}, prayer_bonus: {}, void_bonus: {}, salve_bonus: {}, slayer_bonus: {}, multiplier: {}", base_damage, bonus, prayer_bonus, void_bonus, salve_bonus, slayer_bonus, multiplier);
         // For magic, prayer_bonus is a flat addition to the gear bonus, not a multiplier
         salve_bonus = (salve_bonus - 1.0) * 100.0;
         slayer_bonus = (slayer_bonus - 1.0) * 100.0;
-        console_log!("Base magic damage before bonuses: {}, bonus: {}, prayer_bonus: {}, void_bonus: {}, salve_bonus: {}, slayer_bonus: {}, multiplier: {}", base_damage, bonus, prayer_bonus, void_bonus, salve_bonus, slayer_bonus, multiplier);
         let magic_strength = (bonus * multiplier).min(100.0) + salve_bonus + slayer_bonus + prayer_bonus + void_bonus;
         max_hit = (base_damage * (1.0 + (magic_strength / 100.0))).floor() as u32;
     } else if combat_type == "ranged" {
@@ -204,9 +207,7 @@ pub fn calculate_max_hit_for_style(
         };
         let effective_ranged = ((level + potion_bonus) * prayer_bonus + style_bonus + 8.0).floor();
         max_hit = (0.5 + (effective_ranged * (bonus + 64.0)) / 640.0).floor() as u32;
-        // console_log!("Ranged max_hit before multiplier: {}", max_hit);
         max_hit = (max_hit as f64 * max_hit_multiplier * salve_bonus * slayer_bonus).floor() as u32;
-        // console_log!("Ranged max_hit after multiplier: {}", max_hit);
     } else if combat_type == "melee" {
         if weapon.category == "Pickaxe" {
             let base_max_hit = (0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor();
@@ -219,6 +220,12 @@ pub fn calculate_max_hit_for_style(
         };
         if weapon.name == "Scythe of vitur" {
             max_hit = max_hit + (max_hit / 2) + (max_hit / 4);
+        };
+        if weapon.name == "Emberlight" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
+            max_hit = (max_hit as f64 * 1.70).floor() as u32;
+        }
+        if weapon.name == "Burning claws" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
+            max_hit = (max_hit as f64 * 1.05).floor() as u32;
         };
         if weapon.name == "Zamorak godsword" && (style.combat_style == "Slash" || style.combat_style == "Crush") {
             max_hit = (max_hit as f64 * 1.10).floor() as u32;
@@ -270,8 +277,8 @@ pub fn calculate_max_rolls_for_style(
     };
     let void_bonus = 1.0; // No void for now
 
-    let effective_level = ((((level + potion_bonus) * prayer_bonus).floor() + style_bonus + 8.0) * void_bonus).floor() as u32;
 
+    let effective_level = ((((level + potion_bonus) * prayer_bonus).floor() + style_bonus + 8.0) * void_bonus).floor() as u32;
     let (equipment_bonus, defence_bonus) = match style.attack_type.to_lowercase().as_str() {
         "stab" => (gear.offensive.stab, monster.defensive.stab),
         "slash" => (gear.offensive.slash, monster.defensive.slash),
@@ -281,9 +288,19 @@ pub fn calculate_max_rolls_for_style(
         _ => (0, 0),
     };
     let mut bonus = equipment_bonus;
+    let mut slayer_bonus = 1.0;
+    let mut salve_bonus = 1.0;
+    let mut tbow_mult = 1.0;
 
     let mut max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
+
     let weapon = selected_weapon.unwrap();
+    if weapon.name == "Emberlight" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
+        max_attack_roll = (max_attack_roll as f64 * 1.70).floor() as u64;
+    };
+    if weapon.name == "Burning claws" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
+        max_attack_roll = (max_attack_roll as f64 * 1.05).floor() as u64;
+    };
     if weapon.name == "Tumeken's shadow" {
         bonus *= 3;
         max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
@@ -298,25 +315,23 @@ pub fn calculate_max_rolls_for_style(
             monster.skills.magic.clamp(0, 350) as u32,
             monster.offensive.magic.clamp(0, 350) as u32,
         );
-        let tbow_mult = tbow_scaling(magic, "accuracy");
-        max_attack_roll = (max_attack_roll as f64 * tbow_mult).floor() as u64;
+        tbow_mult = tbow_scaling(magic, "accuracy");
     };
     if gear_set.gear_items.iter().any(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name == "Salve amulet(ei)")
     }) {
         if let Some(attributes) = &monster.attributes {
             if attributes.contains(&"undead".to_string()) {
-                max_attack_roll = (max_attack_roll as f64 * 1.2).floor() as u64;
-                console_log!("Salve amulet(ei) bonus applied, new max_attack_roll: {}", max_attack_roll);
+                salve_bonus = 1.2;
             }
         }
     };
     if gear_set.gear_items.iter().any(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name == "Slayer helmet (i)")
     }) {
-        max_attack_roll = (max_attack_roll as f64 * 1.15).floor() as u64;
-        console_log!("Slayer helmet (i) bonus applied, new max_attack_roll: {}", max_attack_roll);
+        slayer_bonus = 7.0 / 6.0;
     };
+    max_attack_roll = (max_attack_roll as f64 * slayer_bonus * salve_bonus * tbow_mult).floor() as u64;
     // console_log!("Monster def: {}, monster def bonus: {}", monster.skills.def, defence_bonus);
     let max_defence_roll;
     if combat_type == "magic" {
@@ -382,4 +397,87 @@ pub fn calculate_accuracy_for_style(player: &Player, monster: &Monster, combat_t
     // console_log!("Final accuracy: {:.2}%", accuracy * 100.0);
 
     (accuracy, 0, max_attack_roll, max_defence_roll)
+}
+
+pub fn ensure_weapon_swap(
+    player: &mut Player,
+    weapon_name: &str,
+    equip_offhand: Option<SelectedItem>,
+) -> Option<(String, Option<SelectedItem>)> {
+    let gear_stats = &mut player.gear_sets.melee.gear_stats;
+    let gear_items = &mut player.gear_sets.melee.gear_items;
+    let selected_weapon = player.gear_sets.melee.selected_weapon.as_mut()?;
+
+    // Find weapon in inventory
+    let inventory_weapon_idx = player.inventory.iter().position(|item| item.name.contains(weapon_name));
+    if let Some(idx) = inventory_weapon_idx {
+        let inventory_weapon = player.inventory.remove(idx);
+
+        // Find current offhand
+        let current_offhand_idx = gear_items.iter().position(|item| {
+            item.as_ref().map_or(false, |i| i.slot == "shield")
+        });
+        let current_offhand = current_offhand_idx
+            .and_then(|i| gear_items.remove(i))
+            .and_then(|i| Some(i.clone()));
+
+        // Update bonuses
+        if let Some(bonuses) = &selected_weapon.bonuses {
+            if let Some(inv_bonuses) = inventory_weapon.equipment.as_ref().and_then(|eq| eq.bonuses.as_ref()) {
+                gear_stats.bonuses.sub_assign(bonuses);
+                gear_stats.bonuses.add_assign(inv_bonuses);
+
+                if let Some(ref offhand) = current_offhand {
+                    if let Some(off_bonuses) = offhand.bonuses.as_ref() {
+                        gear_stats.bonuses.sub_assign(off_bonuses);
+                    }
+                }
+                if let Some(ref offhand) = equip_offhand {
+                    if let Some(off_bonuses) = offhand.bonuses.as_ref() {
+                        gear_stats.bonuses.add_assign(off_bonuses);
+                    }
+                }
+            }
+        }
+        // Update offensive
+        if let Some(offensive) = &selected_weapon.offensive {
+            if let Some(inv_offensive) = inventory_weapon.equipment.as_ref().and_then(|eq| eq.offensive.as_ref()) {
+                gear_stats.offensive.sub_assign(offensive);
+                gear_stats.offensive.add_assign(inv_offensive);
+
+                if let Some(ref offhand) = current_offhand {
+                    if let Some(off_offensive) = offhand.offensive.as_ref() {
+                        gear_stats.offensive.sub_assign(off_offensive);
+                    }
+                }
+                if let Some(ref offhand) = equip_offhand {
+                    if let Some(off_offensive) = offhand.offensive.as_ref() {
+                        gear_stats.offensive.add_assign(off_offensive);
+                    }
+                }
+            }
+        }
+
+        // Swap weapon
+        let prev_weapon = std::mem::replace(selected_weapon, inventory_weapon.equipment.clone()?);
+
+        player.inventory.push(InventoryItem {
+            name: prev_weapon.name.clone(),
+            equipment: Some(prev_weapon.clone()),
+        });
+
+        // Handle offhand swap
+        if let Some(offhand) = current_offhand.clone() {
+            player.inventory.push(InventoryItem {
+                name: offhand.name.clone(),
+                equipment: Some(offhand.clone()),
+            });
+            return Some((prev_weapon.name.clone(), Some(offhand)));
+        }
+        if let Some(offhand) = equip_offhand.clone() {
+            gear_items.push(Some(offhand.clone()));
+        }
+        return Some((prev_weapon.name.clone(), current_offhand));
+    }
+    None
 }

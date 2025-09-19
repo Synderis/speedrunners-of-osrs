@@ -249,6 +249,40 @@ impl SelectedItem {
     }
 }
 
+// Add methods to GearBonuses for concise stat updates
+impl GearBonuses {
+    pub fn add_assign(&mut self, other: &Self) {
+        self.str += other.str;
+        self.ranged_str += other.ranged_str;
+        self.magic_str += other.magic_str;
+        self.prayer += other.prayer;
+    }
+    pub fn sub_assign(&mut self, other: &Self) {
+        self.str -= other.str;
+        self.ranged_str -= other.ranged_str;
+        self.magic_str -= other.magic_str;
+        self.prayer -= other.prayer;
+    }
+}
+
+// Add methods to GearOffensive for concise stat updates
+impl GearOffensive {
+    pub fn add_assign(&mut self, other: &Self) {
+        self.stab += other.stab;
+        self.slash += other.slash;
+        self.crush += other.crush;
+        self.magic += other.magic;
+        self.ranged += other.ranged;
+    }
+    pub fn sub_assign(&mut self, other: &Self) {
+        self.stab -= other.stab;
+        self.slash -= other.slash;
+        self.crush -= other.crush;
+        self.magic -= other.magic;
+        self.ranged -= other.ranged;
+    }
+}
+
 use serde::de::{self, Deserializer};
 pub fn from_str_or_int<'de, D>(deserializer: D) -> Result<u32, D::Error>
 where

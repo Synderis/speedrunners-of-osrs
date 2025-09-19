@@ -614,7 +614,7 @@ const weaponStyles: Record<string, WeaponStyles[]> = {
             att_spd_reduction: 0,
         },
     ],
-    "Slash sword": [
+    "Slash Sword": [
         {
             name: "Chop",
             attack_type: "Slash",
@@ -706,7 +706,7 @@ const weaponStyles: Record<string, WeaponStyles[]> = {
             att_spd_reduction: 0,
         },
     ],
-    "Stab sword": [
+    "Stab Sword": [
         {
             name: "Stab",
             attack_type: "Stab",
