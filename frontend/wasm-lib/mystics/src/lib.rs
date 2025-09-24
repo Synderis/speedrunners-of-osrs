@@ -3,21 +3,6 @@ use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
 
-#[cfg(feature = "wee_alloc")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
-#[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
-
-macro_rules! console_log {
-    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-}
-
 fn ensure_item_equipped(
     gear_set: &mut GearSetData,
     inventory: &[SelectedItem],
@@ -93,19 +78,16 @@ fn ensure_item_equipped(
 
 #[wasm_bindgen]
 pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
-    console_log!("Received payload JSON: {}", payload_json);
-
     let payload: DPSRoomPayload = match serde_json::from_str(payload_json) {
         Ok(p) => p,
         Err(e) => {
-            console_log!("Failed to parse payload JSON: {}", e);
             return format!("{{\"error\": \"Failed to parse payload data: {}\"}}", e);
         }
     };
 
     let mut player = payload.player;
     let monsters = payload.room.monsters;
-    let cap = payload.config.cap;
+
     let inventory_items: Vec<SelectedItem> = player
         .inventory
         .iter()
@@ -118,12 +100,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
 
     for (_, gear_set) in sets.iter_mut() {
         ensure_item_equipped(gear_set, &inventory_items, "salve");
-        console_log!("Using salve");
     }
-
-    // if !salve {
-
-    // }
 
     // let walk_delay = 24;
     let trials = 100000;
@@ -132,21 +109,17 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     let mut tick_counts = vec![0usize; trials];
     let mut rng = rand::thread_rng();
 
-    // For cumulative kill times
-    let mut encounter_kill_times: Vec<f64> = Vec::new();
-    let mut encounter_attack_speed: Option<usize> = None;
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string(), "ranged".to_string()]);
     let max_hit = best_style.max_hit as i32;
     let accuracy = best_style.accuracy;
     let attack_speed = best_style.attack_speed as usize;
-    console_log!("Max hit: {}, Accuracy: {}, Attack speed: {}", max_hit, accuracy, attack_speed);
     let base_hp = monsters[0].skills.hp as i32;
     let mut single_monster_ticks : Vec<f64> = Vec::new();
     let hit_delay = if player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 2 } else { 1 };
 
     for i in 0..trials {
         let mut tick = 0;
-        for monster in &monsters {
+        for _monster in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
             while hp > 0 {
@@ -184,15 +157,12 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     if tick_counts.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
-    let single_monster_ticks_mean = single_monster_ticks.iter().sum::<f64>() / single_monster_ticks.len() as f64;
-    console_log!("Single monster mean TTK: {}", single_monster_ticks_mean);
-    console_log!("Tick counts sample: {:?}", &tick_counts[0..10.min(tick_counts.len())]);
-    // console_log!("Using combat style: {:?}", best_style);
+
     let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
     let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
     for &ticks in &tick_counts {
         for idx in ticks..=max_ticks {
-            kill_prob[idx as usize] += 1.0;
+            kill_prob[idx as usize] += 1.0; 
         }
     }
     for prob in &mut kill_prob {
@@ -201,7 +171,6 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     let mean_ttk = tick_counts.iter().sum::<usize>() as f64 / trials as f64;
 
     // Collect results for each monster (if you have more than one)
-    
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
     let encounter_kill_times = kill_prob.clone();

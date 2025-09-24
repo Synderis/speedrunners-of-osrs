@@ -120,8 +120,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                     best_style_specced.max_hit as i32,
                     &mut rng,
                 );
-            }
-            else {
+            } else {
                 melee_ticks = phase_loop(
                     &mut melee_hp,
                     &mut current_phase_ticks,

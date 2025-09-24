@@ -3,21 +3,6 @@ use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
 
-#[cfg(feature = "wee_alloc")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
-#[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
-
-macro_rules! console_log {
-    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-}
-
 fn get_drain_and_heal(kindling: usize) -> (f64, f64) {
     if kindling == 0 {
         (0.01, 0.0)
@@ -48,7 +33,7 @@ fn chop_simulation<R: Rng>(rng: &mut R, total_ticks: usize, base_hp: f64) -> usi
         }
     }
 
-    let mut total_ticks = total_ticks + time_before_dump + 14 - 1;
+    let chop_ticks = total_ticks + time_before_dump + 14 - 1;
     let mut burner_1_count = kindling_count;
     kindling_count = 0;
     let mut burner_2_count = 0;
@@ -102,12 +87,12 @@ fn chop_simulation<R: Rng>(rng: &mut R, total_ticks: usize, base_hp: f64) -> usi
                 burner_1_count -= 1;
             }
             if burner_2_count > 0 {
-                let (heal2, drain2) = get_drain_and_heal(burner_2_count);
+                let (_, drain2) = get_drain_and_heal(burner_2_count);
                 burner_drains.push(drain2);
                 burner_2_count -= 1;
             }
             if burner_3_count > 0 {
-                let (heal3, drain3) = get_drain_and_heal(burner_3_count);
+                let (_, drain3) = get_drain_and_heal(burner_3_count);
                 burner_drains.push(drain3);
                 burner_3_count -= 1;
             }
@@ -127,7 +112,7 @@ fn chop_simulation<R: Rng>(rng: &mut R, total_ticks: usize, base_hp: f64) -> usi
         }
     }
 
-    total_ticks + time_after_dump + initial_delay - 1
+    chop_ticks + time_after_dump + initial_delay - 1
 }
 
 fn thrall_hit<R: Rng>(rng: &mut R, hp: i32) -> i32 {
@@ -137,18 +122,14 @@ fn thrall_hit<R: Rng>(rng: &mut R, hp: i32) -> i32 {
 }
 
 fn burning_barrage_special<R: Rng>(rng: &mut R, max_hit: i32, accuracy: f64) -> (Vec<i32>, Vec<i32>) {
-    let mut hits = Vec::new();
-    let mut burn_chance = Vec::new();
-
-    if rng.gen::<f64>() < accuracy {
+    let (hits, burn_chance) = if rng.gen::<f64>() < accuracy {
         let max_hit_low = (max_hit as f64 * 0.75).floor() as i32;
         let max_hit_high = (max_hit as f64 * 1.75).floor() as i32;
         let dmg = rng.gen_range(max_hit_low..=max_hit_high);
         let hit1 = (0.25 * dmg as f64).floor() as i32;
         let hit2 = (0.25 * dmg as f64).floor() as i32;
         let hit3 = (0.5 * dmg as f64).floor() as i32;
-        hits = vec![hit1, hit2, hit3];
-        burn_chance = vec![0.15, 0.15, 0.15];
+        (vec![hit1, hit2, hit3], vec![0.15, 0.15, 0.15])
     } else if rng.gen::<f64>() < accuracy {
         let max_hit_low = (max_hit as f64 * 0.5).floor() as i32;
         let max_hit_high = (max_hit as f64 * 1.5).floor() as i32;
@@ -156,8 +137,7 @@ fn burning_barrage_special<R: Rng>(rng: &mut R, max_hit: i32, accuracy: f64) -> 
         let hit1 = (0.5 * dmg as f64).floor() as i32 - 1;
         let hit2 = (0.5 * dmg as f64).floor() as i32 - 1;
         let hit3 = dmg - (hit1 + hit2);
-        hits = vec![hit1, hit2, hit3];
-        burn_chance = vec![0.30, 0.30, 0.30];
+        (vec![hit1, hit2, hit3], vec![0.30, 0.30, 0.30])
     } else if rng.gen::<f64>() < accuracy {
         let max_hit_low = (max_hit as f64 * 0.25).floor() as i32;
         let max_hit_high = (max_hit as f64 * 0.75).floor() as i32;
@@ -165,19 +145,17 @@ fn burning_barrage_special<R: Rng>(rng: &mut R, max_hit: i32, accuracy: f64) -> 
         let hit3 = dmg - 2;
         let hit1 = if dmg >= 2 { 1 } else { 0 };
         let hit2 = if dmg >= 2 { 1 } else { 0 };
-        hits = vec![hit1, hit2, hit3];
-        burn_chance = vec![0.45, 0.45, 0.45];
+        (vec![hit1, hit2, hit3], vec![0.45, 0.45, 0.45])
     } else {
         let roll = rng.gen::<f64>();
         if roll < 0.2 {
-            hits = vec![0];
+            (vec![0], vec![0.0])
         } else if roll < 0.6 {
-            hits = vec![1];
+            (vec![1], vec![0.0])
         } else {
-            hits = vec![2];
+            (vec![2], vec![0.0])
         }
-        burn_chance = vec![0.0; hits.len()];
-    }
+    };
 
     let mut burns = Vec::new();
     for (i, &chance) in burn_chance.iter().enumerate() {
@@ -315,19 +293,16 @@ fn burning_claws_kill<R: Rng>(
 
 #[wasm_bindgen]
 pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
-    console_log!("Received payload JSON: {}", payload_json);
-
     let payload: DPSRoomPayload = match serde_json::from_str(payload_json) {
         Ok(p) => p,
         Err(e) => {
-            console_log!("Failed to parse payload JSON: {}", e);
             return format!("{{\"error\": \"Failed to parse payload data: {}\"}}", e);
         }
     };
 
     let mut player = payload.player;
     let monsters = payload.room.monsters;
-    let cap = payload.config.cap;
+
     let inventory_items: Vec<SelectedItem> = player
         .inventory
         .iter()
@@ -335,13 +310,11 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
         .collect();
     let emberlight = inventory_items.iter().any(|item| item.name == "Emberlight");
     let burning_claws = inventory_items.iter().any(|item| item.name == "Burning claws");
-    // For cumulative kill times
-    let mut encounter_kill_times: Vec<f64> = Vec::new();
-    let mut encounter_attack_speed: Option<usize> = None;
+
     let mut emberlight_accuracy: Vec<f64> = Vec::new();
-    let mut best_style: StyleResult;
-    let mut attack_speed = 0usize;
-    let mut max_hit = 0;
+    let best_style: StyleResult;
+    let attack_speed;
+    let max_hit;
     let mut accuracy = 0.0;
     if emberlight {
         let avernic_defender = inventory_items.iter().find(|item| item.name == "Avernic defender").cloned();
@@ -354,7 +327,6 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
         max_hit = style1.max_hit;
         emberlight_accuracy.push(style1.accuracy);
 
-        let def_reduction = (base_def as f64 * 0.15).floor() as u32;
         emberlight_ice_demon.skills.def = ((base_def as f64 * 0.85).floor() - 1.0) as u32;
 
         let style2 = find_best_combat_style(&player, &emberlight_ice_demon, vec!["melee".to_string()]);
@@ -374,8 +346,6 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
     } else {
         return "{\"error\": \"No Emberlight or Burning claws found in inventory\"}".to_string();
     }
-    
-    let base_hp = monsters[0].skills.hp as i32;
 
     let trials = 100_000;
     let post_chop_delay = 10;
@@ -383,8 +353,6 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
     let mut tick_counts = vec![0usize; trials];
     let mut ice_demon_pop_time = vec![0usize; trials];
     let mut rng = rand::thread_rng();
-
-    console_log!("[Sim] Starting simulation with {} trials...", trials);
 
     for i in 0..trials {
         let mut total_ticks = 0;

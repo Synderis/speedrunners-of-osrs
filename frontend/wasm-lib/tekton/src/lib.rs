@@ -61,8 +61,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     if monsters[0].id != 7545 || monsters[1].id != 7544 {
         return "{\"error\": \"First two monsters must be Tekton (normal and enraged)\"}".to_string();
     }
-    let initial_best_style = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
-    let initial_best_style_enraged = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
+
     // --- SWAP TO ELDER MAUL BEFORE SIMULATION ---
     let swap_result = ensure_weapon_swap(&mut player, "Elder maul", None);
     let (swapped_weapon, swapped_offhand) = match swap_result {
@@ -77,16 +76,44 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
     // Find best style for spec
     let mut tekton_initial = monsters[0].clone();
+    let mut tekton_initial_enraged = monsters[1].clone();
+
+    let first_spec_def_normal = (tekton_initial.skills.def as f64 * 0.65) as u32;
     tekton_initial.skills.def = (tekton_initial.skills.def as f64 * 0.65) as u32;
     let best_style_spec = find_best_combat_style(&player, &tekton_initial, vec!["melee".to_string()]);
     let max_hit_spec = best_style_spec.max_hit as i32;
-    let accuracy_spec = best_style_spec.accuracy;
+
+    if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some("Elder maul") {
+        ensure_weapon_swap(&mut player, &swapped_weapon, swapped_offhand.clone());
+    }
+
+    let first_spec_def_enraged = (tekton_initial_enraged.skills.def as f64 * 0.65) as u32;
+    tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * 0.65) as u32;
+
+    tekton_initial.skills.def = (tekton_initial.skills.def as f64 * 0.95) as u32;
+    let normal_1_spec_best_style = find_best_combat_style(&player, &tekton_initial, vec!["melee".to_string()]);
+    tekton_initial.skills.def = first_spec_def_normal;
+    tekton_initial.skills.def = (tekton_initial.skills.def as f64 * 0.65) as u32;
+    let normal_2_spec_best_style = find_best_combat_style(&player, &tekton_initial, vec!["melee".to_string()]);
+    let best_styles_normal = vec![
+        normal_1_spec_best_style.clone(),
+        normal_2_spec_best_style.clone(),
+    ];
+
+    tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * 0.95) as u32;
+    let enraged_1_spec_best_style = find_best_combat_style(&player, &tekton_initial_enraged, vec!["melee".to_string()]);
+    tekton_initial_enraged.skills.def = first_spec_def_enraged;
+    tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * 0.65) as u32;
+    let enraged_2_spec_best_style = find_best_combat_style(&player, &tekton_initial_enraged, vec!["melee".to_string()]);
+    let best_styles_enraged = vec![
+        enraged_1_spec_best_style.clone(),
+        enraged_2_spec_best_style.clone(),
+    ];
 
     // Prepare simulation
     let mut tick_counts = vec![0usize; trials];
     let mut hp_pre_anvil: Vec<usize> = vec![0; trials];
     let mut phase_results: Vec<usize> = vec![0; trials];
-
 
     let (delay, attack_pattern): (usize, Vec<[usize; 2]>) = if room_methods.len() > 0 && room_methods[0] == "Tekton Short Lure" {
         (12, vec![[0, 4], [0, 3], [4, 10]])
@@ -96,12 +123,9 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
     for i in 0..trials {
         let mut tekton_hp = base_tekton_hp;
-        let mut tekton_normal = monsters[0].clone();
-        let mut tekton_enraged = monsters[1].clone();
         let mut total_ticks = delay;
-        let mut spec_count = true;
-        let mut best_style_normal = None;
-        let mut best_style_enraged = None;
+        let mut spec_phase = true;
+        let mut specs_hit = 0;
         let mut first_pass = true;
         let mut phase: usize = 0;
         let mut hp_pre_anvil_val: i32 = 0;
@@ -110,52 +134,17 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         let death_animation = if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some("Scythe of vitur") { 3 } else { 4 };
 
         while tekton_hp > 0 {
-            if spec_count {
-                if tekton_normal.skills.def != tekton_enraged.skills.def {
-                    return "{\"error\": \"Defences are not equal\"}".to_string();
-                }
-                tekton_normal.skills.def = (tekton_normal.skills.def as f64 * 0.65) as u32;
-                tekton_enraged.skills.def = (tekton_enraged.skills.def as f64 * 0.65) as u32;
-                if tekton_normal.skills.def != tekton_enraged.skills.def {
-                    return "{\"error\": \"Defences are not equal\"}".to_string();
-                }
+            if spec_phase {
                 total_ticks += 6;
                 tekton_hp -= rng.gen_range(0..=max_hit_spec).max(1);
-                if rng.gen::<f64>() < accuracy_spec {
+                if rng.gen::<f64>() < best_style_spec.accuracy {
+                    specs_hit += 1;
                     let hit = rng.gen_range(0..=max_hit_spec).max(1);
-                    tekton_normal.skills.def = (tekton_normal.skills.def as f64 * 0.65) as u32;
-                    tekton_enraged.skills.def = (tekton_enraged.skills.def as f64 * 0.65) as u32;
-                    if tekton_normal.skills.def != tekton_enraged.skills.def {
-                        return "{\"error\": \"Defences are not equal\"}".to_string();
-                    }
                     tekton_hp -= hit;
-                } else {
-                    tekton_normal.skills.def = (tekton_normal.skills.def as f64 * 0.95) as u32;
-                    tekton_enraged.skills.def = (tekton_enraged.skills.def as f64 * 0.95) as u32;
-                    if tekton_normal.skills.def != tekton_enraged.skills.def {
-                        return "{\"error\": \"Defences are not equal\"}".to_string();
-                    }
                 }
                 total_ticks += 6;
-                spec_count = false;
+                spec_phase = false;
             }
-            if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some("Elder maul") {
-                ensure_weapon_swap(&mut player, &swapped_weapon, swapped_offhand.clone());
-            }
-            // Find best styles if not already found
-            if best_style_normal.is_none() || best_style_enraged.is_none() {
-                best_style_normal = Some(find_best_combat_style(&player, &tekton_normal, vec!["melee".to_string()]));
-                best_style_enraged = Some(find_best_combat_style(&player, &tekton_enraged, vec!["melee".to_string()]));
-            }
-
-            let best_style_normal = match best_style_normal.as_ref() {
-                Some(style) => style,
-                None => return "{\"error\": \"No best style found (normal)\"}".to_string(),
-            };
-            let best_style_enraged = match best_style_enraged.as_ref() {
-                Some(style) => style,
-                None => return "{\"error\": \"No best style found (enraged)\"}".to_string(),
-            };
 
             // --- PHASE LOOP TRANSLATION ---
             // Pre-anvil phase: (0, 5)
@@ -164,9 +153,9 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 &attack_pattern[0],
                 &mut tekton_hp,
                 &mut current_phase_ticks,
-                best_style_normal.attack_speed as usize,
-                best_style_normal.accuracy,
-                best_style_normal.max_hit as i32,
+                best_styles_normal[specs_hit].attack_speed as usize,
+                best_styles_normal[specs_hit].accuracy,
+                best_styles_normal[specs_hit].max_hit as i32,
                 &mut rng,
             );
             tekton_hp = hp1;
@@ -185,7 +174,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
             let anvil_cycle = rng.gen_range(3..7);
             tekton_hp += (anvil_cycle * 5) as i32;
-            total_ticks += ((anvil_cycle * 3) - best_style_normal.attack_speed as usize) as usize;
+            total_ticks += ((anvil_cycle * 3) - best_styles_normal[0].attack_speed as usize) as usize;
             if current_phase_ticks > 0 {
                 total_ticks += current_phase_ticks - 1;
             }
@@ -197,9 +186,9 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 &attack_pattern[1],
                 &mut tekton_hp,
                 &mut current_phase_ticks,
-                best_style_normal.attack_speed as usize,
-                best_style_normal.accuracy,
-                best_style_normal.max_hit as i32,
+                best_styles_normal[specs_hit].attack_speed as usize,
+                best_styles_normal[specs_hit].accuracy,
+                best_styles_normal[specs_hit].max_hit as i32,
                 &mut rng,
             );
             tekton_hp = hp2;
@@ -210,7 +199,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 break;
             }
             // Add attack speed to account for the final attack
-            current_phase_ticks += best_style_normal.attack_speed as usize - 1;
+            current_phase_ticks += best_styles_normal[specs_hit].attack_speed as usize - 1;
 
             // Enraged phase: (4, 11)
             let (hp3, ticks3, _, died3) = phase_loop(
@@ -218,9 +207,9 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 &attack_pattern[2],
                 &mut tekton_hp,
                 &mut current_phase_ticks,
-                best_style_enraged.attack_speed as usize,
-                best_style_enraged.accuracy,
-                best_style_enraged.max_hit as i32,
+                best_styles_enraged[specs_hit].attack_speed as usize,
+                best_styles_enraged[specs_hit].accuracy,
+                best_styles_enraged[specs_hit].max_hit as i32,
                 &mut rng,
             );
             tekton_hp = hp3;
@@ -245,7 +234,6 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         hp_pre_anvil[i] = hp_pre_anvil_val as usize;
     }
 
-
     // Defensive: Check tick_counts
     if tick_counts.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
@@ -253,14 +241,6 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
     // Compute statistics
     let mean_ttk = tick_counts.iter().sum::<usize>() as f64 / trials as f64;
-    // let std_ttk = {
-    //     let mean = mean_ttk;
-    //     let var = tick_counts.iter().map(|&x| {
-    //         let diff = x as f64 - mean;
-    //         diff * diff
-    //     }).sum::<f64>() / trials as f64;
-    //     var.sqrt()
-    // };
 
     // Build cumulative kill probability
     let max_ticks = match tick_counts.iter().max().copied() {
@@ -299,8 +279,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         "expected_hits": 0.0,
         "expected_ticks": 0.0,
         "expected_seconds": 0.0,
-        "combat_type": initial_best_style.attack_type,
-        "attack_style": initial_best_style.combat_style,
+        "combat_type": best_styles_normal[0].attack_type,
+        "attack_style": best_styles_normal[0].combat_style,
         "kill_times": kill_times,
     });
     results.push(result_normal);
@@ -312,20 +292,11 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         "expected_hits": 0.0,
         "expected_ticks": 0.0,
         "expected_seconds": 0.0,
-        "combat_type": initial_best_style_enraged.attack_type,
-        "attack_style": initial_best_style_enraged.combat_style,
+        "combat_type": best_styles_enraged[0].attack_type,
+        "attack_style": best_styles_enraged[0].combat_style,
         "kill_times": kill_times,
     });
     results.push(result_enraged);
-
-
-    // results.push(result_enraged);
-    // if !results.is_empty() {
-    //     return serde_json::json!({ "results": results }).to_string();
-    // }
-
-
-
 
     // Convert encounter_kill_times to JSON object array
     let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()

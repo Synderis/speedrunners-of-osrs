@@ -18,69 +18,69 @@ macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
 
-fn ensure_pickaxe_equipped(
-    gear_set: &mut GearSetData,
-    inventory: &[SelectedItem],
-) {
-    // Check if current selected weapon is a pickaxe
-    let is_pickaxe = gear_set.selected_weapon
-        .as_ref()
-        .map_or(false, |w| w.category == "Pickaxe");
+// fn ensure_pickaxe_equipped(
+//     gear_set: &mut GearSetData,
+//     inventory: &[SelectedItem],
+// ) {
+//     // Check if current selected weapon is a pickaxe
+//     let is_pickaxe = gear_set.selected_weapon
+//         .as_ref()
+//         .map_or(false, |w| w.category == "Pickaxe");
 
-    if is_pickaxe {
-        return;
-    }
+//     if is_pickaxe {
+//         return;
+//     }
 
-    // Remove current weapon's bonuses from gear
-    if let Some(current_weapon) = &gear_set.selected_weapon {
-        if let (Some(bonuses), Some(offensive), Some(defensive)) = (
-            current_weapon.bonuses.as_ref(),
-            current_weapon.offensive.as_ref(),
-            current_weapon.defensive.as_ref(),
-        ) {
-            gear_set.gear_stats.bonuses.str -= bonuses.str;
-            gear_set.gear_stats.bonuses.ranged_str -= bonuses.ranged_str;
-            gear_set.gear_stats.bonuses.magic_str -= bonuses.magic_str;
-            gear_set.gear_stats.bonuses.prayer -= bonuses.prayer;
-            gear_set.gear_stats.offensive.stab -= offensive.stab;
-            gear_set.gear_stats.offensive.slash -= offensive.slash;
-            gear_set.gear_stats.offensive.crush -= offensive.crush;
-            gear_set.gear_stats.offensive.magic -= offensive.magic;
-            gear_set.gear_stats.offensive.ranged -= offensive.ranged;
-            gear_set.gear_stats.defensive.stab -= defensive.stab;
-            gear_set.gear_stats.defensive.slash -= defensive.slash;
-            gear_set.gear_stats.defensive.crush -= defensive.crush;
-            gear_set.gear_stats.defensive.magic -= defensive.magic;
-            gear_set.gear_stats.defensive.ranged -= defensive.ranged;
-        }
-    }
+//     // Remove current weapon's bonuses from gear
+//     if let Some(current_weapon) = &gear_set.selected_weapon {
+//         if let (Some(bonuses), Some(offensive), Some(defensive)) = (
+//             current_weapon.bonuses.as_ref(),
+//             current_weapon.offensive.as_ref(),
+//             current_weapon.defensive.as_ref(),
+//         ) {
+//             gear_set.gear_stats.bonuses.str -= bonuses.str;
+//             gear_set.gear_stats.bonuses.ranged_str -= bonuses.ranged_str;
+//             gear_set.gear_stats.bonuses.magic_str -= bonuses.magic_str;
+//             gear_set.gear_stats.bonuses.prayer -= bonuses.prayer;
+//             gear_set.gear_stats.offensive.stab -= offensive.stab;
+//             gear_set.gear_stats.offensive.slash -= offensive.slash;
+//             gear_set.gear_stats.offensive.crush -= offensive.crush;
+//             gear_set.gear_stats.offensive.magic -= offensive.magic;
+//             gear_set.gear_stats.offensive.ranged -= offensive.ranged;
+//             gear_set.gear_stats.defensive.stab -= defensive.stab;
+//             gear_set.gear_stats.defensive.slash -= defensive.slash;
+//             gear_set.gear_stats.defensive.crush -= defensive.crush;
+//             gear_set.gear_stats.defensive.magic -= defensive.magic;
+//             gear_set.gear_stats.defensive.ranged -= defensive.ranged;
+//         }
+//     }
 
-    // Find a pickaxe in inventory
-    if let Some(pickaxe) = inventory.iter().find(|w| w.category == "Pickaxe") {
-        if let (Some(bonuses), Some(offensive), Some(defensive)) = (
-            pickaxe.bonuses.as_ref(),
-            pickaxe.offensive.as_ref(),
-            pickaxe.defensive.as_ref(),
-        ) {
-            gear_set.gear_stats.bonuses.str += bonuses.str;
-            gear_set.gear_stats.bonuses.ranged_str += bonuses.ranged_str;
-            gear_set.gear_stats.bonuses.magic_str += bonuses.magic_str / 10;
-            gear_set.gear_stats.bonuses.prayer += bonuses.prayer;
-            gear_set.gear_stats.offensive.stab += offensive.stab;
-            gear_set.gear_stats.offensive.slash += offensive.slash;
-            gear_set.gear_stats.offensive.crush += offensive.crush;
-            gear_set.gear_stats.offensive.magic += offensive.magic;
-            gear_set.gear_stats.offensive.ranged += offensive.ranged;
-            gear_set.gear_stats.defensive.stab += defensive.stab;
-            gear_set.gear_stats.defensive.slash += defensive.slash;
-            gear_set.gear_stats.defensive.crush += defensive.crush;
-            gear_set.gear_stats.defensive.magic += defensive.magic;
-            gear_set.gear_stats.defensive.ranged += defensive.ranged;
-        }
-        // Swap selected weapon
-        gear_set.selected_weapon = Some(pickaxe.clone());
-    }
-}
+//     // Find a pickaxe in inventory
+//     if let Some(pickaxe) = inventory.iter().find(|w| w.category == "Pickaxe") {
+//         if let (Some(bonuses), Some(offensive), Some(defensive)) = (
+//             pickaxe.bonuses.as_ref(),
+//             pickaxe.offensive.as_ref(),
+//             pickaxe.defensive.as_ref(),
+//         ) {
+//             gear_set.gear_stats.bonuses.str += bonuses.str;
+//             gear_set.gear_stats.bonuses.ranged_str += bonuses.ranged_str;
+//             gear_set.gear_stats.bonuses.magic_str += bonuses.magic_str / 10;
+//             gear_set.gear_stats.bonuses.prayer += bonuses.prayer;
+//             gear_set.gear_stats.offensive.stab += offensive.stab;
+//             gear_set.gear_stats.offensive.slash += offensive.slash;
+//             gear_set.gear_stats.offensive.crush += offensive.crush;
+//             gear_set.gear_stats.offensive.magic += offensive.magic;
+//             gear_set.gear_stats.offensive.ranged += offensive.ranged;
+//             gear_set.gear_stats.defensive.stab += defensive.stab;
+//             gear_set.gear_stats.defensive.slash += defensive.slash;
+//             gear_set.gear_stats.defensive.crush += defensive.crush;
+//             gear_set.gear_stats.defensive.magic += defensive.magic;
+//             gear_set.gear_stats.defensive.ranged += defensive.ranged;
+//         }
+//         // Swap selected weapon
+//         gear_set.selected_weapon = Some(pickaxe.clone());
+//     }
+// }
 
 #[wasm_bindgen]
 pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
@@ -97,7 +97,6 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
     // Make mutable copies for gear/inventory mutation
     let mut player = payload.player;
     let monsters = payload.room.monsters;
-    let cap = payload.config.cap;
 
     // --- Ensure pickaxe is equipped in melee gear if present in inventory ---
     // Collect inventory weapons (flattened from inventory items with equipment)
@@ -117,9 +116,6 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
     let walk_delay = 28;
     let mut tick_counts = vec![0usize; trials];
 
-    // For cumulative kill times
-    let mut encounter_kill_times: Vec<f64> = Vec::new();
-    let mut encounter_attack_speed: Option<usize> = None;
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
     let max_hit = best_style.max_hit as i32;
     let accuracy = best_style.accuracy;
@@ -130,7 +126,7 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
 
     for i in 0..trials {
         let mut tick = 0;
-        for monster in &monsters {
+        for _ in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
             while hp > 0 {
