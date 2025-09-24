@@ -26,7 +26,7 @@ fn phase_loop(
         if *current_phase_ticks == 1 || (*current_phase_ticks - 1) % attack_speed == 0 {
             let mut hit = 0;
             if rng.gen::<f64>() < accuracy {
-                hit = rng.gen_range(0..=max_hit);
+                hit = rng.gen_range(0..=max_hit).max(1);
             }
             *tekton_hp -= hit;
             hit_count += 1;
@@ -107,6 +107,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         let mut hp_pre_anvil_val: i32 = 0;
         let mut hit_count = 0;
         let mut current_phase_ticks = 0;
+        let death_animation = if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some("Scythe of vitur") { 3 } else { 4 };
 
         while tekton_hp > 0 {
             if spec_count {
@@ -119,9 +120,9 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                     return "{\"error\": \"Defences are not equal\"}".to_string();
                 }
                 total_ticks += 6;
-                tekton_hp -= rng.gen_range(0..=max_hit_spec);
+                tekton_hp -= rng.gen_range(0..=max_hit_spec).max(1);
                 if rng.gen::<f64>() < accuracy_spec {
-                    let hit = rng.gen_range(0..=max_hit_spec);
+                    let hit = rng.gen_range(0..=max_hit_spec).max(1);
                     tekton_normal.skills.def = (tekton_normal.skills.def as f64 * 0.65) as u32;
                     tekton_enraged.skills.def = (tekton_enraged.skills.def as f64 * 0.65) as u32;
                     if tekton_normal.skills.def != tekton_enraged.skills.def {
@@ -236,10 +237,9 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         // Add initial delay and round up to next multiple of 4
         let initial_delay = delay; // Set as needed
         // Add attack speed to account for the final attack
-        total_ticks += initial_delay + best_style_normal.as_ref().unwrap().attack_speed as usize;
-        if total_ticks % 4 != 0 {
-            total_ticks += 4 - (total_ticks % 4);
-        }
+        total_ticks += initial_delay + death_animation;
+        total_ticks += 4 - (total_ticks % 4);
+
         tick_counts[i] = total_ticks;
         phase_results[i] = phase;
         hp_pre_anvil[i] = hp_pre_anvil_val as usize;

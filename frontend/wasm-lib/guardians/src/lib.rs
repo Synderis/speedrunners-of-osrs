@@ -138,7 +138,7 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
                 ticks_this_monster += 1;
                 if (tick - 1) % attack_speed == 0 {
                     let hit = if rng.gen::<f64>() < accuracy {
-                        rng.gen_range(0..=max_hit)
+                        rng.gen_range(0..=max_hit).max(1)
                     } else {
                         0
                     };

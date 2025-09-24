@@ -1,4 +1,5 @@
 use rand::prelude::*;
+use rand::seq::SliceRandom;
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
@@ -130,7 +131,8 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
     // let walk_delay = 24;
     let trials = 100000;
     let walk_delay = 14;
-    let barneys = 6;
+    let barneys = 4;
+    let death_animation = 4;
     let mut tick_counts = vec![0usize; trials];
     let mut rng = rand::thread_rng();
 
@@ -138,6 +140,7 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
     let mut encounter_kill_times: Vec<f64> = Vec::new();
     let mut encounter_attack_speed: Option<usize> = None;
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string(), "ranged".to_string()]);
+    let hit_delay_vec = if best_style.gear_type == "ranged" { vec![2] } else if best_style.gear_type == "magic" && player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { vec![3, 4, 5] } else { vec![2, 3, 4] };
     let max_hit = best_style.max_hit as i32;
     let accuracy = best_style.accuracy;
     let attack_speed = best_style.attack_speed as usize;
@@ -162,7 +165,7 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
                 }
                 if (tick - 1) % attack_speed == 0 {
                     let hit = if rng.gen::<f64>() < accuracy {
-                        rng.gen_range(0..=max_hit)
+                        rng.gen_range(0..=max_hit).max(1)
                     } else {
                         0
                     };
@@ -176,10 +179,9 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
             ticks_this_monster += attack_speed - 1;
             single_monster_ticks.push(ticks_this_monster as f64);
         }
-        if (tick - 1) % 4 != 0 {
-            tick += 4 - ((tick - 1) % 4);
-        }
-        tick_counts[i] = tick + walk_delay + barneys;
+        tick -= attack_speed - 1;
+        let hit_delay = *hit_delay_vec.choose(&mut rng).unwrap();
+        tick_counts[i] = tick + walk_delay + hit_delay + 1 + death_animation + barneys;
     }
     // Defensive: Check tick_counts
     if tick_counts.is_empty() {

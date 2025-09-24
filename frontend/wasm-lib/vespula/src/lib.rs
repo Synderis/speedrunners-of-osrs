@@ -38,6 +38,7 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
     let mut tick_counts = vec![0usize; trials];
     let mut rng = rand::thread_rng();
     let walk_delay = 21;
+    let death_animation = 4;
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string(), "ranged".to_string()]);
     let max_hit = best_style.max_hit as i32;
     let accuracy = best_style.accuracy;
@@ -45,6 +46,7 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
     console_log!("Max hit: {}, Accuracy: {}, Attack speed: {}", max_hit, accuracy, attack_speed);
     let base_hp = monsters[0].skills.hp as i32;
     let mut single_monster_ticks : Vec<f64> = Vec::new();
+    let hit_delay = if best_style.gear_type == "ranged" { 2 } else if best_style.gear_type == "magic" && player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 5 } else { 4 };
 
     for i in 0..trials {
         let mut tick = 0;
@@ -56,7 +58,7 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
                 ticks_this_monster += 1;
                 if (tick - 1) % attack_speed == 0 {
                     let hit = if rng.gen::<f64>() < accuracy {
-                        rng.gen_range(0..=max_hit)
+                        rng.gen_range(0..=max_hit).max(1)
                     } else {
                         0
                     };
@@ -66,14 +68,14 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
                     break;
                 }
             }
-            tick += attack_speed - 1;
-            ticks_this_monster += attack_speed - 1;
+            tick += hit_delay;
+            ticks_this_monster += hit_delay;
             single_monster_ticks.push(ticks_this_monster as f64);
         }
-        if (tick - 1) % 4 != 0 {
-            tick += 4 - ((tick - 1) % 4);
-        }
-        tick_counts[i] = tick + walk_delay;
+        tick += death_animation;
+        tick += walk_delay;
+        tick += 4 - (tick % 4);
+        tick_counts[i] = tick;
     }
     // Defensive: Check tick_counts
     if tick_counts.is_empty() {

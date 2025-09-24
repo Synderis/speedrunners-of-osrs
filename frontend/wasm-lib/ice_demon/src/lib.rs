@@ -219,7 +219,7 @@ fn ember_light_kill<R: Rng>(
         attack_tick += 1;
         if (attack_tick - 1) % attack_speed == 0 {
             if rng.gen::<f64>() < accuracy_val {
-                let hit = rng.gen_range(0..=max_hit);
+                let hit = rng.gen_range(0..=max_hit).max(1);
                 if (accuracy_val - accuracy[1]).abs() < f64::EPSILON {
                     accuracy_val = accuracy[2];
                 } else {
@@ -238,7 +238,7 @@ fn ember_light_kill<R: Rng>(
         if (attack_tick - 1) % attack_speed == 0 {
             let mut hit = 0;
             if rng.gen::<f64>() < accuracy_val {
-                hit = rng.gen_range(0..=max_hit);
+                hit = rng.gen_range(0..=max_hit).max(1);
             }
             hp -= hit;
             hit_count += 1;
@@ -246,7 +246,7 @@ fn ember_light_kill<R: Rng>(
         }
         if hp <= 0 {
             // You can handle early_death logic here if needed
-            total_ticks += attack_tick + attack_speed - 1;
+            total_ticks += attack_tick - 1;
             break;
         }
     }
@@ -284,7 +284,7 @@ fn burning_claws_kill<R: Rng>(
 
     if hp <= 0 {
         // You can handle early_death logic here if needed
-        total_ticks += attack_tick + attack_speed - 1;
+        total_ticks += attack_tick - 1;
         return total_ticks;
     }
 
@@ -296,7 +296,7 @@ fn burning_claws_kill<R: Rng>(
         attack_tick += 1;
         if (attack_tick - 1) % attack_speed == 0 {
             let hit = if rng.gen::<f64>() < accuracy {
-                rng.gen_range(0..=max_hit)
+                rng.gen_range(0..=max_hit).max(1)
             } else {
                 0
             };
@@ -306,7 +306,7 @@ fn burning_claws_kill<R: Rng>(
             hp = thrall_hit(rng, hp);
         }
         if hp <= 0 {
-            total_ticks += attack_tick + attack_speed - 1;
+            total_ticks += attack_tick - 1;
             break;
         }
     }
@@ -379,7 +379,7 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
 
     let trials = 100_000;
     let post_chop_delay = 10;
-    let post_death_delay = 6;
+    let death_animation = 4;
     let mut tick_counts = vec![0usize; trials];
     let mut ice_demon_pop_time = vec![0usize; trials];
     let mut rng = rand::thread_rng();
@@ -415,20 +415,14 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
         }
 
         total_ticks += post_chop_delay;
-        if total_ticks % 4 != 0 {
-            total_ticks += 4 - (total_ticks % 4);
-        }
-        total_ticks += post_death_delay;
+        total_ticks += 1 + death_animation;
         tick_counts[i] = total_ticks;
     }
     // Defensive: Check tick_counts
     if tick_counts.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
-    // let single_monster_ticks_mean = single_monster_ticks.iter().sum::<f64>() / single_monster_ticks.len() as f64;
-    // console_log!("Single monster mean TTK: {}", single_monster_ticks_mean);
-    // console_log!("Tick counts sample: {:?}", &tick_counts[0..10.min(tick_counts.len())]);
-    // console_log!("Using combat style: {:?}", best_style);
+
     let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
     let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
     for &ticks in &tick_counts {

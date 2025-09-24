@@ -19,7 +19,7 @@ fn phase_loop(
         if (*current_phase_ticks - 1) % attack_speed == 0 {
             let mut hit = 0;
             if rng.gen::<f64>() < accuracy {
-                hit = rng.gen_range(0..=max_hit);
+                hit = rng.gen_range(0..=max_hit).max(1);
             };
             *hp -= hit;
         }
@@ -109,7 +109,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             );
             if rng.gen::<f64>() < best_style_spec.accuracy {
                 spec_hit = true;
-                melee_hp -= rng.gen_range(0..=best_style_spec.max_hit as i32);
+                melee_hp -= rng.gen_range(0..=best_style_spec.max_hit as i32).max(1);
             };
             if spec_hit {
                 melee_ticks = phase_loop(

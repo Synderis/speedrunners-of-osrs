@@ -56,6 +56,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 
     // Simulation parameters
     let initial_delay = 24;
+    let death_animation = 4;
     let mut tick_counts: Vec<usize> = vec![0; trials];
     let mut phase_list = Vec::with_capacity(trials);
     // let mut debug_trials = Vec::with_capacity(trials);
@@ -144,7 +145,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
                 }
                 if let Some(idx) = attack_idx {
                     let hit = if rng.gen::<f64>() < accuracies[idx] {
-                        rng.gen_range(0..=max_hits[idx])
+                        rng.gen_range(0..=max_hits[idx]).max(1)
                     } else {
                         0
                     };
@@ -165,7 +166,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
             // }));
             tick += 1;
         }
-        tick_counts[i] = tick + initial_delay;
+        tick_counts[i] = tick + initial_delay + death_animation;
         phase_list.push(teleport);
         // debug_trials.push(debug_tick_log);
     }

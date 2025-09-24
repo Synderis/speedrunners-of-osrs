@@ -76,6 +76,7 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                     //     effective_dps
                     // );
                     let style_result = StyleResult {
+                        gear_type: combat_type.clone(),
                         combat_style: style.combat_style.clone(),
                         attack_type: style.attack_type.clone(),
                         max_hit,
