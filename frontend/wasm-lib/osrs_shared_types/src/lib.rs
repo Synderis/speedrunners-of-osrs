@@ -184,6 +184,7 @@ pub struct CalculationResult {
 
 #[derive(Deserialize, Clone)]
 pub struct StyleResult {
+    pub gear_type: String,
     pub combat_style: String,
     pub attack_type: String,
     pub max_hit: u32,

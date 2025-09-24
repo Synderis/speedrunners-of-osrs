@@ -128,6 +128,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     // let walk_delay = 24;
     let trials = 100000;
     let walk_delay = 0;
+    let death_animation = 4;
     let mut tick_counts = vec![0usize; trials];
     let mut rng = rand::thread_rng();
 
@@ -141,6 +142,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     console_log!("Max hit: {}, Accuracy: {}, Attack speed: {}", max_hit, accuracy, attack_speed);
     let base_hp = monsters[0].skills.hp as i32;
     let mut single_monster_ticks : Vec<f64> = Vec::new();
+    let hit_delay = if player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 2 } else { 1 };
 
     for i in 0..trials {
         let mut tick = 0;
@@ -159,7 +161,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
                 }
                 if (tick - 1) % attack_speed == 0 {
                     let hit = if rng.gen::<f64>() < accuracy {
-                        rng.gen_range(0..=max_hit)
+                        rng.gen_range(0..=max_hit).max(1)
                     } else {
                         0
                     };
@@ -173,9 +175,9 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
             ticks_this_monster += attack_speed - 1;
             single_monster_ticks.push(ticks_this_monster as f64);
         }
-        if (tick - 1) % 4 != 0 {
-            tick += 4 - ((tick - 1) % 4);
-        }
+        tick -= attack_speed - 1;
+        tick += hit_delay + 1 + death_animation;
+        tick += 4 - (tick % 4);
         tick_counts[i] = tick;
     }
     // Defensive: Check tick_counts

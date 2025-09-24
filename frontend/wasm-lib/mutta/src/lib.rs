@@ -13,7 +13,7 @@ fn sim_freeze_mutta(
     ) -> i32 {
     while hp_mutta > (mutta.skills.hp as f64 * 0.4) as i32 {
         let hit = if rng.gen::<f64>() < best_style_mutta.accuracy {
-            rng.gen_range(0..=best_style_mutta.max_hit as u32) as i32
+            rng.gen_range(0..=best_style_mutta.max_hit as u32).max(1) as i32
         } else {
             0
         };
@@ -25,14 +25,14 @@ fn sim_freeze_mutta(
     if rng.gen::<f64>() > zgs_best_style.accuracy {
         hp_mutta += (mutta.skills.hp as i32 / 2).min(mutta.skills.hp as i32 - hp_mutta);
     } else {
-        let hit = rng.gen_range(0..=zgs_best_style.max_hit as u32) as i32;
+        let hit = rng.gen_range(0..=zgs_best_style.max_hit as u32).max(1) as i32;
         hp_mutta -= hit;
     }
     total_ticks += 6;
     // Continue attacking until dead
     while hp_mutta > 0 {
         let hit = if rng.gen::<f64>() < best_style_mutta.accuracy {
-            rng.gen_range(0..=best_style_mutta.max_hit as u32) as i32
+            rng.gen_range(0..=best_style_mutta.max_hit as u32).max(1) as i32
         } else {
             0
         };
@@ -59,7 +59,7 @@ fn sim_chop_tree(
         // Small mutta can be hit if it's above half HP
         if base_small_mutta_hp / 2 < best_style_small_mutta.max_hit as i32 + hp_small_mutta {
             let hit = if rng.gen::<f64>() < best_style_small_mutta.accuracy {
-                rng.gen_range(0..=best_style_small_mutta.max_hit as u32) as i32
+                rng.gen_range(0..=best_style_small_mutta.max_hit as u32).max(1) as i32
             } else {
                 0
             };
@@ -76,7 +76,7 @@ fn sim_chop_tree(
     // Finish off small mutta
     while hp_small_mutta > 0 {
         let hit = if rng.gen::<f64>() < best_style_small_mutta.accuracy {
-            rng.gen_range(0..=best_style_small_mutta.max_hit as u32) as i32
+            rng.gen_range(0..=best_style_small_mutta.max_hit as u32).max(1) as i32
         } else {
             0
         };
@@ -136,6 +136,10 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
     let wc_level = player.combat_stats.woodcutting as i32;
     let tree_accuracy = (1.0 + ((((50.0 * (99.0 - wc_level as f64)) / 98.0) + ((200.0 * (wc_level as f64 - 1.0)) / 98.0) + 0.5)).floor()) / 256.0;
     let base_tree_hp = wc_level * 5;
+    let death_animation = 4;
+    let post_room_delay = 4;
+    let hit_delay = 1;
+    let hit_delay_small_mutta = if player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 2 } else { 1 };
 
     let mut tick_counts: Vec<i32> = vec![0; trials];
     let mut phase_results: Vec<i32> = vec![0; trials];
@@ -147,17 +151,25 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
         let mut total_ticks = 0;
         if has_zgs {
             total_ticks = sim_freeze_mutta(total_ticks, hp_small_mutta, &monsters[0], &best_style_small_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
-            total_ticks += 9;
+            total_ticks -= attack_speed_small_mutta;
+            total_ticks += 1 + hit_delay_small_mutta;
+            total_ticks += 4 - (total_ticks % 4);
+            // Large mutta leaving the lake
+            total_ticks += 5;
             total_ticks = sim_freeze_mutta(total_ticks, hp_large_mutta, &monsters[1], &best_style_large_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
             phase_results[i] = 0;
         } else {
             let (new_total_ticks, phase_ticks) = sim_chop_tree(&player, total_ticks, tree_hp, tree_accuracy, hp_small_mutta, base_small_mutta_hp, &best_style_small_mutta, &mut rng);
             phase_results[i] = phase_ticks;
             total_ticks = new_total_ticks;
-            total_ticks += 9;
+            total_ticks -= attack_speed_small_mutta;
+            total_ticks += 1 + hit_delay_small_mutta;
+            total_ticks += 4 - (total_ticks % 4);
+            // Large mutta leaving the lake
+            total_ticks += 5;
             while hp_large_mutta > 0 {
                 let hit = if rng.gen::<f64>() < best_style_large_mutta.accuracy {
-                    rng.gen_range(0..=best_style_large_mutta.max_hit as u32) as i32
+                    rng.gen_range(0..=best_style_large_mutta.max_hit as u32).max(1) as i32
                 } else {
                     0
                 };
@@ -165,11 +177,9 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
                 hp_large_mutta -= hit;
             }
         }
-
-        // Round up to next multiple of 4
-        if total_ticks % 4 != 0 {
-            total_ticks += 4 - (total_ticks % 4);
-        }
+        total_ticks -= attack_speed_large_mutta;
+        total_ticks += 1 + hit_delay + death_animation + post_room_delay;
+        total_ticks += 4 - (total_ticks % 4);
         tick_counts[i] = total_ticks;
     }
 

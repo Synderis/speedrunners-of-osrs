@@ -31,7 +31,7 @@ fn phase_loop(
         if (vasa_attack_tick - 1) % attack_speed == 0 {
             let mut hit = 0;
             if rng.gen::<f64>() < accuracy {
-                hit = rng.gen_range(0..=max_hit);
+                hit = rng.gen_range(0..=max_hit).max(1);
             }
             vasa_hp = vasa_hp.saturating_sub(hit);
             hit_counter += 1;
@@ -123,7 +123,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                 healing_ticks += crystal_attack_speed;
                 let mut hit_crystal = 0;
                 if rng.gen::<f64>() < crystal_accuracy {
-                    hit_crystal = rng.gen_range(0..=crystal_max_hit);
+                    hit_crystal = rng.gen_range(0..=crystal_max_hit).max(1);
                 }
                 crystal_hp = crystal_hp.saturating_sub(hit_crystal);
                 if crystal_attacks >= max_attacks_crystal {
