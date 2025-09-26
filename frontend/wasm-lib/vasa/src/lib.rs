@@ -95,6 +95,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
     let crystal_attack_speed = best_style_crystal.attack_speed as usize;
     let mut phase_results: Vec<usize> = vec![0; trials];
     let mut tick_counts: Vec<usize> = vec![0; trials];
+    let death_animation = 4;
     let base_max_attacks_crystal = 70;
     let (initial_delay, attack_pattern): (usize, Vec<[usize; 2]>) = if room_methods.len() > 0 && room_methods[0] == "Flame Skip" {
         (22, vec![[0, 5], [0, 3], [0, 7]])
@@ -118,6 +119,8 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         let mut healing_ticks;
         let mut total_ticks = 0;
         let mut pre_crystal_attacks = 0;
+        let overkill = if rng.gen_range(1..=(4 * vasa_attack_speed)) == 1 { 1 } else { 0 };
+        let hit_delay = if rng.gen_range(1..=8) < 3 { 1 } else { 2 };
 
         while vasa_hp > 0 {
             crystal_hp = crystal_base_hp;
@@ -179,10 +182,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                 break;
             }
         }
-        total_ticks += initial_delay;
-        if total_ticks % 4 != 0 {
-            total_ticks += 4 - (total_ticks % 4);
-        }
+        total_ticks += initial_delay + hit_delay + 2 + death_animation - overkill;
         phase_results[i] = crystal_count;
         tick_counts[i] = total_ticks;
     }

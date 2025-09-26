@@ -59,12 +59,10 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
                     break;
                 }
             }
-            tick += hit_delay;
             ticks_this_monster += hit_delay;
             single_monster_ticks.push(ticks_this_monster as f64);
         }
-        tick += death_animation;
-        tick += walk_delay;
+        tick += walk_delay + hit_delay + death_animation;
         tick += 4 - (tick % 4);
         tick_counts[i] = tick;
     }

@@ -149,6 +149,7 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
         let hp_small_mutta = base_small_mutta_hp;
         let tree_hp = base_tree_hp;
         let mut total_ticks = 0;
+        let overkill_large_mutta = if rng.gen_range(1..=(4 * attack_speed_large_mutta)) == 1 { 1 } else { 0 };
         if has_zgs {
             total_ticks = sim_freeze_mutta(total_ticks, hp_small_mutta, &monsters[0], &best_style_small_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
             total_ticks -= attack_speed_small_mutta;
@@ -178,7 +179,7 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
             }
         }
         total_ticks -= attack_speed_large_mutta;
-        total_ticks += 1 + hit_delay + death_animation + post_room_delay;
+        total_ticks += 1 + hit_delay + death_animation - overkill_large_mutta + post_room_delay;
         total_ticks += 4 - (total_ticks % 4);
         tick_counts[i] = total_ticks;
     }

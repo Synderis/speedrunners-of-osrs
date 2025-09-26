@@ -906,7 +906,7 @@ export const rooms: Room[] = [
         description: 'High-level boss encounter',
         monsters: ['7573', '7573'],
         units: 'Lizardman Shamans',
-        methods: []
+        methods: ["Shamans Slayer Task"]
     },
     {
         id: 'vangs',
@@ -960,7 +960,7 @@ export const rooms: Room[] = [
         description: 'Barrows Brothers minigame',
         monsters: ['7604', '7604', '7604'],
         units: 'Mystics',
-        methods: []
+        methods: ['Mystics Slayer Task']
     },
     {
         id: 'muttadile',

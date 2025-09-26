@@ -9,23 +9,21 @@ fn ensure_item_equipped(
     inventory: &[SelectedItem],
     item_name: &str,
 ) {
-    // Only proceed if a Salve item is present in inventory (case-insensitive)
-    let has_salve = inventory.iter().any(|item| item.name.to_lowercase().contains("salve"));
-    if !has_salve {
-        return;
-    };
 
     // Find the item in inventory (case-insensitive)
-    let item = match inventory.iter().find(|item| item.name.to_lowercase().contains(item_name)) {
+    let item = match inventory.iter().find(|item| item.name == item_name) {
         Some(item) => item,
         None => return,
     };
 
-    // Remove any existing head item from gear_items and subtract its bonuses
+    // Get the slot of the item we want to equip
+    let target_slot = &item.slot;
+
+    // Remove any existing item from the same slot and subtract its bonuses
     let mut i = 0;
     while i < gear_set.gear_items.len() {
         if let Some(existing) = &gear_set.gear_items[i] {
-            if existing.slot == "head" {
+            if existing.slot == *target_slot {
                 if let (Some(bonuses), Some(offensive), Some(defensive)) = (
                     existing.bonuses.as_ref(),
                     existing.offensive.as_ref(),
@@ -90,6 +88,7 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
 
     let mut player = payload.player;
     let monsters = payload.room.monsters;
+    let room_methods = payload.room.methods;
     let inventory_items: Vec<SelectedItem> = player
         .inventory
         .iter()
@@ -99,9 +98,16 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
         ("magic", &mut player.gear_sets.mage),
         ("ranged", &mut player.gear_sets.ranged),
     ];
-
-    for (_, gear_set) in sets.iter_mut() {
-        ensure_item_equipped(gear_set, &inventory_items, "slayer");
+    let slayer_helm = inventory_items.iter().any(|item| item.name == "Slayer helmet (i)");
+    let slayer_task = if room_methods.len() > 0 && room_methods[0] == "Shamans Slayer Task" {
+        true
+    } else {
+        false
+    };
+    if slayer_helm && slayer_task {
+        for (_, gear_set) in sets.iter_mut() {
+            ensure_item_equipped(gear_set, &inventory_items, "Slayer helmet (i)");
+        }
     };
 
     // let walk_delay = 24;
@@ -122,6 +128,7 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
 
     for i in 0..trials {
         let mut tick = 0;
+        let overkill = if rng.gen_range(1..=(4 * attack_speed)) == 1 { 1 } else { 0 };
         for _monster in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
@@ -153,7 +160,7 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
         }
         tick -= attack_speed - 1;
         let hit_delay = *hit_delay_vec.choose(&mut rng).unwrap();
-        tick_counts[i] = tick + walk_delay + hit_delay + 1 + death_animation + barneys;
+        tick_counts[i] = tick + walk_delay + hit_delay + 1 + death_animation - overkill + barneys;
     }
     // Defensive: Check tick_counts
     if tick_counts.is_empty() {
