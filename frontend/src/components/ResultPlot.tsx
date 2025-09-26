@@ -4,6 +4,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 
 interface ResultPlotProps {
     chartRef: React.RefObject<HTMLDivElement>;
+    chartName: string;
     chartInView: boolean;
     isLoading: boolean;
     handleRecalculate: () => void;
@@ -21,6 +22,7 @@ interface ResultPlotProps {
 
 const ResultPlot: React.FC<ResultPlotProps> = ({
     chartRef,
+    chartName,
     chartInView,
     isLoading,
     handleRecalculate,
@@ -44,15 +46,18 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
     >
         {/* Chart type and unit toggle buttons above the chart */}
         <div className="chart-controls">
-            <motion.button
-                className="btn"
-                onClick={handleRecalculate}
-                disabled={isLoading}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-            >
-                {isLoading ? 'Calculating...' : 'Calculate'}
-            </motion.button>
+
+            {chartName === 'result-plot' && (
+                <motion.button
+                    className="btn"
+                    onClick={handleRecalculate}
+                    disabled={isLoading}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                >
+                    {isLoading ? 'Calculating...' : 'Calculate'}
+                </motion.button>
+            )}
             <motion.button
                 className="btn"
                 onClick={() => setShowSeconds(s => !s)}
