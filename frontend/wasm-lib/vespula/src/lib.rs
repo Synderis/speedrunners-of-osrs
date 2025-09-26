@@ -3,36 +3,17 @@ use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
 
-#[cfg(feature = "wee_alloc")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
-#[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
-
-macro_rules! console_log {
-    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-}
-
 #[wasm_bindgen]
 pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
-    console_log!("Received payload JSON: {}", payload_json);
-
     let payload: DPSRoomPayload = match serde_json::from_str(payload_json) {
         Ok(p) => p,
         Err(e) => {
-            console_log!("Failed to parse payload JSON: {}", e);
             return format!("{{\"error\": \"Failed to parse payload data: {}\"}}", e);
         }
     };
 
     let player = payload.player;
     let monsters = payload.room.monsters;
-    let cap = payload.config.cap;
 
     let trials = 100000;
     let mut tick_counts = vec![0usize; trials];
@@ -43,26 +24,36 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
     let max_hit = best_style.max_hit as i32;
     let accuracy = best_style.accuracy;
     let attack_speed = best_style.attack_speed as usize;
-    console_log!("Max hit: {}, Accuracy: {}, Attack speed: {}", max_hit, accuracy, attack_speed);
     let base_hp = monsters[0].skills.hp as i32;
     let mut single_monster_ticks : Vec<f64> = Vec::new();
     let hit_delay = if best_style.gear_type == "ranged" { 2 } else if best_style.gear_type == "magic" && player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 5 } else { 4 };
+    let inventory_items: Vec<SelectedItem> = player
+        .inventory
+        .iter()
+        .filter_map(|item| item.equipment.clone())
+        .collect();
+    let zaryte_crossbow = inventory_items.iter().any(|item| item.name == "Zaryte crossbow");
 
     for i in 0..trials {
         let mut tick = 0;
-        for monster in &monsters {
+        for _monster in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
             while hp > 0 {
                 tick += 1;
                 ticks_this_monster += 1;
-                if (tick - 1) % attack_speed == 0 {
-                    let hit = if rng.gen::<f64>() < accuracy {
-                        rng.gen_range(0..=max_hit).max(1)
-                    } else {
-                        0
-                    };
-                    hp -= hit;
+                if zaryte_crossbow && (tick - 1) == attack_speed {
+                    let spec_dmg = (hp as f64 * 0.22).floor() as i32;
+                    hp -= spec_dmg;
+                } else {
+                    if (tick - 1) % attack_speed == 0 {
+                        let hit = if rng.gen::<f64>() < accuracy {
+                            rng.gen_range(0..=max_hit).max(1)
+                        } else {
+                            0
+                        };
+                        hp -= hit;
+                    }
                 }
                 if hp <= 0 {
                     break;
@@ -81,10 +72,7 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
     if tick_counts.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
-    let single_monster_ticks_mean = single_monster_ticks.iter().sum::<f64>() / single_monster_ticks.len() as f64;
-    console_log!("Single monster mean TTK: {}", single_monster_ticks_mean);
-    console_log!("Tick counts sample: {:?}", &tick_counts[0..10.min(tick_counts.len())]);
-    // console_log!("Using combat style: {:?}", best_style);
+
     let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
     let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
     for &ticks in &tick_counts {

@@ -79,6 +79,13 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     let mut olm_melee_hand_specced = monsters[1].clone();
     olm_melee_hand_specced.skills.def = (olm_melee_hand_specced.skills.def as f64 * 0.65) as u32;
     let best_style_specced = find_best_combat_style(&player, &olm_melee_hand_specced, vec!["melee".to_string()]);
+    let inventory_items: Vec<SelectedItem> = player
+        .inventory
+        .iter()
+        .filter_map(|item| item.equipment.clone())
+        .collect();
+    let zaryte_crossbow = inventory_items.iter().any(|item| item.name == "Zaryte crossbow");
+    // let burning_claws = inventory_items.iter().any(|item| item.name == "Burning claws");
 
     // Prepare simulation
     let mut tick_counts = vec![0usize; trials];
@@ -88,7 +95,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
 
     for i in 0..trials {
         let mut total_ticks = 0;
-        let ranged_ticks;
         let mut ranged_hp = monsters[2].skills.hp as i32;
         let mut current_phase_ticks = 0;
         for phase in 0..3 {
@@ -120,8 +126,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                     best_style_specced.max_hit as i32,
                     &mut rng,
                 );
-            }
-            else {
+            } else {
                 melee_ticks = phase_loop(
                     &mut melee_hp,
                     &mut current_phase_ticks,
@@ -136,7 +141,12 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             total_ticks += delay_list[phase];
             phase_results.push(melee_ticks + mage_ticks);
         };
-        ranged_ticks = phase_loop(
+        if zaryte_crossbow {
+            let spec_dmg = (ranged_hp as f64 * 0.22).floor() as i32;
+            ranged_hp -= spec_dmg;
+            current_phase_ticks += 5;
+        }
+        let mut ranged_ticks = phase_loop(
             &mut ranged_hp,
             &mut current_phase_ticks,
             best_style_ranged.attack_speed as usize,
@@ -144,6 +154,9 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             best_style_ranged.max_hit as i32,
             &mut rng,
         );
+        if zaryte_crossbow {
+            ranged_ticks += 5;
+        }
         total_ticks += ranged_ticks;
         if total_ticks % 4 != 0 {
             total_ticks += 4 - (total_ticks % 4);

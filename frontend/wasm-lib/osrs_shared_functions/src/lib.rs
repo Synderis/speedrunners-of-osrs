@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
+use rand::Rng;
 
 #[wasm_bindgen]
 extern "C" {
@@ -47,34 +48,34 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
 
         if let Some(weapon) = selected_weapon {
             if let Some(styles) = &weapon.weapon_styles {
-                // console_log!(
-                //     "Evaluating {} combat styles for {} weapon: {}",
-                //     styles.len(),
-                //     combat_type,
-                //     weapon.name
-                // );
+                console_log!(
+                    "Evaluating {} combat styles for {} weapon: {}",
+                    styles.len(),
+                    combat_type,
+                    weapon.name
+                );
                 for style in styles {
                     let (max_hit, _effective_level) = calculate_max_hit_for_style(player, monster, &combat_type, style, gear_stats);
                     let (accuracy, effective_level, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, &combat_type, style, gear_stats);
                     let effective_dps = (max_hit as f64 * accuracy) / (weapon.speed as f64 - style.att_spd_reduction as f64);
                     let effective_strength = 0; // Not used for mage/ranged
                     let effective_attack = effective_level;
-                    // console_log!(
-                    //     "Style: {} ({}), effective_level: {}, max_attack_roll: {:.2}%, max_defence_roll: {:.2}%",
-                    //     style.combat_style,
-                    //     style.attack_type,
-                    //     effective_level,
-                    //     max_attack_roll,
-                    //     max_defence_roll
-                    // );
-                    // console_log!(
-                    //     "Style: {} ({}), Max Hit: {}, Accuracy: {:.2}%, Effective DPS: {:.2}",
-                    //     style.combat_style,
-                    //     style.attack_type,
-                    //     max_hit,
-                    //     accuracy * 100.0,
-                    //     effective_dps
-                    // );
+                    console_log!(
+                        "Style: {} ({}), effective_level: {}, max_attack_roll: {:.2}%, max_defence_roll: {:.2}%",
+                        style.combat_style,
+                        style.attack_type,
+                        effective_level,
+                        max_attack_roll,
+                        max_defence_roll
+                    );
+                    console_log!(
+                        "Style: {} ({}), Max Hit: {}, Accuracy: {:.2}%, Effective DPS: {:.2}",
+                        style.combat_style,
+                        style.attack_type,
+                        max_hit,
+                        accuracy * 100.0,
+                        effective_dps
+                    );
                     let style_result = StyleResult {
                         gear_type: combat_type.clone(),
                         combat_style: style.combat_style.clone(),
@@ -98,12 +99,12 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
         }
     }
     let result = best_style.unwrap();
-    // console_log!(
-    //     "🏆 Best combat style selected: {} ({}) with {:.2} effective DPS",
-    //     result.combat_style,
-    //     result.attack_type,
-    //     result.effective_dps
-    // );
+    console_log!(
+        "🏆 Best combat style selected: {} ({}) with {:.2} effective DPS",
+        result.combat_style,
+        result.attack_type,
+        result.effective_dps
+    );
     result
 }
 
@@ -481,4 +482,65 @@ pub fn ensure_weapon_swap(
         return Some((prev_weapon.name.clone(), current_offhand));
     }
     None
+}
+
+pub fn burning_barrage_special<R: Rng>(rng: &mut R, max_hit: i32, accuracy: f64) -> (Vec<i32>, Vec<i32>) {
+    let (hits, burn_chance) = if rng.gen::<f64>() < accuracy {
+        let max_hit_low = (max_hit as f64 * 0.75).floor() as i32;
+        let max_hit_high = (max_hit as f64 * 1.75).floor() as i32;
+        let dmg = rng.gen_range(max_hit_low..=max_hit_high);
+        let hit1 = (0.25 * dmg as f64).floor() as i32;
+        let hit2 = (0.25 * dmg as f64).floor() as i32;
+        let hit3 = (0.5 * dmg as f64).floor() as i32;
+        (vec![hit1, hit2, hit3], vec![0.15, 0.15, 0.15])
+    } else if rng.gen::<f64>() < accuracy {
+        let max_hit_low = (max_hit as f64 * 0.5).floor() as i32;
+        let max_hit_high = (max_hit as f64 * 1.5).floor() as i32;
+        let dmg = rng.gen_range(max_hit_low..=max_hit_high);
+        let hit1 = (0.5 * dmg as f64).floor() as i32 - 1;
+        let hit2 = (0.5 * dmg as f64).floor() as i32 - 1;
+        let hit3 = dmg - (hit1 + hit2);
+        (vec![hit1, hit2, hit3], vec![0.30, 0.30, 0.30])
+    } else if rng.gen::<f64>() < accuracy {
+        let max_hit_low = (max_hit as f64 * 0.25).floor() as i32;
+        let max_hit_high = (max_hit as f64 * 0.75).floor() as i32;
+        let dmg = rng.gen_range(max_hit_low..=max_hit_high);
+        let hit3 = dmg - 2;
+        let hit1 = if dmg >= 2 { 1 } else { 0 };
+        let hit2 = if dmg >= 2 { 1 } else { 0 };
+        (vec![hit1, hit2, hit3], vec![0.45, 0.45, 0.45])
+    } else {
+        let roll = rng.gen::<f64>();
+        if roll < 0.2 {
+            (vec![0], vec![0.0])
+        } else if roll < 0.6 {
+            (vec![1], vec![0.0])
+        } else {
+            (vec![2], vec![0.0])
+        }
+    };
+
+    let mut burns = Vec::new();
+    for (i, &chance) in burn_chance.iter().enumerate() {
+        if chance > 0.0 && rng.gen::<f64>() < chance {
+            if i == 2 {
+                burns.push(9);
+            } else {
+                burns.push(10);
+            }
+        }
+    }
+    (hits, burns)
+}
+
+pub fn apply_burns(hp: i32, burn_list: &mut Vec<i32>) -> i32 {
+    let mut new_hp = hp;
+    burn_list.retain_mut(|burn| {
+        if *burn > 0 {
+            new_hp -= 1;
+            *burn -= 1;
+        }
+        *burn > 0
+    });
+    new_hp
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, ReferenceLine } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar, ReferenceLine } from 'recharts';
 
 interface ResultPlotProps {
     chartRef: React.RefObject<HTMLDivElement>;
@@ -122,7 +122,7 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
                                 <YAxis
                                     stroke={chartColors.text}
                                     fontSize={12}
-                                    label={{ value: 'P(Dead)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: chartColors.text } }}
+                                    label={{ value: 'P(Completion)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: chartColors.text } }}
                                 />
                                 <Tooltip
                                     contentStyle={{
@@ -133,13 +133,12 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
                                     }}
                                     formatter={(value, name) => [
                                         value,
-                                        name === "P(Dead)" ? "P(Dead)" : name
+                                        name === "P(Completion)" ? "P(Completion)" : name
                                     ]}
                                     labelFormatter={label =>
                                         showSeconds ? formatSeconds(label as number) : `Tick ${label}`
                                     }
                                 />
-                                <Legend />
                                 <ReferenceLine
                                     x={expectedTTK}
                                     stroke={chartColors.primary}
@@ -159,7 +158,7 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
                                     strokeWidth={2}
                                     dot={{ fill: chartColors.primary, strokeWidth: 2, r: 3 }}
                                     activeDot={{ r: 5, stroke: chartColors.primary, strokeWidth: 2 }}
-                                    name="P(Dead)"
+                                    name="P(Completion)"
                                 />
 
                             </LineChart>
@@ -184,7 +183,6 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
                                         color: chartColors.text
                                     }}
                                 />
-                                <Legend />
                                 <Bar
                                     dataKey="dps"
                                     fill={chartColors.primary}

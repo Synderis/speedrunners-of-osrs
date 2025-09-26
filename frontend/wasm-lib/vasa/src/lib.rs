@@ -22,20 +22,28 @@ fn phase_loop(
     max_hit: usize,
     attack_pattern: &[usize; 2],
     mut total_ticks: usize,
+    zaryte_crossbow: bool,
     rng: &mut ThreadRng,
 ) -> (usize, usize, usize, usize) {
     let mut hit_counter = 0;
     let mut pre_crystal_attacks = 0;
     while hit_counter <= attack_pattern[0] || hit_counter < attack_pattern[1] {
         vasa_attack_tick += 1;
-        if (vasa_attack_tick - 1) % attack_speed == 0 {
-            let mut hit = 0;
-            if rng.gen::<f64>() < accuracy {
-                hit = rng.gen_range(0..=max_hit).max(1);
-            }
-            vasa_hp = vasa_hp.saturating_sub(hit);
+        if zaryte_crossbow && (vasa_attack_tick - 1) == attack_speed {
+            let spec_dmg = (vasa_hp as f64 * 0.22).floor() as usize;
+            vasa_hp = vasa_hp.saturating_sub(spec_dmg);
             hit_counter += 1;
             pre_crystal_attacks += 1;
+        } else {
+            if (vasa_attack_tick - 1) % attack_speed == 0 {
+                let mut hit = 0;
+                if rng.gen::<f64>() < accuracy {
+                    hit = rng.gen_range(0..=max_hit).max(1);
+                }
+                vasa_hp = vasa_hp.saturating_sub(hit);
+                hit_counter += 1;
+                pre_crystal_attacks += 1;
+            }
         }
         if vasa_hp == 0 {
             total_ticks += vasa_attack_tick.saturating_sub(1);
@@ -93,6 +101,13 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
     } else {
         (29, vec![[0, 4], [0, 3], [0, 7]])
     };
+    let inventory_items: Vec<SelectedItem> = player
+        .inventory
+        .iter()
+        .filter_map(|item| item.equipment.clone())
+        .collect();
+    let zaryte_crossbow = inventory_items.iter().any(|item| item.name == "Zaryte crossbow");
+
     for i in 0..trials {
         let mut vasa_hp = vasa_base_hp;
         let mut crystal_hp;
@@ -108,7 +123,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
             crystal_hp = crystal_base_hp;
             if pre_crystal_attacks < 4 {
                 let (new_vasa_hp, new_vasa_attack_tick, new_pre_crystal_attacks, new_total_ticks) = phase_loop(
-                    vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, &attack_pattern[0], total_ticks, &mut rng
+                    vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, &attack_pattern[0], total_ticks, zaryte_crossbow, &mut rng
                 );
                 vasa_hp = new_vasa_hp;
                 vasa_attack_tick = new_vasa_attack_tick;
@@ -132,7 +147,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                     vasa_hp += heal_amount;
                     vasa_hp = std::cmp::min(vasa_hp, vasa_base_hp);
                     let (new_vasa_hp, new_vasa_attack_tick, _, new_total_ticks) = phase_loop(
-                        vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, &attack_pattern[1], total_ticks, &mut rng
+                        vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, &attack_pattern[1], total_ticks, false, &mut rng
                     );
                     vasa_hp = new_vasa_hp;
                     vasa_attack_tick = new_vasa_attack_tick;
@@ -155,7 +170,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
             }
             vasa_attack_tick = 0;
             let (new_vasa_hp, new_vasa_attack_tick, _, new_total_ticks) = phase_loop(
-                vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, &attack_pattern[2], total_ticks, &mut rng
+                vasa_hp, vasa_attack_tick, vasa_attack_speed, vasa_accuracy, vasa_max_hit, &attack_pattern[2], total_ticks, false, &mut rng
             );
             vasa_hp = new_vasa_hp;
             vasa_attack_tick = new_vasa_attack_tick;

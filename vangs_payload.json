@@ -1529,6 +1529,119 @@
                         }
                     ]
                 }
+            },
+            {
+                "name": "Avernic defender",
+                "equipment": {
+                    "name": "Avernic defender",
+                    "id": 22322,
+                    "version": "Normal",
+                    "slot": "shield",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB0AAAAdCAMAAABhTZc9AAAAkFBMVEUAAACBgXiFgWt/f3Z9fXSCfGZ7e3J5eXB9eGN3d257dmJ1dGx4c2Bzcmt2cV1wcGlxbVpwaWlsbGRqamJsZGRnZ2BqYmJlXl1hWlpRUUpOTkhRSkpMSkZMRkZIQ0NFQEA8OjA5OTQ5NDQ1NTA1MDAyMC4yLi4sLCosKiooKCYoJiYkIiIgHR0aGBgVEREAAAFp04FTAAAAAXRSTlMAQObYZgAAAMJJREFUeNqF0tkSgjAMBVBURBFx30CLAlJrt/v/f+cUfSOtecyZSdMkUeQLAAHTWsNnQpPqMhCCVrgUeK80OuYk9jlcKxKVsojATtwQHWklFbA9c0ug1VJycbgwhxi++oy51HdXHRUGDacTLo0FUA3QAPlIGWubaoBuflmmTN0yRmCE9FjUAGOMEZjsi9YhtTvEu7IFGnqtWJcd8c0f5rfOewzINi8/zlYBTObvwI1NQzh+BHAROt2l3/7gKoC+0X3jA7AuIwLtWtWWAAAAAElFTkSuQmCC",
+                    "speed": 0,
+                    "category": "",
+                    "bonuses": {
+                        "str": 8,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 30,
+                        "slash": 29,
+                        "crush": 28,
+                        "magic": -5,
+                        "ranged": -4
+                    },
+                    "defensive": {
+                        "stab": 30,
+                        "slash": 29,
+                        "crush": 28,
+                        "magic": -5,
+                        "ranged": -4
+                    },
+                    "two_handed": false,
+                    "weapon_styles": []
+                }
+            },
+            {
+                "name": "Burning claws",
+                "equipment": {
+                    "name": "Burning claws",
+                    "id": 29577,
+                    "version": "",
+                    "slot": "weapon",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAACEAAAAbCAMAAADF2xaWAAABqlBMVEUAAAAAAAGYdSaScCS2jC69kjBzWB3PoDTRojXLnDTDlTDUpDWyiSythSqhfCh7Xh2Ed2l7b2KFeWuThXR/c2V9cWOKfW6Ie2yWiHiCdWaVhnZzaVxsYlabjHufj35YUlJWUFBbVVWqmoejk4GgkYA/Ojp2a12Qg3NxZlpeVkxjXFthWlplXl1RSUBRSkqzoo9AOjJqYmJkW1CNf3BNRj1cVElMRkZ4bWBUTU0yLi4kIiIaGBiPgXGZinl+YSCCZCBFQEAgHR01MDCdjn2klYNnYGBdV1fQVErcWE7CTkbLUklUIh1wVhpJORHZV05GGhhrKiZSPxUaCQlvLCZXIiBgSRhnKCRnXVKIaSLETkbNUkqMOTJgJiLSVUzGUEjXVk3VVk2MbCKFNTCbeCangSqqgyqFZiKbPTe6SkMdFQDImjKunYrNnjROPBHeqznJUUiSOjR8MiyVPDWdPzmgQDmPOTSJNzCYPTeDNC6oQzyuRj+lQjyrRT24SkK2SUC9TEOwRj+ySECjQjqfeiiANC55MCrAlDDFmDJ3XB2PbiS7jy6kfyi4ji6vhyyx3Jp1AAAAAXRSTlMAQObYZgAAAdpJREFUeNp90WdTo1AUBmDeQNbV3ay0kKqQ2Mv23nvvvfde1WgqkASENQb4zxLCGEnU++XMnXnmPeeeS2xyAADE1ge4cOmiwGBrMJs5xsSSqW6xnoqDs9MSy9FpdAGa9XsjPpOZPjPEH+oRMT4j7XMNmLQ0c1bghAPoEonE8ROSOAbQPJMWhy/HhSgCgqVpRhLFsfGJw8lE+iiujMT1ErBBcFw0Kl4T2cTp5HCSmQKyI/XFx4/QAWxM4DNXOX7yFLKj8dQR4HdNmX8CH0D/zkR5emKU5adOYn9W1c37wJwqG/CBohcLk+NDAs2k9oLA9Zta8QHw9qWmow3qylLuk1kp68XSc7j3G7dqlddvgFe1yE94QlMW84ZWV+Sc8cxb2r05tVy6Dfyiln0hFwtmVauUcwt+6vt3NnnnLvrCX9qCWsobUKt1eX599A8rzuBDYMUJeaG7QwUTqqrJC53n7wyTT4E/9p62IA3gh1rNo7PBf/3UDhD4/5UEgT5ntQHUbMvcuORdA6G/QNNCK9B54bqmvRr8qf5mA6CWPRE5D4RtqxEQbofPIBBCKy9yDn5EkDiuINGKc+eFbXUDwgtAqw6EAMp2J+8lfrFdGRkMgJ52sL4FQG8WPm4H1gBy7VypxYd3VwAAAABJRU5ErkJggg==",
+                    "speed": 4,
+                    "category": "Claw",
+                    "bonuses": {
+                        "str": 32,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 43,
+                        "slash": 54,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "defensive": {
+                        "stab": 3,
+                        "slash": 6,
+                        "crush": 1,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "two_handed": true,
+                    "weapon_styles": [
+                        {
+                            "name": "Chop",
+                            "attack_type": "Slash",
+                            "combat_style": "Accurate",
+                            "att": 3,
+                            "str": 0,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Slash",
+                            "attack_type": "Slash",
+                            "combat_style": "Aggressive",
+                            "att": 0,
+                            "str": 3,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Lunge",
+                            "attack_type": "Stab",
+                            "combat_style": "Controlled",
+                            "att": 1,
+                            "str": 1,
+                            "def": 1,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Block",
+                            "attack_type": "Slash",
+                            "combat_style": "Defensive",
+                            "att": 0,
+                            "str": 0,
+                            "def": 3,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        }
+                    ]
+                }
             }
         ]
     },
@@ -1540,7 +1653,7 @@
         "monsters": [
             {
                 "id": 7527,
-                "name": "Vanguard",
+                "name": "Vanguard (melee)",
                 "version": "Melee",
                 "image": "Vanguard (melee).png",
                 "level": 0,
@@ -1586,7 +1699,7 @@
             },
             {
                 "id": 7528,
-                "name": "Vanguard",
+                "name": "Vanguard (ranged)",
                 "version": "Ranged",
                 "image": "Vanguard (ranged).png",
                 "level": 0,
@@ -1632,7 +1745,7 @@
             },
             {
                 "id": 7529,
-                "name": "Vanguard",
+                "name": "Vanguard (magic)",
                 "version": "Magic",
                 "image": "Vanguard (magic).png",
                 "level": 0,

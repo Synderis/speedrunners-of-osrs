@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { fadeInOut } from '../utils/animations';
 import type { PlotDataPoint } from '../types/loaders';
@@ -25,6 +25,78 @@ import { calculateDPSWithObjectsIceDemon } from '../loaders/iceDemonWasm';
 
 // --- Constants & Types ---
 const GEAR_TYPES = ['melee', 'mage', 'ranged'] as const;
+
+// Floor configuration for raid structure
+interface FloorRoom {
+  roomId: string;
+  name: string;
+  isDelay?: boolean;
+  delayTicks?: number;
+}
+
+interface Floor {
+  id: string;
+  name: string;
+  rooms: FloorRoom[];
+}
+
+const RAID_FLOORS: Floor[] = [
+  {
+    id: 'floor1',
+    name: 'Floor 1',
+    rooms: [
+      { roomId: 'tekton', name: 'Tekton' },
+      { roomId: 'crabs_delay', name: 'Crabs', isDelay: true, delayTicks: 89 },
+      { roomId: 'ice_demon', name: 'Ice Demon' },
+      { roomId: 'lizardman_shamans', name: 'Shamans' },
+      { roomId: 'post_shamans_delay', name: 'Post Shamans', isDelay: true, delayTicks: 36 }
+    ]
+  },
+  {
+    id: 'floor2',
+    name: 'Floor 2',
+    rooms: [
+      { roomId: 'vangs', name: 'Vanguards' },
+      { roomId: 'thieving', name: 'Thieving', isDelay: true, delayTicks: 89 }, // Not implemented yet
+      { roomId: 'vespula', name: 'Vespula' },
+      { roomId: 'tightrope', name: 'Tightrope', isDelay: true, delayTicks: 77 },
+      { roomId: 'post_tightrope_delay', name: 'Post Tightrope', isDelay: true, delayTicks: 18 }
+    ]
+  },
+  {
+    id: 'floor3',
+    name: 'Floor 3',
+    rooms: [
+      { roomId: 'guardians', name: 'Guardians' },
+      { roomId: 'vasa', name: 'Vasa' },
+      { roomId: 'mystics', name: 'Mystics' },
+      { roomId: 'muttadile', name: 'Muttadile' },
+      { roomId: 'post_mutta_delay', name: 'Post Muttadile', isDelay: true, delayTicks: 40 }
+    ]
+  },
+  {
+    id: 'raid_total',
+    name: 'Complete Raid',
+    rooms: [
+      { roomId: 'tekton', name: 'Tekton' },
+      { roomId: 'crabs_delay', name: 'Crabs', isDelay: true, delayTicks: 89 },
+      { roomId: 'ice_demon', name: 'Ice Demon' },
+      { roomId: 'lizardman_shamans', name: 'Shamans' },
+      { roomId: 'post_shamans_delay', name: 'Post Shamans', isDelay: true, delayTicks: 36 },
+      { roomId: 'vangs', name: 'Vanguards' },
+      { roomId: 'thieving', name: 'Thieving', isDelay: true, delayTicks: 183 },
+      { roomId: 'vespula', name: 'Vespula' },
+      { roomId: 'tightrope', name: 'Tightrope', isDelay: true, delayTicks: 77 },
+      { roomId: 'post_tightrope_delay', name: 'Post Tightrope', isDelay: true, delayTicks: 18 },
+      { roomId: 'guardians', name: 'Guardians' },
+      { roomId: 'vasa', name: 'Vasa' },
+      { roomId: 'mystics', name: 'Mystics' },
+      { roomId: 'muttadile', name: 'Muttadile' },
+      { roomId: 'post_mutta_delay', name: 'Post Muttadile', isDelay: true, delayTicks: 40 },
+      { roomId: 'olm', name: 'Olm' }
+    ]
+  }
+];
 
 const DEFAULT_GEAR_STATS = {
   bonuses: {
@@ -117,6 +189,211 @@ const wasmModelLoaders: Record<string, (player: any, monster: any) => Promise<an
   "ice_demon": calculateDPSWithObjectsIceDemon
 };
 
+// Add this helper function after the existing helper functions (around line 200)
+const cropDistributionTo999 = (data: PlotDataPoint[]): PlotDataPoint[] => {
+  if (!data || data.length === 0) return data;
+  
+  // Find the index where cumulative probability reaches 0.999
+  const cropIndex = data.findIndex(point => point.dps >= 0.999);
+  
+  if (cropIndex === -1) {
+    // If we never reach 0.999, return the full distribution
+    return data;
+  }
+  
+  // Return data up to and including the 0.999 point, plus a few extra points for smoothness
+  const extraPoints = Math.min(10, data.length - cropIndex - 1);
+  return data.slice(0, cropIndex + 1 + extraPoints);
+};
+
+// Modify the calculateCombinedDistribution function around line 350
+const calculateCombinedDistribution = (
+  room1Data: PlotDataPoint[],
+  room2Data: PlotDataPoint[],
+  delayTicks: number = 89
+): PlotDataPoint[] => {
+  // Input validation
+  if (!room1Data || !room2Data || !Array.isArray(room1Data) || !Array.isArray(room2Data)) {
+    console.error('Invalid input data for combined distribution');
+    return [];
+  }
+  
+  if (!room1Data.length || !room2Data.length) {
+    console.error('Empty data arrays for combined distribution');
+    return [];
+  }
+
+  try {
+    // Validate data structure
+    const validateData = (data: PlotDataPoint[], name: string) => {
+      console.log(`Validating ${name} data:`, {
+        length: data.length,
+        sample: data.slice(0, 3),
+        types: data.slice(0, 3).map(p => ({
+          time: typeof p.time,
+          dps: typeof p.dps,
+          timeValue: p.time,
+          dpsValue: p.dps
+        }))
+      });
+      
+      for (let i = 0; i < data.length; i++) {
+        const point = data[i];
+        if (!point || typeof point.time !== 'number' || typeof point.dps !== 'number') {
+          console.error(`Invalid data point in ${name} at index ${i}:`, point);
+          return false;
+        }
+        // Relax the validation - allow dps values greater than 1 since they might be cumulative probabilities
+        if (isNaN(point.time) || isNaN(point.dps) || point.time < 0 || point.dps < 0) {
+          console.error(`Invalid values in ${name} at index ${i}:`, point, {
+            timeNaN: isNaN(point.time),
+            dpsNaN: isNaN(point.dps),
+            timeNegative: point.time < 0,
+            dpsNegative: point.dps < 0
+          });
+          return false;
+        }
+      }
+      console.log(`${name} data validation passed`);
+      return true;
+    };
+
+    if (!validateData(room1Data, 'room1') || !validateData(room2Data, 'room2')) {
+      return [];
+    }
+
+    // Get the max times for both distributions
+    const maxTime1 = Math.max(...room1Data.map(d => d.time));
+    const maxTime2 = Math.max(...room2Data.map(d => d.time));
+    
+    if (!isFinite(maxTime1) || !isFinite(maxTime2) || maxTime1 <= 0 || maxTime2 <= 0) {
+      console.error('Invalid max times:', { maxTime1, maxTime2 });
+      return [];
+    }
+    
+    const maxCombinedTime = maxTime1 + maxTime2 + delayTicks;
+    
+    if (maxCombinedTime > 10000) { // Prevent memory issues
+      console.error('Combined time too large:', maxCombinedTime);
+      return [];
+    }
+
+    // Convert cumulative distributions to probability mass functions
+    const convertToPMF = (data: PlotDataPoint[], maxTime: number) => {
+      const pmf = new Array(Math.floor(maxTime) + 1).fill(0);
+      
+      console.log(`Converting to PMF for maxTime ${maxTime}, data length: ${data.length}`);
+      console.log(`Data sample - first 5:`, data.slice(0, 5));
+      console.log(`Data sample - middle 5:`, data.slice(Math.floor(data.length/2) - 2, Math.floor(data.length/2) + 3));
+      console.log(`Data sample - last 5:`, data.slice(-5));
+      
+      let totalMassAdded = 0;
+      let nonZeroCount = 0;
+      
+      for (let i = 0; i < data.length - 1; i++) {
+        const currentProb = data[i].dps;
+        const nextProb = data[i + 1]?.dps || 0;
+        // For increasing CDF, probability mass is nextProb - currentProb
+        const probMass = Math.max(0, nextProb - currentProb);
+        const timeIndex = Math.floor(data[i].time);
+        
+        // Log a few examples
+        if (i < 5 || i > data.length - 6 || (i > data.length/2 - 3 && i < data.length/2 + 3)) {
+          console.log(`PMF conversion i=${i}: currentProb=${currentProb}, nextProb=${nextProb}, probMass=${probMass}, timeIndex=${timeIndex}`);
+        }
+        
+        if (timeIndex >= 0 && timeIndex < pmf.length && probMass > 0 && isFinite(probMass)) {
+          pmf[timeIndex] = probMass;
+          totalMassAdded += probMass;
+          nonZeroCount++;
+        }
+      }
+      
+      console.log(`PMF conversion result: totalMass=${totalMassAdded}, nonZeroCount=${nonZeroCount}, pmfLength=${pmf.length}`);
+      console.log(`PMF sample (first 100):`, pmf.slice(0, 10));
+      console.log(`PMF sample (last 10):`, pmf.slice(-10));
+      
+      return pmf;
+    };
+
+    const pmf1 = convertToPMF(room1Data, maxTime1);
+    const pmf2 = convertToPMF(room2Data, maxTime2);
+    
+    // Validate PMFs
+    if (!pmf1.length || !pmf2.length) {
+      console.error('Failed to create PMFs');
+      return [];
+    }
+
+    // Convolve the distributions with delay
+    const combinedPMF = new Array(Math.floor(maxCombinedTime) + 1).fill(0);
+    
+    for (let t1 = 0; t1 < pmf1.length; t1++) {
+      if (pmf1[t1] > 0) {
+        for (let t2 = 0; t2 < pmf2.length; t2++) {
+          if (pmf2[t2] > 0) {
+            const combinedTime = t1 + t2 + delayTicks;
+            if (combinedTime >= 0 && combinedTime < combinedPMF.length) {
+              const product = pmf1[t1] * pmf2[t2];
+              if (isFinite(product)) {
+                combinedPMF[combinedTime] += product;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Convert back to cumulative distribution - ONLY ADD NON-ZERO POINTS
+    const combinedData: PlotDataPoint[] = [];
+    let cumulativeProb = 0;
+    
+    console.log('Converting PMF back to CDF, combinedPMF length:', combinedPMF.length);
+    
+    // For increasing CDF, we build from left to right (time 0 to max)
+    for (let t = 0; t < combinedPMF.length; t++) {
+      if (isFinite(combinedPMF[t])) {
+        cumulativeProb += combinedPMF[t];
+      }
+      
+      // ONLY add data points where there's actual probability mass or where cumulative changes
+      if (combinedPMF[t] > 0 || (combinedData.length > 0 && cumulativeProb !== combinedData[combinedData.length - 1].dps)) {
+        combinedData.push({
+          time: t,
+          dps: Math.min(1, Math.max(0, cumulativeProb)), // Ensure probability is between 0 and 1
+          accuracy: 0
+        });
+      }
+    }
+    
+    console.log('Combined data before cropping:', {
+      length: combinedData.length,
+      maxDps: Math.max(...combinedData.map(d => d.dps))
+    });
+    
+    // Crop the distribution to 99.9%
+    const croppedData = cropDistributionTo999(combinedData);
+    
+    console.log('Combined data after cropping to 99.9%:', {
+      originalLength: combinedData.length,
+      croppedLength: croppedData.length,
+      reduction: `${(((combinedData.length - croppedData.length) / combinedData.length) * 100).toFixed(1)}%`,
+      lastPoint: croppedData[croppedData.length - 1]
+    });
+
+    if (!croppedData.length) {
+      console.error('No combined data generated after cropping');
+      return [];
+    }
+
+    console.log(`Generated ${croppedData.length} combined data points (cropped to 99.9%)`);
+    return croppedData;
+  } catch (error) {
+    console.error('Error calculating combined distribution:', error);
+    return [];
+  }
+};
+
 // --- Main Component ---
 const PlotSection: React.FC<PlotSectionProps> = ({
   gearSets = {
@@ -168,6 +445,26 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   const [showSeconds, setShowSeconds] = useState(false);
   const [selectedMonsterIdx, setSelectedMonsterIdx] = useState(0);
   const [showConfig, setShowConfig] = useState(false);
+  const [activeFloor, setActiveFloor] = useState<string>(''); // New state for active floor tab
+  const combinedChartRef = useRef(null);
+
+  // --- New state variables for combined analysis ---
+  const [availableFloors, setAvailableFloors] = useState<Floor[]>([]);
+  const [combinedRoomAnalysis, setCombinedRoomAnalysis] = useState<Record<string, {
+    plotData: PlotDataPoint[];
+    expectedTime: number;
+    floorName: string;
+    roomStats: Array<{ name: string; stats: Stats }>;
+    floorId: string;
+  } | null>>({});
+
+  // --- Default Stats (needed for combined room analysis) ---
+  const defaultStats: Stats = {
+    total_hits: 0,
+    phase_time_results: [],
+    phase_results: [],
+    total_expected_ticks: 0,
+  };
 
   // --- Refs ---
   const titleRef = useRef(null);
@@ -186,6 +483,13 @@ const PlotSection: React.FC<PlotSectionProps> = ({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Force combined plot re-render when data changes
+  // useEffect(() => {
+  //   if (selectedRooms.length >= 2 && Object.keys(plotDataDict).length >= 2) {
+  //     setCombinedPlotKey(prev => prev + 1);
+  //   }
+  // }, [plotDataDict, statsDict, selectedRooms, activeFloor]);
 
   useEffect(() => {
     if (
@@ -218,14 +522,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   const monstersInRoom = activeRoom ? getMonstersByRoom(activeRoom) : [];
   const currentMonster = monstersInRoom.length > 0 ? monstersInRoom[selectedMonsterIdx] : null;
   const plotData = plotDataDict[activeTab] || [];
-  const defaultStats: Stats = {
-    total_hits: 0,
-    phase_time_results: [],
-    phase_results: [],
-    total_expected_ticks: 0,
-  };
   const activeStats = statsDict[activeTab] || defaultStats;
-
   // --- Transform plotData for seconds/ticks ---
   const plotDataToShow = showSeconds
     ? plotData.map(d => ({ ...d, time: d.time * 0.6 }))
@@ -404,11 +701,110 @@ const PlotSection: React.FC<PlotSectionProps> = ({
       setPlotDataDict(prev => ({ ...prev, ...plotDataUpdates }));
       setStatsDict(prev => ({ ...prev, ...statsUpdates }));
 
+      // Calculate combined floor analysis after individual room data is ready
+      calculateCombinedFloorAnalysis(plotDataUpdates, statsUpdates);
+
     } catch (error) {
       console.error('WASM calculation failed:', error);
-      // Optionally update statsDict/plotDataDict for all monsters with error values
     }
     setIsLoading(false);
+  };
+
+  // New function to calculate combined analysis
+  const calculateCombinedFloorAnalysis = (
+    plotData: Record<string, PlotDataPoint[]>, 
+    statsData: Record<string, Stats>
+  ) => {
+    console.log('Calculating combined floor analysis');
+    
+    if (selectedRooms.length < 2) {
+      setAvailableFloors([]);
+      setCombinedRoomAnalysis({});
+      return;
+    }
+
+    // Find which floors can be analyzed based on selected rooms
+    const floors = RAID_FLOORS.filter(floor => {
+      const combatRooms = floor.rooms.filter(room => !room.isDelay);
+      const hasAllRoomsSelected = combatRooms.every(room => 
+        selectedRooms.some(selectedRoom => selectedRoom.id === room.roomId)
+      );
+      const hasAllRoomsData = combatRooms.every(room => 
+        plotData[room.roomId] && statsData[room.roomId]
+      );
+      
+      return hasAllRoomsSelected && hasAllRoomsData;
+    });
+
+    setAvailableFloors(floors);
+
+    // Set default active floor if needed
+    if (floors.length > 0 && !floors.some(f => f.id === activeFloor)) {
+      setActiveFloor(floors[0].id);
+    }
+
+    // Calculate analysis for ALL available floors
+    const newCombinedAnalysis: Record<string, any> = {};
+    
+    for (const floor of floors) {
+      try {
+        let combinedPlotData: PlotDataPoint[] = [];
+        let totalExpectedTime = 0;
+        const roomStats: Array<{ name: string; stats: Stats }> = [];
+        let pendingDelay = 0;
+        
+        for (let i = 0; i < floor.rooms.length; i++) {
+          const room = floor.rooms[i];
+          
+          if (room.isDelay) {
+            pendingDelay += room.delayTicks || 0;
+            totalExpectedTime += room.delayTicks || 0;
+          } else {
+            const roomData = plotData[room.roomId];
+            const roomStatsData = statsData[room.roomId];
+            
+            if (!roomData || !roomStatsData) continue;
+
+            roomStats.push({ name: room.name, stats: roomStatsData });
+            totalExpectedTime += roomStatsData.total_expected_ticks || 0;
+
+            if (combinedPlotData.length === 0) {
+              combinedPlotData = [...roomData];
+            } else {
+              combinedPlotData = calculateCombinedDistribution(combinedPlotData, roomData, pendingDelay);
+              if (combinedPlotData.length === 0) {
+                console.error(`Failed to combine distribution for floor ${floor.id}`);
+                break;
+              }
+            }
+            pendingDelay = 0;
+          }
+        }
+
+        // Apply final delay if any
+        if (pendingDelay > 0) {
+          combinedPlotData = combinedPlotData.map(point => ({
+            ...point,
+            time: point.time + pendingDelay
+          }));
+        }
+
+        // Store the result for this floor
+        newCombinedAnalysis[floor.id] = {
+          plotData: combinedPlotData,
+          expectedTime: totalExpectedTime,
+          floorName: floor.name,
+          roomStats: roomStats,
+          floorId: floor.id
+        };
+
+      } catch (error) {
+        console.error(`Error in floor analysis for ${floor.id}:`, error);
+        newCombinedAnalysis[floor.id] = null;
+      }
+    }
+
+    setCombinedRoomAnalysis(newCombinedAnalysis);
   };
 
   // --- Debug & Controls ---
@@ -501,6 +897,36 @@ const PlotSection: React.FC<PlotSectionProps> = ({
       unit: showSeconds ? 'min:sec' : 'ticks' 
     },
   ].filter(stat => stat.value !== null);
+
+  // Computed value for combined plot data to show
+  const combinedPlotDataToShow = useMemo(() => {
+    if (!combinedRoomAnalysis[activeFloor]?.plotData) return [];
+    
+    return showSeconds
+      ? combinedRoomAnalysis[activeFloor].plotData.map(d => ({ ...d, time: d.time * 0.6 }))
+      : combinedRoomAnalysis[activeFloor].plotData;
+  }, [combinedRoomAnalysis[activeFloor]?.plotData, showSeconds, activeFloor]);
+
+  // Add this after the other useMemo hooks (around line 500)
+  const shouldShowCombinedPlot = useMemo(() => {
+    const hasBasicRequirements = selectedRooms.length >= 2 && 
+                                Object.keys(plotDataDict).length >= 2;
+    
+    const shouldShow = availableFloors.length > 0 && 
+                      combinedRoomAnalysis[activeFloor] && 
+                      combinedRoomAnalysis[activeFloor]!.plotData && 
+                      combinedRoomAnalysis[activeFloor]!.plotData.length > 0 && 
+                      combinedPlotDataToShow.length > 0;
+    
+    return hasBasicRequirements && (shouldShow || availableFloors.length > 0);
+  }, [
+    selectedRooms.length, 
+    Object.keys(plotDataDict).length,
+    availableFloors.length,
+    activeFloor,
+    combinedRoomAnalysis[activeFloor]?.plotData?.length,
+    combinedPlotDataToShow.length
+  ]);
 
   return (
     <motion.section
@@ -654,6 +1080,138 @@ const PlotSection: React.FC<PlotSectionProps> = ({
           fadeInOut={fadeInOut}
           expectedTTK={showSeconds ? (activeStats.total_expected_ticks * 0.6).toFixed(1) : activeStats.total_expected_ticks.toFixed(1)}
         />
+
+        {/* NEW COMBINED ROOMS PLOT SECTION - NOW FLOOR BASED */}
+        {shouldShowCombinedPlot && (
+          <div
+            className="combined-plot-section"
+            style={{ 
+              marginTop: '1rem', 
+              display: 'block', 
+              visibility: 'visible',
+              opacity: 1,
+              minHeight: '400px',
+              padding: '20px'
+            }}
+          >
+            {/* Floor Tabs */}
+            {availableFloors.length > 1 && (
+              <div className="floor-tabs" style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                gap: '1rem', 
+                marginBottom: '2rem' 
+              }}>
+                {availableFloors.map(floor => (
+                  <button
+                    key={floor.id}
+                    className={`plot-tab${activeFloor === floor.id ? ' active' : ''}`}
+                    onClick={() => setActiveFloor(floor.id)}
+                    style={{
+                      padding: '12px 24px',
+                      fontSize: '1rem',
+                      fontWeight: '600'
+                    }}
+                  >
+                    {floor.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Combined Plot Title */}
+            <h3
+              className="combined-plot-title"
+              style={{
+                textAlign: 'center',
+                margin: '2rem 0 1rem 0',
+                color: chartColors.text,
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                borderBottom: `2px solid ${chartColors.primary}`,
+                paddingBottom: '0.5rem',
+                opacity: 1
+              }}
+            >
+              {combinedRoomAnalysis[activeFloor]?.floorName} Analysis
+            </h3>
+
+            {/* Plot and Stats Container - Side by Side */}
+            <div style={{
+              display: 'flex',
+              gap: '2rem',
+              alignItems: 'flex-start',
+              justifyContent: 'center'
+            }}>
+              {/* Combined Plot - Left Side */}
+              <div style={{ flex: '1', minWidth: '600px' }}>
+                <ResultPlot
+                  key={`combined-plot-${activeFloor}`}
+                  chartRef={combinedChartRef}
+                  chartInView={true}
+                  isLoading={false}
+                  handleRecalculate={() => {}}
+                  showSeconds={showSeconds}
+                  setShowSeconds={setShowSeconds}
+                  chartType={chartType}
+                  setChartType={setChartType}
+                  plotDataToShow={combinedPlotDataToShow || []}
+                  chartColors={{...chartColors, primary: chartColors.secondary}}
+                  theme={theme}
+                  formatSeconds={formatSeconds}
+                  fadeInOut={fadeInOut}
+                  expectedTTK={combinedRoomAnalysis[activeFloor] ? (showSeconds 
+                    ? (combinedRoomAnalysis[activeFloor]!.expectedTime * 0.6).toFixed(1) 
+                    : combinedRoomAnalysis[activeFloor]!.expectedTime.toFixed(1)
+                  ) : '0'}
+                />
+              </div>
+
+              {/* Combined Stats Card - Right Side */}
+              <div style={{ flexShrink: 0, width: '350px' }}>
+                <div
+                  className="stat-card card combined-stat-card"
+                  style={{ 
+                    height: 'fit-content',
+                    textAlign: 'center',
+                    background: `linear-gradient(135deg, ${chartColors.primary}20, ${chartColors.secondary}20)`,
+                    opacity: 1,
+                    position: 'sticky',
+                    top: '20px'
+                  }}
+                >
+                  <h3>Total Expected {combinedRoomAnalysis[activeFloor]?.floorName || 'Floor'} Time</h3>
+                  <p
+                    className="stat-value"
+                    style={{ fontSize: '2rem', color: chartColors.primary, opacity: 1 }}
+                  >
+                    {combinedRoomAnalysis[activeFloor] ? (showSeconds 
+                      ? formatSeconds(combinedRoomAnalysis[activeFloor]!.expectedTime * 0.6)
+                      : combinedRoomAnalysis[activeFloor]!.expectedTime.toFixed(1)
+                    ) : '--'}
+                  </p>
+                  <span className="stat-unit">
+                    {showSeconds ? 'min:sec' : 'ticks'} (including delays)
+                  </span>
+                  <div style={{ 
+                    marginTop: '1rem', 
+                    fontSize: '0.9rem', 
+                    color: chartColors.text + '80'
+                  }}>
+                    {combinedRoomAnalysis[activeFloor]?.roomStats?.map((room, index) => (
+                      <div key={index} style={{ marginBottom: '0.5rem' }}>
+                        <strong>{room.name}:</strong> {showSeconds 
+                          ? formatSeconds(room.stats.total_expected_ticks * 0.6)
+                          : room.stats.total_expected_ticks.toFixed(1)
+                        } {showSeconds ? 'min:sec' : 'ticks'}
+                      </div>
+                    )) || null}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         </div>
       </div>
     </motion.section>
