@@ -74,7 +74,19 @@ export const gearSetPresets: GearSetPreset[] = [
             "22322",
             "26374"
         ],
-        rooms: [{ id: "tekton", method: "Tekton Short Lure" }, { id: "vasa", method: "Flame Skip" }]
+        rooms: [
+            { id: "tekton", method: "Tekton Short Lure" },
+            { id: "ice_demon" },
+            { id: "lizardman_shamans", method: "Shamans Slayer Task" },
+            { id: "vangs" },
+            { id: "thieving" },
+            { id: "vespula" },
+            { id: "guardians" },
+            { id: "vasa", method: "Flame Skip" },
+            { id: "mystics" },
+            { id: "muttadile" },
+            { id: "olm"}
+        ]
     },
     {
         id: "sample1",

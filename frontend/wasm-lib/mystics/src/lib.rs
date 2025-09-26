@@ -6,15 +6,12 @@ use osrs_shared_functions::*;
 fn ensure_item_equipped(
     gear_set: &mut GearSetData,
     inventory: &[SelectedItem],
-    _item_name: &str, // item_name is not needed anymore
+    item_name: &str, // item_name is not needed anymore
 ) {
-    // Prefer salve (slot == "neck" and name contains "salve"), else slayer helm (slot == "head" and name contains "slayer")
-    let item = if let Some(salve) = inventory.iter().find(|item| item.slot == "neck" && item.name.to_lowercase().contains("salve")) {
-        salve
-    } else if let Some(slayer_helm) = inventory.iter().find(|item| item.slot == "head" && item.name.to_lowercase().contains("slayer")) {
-        slayer_helm
-    } else {
-        return;
+
+    let item = match inventory.iter().find(|item| item.name == item_name) {
+        Some(item) => item,
+        None => return,
     };
 
     // Remove any existing item from the relevant slot and subtract its bonuses
@@ -76,6 +73,29 @@ fn ensure_item_equipped(
     }
 }
 
+fn generate_barrier_delay(rng: &mut ThreadRng) -> usize {
+    // Tiles until barrier distribution with frequencies
+    let barrier_tiles = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    let frequencies = [4, 4, 6, 2, 6, 10, 6, 14, 6, 7, 2, 1];
+    
+    // Calculate total frequency for weighted selection
+    let total_frequency: usize = frequencies.iter().sum();
+    let random_value = rng.gen_range(0..total_frequency);
+    
+    let mut cumulative_frequency = 0;
+    for (i, &frequency) in frequencies.iter().enumerate() {
+        cumulative_frequency += frequency;
+        if random_value < cumulative_frequency {
+            let tiles = barrier_tiles[i];
+            // Convert tiles to ticks: player runs 2 tiles per tick
+            return (tiles + 1) / 2; // Round up for odd tiles
+        }
+    }
+    
+    // Fallback (should never reach here)
+    1
+}
+
 #[wasm_bindgen]
 pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     let payload: DPSRoomPayload = match serde_json::from_str(payload_json) {
@@ -87,6 +107,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
 
     let mut player = payload.player;
     let monsters = payload.room.monsters;
+    let room_methods = payload.room.methods;
 
     let inventory_items: Vec<SelectedItem> = player
         .inventory
@@ -99,16 +120,24 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
         ("melee", &mut player.gear_sets.melee),
     ];
     let salve_amulet = inventory_items.iter().any(|item| item.name == "Salve amulet(ei)");
-
-    if salve_amulet {
+    let slayer_helm = inventory_items.iter().any(|item| item.name == "Slayer helmet (i)");
+    let slayer_task = if room_methods.len() > 0 && room_methods[0] == "Mystics Slayer Task" {
+        true
+    } else {
+        false
+    };
+    if slayer_task && slayer_helm {
         for (_, gear_set) in sets.iter_mut() {
-            ensure_item_equipped(gear_set, &inventory_items, "salve");
+            ensure_item_equipped(gear_set, &inventory_items, "Slayer helmet (i)");
         }
-    }
+    } else if salve_amulet {
+        for (_, gear_set) in sets.iter_mut() {
+            ensure_item_equipped(gear_set, &inventory_items, "Salve amulet(ei)");
+        }
+    };
 
     // let walk_delay = 24;
     let trials = 100000;
-    let walk_delay = 0;
     let death_animation = 4;
     let mut tick_counts = vec![0usize; trials];
     let mut rng = rand::thread_rng();
@@ -133,10 +162,12 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
         ensure_weapon_swap(&mut player, "Voidwaker", avernic_defender);
     }
     let best_style_spec = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
+    let pot_pickup_delay = 4;
 
     for i in 0..trials {
         let mut tick = 0;
         let mut spec_count = if voidwaker { 1 } else { 0 };
+        let overkill = if rng.gen_range(1..=(4 * attack_speed)) == 1 { 1 } else { 0 };
         for _monster in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
@@ -175,8 +206,9 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
             ticks_this_monster += attack_speed - 1;
             single_monster_ticks.push(ticks_this_monster as f64);
         }
+        let walk_delay = generate_barrier_delay(&mut rng) + 27;
         tick -= attack_speed - 1;
-        tick += hit_delay + 1 + death_animation;
+        tick += walk_delay + hit_delay + 1 + death_animation - overkill + pot_pickup_delay;
         tick += 4 - (tick % 4);
         tick_counts[i] = tick;
     }

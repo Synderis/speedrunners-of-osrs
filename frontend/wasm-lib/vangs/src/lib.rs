@@ -72,7 +72,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
     let best_style_spec = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
 
     // Simulation parameters
-    let initial_delay = 24;
+    let walk_delay = 18;
     let death_animation = 4;
     let mut tick_counts: Vec<usize> = vec![0; trials];
     let mut phase_list = Vec::with_capacity(trials);
@@ -103,6 +103,11 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
     attack_speeds.insert("ranged".to_string(), best_style_ranged.attack_speed as usize);
     attack_speeds.insert("spec".to_string(), best_style_spec.attack_speed as usize);
 
+    let mut hit_delay_map = HashMap::new();
+    hit_delay_map.insert("mage".to_string(), if player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 2 } else { 1 });
+    hit_delay_map.insert("melee".to_string(), 0);
+    hit_delay_map.insert("ranged".to_string(), 1);
+
     for i in 0..trials {
         let mut vang_hps_trial = vang_hps.clone();
         let mut tick = 0;
@@ -115,6 +120,8 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
         let mut initial_burn_tick = 0;
         let mut current_attack_phase_tick = 0;
         let mut last_vang_attacked = String::new();
+        let spawn_delay = rng.gen_range(1..=4) + 6;
+        let mut overkill = if rng.gen_range(1..=4) == 1 { 1 } else { 0 };
 
         loop {
             // Exit immediately if all vangs are dead
@@ -220,7 +227,11 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
             }
             tick += 1;
         }
-        tick_counts[i] = tick + initial_delay + death_animation;
+        if &last_vang_attacked == "melee" {
+            overkill = 1;
+        }
+        let hit_delay = hit_delay_map[&last_vang_attacked];
+        tick_counts[i] = tick + walk_delay + spawn_delay + hit_delay + death_animation - overkill;
         phase_list.push(teleport);
     }
 
