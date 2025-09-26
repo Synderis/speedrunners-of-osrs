@@ -126,7 +126,7 @@ interface PlotSectionProps {
   combatStats?: CombatStats;
   selectedRooms?: Room[];
   selectedInventoryItems?: InventoryItem[];
-  selectedMethods?: { [roomId: string]: string | null };
+  selectedMethods?: { [roomId: string]: string[] }; // Changed to match RoomSelection format
 }
 
 type Stats = {
@@ -678,10 +678,10 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         // Get the full monster objects for this room
         const monsters = getMonstersByRoom(room);
         // Always create a shallow copy of the room with the correct methods array
-        const selectedMethod = selectedMethods && selectedMethods[room.id];
+        const selectedMethodsForRoom = selectedMethods && selectedMethods[room.id];
         let filteredMethods = room.methods;
-        if (selectedMethod && typeof selectedMethod === 'string' && Array.isArray(room.methods)) {
-          filteredMethods = room.methods.filter(m => m === selectedMethod);
+        if (selectedMethodsForRoom && Array.isArray(selectedMethodsForRoom) && selectedMethodsForRoom.length > 0) {
+          filteredMethods = selectedMethodsForRoom;
         }
         const roomPayload = { ...room, methods: filteredMethods, monsters };
         console.log('Sending to WASM:', { room: roomPayload, monsters });

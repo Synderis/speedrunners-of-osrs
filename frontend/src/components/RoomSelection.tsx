@@ -12,8 +12,8 @@ export interface SelectedRoomWithMonster extends Room {
 interface RoomSelectionProps {
     selectedRooms: SelectedRoomWithMonster[];
     setSelectedRooms: React.Dispatch<React.SetStateAction<SelectedRoomWithMonster[]>>;
-    selectedMethods: { [roomId: string]: string | null };
-    setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string | null }>>;
+    selectedMethods: { [roomId: string]: string[] }; // Changed from string | null to string[]
+    setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string[] }>>;
     selectedPreset: string;
 }
 
@@ -127,30 +127,93 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Handler for method selection
+    // Handler for method selection with category support
     const handleMethodSelect = (room: Room, method: string) => {
-        setSelectedMethods(prev => ({
-            ...prev,
-            [room.id]: prev[room.id] === method ? null : method
-        }));
+        const originalRoom = rooms.find(orig => orig.id === room.id);
+        if (!originalRoom?.methodCategories) {
+            // Fallback to old single-method logic if no categories defined
+            setSelectedMethods(prev => ({
+                ...prev,
+                [room.id]: prev[room.id]?.includes(method) ? prev[room.id].filter(m => m !== method) : [method]
+            }));
+            return;
+        }
 
-        setSelectedRooms(prevRooms => prevRooms.map(r => {
-            if (r.id !== room.id) return r;
-            const originalRoom = rooms.find(orig => orig.id === room.id);
-            const isSingleMethod = originalRoom && originalRoom.methods && originalRoom.methods.length === 1;
-            // If deselecting (toggle off)
-            if (selectedMethods[room.id] === method) {
-                if (isSingleMethod) {
-                    // For single-method rooms, set methods to []
-                    return { ...r, methods: [] };
+        // Find which category this method belongs to
+        let methodCategory = '';
+        let allowMultiple = true;
+        for (const [categoryName, categoryData] of Object.entries(originalRoom.methodCategories)) {
+            if (categoryData.methods.includes(method)) {
+                methodCategory = categoryName;
+                allowMultiple = categoryData.allowMultiple;
+                break;
+            }
+        }
+
+        setSelectedMethods(prev => {
+            const currentMethods = prev[room.id] || [];
+            
+            if (allowMultiple) {
+                // Checkbox behavior - toggle the method
+                if (currentMethods.includes(method)) {
+                    return {
+                        ...prev,
+                        [room.id]: currentMethods.filter(m => m !== method)
+                    };
                 } else {
-                    // For multi-method rooms, restore all methods
-                    return originalRoom ? { ...r, methods: originalRoom.methods } : r;
+                    return {
+                        ...prev,
+                        [room.id]: [...currentMethods, method]
+                    };
                 }
             } else {
-                // Only keep the selected method
-                return { ...r, methods: [method] };
+                // Radio button behavior - replace other methods in same category
+                const categoryMethods = originalRoom.methodCategories?.[methodCategory]?.methods || [];
+                const methodsFromOtherCategories = currentMethods.filter(m => !categoryMethods.includes(m));
+                
+                if (currentMethods.includes(method)) {
+                    // Deselecting current method
+                    return {
+                        ...prev,
+                        [room.id]: methodsFromOtherCategories
+                    };
+                } else {
+                    // Selecting new method (replace others in same category)
+                    return {
+                        ...prev,
+                        [room.id]: [...methodsFromOtherCategories, method]
+                    };
+                }
             }
+        });
+
+        // Update room methods in selectedRooms
+        setSelectedRooms(prevRooms => prevRooms.map(r => {
+            if (r.id !== room.id) return r;
+            
+            // Get the updated methods list
+            const updatedMethods = (() => {
+                const currentMethods = selectedMethods[room.id] || [];
+                
+                if (allowMultiple) {
+                    if (currentMethods.includes(method)) {
+                        return currentMethods.filter(m => m !== method);
+                    } else {
+                        return [...currentMethods, method];
+                    }
+                } else {
+                    const categoryMethods = originalRoom.methodCategories?.[methodCategory]?.methods || [];
+                    const methodsFromOtherCategories = currentMethods.filter(m => !categoryMethods.includes(m));
+                    
+                    if (currentMethods.includes(method)) {
+                        return methodsFromOtherCategories;
+                    } else {
+                        return [...methodsFromOtherCategories, method];
+                    }
+                }
+            })();
+
+            return { ...r, methods: updatedMethods };
         }));
     };
 
@@ -163,7 +226,9 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                 .map(room => {
                     const presetRoom = selectedGearPreset.rooms.find(r => r.id === room.id);
                     let methods: string[] = [];
-                    if (presetRoom?.method) {
+                    if (presetRoom?.methods) {
+                        methods = presetRoom.methods;
+                    } else if (presetRoom?.method) {
                         methods = [presetRoom.method];
                     } else if (room.methods && room.methods.length > 1) {
                         methods = room.methods;
@@ -177,9 +242,13 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
             setSelectedRooms(presetRooms);
 
             // Set selectedMethods if method is specified
-            const newSelectedMethods: { [roomId: string]: string | null } = {};
+            const newSelectedMethods: { [roomId: string]: string[] } = {};
             selectedGearPreset.rooms.forEach(r => {
-                if (r.method) newSelectedMethods[r.id] = r.method;
+                if (r.methods) {
+                    newSelectedMethods[r.id] = r.methods;
+                } else if (r.method) {
+                    newSelectedMethods[r.id] = [r.method];
+                }
             });
             setSelectedMethods(newSelectedMethods);
         } else {
@@ -354,30 +423,70 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                         </AnimatePresence>
                     </motion.div>
                     {selectedRooms.map(room => {
-                        // Find the original room definition
                         const originalRoom = rooms.find(orig => orig.id === room.id);
-                        // If the original room has only one method, show the button for it even if methods is empty
-                        const showSingleMethod = originalRoom && originalRoom.methods && originalRoom.methods.length === 1;
-                        const methodsToShow = (room.methods && room.methods.length > 0)
-                            ? room.methods
-                            : (showSingleMethod ? originalRoom.methods : []);
-                        return (
-                            <div key={room.id} className="selected-room-methods">
-                                {methodsToShow && methodsToShow.length > 0 && (
+                        
+                        // Use method categories if available, otherwise fall back to simple methods
+                        if (originalRoom?.methodCategories) {
+                            // Flatten all methods from all categories into a single row
+                            const allCategoryMethods = Object.entries(originalRoom.methodCategories).flatMap(([categoryName, categoryData]) => 
+                                categoryData.methods.map(method => ({
+                                    method,
+                                    allowMultiple: categoryData.allowMultiple,
+                                    categoryName
+                                }))
+                            );
+
+                            return (
+                                <div key={room.id} className="selected-room-methods">
                                     <div className="room-method-buttons">
-                                        {methodsToShow.map(method => (
-                                            <button
-                                                key={method}
-                                                className={`method-tab${selectedMethods[room.id] === method ? ' active' : ''}`}
-                                                onClick={() => handleMethodSelect(room, method)}
-                                            >
-                                                {method}
-                                            </button>
-                                        ))}
+                                        {allCategoryMethods.map(({ method, allowMultiple }) => {
+                                            const isSelected = selectedMethods[room.id]?.includes(method) || false;
+                                            const inputType = allowMultiple ? 'checkbox' : 'radio';
+                                            
+                                            return (
+                                                <button
+                                                    key={method}
+                                                    className={`method-tab ${isSelected ? 'active' : ''} ${inputType}`}
+                                                    onClick={() => handleMethodSelect(room, method)}
+                                                >
+                                                    {/* <span className={`method-indicator ${inputType}`}>
+                                                        {allowMultiple ? 
+                                                            (isSelected ? '☑' : '☐') : 
+                                                            (isSelected ? '●' : '○')
+                                                        }
+                                                    </span> */}
+                                                    {method}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
-                                )}
-                            </div>
-                        );
+                                </div>
+                            );
+                        } else {
+                            // Fallback to old method rendering
+                            const showSingleMethod = originalRoom && originalRoom.methods && originalRoom.methods.length === 1;
+                            const methodsToShow = (room.methods && room.methods.length > 0)
+                                ? room.methods
+                                : (showSingleMethod ? originalRoom.methods : []);
+                                
+                            return (
+                                <div key={room.id} className="selected-room-methods">
+                                    {methodsToShow && methodsToShow.length > 0 && (
+                                        <div className="room-method-buttons">
+                                            {methodsToShow.map(method => (
+                                                <button
+                                                    key={method}
+                                                    className={`method-tab${selectedMethods[room.id]?.includes(method) ? ' active' : ''}`}
+                                                    onClick={() => handleMethodSelect(room, method)}
+                                                >
+                                                    {method}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        }
                     })}
                 </motion.div>
                 

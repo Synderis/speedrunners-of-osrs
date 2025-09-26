@@ -114,8 +114,10 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     let mut tick_counts = vec![0usize; trials];
     let mut hp_pre_anvil: Vec<usize> = vec![0; trials];
     let mut phase_results: Vec<usize> = vec![0; trials];
+    let pre_veng = if room_methods.contains(&"Pre-Veng".to_string()) { 1 } else { 0 };
+    let tekton_enraged_max_hit = &monsters[1].max_hit;
 
-    let (delay, attack_pattern): (usize, Vec<[usize; 2]>) = if room_methods.len() > 0 && room_methods[0] == "Tekton Short Lure" {
+    let (delay, attack_pattern): (usize, Vec<[usize; 2]>) = if room_methods.contains(&"Tekton Short Lure".to_string()) {
         (12, vec![[0, 4], [0, 3], [4, 10]])
     } else {
         (17, vec![[0, 5], [0, 3], [4, 11]])
@@ -132,6 +134,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         let mut hit_count = 0;
         let mut current_phase_ticks = 0;
         let death_animation = if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some("Scythe of vitur") { 3 } else { 4 };
+        let mut veng_count = pre_veng;
 
         while tekton_hp > 0 {
             if spec_phase {
@@ -181,6 +184,12 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             current_phase_ticks = 0;
 
             // Normal phase: (0, 3)
+            if veng_count > 0 {
+                let veng_hit = rng.gen_range(0..=tekton_enraged_max_hit).max(1);
+                let veng_dmg = (veng_hit as f64 * 0.75).floor() as i32;
+                tekton_hp -= veng_dmg;
+                veng_count -= 1;
+            }
             let (hp2, ticks2, hit_count2, died2) = phase_loop(
                 hit_count,
                 &attack_pattern[1],

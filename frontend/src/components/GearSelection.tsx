@@ -23,8 +23,8 @@ interface GearSelectionProps {
   setSelectedPreset: React.Dispatch<React.SetStateAction<string>>;
   selectedRooms: SelectedRoomWithMonster[];
   setSelectedRooms: React.Dispatch<React.SetStateAction<SelectedRoomWithMonster[]>>; // <-- add this
-  selectedMethods: { [roomId: string]: string | null };
-  setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string | null }>>;
+  selectedMethods: { [roomId: string]: string[] };
+  setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string[] }>>;
 }
 
 const GearSelection: React.FC<GearSelectionProps> = ({
@@ -75,10 +75,11 @@ const GearSelection: React.FC<GearSelectionProps> = ({
     if (!name) return;
     const description = prompt('Enter a description (optional):') || '';
 
-    // Build the rooms array with method
+    // Build the rooms array with methods
     const rooms = selectedRooms.map(room => ({
       id: room.id,
-      method: selectedMethods[room.id] || undefined
+      methods: selectedMethods[room.id] && selectedMethods[room.id].length > 0 ? selectedMethods[room.id] : undefined,
+      method: selectedMethods[room.id] && selectedMethods[room.id].length === 1 ? selectedMethods[room.id][0] : undefined
     }));
 
     const newPreset: GearSetPreset = {
@@ -231,10 +232,14 @@ const GearSelection: React.FC<GearSelectionProps> = ({
             })
             .filter(Boolean);
           setSelectedRooms(presetRooms as SelectedRoomWithMonster[]);
-          // Restore selectedMethods
-          const newSelectedMethods: { [roomId: string]: string | null } = {};
+          // Restore selectedMethods - handle both new methods array and legacy method format
+          const newSelectedMethods: { [roomId: string]: string[] } = {};
           preset.rooms.forEach(r => {
-            if (r.method) newSelectedMethods[r.id] = r.method;
+            if (r.methods) {
+              newSelectedMethods[r.id] = r.methods;
+            } else if (r.method) {
+              newSelectedMethods[r.id] = [r.method];
+            }
           });
           setSelectedMethods(newSelectedMethods);
         }

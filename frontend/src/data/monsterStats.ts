@@ -865,10 +865,16 @@ export interface Room {
     id: string;
     name: string;
     image: string;
-    description: string;
-    monsters: string[];
+    description?: string;
+    monsters?: string[];
     units: string;
     methods: string[];
+    methodCategories?: {
+        [categoryName: string]: {
+            methods: string[];
+            allowMultiple: boolean; // if true, checkboxes; if false, radio buttons
+        };
+    };
 }
 
 export const rooms: Room[] = [
@@ -879,7 +885,17 @@ export const rooms: Room[] = [
         description: 'High-level boss encounter',
         monsters: ['7545', '7544'],
         units: 'Anvils',
-        methods: ['Tekton Long Lure', 'Tekton Medium Lure', 'Tekton Short Lure']
+        methods: ['Tekton Long Lure', 'Tekton Medium Lure', 'Tekton Short Lure', 'Pre-Veng'],
+        methodCategories: {
+            'Lure Method': {
+                methods: ['Tekton Long Lure', 'Tekton Medium Lure', 'Tekton Short Lure'],
+                allowMultiple: false // radio buttons
+            },
+            'Additional Methods': {
+                methods: ['Pre-Veng'],
+                allowMultiple: true // checkboxes
+            }
+        }
     },
     // {
     //     id: 'crabs',
@@ -918,21 +934,21 @@ export const rooms: Room[] = [
         methods: []
     },
     {
-        id: 'vespula',
-        name: 'Vespula',
-        image: '/rooms/280px-Vespula.webp',
-        description: 'Barrows Brothers minigame',
-        monsters: ['7533'],
-        units: 'Portals',
-        methods: []
-    },
-    {
         id: 'thieving',
         name: 'Thieving',
         image: '/rooms/250px-Chest_(Chambers_of_Xeric,_closed).webp',
         description: 'High-level agility course',
         monsters: [],
         units: 'Keystones',
+        methods: []
+    },
+    {
+        id: 'vespula',
+        name: 'Vespula',
+        image: '/rooms/280px-Vespula.webp',
+        description: 'Barrows Brothers minigame',
+        monsters: ['7533'],
+        units: 'Portals',
         methods: []
     },
     {
