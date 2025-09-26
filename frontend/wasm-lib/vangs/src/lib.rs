@@ -2,86 +2,26 @@ use rand::prelude::*;
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
-
-fn burning_barrage_special<R: Rng>(rng: &mut R, max_hit: i32, accuracy: f64) -> (Vec<i32>, Vec<i32>) {
-    let (hits, burn_chance) = if rng.gen::<f64>() < accuracy {
-        let max_hit_low = (max_hit as f64 * 0.75).floor() as i32;
-        let max_hit_high = (max_hit as f64 * 1.75).floor() as i32;
-        let dmg = rng.gen_range(max_hit_low..=max_hit_high);
-        let hit1 = (0.25 * dmg as f64).floor() as i32;
-        let hit2 = (0.25 * dmg as f64).floor() as i32;
-        let hit3 = (0.5 * dmg as f64).floor() as i32;
-        (vec![hit1, hit2, hit3], vec![0.15, 0.15, 0.15])
-    } else if rng.gen::<f64>() < accuracy {
-        let max_hit_low = (max_hit as f64 * 0.5).floor() as i32;
-        let max_hit_high = (max_hit as f64 * 1.5).floor() as i32;
-        let dmg = rng.gen_range(max_hit_low..=max_hit_high);
-        let hit1 = (0.5 * dmg as f64).floor() as i32 - 1;
-        let hit2 = (0.5 * dmg as f64).floor() as i32 - 1;
-        let hit3 = dmg - (hit1 + hit2);
-        (vec![hit1, hit2, hit3], vec![0.30, 0.30, 0.30])
-    } else if rng.gen::<f64>() < accuracy {
-        let max_hit_low = (max_hit as f64 * 0.25).floor() as i32;
-        let max_hit_high = (max_hit as f64 * 0.75).floor() as i32;
-        let dmg = rng.gen_range(max_hit_low..=max_hit_high);
-        let hit3 = dmg - 2;
-        let hit1 = if dmg >= 2 { 1 } else { 0 };
-        let hit2 = if dmg >= 2 { 1 } else { 0 };
-        (vec![hit1, hit2, hit3], vec![0.45, 0.45, 0.45])
-    } else {
-        let roll = rng.gen::<f64>();
-        if roll < 0.2 {
-            (vec![0], vec![0.0])
-        } else if roll < 0.6 {
-            (vec![1], vec![0.0])
-        } else {
-            (vec![2], vec![0.0])
-        }
-    };
-
-    let mut burns = Vec::new();
-    for (i, &chance) in burn_chance.iter().enumerate() {
-        if chance > 0.0 && rng.gen::<f64>() < chance {
-            if i == 2 {
-                burns.push(9);
-            } else {
-                burns.push(10);
-            }
-        }
-    }
-    (hits, burns)
-}
-
-fn apply_burns(hp: i32, burn_list: &mut Vec<i32>) -> i32 {
-    let mut new_hp = hp;
-    burn_list.retain_mut(|burn| {
-        if *burn > 0 {
-            new_hp -= 1;
-            *burn -= 1;
-        }
-        *burn > 0
-    });
-    new_hp
-}
+use std::collections::HashMap;
 
 fn can_attack_vang(
-    vang_hps: &[i32],
-    idx: usize,
+    vang_hps: &HashMap<String, i32>,
+    combat_type: &str,
     max_hit: i32,
     threshold: f64,
     hp_reset_threshold: i32,
     base_hp: i32,
 ) -> bool {
-    if vang_hps.iter().all(|&hp| hp < hp_reset_threshold) {
+    if vang_hps.values().all(|&hp| hp < hp_reset_threshold) {
         return true;
     }
-    if *vang_hps.iter().max().unwrap() < hp_reset_threshold {
+    if *vang_hps.values().max().unwrap() < hp_reset_threshold {
         return true;
     }
-    let mut new_hps = vang_hps.to_vec();
-    new_hps[idx] = vang_hps[idx] - max_hit;
-    let min_hp = *new_hps.iter().min().unwrap();
-    let max_hp = *new_hps.iter().max().unwrap();
+    let mut new_hps = vang_hps.clone();
+    new_hps.insert(combat_type.to_string(), vang_hps[combat_type] - max_hit);
+    let min_hp = *new_hps.values().min().unwrap();
+    let max_hp = *new_hps.values().max().unwrap();
     let reset_threshold = (threshold * base_hp as f64) as i32;
     if (max_hp - min_hp) > reset_threshold {
         return false;
@@ -99,7 +39,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
         }
     };
 
-    let player = payload.player;
+    let mut player = payload.player;
     let monsters = payload.room.monsters;
     let _room_methods = payload.room.methods;
     let trials = 100000; // Reduce for debug
@@ -113,59 +53,77 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
     let best_style_mage = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string()]);
     let best_style_melee = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
     let best_style_ranged = find_best_combat_style(&player, &monsters[2], vec!["ranged".to_string()]);
+    let inventory_items: Vec<SelectedItem> = player
+        .inventory
+        .iter()
+        .filter_map(|item| item.equipment.clone())
+        .collect();
+    let burning_claws = inventory_items.iter().any(|item| item.name == "Burning claws");
+    let voidwaker = inventory_items.iter().any(|item| item.name == "Voidwaker");
+
+    if burning_claws {
+        ensure_weapon_swap(&mut player, "Burning claws", None);
+    }
+    if voidwaker {
+        let avernic_defender = inventory_items.iter().find(|item| item.name == "Avernic defender").cloned();
+        ensure_weapon_swap(&mut player, "Voidwaker", avernic_defender);
+    }
+
+    let best_style_spec = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
 
     // Simulation parameters
     let initial_delay = 24;
     let death_animation = 4;
     let mut tick_counts: Vec<usize> = vec![0; trials];
     let mut phase_list = Vec::with_capacity(trials);
-    // let mut debug_trials = Vec::with_capacity(trials);
 
     let max_hp = monsters[0].skills.hp as i32;
     let hp_reset_threshold = (max_hp as f64 * 0.4) as i32;
 
-    let max_hits = [
-        best_style_mage.max_hit as i32,
-        best_style_melee.max_hit as i32,
-        best_style_ranged.max_hit as i32,
-    ];
-    let accuracies = [
-        best_style_mage.accuracy,
-        best_style_melee.accuracy,
-        best_style_ranged.accuracy,
-    ];
-    let attack_speeds = [
-        best_style_mage.attack_speed as usize,
-        best_style_melee.attack_speed as usize,
-        best_style_ranged.attack_speed as usize,
-    ];
+    let mut vang_hps = HashMap::new();
+    vang_hps.insert("mage".to_string(), max_hp);
+    vang_hps.insert("melee".to_string(), max_hp);
+    vang_hps.insert("ranged".to_string(), max_hp);
+
+    let mut max_hits = HashMap::new();
+    max_hits.insert("mage".to_string(), best_style_mage.max_hit as i32);
+    max_hits.insert("melee".to_string(), best_style_melee.max_hit as i32);
+    max_hits.insert("ranged".to_string(), best_style_ranged.max_hit as i32);
+    max_hits.insert("spec".to_string(), best_style_spec.max_hit as i32);
+
+    let mut accuracies = HashMap::new();
+    accuracies.insert("mage".to_string(), best_style_mage.accuracy);
+    accuracies.insert("melee".to_string(), best_style_melee.accuracy);
+    accuracies.insert("ranged".to_string(), best_style_ranged.accuracy);
+    accuracies.insert("spec".to_string(), best_style_spec.accuracy);
+
+    let mut attack_speeds = HashMap::new();
+    attack_speeds.insert("mage".to_string(), best_style_mage.attack_speed as usize);
+    attack_speeds.insert("melee".to_string(), best_style_melee.attack_speed as usize);
+    attack_speeds.insert("ranged".to_string(), best_style_ranged.attack_speed as usize);
+    attack_speeds.insert("spec".to_string(), best_style_spec.attack_speed as usize);
 
     for i in 0..trials {
-        let mut vang_hps = [max_hp, max_hp, max_hp];
+        let mut vang_hps_trial = vang_hps.clone();
         let mut tick = 0;
         let mut cooldown = 0;
         let mut immune_ticks_left = 0;
         let mut next_teleport = 20;
         let mut teleport = 0;
-        // let mut debug_tick_log = Vec::new();
+        let mut spec_count = if burning_claws { 3 } else if voidwaker { 2 } else { 0 };
+        let mut burns = Vec::new();
+        let mut initial_burn_tick = 0;
+        let mut current_attack_phase_tick = 0;
+        let mut last_vang_attacked = String::new();
 
         loop {
             // Exit immediately if all vangs are dead
-            if !vang_hps.iter().any(|&hp| hp > 0) {
+            if !vang_hps_trial.values().any(|&hp| hp > 0) {
                 break;
             }
 
             // Handle teleport/immune phase
             if immune_ticks_left > 0 {
-                // debug_tick_log.push(serde_json::json!({
-                //     "tick": tick,
-                //     "vang_hps": vang_hps,
-                //     "immune_ticks_left": immune_ticks_left,
-                //     "next_teleport": next_teleport,
-                //     "teleport": teleport,
-                //     "cooldown": cooldown,
-                //     "event": "immune"
-                // }));
                 immune_ticks_left -= 1;
                 tick += 1;
                 continue;
@@ -173,62 +131,97 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 
             // Only check for teleport if not in immune phase
             if tick >= next_teleport {
-                // Exit immediately if all vangs are dead before teleport
-                if !vang_hps.iter().any(|&hp| hp > 0) {
-                    break;
-                }
-                // debug_tick_log.push(serde_json::json!({
-                //     "tick": tick,
-                //     "vang_hps": vang_hps,
-                //     "immune_ticks_left": immune_ticks_left,
-                //     "next_teleport": next_teleport,
-                //     "teleport": teleport,
-                //     "cooldown": cooldown,
-                //     "event": "teleport"
-                // }));
                 teleport += 1;
                 immune_ticks_left = 11;
+                current_attack_phase_tick = 0;
                 next_teleport += 11 + rng.gen_range(20..=36);
                 continue; // Start immune phase, skip combat this tick
             }
 
-            let mut attack_idx: Option<usize> = None;
+            let mut attack_combat_type: Option<String> = None;
             if tick >= cooldown {
-                let ready_idxs: Vec<usize> = vang_hps.iter().enumerate().filter_map(|(i, &hp)| if hp > 0 { Some(i) } else { None }).collect();
-                let mut sorted_idxs = ready_idxs.clone();
-                sorted_idxs.sort_by_key(|&i| -vang_hps[i]);
-                for &idx in &sorted_idxs {
-                    if can_attack_vang(&vang_hps, idx, max_hits[idx], 0.4, hp_reset_threshold, max_hp) {
-                        attack_idx = Some(idx);
+                let ready_types: Vec<String> = vang_hps_trial.iter()
+                    .filter_map(|(combat_type, &hp)| if hp > 0 { Some(combat_type.clone()) } else { None })
+                    .collect();
+
+                let mut sorted_types = ready_types.clone();
+                sorted_types.sort_by_key(|combat_type| -vang_hps_trial[combat_type]);
+
+                for combat_type in &sorted_types {
+                    if can_attack_vang(&vang_hps_trial, combat_type, max_hits[combat_type], 0.4, hp_reset_threshold, max_hp) {
+                        attack_combat_type = Some(combat_type.clone());
                         break;
                     }
                 }
-                if let Some(idx) = attack_idx {
-                    let hit = if rng.gen::<f64>() < accuracies[idx] {
-                        rng.gen_range(0..=max_hits[idx]).max(1)
+
+                if let Some(combat_type) = &attack_combat_type {
+                    if last_vang_attacked != *combat_type {
+                        current_attack_phase_tick = 1;
+                    }
+                    last_vang_attacked = combat_type.clone();
+                    let hit = if *combat_type == "melee" && spec_count > 0 {
+                        cooldown = tick + attack_speeds["spec"];
+                        spec_count -= 1;
+                        if voidwaker {
+                            // Voidwaker special: guaranteed hit with 50%-150% damage range
+                            let lower_bound = (max_hits["spec"] as f64 * 0.5).floor() as i32;
+                            let upper_bound = (max_hits["spec"] as f64 * 1.5).floor() as i32;
+                            rng.gen_range(lower_bound..=upper_bound)
+                        } else if burning_claws {
+                            let (hits, new_burns) = burning_barrage_special(&mut rng, max_hits["spec"], accuracies["spec"]);
+                            if initial_burn_tick == 0 && !new_burns.is_empty() && burns.is_empty() {
+                                initial_burn_tick = 1;
+                            }
+                            if !new_burns.is_empty() {
+                                burns.extend(new_burns);
+                                if burns.len() > 5 {
+                                    burns.truncate(5);
+                                }
+                            }
+                            hits.iter().sum()
+                        } else {
+                            // Other special attacks - use normal accuracy roll
+                            if rng.gen::<f64>() < accuracies["spec"] {
+                                rng.gen_range(0..=max_hits["spec"]).max(1)
+                            } else {
+                                0
+                            }
+                        }
                     } else {
-                        0
+                        cooldown = tick + attack_speeds[combat_type];
+                        if rng.gen::<f64>() < accuracies[combat_type] {
+                            rng.gen_range(0..=max_hits[combat_type]).max(1)
+                        } else {
+                            0
+                        }
                     };
-                    vang_hps[idx] = (vang_hps[idx] - hit).max(0);
-                    cooldown = tick + attack_speeds[idx];
+                    let current_hp = vang_hps_trial[combat_type];
+                    vang_hps_trial.insert(combat_type.clone(), (current_hp - hit).max(0));
                 }
             }
-            // debug_tick_log.push(serde_json::json!({
-            //     "tick": tick,
-            //     "vang_hps": vang_hps,
-            //     "immune_ticks_left": immune_ticks_left,
-            //     "next_teleport": next_teleport,
-            //     "teleport": teleport,
-            //     "cooldown": cooldown,
-            //     "attack_idx": attack_idx,
-            //     "hit": hit,
-            //     "event": "attack_or_idle"
-            // }));
+            if initial_burn_tick > 0 && !burns.is_empty() && (initial_burn_tick - 1) % 4 == 0 {
+                let melee_hp = vang_hps_trial["melee"];
+                let new_melee_hp = apply_burns(melee_hp, &mut burns);
+                vang_hps_trial.insert("melee".to_string(), new_melee_hp);
+                if burns.is_empty() {
+                    initial_burn_tick = 0;
+                }
+            }
+            if initial_burn_tick > 0 {
+                initial_burn_tick += 1;
+            }
+            if immune_ticks_left == 0 {
+                if (current_attack_phase_tick - 1) % 4 == 0 {
+                    let thrall_hit = rng.gen_range(0..=3);
+                    let thrall_dmg_hp = vang_hps_trial[last_vang_attacked.as_str()];
+                    vang_hps_trial.insert(last_vang_attacked.clone(), (thrall_dmg_hp - thrall_hit).max(0));
+                }
+                current_attack_phase_tick += 1;
+            }
             tick += 1;
         }
         tick_counts[i] = tick + initial_delay + death_animation;
         phase_list.push(teleport);
-        // debug_trials.push(debug_tick_log);
     }
 
     // Defensive: Check tick_counts
@@ -326,7 +319,6 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
         "total_expected_seconds": total_expected_seconds,
         "encounter_kill_times": encounter_kill_times_obj,
         "phase_results": phase_list,
-        // "debug_trials": debug_trials,
     }).to_string()
 }
 

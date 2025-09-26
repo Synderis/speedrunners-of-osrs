@@ -116,9 +116,23 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     let base_hp = monsters[0].skills.hp as i32;
     let mut single_monster_ticks : Vec<f64> = Vec::new();
     let hit_delay = if player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 2 } else { 1 };
+    let inventory_items: Vec<SelectedItem> = player
+        .inventory
+        .iter()
+        .filter_map(|item| item.equipment.clone())
+        .collect();
+
+    let voidwaker = inventory_items.iter().any(|item| item.name == "Voidwaker");
+
+    if voidwaker {
+        let avernic_defender = inventory_items.iter().find(|item| item.name == "Avernic defender").cloned();
+        ensure_weapon_swap(&mut player, "Voidwaker", avernic_defender);
+    }
+    let best_style_spec = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
 
     for i in 0..trials {
         let mut tick = 0;
+        let mut spec_count = if voidwaker { 1 } else { 0 };
         for _monster in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
@@ -131,6 +145,15 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
                 }
                 if hp <= 0 {
                     break;
+                }
+                if spec_count > 0 {
+                    let lower_bound = (best_style_spec.max_hit as f64 * 0.5).floor() as i32;
+                    let upper_bound = (best_style_spec.max_hit as f64 * 1.5).floor() as i32;
+                    let hit = rng.gen_range(lower_bound..=upper_bound);
+                    hp -= hit;
+                    spec_count -= 1;
+                    tick += 4;
+                    continue;
                 }
                 if (tick - 1) % attack_speed == 0 {
                     let hit = if rng.gen::<f64>() < accuracy {

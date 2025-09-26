@@ -26,12 +26,12 @@ export const gearSetPresets: GearSetPreset[] = [
         gearSets: {
             melee: {
                 weapon: "22325",
-                head: "26382",
+                head: "30750",
                 neck: "29801",
                 cape: "21295",
                 shield: "",
-                body: "26384",
-                legs: "26386",
+                body: "30753",
+                legs: "30756",
                 hands: "22981",
                 feet: "31097",
                 ring: "28307",
@@ -54,7 +54,7 @@ export const gearSetPresets: GearSetPreset[] = [
                 weapon: "20997",
                 head: "27235",
                 neck: "19547",
-                cape: "22109",
+                cape: "28955",
                 shield: "",
                 body: "27238",
                 legs: "27241",
@@ -71,9 +71,11 @@ export const gearSetPresets: GearSetPreset[] = [
             "11808",
             "11920",
             "21003",
-            "22322"
+            "29577",
+            "22322",
+            "26374"
         ],
-        rooms: [{ id: "tekton", method: "Tekton Short Lure" }]
+        rooms: [{ id: "tekton", method: "Tekton Short Lure" }, { id: "vasa", method: "Flame Skip" }]
     },
     {
         id: "sample1",

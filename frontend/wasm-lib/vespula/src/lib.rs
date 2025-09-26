@@ -27,6 +27,12 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
     let base_hp = monsters[0].skills.hp as i32;
     let mut single_monster_ticks : Vec<f64> = Vec::new();
     let hit_delay = if best_style.gear_type == "ranged" { 2 } else if best_style.gear_type == "magic" && player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 5 } else { 4 };
+    let inventory_items: Vec<SelectedItem> = player
+        .inventory
+        .iter()
+        .filter_map(|item| item.equipment.clone())
+        .collect();
+    let zaryte_crossbow = inventory_items.iter().any(|item| item.name == "Zaryte crossbow");
 
     for i in 0..trials {
         let mut tick = 0;
@@ -36,13 +42,18 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
             while hp > 0 {
                 tick += 1;
                 ticks_this_monster += 1;
-                if (tick - 1) % attack_speed == 0 {
-                    let hit = if rng.gen::<f64>() < accuracy {
-                        rng.gen_range(0..=max_hit).max(1)
-                    } else {
-                        0
-                    };
-                    hp -= hit;
+                if zaryte_crossbow && (tick - 1) == attack_speed {
+                    let spec_dmg = (hp as f64 * 0.22).floor() as i32;
+                    hp -= spec_dmg;
+                } else {
+                    if (tick - 1) % attack_speed == 0 {
+                        let hit = if rng.gen::<f64>() < accuracy {
+                            rng.gen_range(0..=max_hit).max(1)
+                        } else {
+                            0
+                        };
+                        hp -= hit;
+                    }
                 }
                 if hp <= 0 {
                     break;

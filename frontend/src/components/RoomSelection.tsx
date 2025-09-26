@@ -81,7 +81,20 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
     const selectAll = () => {
         const roomsWithMonsters: SelectedRoomWithMonster[] = rooms.map(room => {
             const monster = getMonsterByRoom(room);
-            const methods = room.methods && room.methods.length === 1 ? [] : room.methods;
+            
+            // Check if this room already has a selected method from preset
+            const existingRoom = selectedRooms.find(r => r.id === room.id);
+            const hasPresetMethod = selectedMethods[room.id];
+            
+            let methods: string[];
+            if (hasPresetMethod && existingRoom) {
+                // Preserve the preset method selection
+                methods = existingRoom.methods || [];
+            } else {
+                // Default behavior for rooms without preset methods
+                methods = room.methods && room.methods.length === 1 ? [] : room.methods;
+            }
+            
             return {
                 ...room,
                 monster,

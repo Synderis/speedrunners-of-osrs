@@ -186,6 +186,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
       mage: prev.mage.map(slot => ({ ...slot, selected: undefined })),
       ranged: prev.ranged.map(slot => ({ ...slot, selected: undefined }))
     }));
+    setSelectedInventoryItems([]); // Clear inventory items
     setSelectedPreset('');
   };
 

@@ -49,52 +49,71 @@ def ensure_weapon_swap(player, weapon, equip_offhand=None):
             return player, current_weapon["name"], current_offhand
 
 
-# def phase_loop(hp, attack_tick, attack_speed, accuracy, max_hit, hit_counter_bounds, total_ticks):
-#     hit_counter = 0
-#     while hit_counter <= hit_counter_bounds[0] or hit_counter < hit_counter_bounds[1]:
-#         attack_tick += 1
-#         if (attack_tick - 1) % attack_speed == 0:
-#             # print(f"[Sim] Vasa attack: tick={attack_tick - 1}, hp={hp}")
-#             if np.random.rand() < accuracy:
-#                 hit = np.random.randint(0, max_hit + 1)
-#             else:
-#                 hit = 0
-#             hp -= hit
-#             hit_counter += 1
-#             # print(f"[Sim] Vasa hits for {hit}, hp={hp}, hit_counter={hit_counter}")
-#         if hp <= 0:
-#             total_ticks += (attack_tick - 1)
-#             break
-#         if (attack_tick - 1) % 4 == 0:
-#             # print(f"[Sim] Thrall attack: tick={attack_tick - 1}, hp={hp}")
-#             hit = np.random.randint(0, 4)
-#             hp -= hit
-#         if hp <= 0:
-#             total_ticks += (attack_tick - 1) 
-#             break
-#     attack_tick += attack_speed
-#     return hp, attack_tick, hit_counter, total_ticks
+def burning_barrage_special(max_hit, accuracy):
+    # First accuracy roll
+    if np.random.rand() < accuracy:
+        max_hit_low = int(max_hit * 0.75)
+        max_hit_high = int(max_hit * 1.75)
+        dmg = np.random.randint(max_hit_low, max_hit_high + 1)
+        # dmg = int(np.random.uniform(0.75, 1.75) * max_hit)
+        hit1 = int(0.25 * dmg)
+        hit2 = int(0.25 * dmg)
+        hit3 = int(0.5 * dmg)
+        hits = [hit1, hit2, hit3]
+        burn_chance = [0.15, 0.15, 0.15]
+    # Second accuracy roll
+    elif np.random.rand() < accuracy:
+        max_hit_low = int(max_hit * 0.5)
+        max_hit_high = int(max_hit * 1.5)
+        dmg = np.random.randint(max_hit_low, max_hit_high + 1)
+        # dmg = int(np.random.uniform(0.5, 1.5) * max_hit)
+        hit1 = int(0.5 * dmg) - 1
+        hit2 = int(0.5 * dmg) - 1
+        hit3 = dmg - (hit1 + hit2)
+        hits = [hit1, hit2, hit3]
+        burn_chance = [0.30, 0.30, 0.30]
+    # Third accuracy roll
+    elif np.random.rand() < accuracy:
+        max_hit_low = int(max_hit * 0.25)
+        max_hit_high = int(max_hit * 0.75)
+        dmg = np.random.randint(max_hit_low, max_hit_high + 1)
+        # dmg = int(np.random.uniform(0.25, 1.25) * max_hit)
+        hit3 = dmg - 2
+        hit1 = 1 if dmg >= 2 else 0
+        hit2 = 1 if dmg >= 2 else 0
+        hits = [hit1, hit2, hit3]
+        burn_chance = [0.45, 0.45, 0.45]
+    # All miss
+    else:
+        roll = np.random.rand()
+        if roll < 0.2:
+            hits = [0]
+        elif roll < 0.6:
+            hits = [1]
+        else:
+            hits = [2]
+        burn_chance = [0.0] * len(hits)
 
-# def phase_loop(hp, attack_tick, attack_speed, accuracy, max_hit, total_ticks):
-#     while hp > 0:
-#         attack_tick += 1
-#         if (attack_tick - 1) % attack_speed == 0:
-#             if np.random.rand() < accuracy:
-#                 hit = np.random.randint(0, max_hit + 1)
-#             else:
-#                 hit = 0
-#             hp -= hit
-#         if hp <= 0:
-#             total_ticks += (attack_tick - 1)
-#             break
-#         if (attack_tick - 1) % 4 == 0:
-#             hit = np.random.randint(0, 4)
-#             hp -= hit
-#         if hp <= 0:
-#             total_ticks += (attack_tick - 1) 
-#             break
-#     attack_tick += attack_speed - 1
-#     return attack_tick
+    # Burn calculation
+    burns = []
+    for i, hit in enumerate(hits):
+        if burn_chance[i] > 0 and np.random.rand() < burn_chance[i]:
+            if i == 2:
+                burns.append(9)
+            else:
+                burns.append(10)
+    return hits, burns
+
+def apply_burns(hp, burn_list):
+    # Apply burn damage and update burn durations
+    new_burn_list = []
+    for burn in burn_list:
+        if burn > 0:
+            hp -= 1
+            burn -= 1
+        if burn > 0:
+            new_burn_list.append(burn)
+    return hp, new_burn_list
 
 def can_attack_vang(vang_hps, combat_type, max_hit, threshold=0.4, hp_reset_threshold=108, base_hp=270):
     # If all vangs are below the reset threshold, always allow
@@ -117,20 +136,21 @@ if __name__ == "__main__":
     start_time = time.time()
 
     # Load parameters from your Markov model's best style output
-    with open("vangs_payload.json", "r") as f:
+    with open("/home/synderis/Documents/github_repos/speedrunners-of-osrs/vangs_payload.json", "r") as f:
         payload = json.load(f)
     player = payload["player"]
     room = payload["room"]
     monsters = room["monsters"]
     burning_claws = True
     voidwaker = False
+    spec_list = []
     best_style_mage = find_best_combat_style(player, monsters[0], "mage")
     best_style_melee = find_best_combat_style(player, monsters[1], "melee")
     best_style_ranged = find_best_combat_style(player, monsters[2], "ranged")
     if burning_claws:
-        player, current_weapon, current_offhand = ensure_weapon_swap(player, "Burning claws", None)
+        player, current_weapon, current_offhand = ensure_weapon_swap(player, "Burning claws")
     if voidwaker:
-        player, current_weapon, current_offhand = ensure_weapon_swap(player, "Voidwaker", None)
+        player, current_weapon, current_offhand = ensure_weapon_swap(player, "Voidwaker")
     best_style_spec = find_best_combat_style(player, monsters[1], "melee")
 
     # Simulation for empirical TTK and cumulative kill probability
@@ -144,6 +164,7 @@ if __name__ == "__main__":
     ranged_list = []
     teleports = []
     total_immune_ticks = []
+    burn_instance_list = []
     # combat_ticks_list = []
 
     print(f"[Sim] Starting simulation with {trials} trials...")
@@ -151,6 +172,7 @@ if __name__ == "__main__":
     debug_trial_count = 3
 
     for trial_idx in range(trials):
+        burn_instances = 0
         spec_count = 0
         if burning_claws:
             spec_count = 3
@@ -190,84 +212,79 @@ if __name__ == "__main__":
         teleport = 0
         immune_ticks = 0
         debug_tick_log = []
-        while any(hp > 0 for hp in vang_hps):
+        initial_burn_tick = 0
+        last_vang_attacked = None
+        current_attack_phase_tick = 0
+        burns = []
+        while any(hp > 0 for hp in vang_hps.values()):
             ko_this_tick = False
             prev_vang_hps = vang_hps.copy()
             # Handle teleport/immune phase
             if immune_ticks_left > 0:
-                debug_tick_log.append({
-                    "tick": tick,
-                    "vang_hps": vang_hps.copy(),
-                    "immune_ticks_left": immune_ticks_left,
-                    "next_teleport": next_teleport,
-                    "teleport": teleport,
-                    "cooldown": cooldown,
-                    "event": "immune"
-                })
                 immune_ticks_left -= 1
                 immune_ticks += 1
                 tick += 1
                 continue
             # Only check for teleport if not in immune phase
             if tick >= next_teleport:
-                debug_tick_log.append({
-                    "tick": tick,
-                    "vang_hps": vang_hps.copy(),
-                    "immune_ticks_left": immune_ticks_left,
-                    "next_teleport": next_teleport,
-                    "teleport": teleport,
-                    "cooldown": cooldown,
-                    "event": "teleport"
-                })
                 teleport += 1
                 immune_ticks_left = 11
+                current_attack_phase_tick = 0
                 next_teleport += immune_ticks_left + np.random.randint(20, 37)
                 continue
+
             attack_type = None
             hit = 0
             if tick >= cooldown:
-                ready_types = [combat_type for combat_type, hp in vang_hps.items() if hp > 0]
+                ready_types = [combat_type for combat_type in vang_hps.keys() if vang_hps[combat_type] > 0]
                 for combat_type in sorted(ready_types, key=lambda t: -vang_hps[t]):
                     if can_attack_vang(vang_hps, combat_type, max_hits[combat_type], 0.4, hp_reset_threshold):
                         attack_type = combat_type
                         break
                 
                 if attack_type is not None:
-                    if np.random.rand() < accuracies[attack_type]:
-                        hit = np.random.randint(0, max_hits[attack_type] + 1)
+                    if attack_type != last_vang_attacked:
+                        current_attack_phase_tick = 1
+                    last_vang_attacked = attack_type
+                    if attack_type == "melee" and spec_count > 0:
+                        cooldown = tick + attack_speeds["spec"]
+                        spec_count -= 1
+                        hits, new_burns = burning_barrage_special(max_hits["spec"], accuracies["spec"])
+                        if initial_burn_tick == 0 and new_burns:
+                            initial_burn_tick = 1
+                        for burn in new_burns:  # Iterate over NEW burns
+                            if burn > 0 and len(burns) < 5:  # Check existing burns list length
+                                burns.append(burn)  # Add to existing burns list
+                        hit = sum(hits)
                     else:
-                        hit = 0
+                        cooldown = tick + attack_speeds[attack_type]
+                        if np.random.rand() < accuracies[attack_type]:
+                            hit = max(1, np.random.randint(0, max_hits[attack_type] + 1))
+                        else:
+                            hit = 0
                     prev_hp = vang_hps[attack_type]
                     vang_hps[attack_type] = max(0, vang_hps[attack_type] - hit)
                     if prev_hp > 0 and vang_hps[attack_type] == 0:
                         ko_this_tick = True
-                    cooldown = tick + attack_speeds[attack_type]
-            
-            # Update debug logging:
-            debug_tick_log.append({
-                "tick": tick,
-                "vang_hps": vang_hps.copy(),
-                "immune_ticks_left": immune_ticks_left,
-                "next_teleport": next_teleport,
-                "teleport": teleport,
-                "cooldown": cooldown,
-                "attack_type": attack_type,
-                "hit": hit,
-                "event": "attack_or_idle"
-            })
+
+            if initial_burn_tick > 0 and burns and (initial_burn_tick - 1) % 4 == 0:
+                vang_hps['melee'], burns = apply_burns(vang_hps['melee'], burns)
+                if not burns:
+                    initial_burn_tick = 0
+            if initial_burn_tick > 0:
+                initial_burn_tick += 1
+            if immune_ticks_left == 0:
+                if (current_attack_phase_tick - 1) % 4 == 0:
+                    vang_hps[last_vang_attacked] = vang_hps[last_vang_attacked] - np.random.randint(1, 4)
+                current_attack_phase_tick += 1
             tick += 1
+        spec_list.append(spec_count)
+        burn_instance_list.append(burn_instances)
         total_immune_ticks.append(immune_ticks)
         teleports.append(teleport)
-        tick_counts.append(tick + initial_delay)
+        tick_counts.append(tick + initial_delay + 4)
         if trial_idx < debug_trial_count:
             debug_trials.append(debug_tick_log)
-    # Save debug output for first 3 trials
-    # with open("vangs_debug_trials_from_PYTHON.json", "w") as f:
-    #     json.dump(debug_trials, f, indent=2)
-
-        # if total_ticks % 4 != 0:
-        #     total_ticks += 4 - (total_ticks % 4)
-        # tick_counts.append(total_ticks)
     print(f"[Sim] Simulation complete.")
     
     max_ticks = int(max(tick_counts))
@@ -283,6 +300,8 @@ if __name__ == "__main__":
     # ranged_list_mean = np.mean(ranged_list)
     # phase_list_mean = np.mean(phase_list)
     # combat_ticks_list_mean = np.mean(combat_ticks_list)
+    spec_list_mean = np.mean(spec_list)
+    burn_instance_list_mean = np.mean(burn_instance_list)
     immune_ticks_mean = np.mean(total_immune_ticks)
     teleports_mean = np.mean(teleports)
     mean_ttk = np.mean(tick_counts)
@@ -293,6 +312,8 @@ if __name__ == "__main__":
     # print(f"Combat ticks: {combat_ticks_list_mean:.2f} ticks ({combat_ticks_list_mean * 0.6:.2f} seconds)")
     print(f"Teleports: {teleports_mean:.2f}")
     print(f"Immune ticks: {immune_ticks_mean:.2f} ticks ({immune_ticks_mean * 0.6:.2f} seconds)")
+    print(f"Special attacks used: {spec_list_mean:.2f} out of 3")
+    print(f"Burn instances applied: {burn_instance_list_mean:.2f}")
     # print(f"Phase average ticks: {phase_list_mean:.2f} ticks ({phase_list_mean * 0.6:.2f} seconds)")
     # print(f"Melee average ticks: {melee_list_mean:.2f} ticks ({melee_list_mean * 0.6:.2f} seconds)")
     # print(f"Mage average ticks: {mage_list_mean:.2f} ticks ({mage_list_mean * 0.6:.2f} seconds)")
