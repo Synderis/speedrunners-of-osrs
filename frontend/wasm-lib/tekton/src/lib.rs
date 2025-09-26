@@ -185,7 +185,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
             // Normal phase: (0, 3)
             if veng_count > 0 {
-                let veng_hit = rng.gen_range(0..=tekton_enraged_max_hit).max(1);
+                let veng_hit = rng.gen_range(0..=tekton_enraged_max_hit as i32).max(1);
                 let veng_dmg = (veng_hit as f64 * 0.75).floor() as i32;
                 tekton_hp -= veng_dmg;
                 veng_count -= 1;
