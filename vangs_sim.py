@@ -96,16 +96,16 @@ def ensure_weapon_swap(player, weapon, equip_offhand=None):
 #     attack_tick += attack_speed - 1
 #     return attack_tick
 
-def can_attack_vang(vang_hps, idx, max_hit, threshold=0.4, hp_reset_threshold=108, base_hp=270):
+def can_attack_vang(vang_hps, combat_type, max_hit, threshold=0.4, hp_reset_threshold=108, base_hp=270):
     # If all vangs are below the reset threshold, always allow
-    if all(hp < hp_reset_threshold for hp in vang_hps):
+    if all(hp < hp_reset_threshold for hp in vang_hps.values()):
         return True
-    if max(vang_hps) < hp_reset_threshold:
+    if max(vang_hps.values()) < hp_reset_threshold:
         return True
     new_hps = vang_hps.copy()
-    new_hps[idx] = vang_hps[idx] - max_hit
-    min_hp = min(new_hps)
-    max_hp = max(new_hps)
+    new_hps[combat_type] = vang_hps[combat_type] - max_hit
+    min_hp = min(new_hps.values())
+    max_hp = max(new_hps.values())
     reset_threshold = threshold * base_hp
     # Only allow if max hit does NOT cause a reset
     if (max_hp - min_hp) > reset_threshold:
@@ -122,9 +122,16 @@ if __name__ == "__main__":
     player = payload["player"]
     room = payload["room"]
     monsters = room["monsters"]
+    burning_claws = True
+    voidwaker = False
     best_style_mage = find_best_combat_style(player, monsters[0], "mage")
     best_style_melee = find_best_combat_style(player, monsters[1], "melee")
     best_style_ranged = find_best_combat_style(player, monsters[2], "ranged")
+    if burning_claws:
+        player, current_weapon, current_offhand = ensure_weapon_swap(player, "Burning claws", None)
+    if voidwaker:
+        player, current_weapon, current_offhand = ensure_weapon_swap(player, "Voidwaker", None)
+    best_style_spec = find_best_combat_style(player, monsters[1], "melee")
 
     # Simulation for empirical TTK and cumulative kill probability
     trials = 100000
@@ -142,29 +149,38 @@ if __name__ == "__main__":
     print(f"[Sim] Starting simulation with {trials} trials...")
     debug_trials = []
     debug_trial_count = 3
+
     for trial_idx in range(trials):
+        spec_count = 0
+        if burning_claws:
+            spec_count = 3
+        if voidwaker:
+            spec_count = 2
         encounter_ticks = 0
         total_ticks = 0
         mage_hp = 270
         melee_hp = 270
         ranged_hp = 270
         hp_reset_threshold = 108
-        vang_hps = [mage_hp, melee_hp, ranged_hp]
-        max_hits = [
-            best_style_mage["max_hit"],
-            best_style_melee["max_hit"],
-            best_style_ranged["max_hit"]
-        ]
-        accuracies = [
-            best_style_mage["accuracy"],
-            best_style_melee["accuracy"],
-            best_style_ranged["accuracy"]
-        ]
-        attack_speeds = [
-            best_style_mage["attack_speed"],
-            best_style_melee["attack_speed"],
-            best_style_ranged["attack_speed"]
-        ]
+        vang_hps = {"mage": mage_hp, "melee": melee_hp, "ranged": ranged_hp}
+        max_hits = {
+            "mage": best_style_mage["max_hit"],
+            "melee": best_style_melee["max_hit"],
+            "ranged": best_style_ranged["max_hit"],
+            "spec": best_style_spec["max_hit"]
+        }
+        accuracies = {
+            "mage": best_style_mage["accuracy"],
+            "melee": best_style_melee["accuracy"],
+            "ranged": best_style_ranged["accuracy"],
+            "spec": best_style_spec["accuracy"]
+        }
+        attack_speeds = {
+            "mage": best_style_mage["attack_speed"],
+            "melee": best_style_melee["attack_speed"],
+            "ranged": best_style_ranged["attack_speed"],
+            "spec": best_style_spec["attack_speed"]
+        }
         initial_delay = 24
         tick = 0
         cooldown = 0
@@ -207,24 +223,27 @@ if __name__ == "__main__":
                 immune_ticks_left = 11
                 next_teleport += immune_ticks_left + np.random.randint(20, 37)
                 continue
-            attack_idx = None
+            attack_type = None
             hit = 0
             if tick >= cooldown:
-                ready_idxs = [i for i, hp in enumerate(vang_hps) if hp > 0]
-                for idx in sorted(ready_idxs, key=lambda i: -vang_hps[i]):
-                    if can_attack_vang(vang_hps, idx, max_hits[idx], 0.4, hp_reset_threshold):
-                        attack_idx = idx
+                ready_types = [combat_type for combat_type, hp in vang_hps.items() if hp > 0]
+                for combat_type in sorted(ready_types, key=lambda t: -vang_hps[t]):
+                    if can_attack_vang(vang_hps, combat_type, max_hits[combat_type], 0.4, hp_reset_threshold):
+                        attack_type = combat_type
                         break
-                if attack_idx is not None:
-                    if np.random.rand() < accuracies[attack_idx]:
-                        hit = np.random.randint(0, max_hits[attack_idx] + 1)
+                
+                if attack_type is not None:
+                    if np.random.rand() < accuracies[attack_type]:
+                        hit = np.random.randint(0, max_hits[attack_type] + 1)
                     else:
                         hit = 0
-                    prev_hp = vang_hps[attack_idx]
-                    vang_hps[attack_idx] = max(0, vang_hps[attack_idx] - hit)
-                    if prev_hp > 0 and vang_hps[attack_idx] == 0:
+                    prev_hp = vang_hps[attack_type]
+                    vang_hps[attack_type] = max(0, vang_hps[attack_type] - hit)
+                    if prev_hp > 0 and vang_hps[attack_type] == 0:
                         ko_this_tick = True
-                    cooldown = tick + attack_speeds[attack_idx]
+                    cooldown = tick + attack_speeds[attack_type]
+            
+            # Update debug logging:
             debug_tick_log.append({
                 "tick": tick,
                 "vang_hps": vang_hps.copy(),
@@ -232,7 +251,7 @@ if __name__ == "__main__":
                 "next_teleport": next_teleport,
                 "teleport": teleport,
                 "cooldown": cooldown,
-                "attack_idx": attack_idx,
+                "attack_type": attack_type,
                 "hit": hit,
                 "event": "attack_or_idle"
             })
