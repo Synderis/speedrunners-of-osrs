@@ -74,6 +74,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
     // Simulation parameters
     let walk_delay = 18;
     let death_animation = 4;
+    let post_room_delay = 4;
     let mut tick_counts: Vec<usize> = vec![0; trials];
     let mut phase_list = Vec::with_capacity(trials);
 
@@ -231,7 +232,12 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
             overkill = 1;
         }
         let hit_delay = hit_delay_map[&last_vang_attacked];
-        tick_counts[i] = tick + walk_delay + spawn_delay + hit_delay + death_animation - overkill;
+        tick += walk_delay + spawn_delay + hit_delay + death_animation - overkill;
+        if tick % 4 != 0 {
+            tick += 4 - (tick % 4);
+        }
+        tick += post_room_delay;
+        tick_counts[i] = tick;
         phase_list.push(teleport);
     }
 
