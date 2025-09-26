@@ -3,8 +3,9 @@ import type { Equipment, InventoryItem } from '../types/player';
 import './InventoryItems.css';
 
 const INVENTORY_IDS = [
-    25975, 11808, 29577, 29589, 12018, 11865, 27690, 21003, 11920, 22322, 26374
+    11808, 29577, 29589, 12018, 11865, 27690, 21003, 11920, 22322, 26374
 ];
+//25975 Lightbearer removing for now
 //make sure to add lockpick somehow as its not technically an item so we will exclude it for now
 
 interface InventoryItemsProps {
