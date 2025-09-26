@@ -1066,6 +1066,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
           {/* Chart */}
         <ResultPlot
           chartRef={chartRef}
+          chartName='result-plot'
           chartInView={chartInView}
           isLoading={isLoading}
           handleRecalculate={handleRecalculate}
@@ -1148,6 +1149,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                 <ResultPlot
                   key={`combined-plot-${activeFloor}`}
                   chartRef={combinedChartRef}
+                  chartName='combined-plot'
                   chartInView={true}
                   isLoading={false}
                   handleRecalculate={() => {}}
