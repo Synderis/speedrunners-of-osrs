@@ -15,6 +15,15 @@ export interface GearSetPreset {
     };
     inventoryItems: string[]; // Array of inventory item IDs
     rooms: PresetRoom[]; // Array of room IDs where this preset is applicable
+    combatStats?: {
+        attack: number;
+        strength: number;
+        defense: number;
+        ranged: number;
+        prayer: number;
+        magic: number;
+        hitpoints: number;
+    };
 }
 
 export type GearSetType = "melee" | "mage" | "ranged";
@@ -75,6 +84,15 @@ export const gearSetPresets: GearSetPreset[] = [
             "22322",
             "26374"
         ],
+        combatStats: {
+            attack: 99,
+            strength: 99,
+            defense: 99,
+            ranged: 99,
+            prayer: 99,
+            magic: 99,
+            hitpoints: 99
+        },
         rooms: [
             { id: "tekton", methods: ["Tekton Short Lure", "Pre-Veng"] }, // Multiple methods example
             { id: "ice_demon" },
