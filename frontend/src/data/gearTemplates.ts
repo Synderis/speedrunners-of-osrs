@@ -1,6 +1,7 @@
 export interface PresetRoom {
     id: string;
     method?: string;
+    methods?: string[]; // Support for multiple methods
 }
 
 export interface GearSetPreset {
@@ -75,7 +76,7 @@ export const gearSetPresets: GearSetPreset[] = [
             "26374"
         ],
         rooms: [
-            { id: "tekton", method: "Tekton Short Lure" },
+            { id: "tekton", methods: ["Tekton Short Lure", "Pre-Veng"] }, // Multiple methods example
             { id: "ice_demon" },
             { id: "lizardman_shamans", method: "Shamans Slayer Task" },
             { id: "vangs" },

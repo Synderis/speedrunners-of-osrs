@@ -349,6 +349,21 @@
     justify-content: center;
     margin-top: 1rem;
 }
+
+/* Method Categories */
+.method-category {
+    margin-bottom: 1rem;
+}
+
+.method-category-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .method-tab {
     border: 1px solid rgba(59, 130, 246, 0.2);
     border-radius: 4.8px;
@@ -358,12 +373,29 @@
     color: inherit;
     cursor: pointer;
     transition: border 0.2s, background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .method-tab.active {
     border: 2px solid #3b82f6;
     background: rgba(59, 130, 246, 0.08);
     color: #3b82f6;
+}
+
+.method-indicator {
+    font-size: 0.9rem;
+    min-width: 16px;
+    text-align: center;
+}
+
+.method-indicator.checkbox {
+    font-family: monospace;
+}
+
+.method-indicator.radio {
+    font-size: 1.2rem;
 }
 
 @media (max-width: 768px) {

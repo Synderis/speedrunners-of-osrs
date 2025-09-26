@@ -39,7 +39,7 @@ function App() {
   });
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [selectedRooms, setSelectedRooms] = useState<SelectedRoomWithMonster[]>([]);
-  const [selectedMethods, setSelectedMethods] = useState<{ [roomId: string]: string | null }>({});
+  const [selectedMethods, setSelectedMethods] = useState<{ [roomId: string]: string[] }>({});
   const [selectedPreset, setSelectedPreset] = useState<string>('');
 
   useEffect(() => {
