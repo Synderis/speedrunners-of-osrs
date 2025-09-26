@@ -107,6 +107,15 @@ const GearSelection: React.FC<GearSelectionProps> = ({
         ) as Record<string, string>,
       },
       inventoryItems: selectedInventoryItems.map(item => item.equipment?.id?.toString() || ''),
+      combatStats: {
+        attack: combatStats.attack,
+        strength: combatStats.strength,
+        defense: combatStats.defense,
+        ranged: combatStats.ranged,
+        prayer: combatStats.prayer,
+        magic: combatStats.magic,
+        hitpoints: combatStats.hitpoints
+      },
       rooms // <-- Save rooms with method!
     };
     console.log('Saving preset:', newPreset);
@@ -242,6 +251,14 @@ const GearSelection: React.FC<GearSelectionProps> = ({
             }
           });
           setSelectedMethods(newSelectedMethods);
+        }
+        
+        // Restore combat stats from preset
+        if (preset.combatStats) {
+          setCombatStats(prev => ({
+            ...prev,
+            ...preset.combatStats
+          }));
         }
         (['melee', 'mage', 'ranged'] as GearSetType[]).forEach(type => {
           updated[type] = prev[type].map(slot => {
