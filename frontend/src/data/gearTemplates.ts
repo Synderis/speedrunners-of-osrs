@@ -66,7 +66,6 @@ export const gearSetPresets: GearSetPreset[] = [
         },
         inventoryItems: [
             "25975",
-            "12018",
             "11865",
             "11808",
             "11920",

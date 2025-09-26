@@ -96,10 +96,14 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     let mut sets = [
         ("magic", &mut player.gear_sets.mage),
         ("ranged", &mut player.gear_sets.ranged),
+        ("melee", &mut player.gear_sets.melee),
     ];
+    let salve_amulet = inventory_items.iter().any(|item| item.name == "Salve amulet(ei)");
 
-    for (_, gear_set) in sets.iter_mut() {
-        ensure_item_equipped(gear_set, &inventory_items, "salve");
+    if salve_amulet {
+        for (_, gear_set) in sets.iter_mut() {
+            ensure_item_equipped(gear_set, &inventory_items, "salve");
+        }
     }
 
     // let walk_delay = 24;
