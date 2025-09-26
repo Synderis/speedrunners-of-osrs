@@ -115,7 +115,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     let mut hp_pre_anvil: Vec<usize> = vec![0; trials];
     let mut phase_results: Vec<usize> = vec![0; trials];
     let pre_veng = if room_methods.contains(&"Pre-Veng".to_string()) { 1 } else { 0 };
-    let tekton_enraged_max_hit = &monsters[1].max_hit;
+    let tekton_enraged_max_hit = monsters[1].max_hit.unwrap_or(0) as i32;
 
     let (delay, attack_pattern): (usize, Vec<[usize; 2]>) = if room_methods.contains(&"Tekton Short Lure".to_string()) {
         (12, vec![[0, 4], [0, 3], [4, 10]])
@@ -185,7 +185,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
             // Normal phase: (0, 3)
             if veng_count > 0 {
-                let veng_hit = rng.gen_range(0..=tekton_enraged_max_hit as i32).max(1);
+                let veng_hit = rng.gen_range(0..=tekton_enraged_max_hit).max(1);
                 let veng_dmg = (veng_hit as f64 * 0.75).floor() as i32;
                 tekton_hp -= veng_dmg;
                 veng_count -= 1;
