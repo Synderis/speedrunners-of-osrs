@@ -57,7 +57,12 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                 for style in styles {
                     let (max_hit, _effective_level) = calculate_max_hit_for_style(player, monster, &combat_type, style, gear_stats);
                     let (accuracy, effective_level, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, &combat_type, style, gear_stats);
-                    let effective_dps = (max_hit as f64 * accuracy) / (weapon.speed as f64 - style.att_spd_reduction as f64);
+                    let effective_dps = if weapon.name == "Scythe of vitur" {
+                        let modified_max_hit = max_hit + (max_hit / 2) + (max_hit / 4);
+                        (modified_max_hit as f64 * accuracy) / (weapon.speed as f64 - style.att_spd_reduction as f64)
+                    } else {
+                        (max_hit as f64 * accuracy) / (weapon.speed as f64 - style.att_spd_reduction as f64)
+                    };
                     let effective_strength = 0; // Not used for mage/ranged
                     let effective_attack = effective_level;
                     console_log!(
@@ -115,7 +120,7 @@ pub fn calculate_max_hit_for_style(
     combat_type: &str,
     style: &WeaponStyle,
     gear: &GearStats,
-) -> (u32, u32) {
+) -> (i32, u32) {
     // Get the relevant level, prayer bonus, bonus, style bonus, and weapon
     let (level, prayer_bonus, gear_set, bonus, style_bonus, weapon) = match combat_type {
         "magic" => (
@@ -159,7 +164,7 @@ pub fn calculate_max_hit_for_style(
     };
     let mut base_damage;
     let mut multiplier = 1.0;
-    let mut max_hit = 0u32;
+    let mut max_hit = 0i32;
     let weapon = weapon.unwrap();
     // console_log!("Selected weapon: {} (combat type: {})", weapon.name, combat_type);
     // console_log!("Weapon category: {}", weapon.category);
@@ -196,7 +201,7 @@ pub fn calculate_max_hit_for_style(
         salve_bonus = (salve_bonus - 1.0) * 100.0;
         slayer_bonus = (slayer_bonus - 1.0) * 100.0;
         let magic_strength = (bonus * multiplier).min(100.0) + salve_bonus + slayer_bonus + prayer_bonus + void_bonus;
-        max_hit = (base_damage * (1.0 + (magic_strength / 100.0))).floor() as u32;
+        max_hit = (base_damage * (1.0 + (magic_strength / 100.0))).floor() as i32;
     } else if combat_type == "ranged" {
         let mut max_hit_multiplier = 1.0;
         if weapon.name == "Twisted bow" {
@@ -208,29 +213,26 @@ pub fn calculate_max_hit_for_style(
             max_hit_multiplier = tbow_scaling(magic, "damage");
         };
         let effective_ranged = ((level + potion_bonus) * prayer_bonus + style_bonus + 8.0).floor();
-        max_hit = (0.5 + (effective_ranged * (bonus + 64.0)) / 640.0).floor() as u32;
-        max_hit = (max_hit as f64 * max_hit_multiplier * salve_bonus * slayer_bonus).floor() as u32;
+        max_hit = (0.5 + (effective_ranged * (bonus + 64.0)) / 640.0).floor() as i32;
+        max_hit = (max_hit as f64 * max_hit_multiplier * salve_bonus * slayer_bonus).floor() as i32;
     } else if combat_type == "melee" {
         if weapon.category == "Pickaxe" {
             let base_max_hit = (0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor();
             let level_requirement = 60.0;
             let mining_level = player.combat_stats.mining as f64;
             let damage_multiplier = (50.0 + mining_level + level_requirement) / 150.0;
-            max_hit = (base_max_hit * damage_multiplier).ceil() as u32;
+            max_hit = (base_max_hit * damage_multiplier).ceil() as i32;
         } else {
-            max_hit = (0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor() as u32;
-        };
-        if weapon.name == "Scythe of vitur" {
-            max_hit = max_hit + (max_hit / 2) + (max_hit / 4);
+            max_hit = (0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor() as i32;
         };
         if weapon.name == "Emberlight" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
-            max_hit = (max_hit as f64 * 1.70).floor() as u32;
+            max_hit = (max_hit as f64 * 1.70).floor() as i32;
         }
         if weapon.name == "Burning claws" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
-            max_hit = (max_hit as f64 * 1.05).floor() as u32;
+            max_hit = (max_hit as f64 * 1.05).floor() as i32;
         };
         if weapon.name == "Zamorak godsword" && (style.combat_style == "Slash" || style.combat_style == "Crush") {
-            max_hit = (max_hit as f64 * 1.10).floor() as u32;
+            max_hit = (max_hit as f64 * 1.10).floor() as i32;
         };
     };
     // console_log!("Gear items: {:?}", gear_set.gear_items);
@@ -543,4 +545,23 @@ pub fn apply_burns(hp: i32, burn_list: &mut Vec<i32>) -> i32 {
         *burn > 0
     });
     new_hp
+}
+pub fn dmg_modifier_check(rng: &mut impl Rng, max_hit: i32, accuracy: f64, weapon: &str) -> i32 {
+    let hit = if weapon == "Scythe of vitur" {
+        let hit_1 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=max_hit).max(1) } else { 0 };
+        let hit_2 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=((max_hit as f64 * 0.5).floor() as i32)) } else { 0 };
+        let hit_3 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=((max_hit as f64 * 0.25).floor() as i32)) } else { 0 };
+        hit_1 + hit_2 + hit_3
+    } else if weapon == "Voidwaker" {
+        let lower_bound = (max_hit as f64 * 0.50).floor() as i32;
+        let upper_bound = (max_hit as f64 * 1.50).floor() as i32;
+        rng.gen_range(lower_bound..=upper_bound)
+    } else {
+        if rng.gen::<f64>() < accuracy {
+            rng.gen_range(0..=max_hit).max(1)
+        } else {
+            0
+        }
+    };
+    hit
 }

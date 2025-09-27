@@ -2,16 +2,16 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct CombatStats {
-    pub attack: u32,
-    pub strength: u32,
-    pub defense: u32,
-    pub ranged: u32,
-    pub magic: u32,
-    pub hitpoints: u32,
-    pub prayer: u32,
-    pub woodcutting: u32,
-    pub mining: u32,
-    pub thieving: u32,
+    pub attack: i32,
+    pub strength: i32,
+    pub defense: i32,
+    pub ranged: i32,
+    pub magic: i32,
+    pub hitpoints: i32,
+    pub prayer: i32,
+    pub woodcutting: i32,
+    pub mining: i32,
+    pub thieving: i32,
 }
 
 #[derive(Deserialize, Clone)]
@@ -121,12 +121,12 @@ pub struct Player {
 
 #[derive(Deserialize, Clone)]
 pub struct MonsterSkills {
-    pub atk: u32,
-    pub def: u32,
-    pub hp: u32,
-    pub magic: u32,
-    pub ranged: u32,
-    pub str: u32,
+    pub atk: i32,
+    pub def: i32,
+    pub hp: i32,
+    pub magic: i32,
+    pub ranged: i32,
+    pub str: i32,
 }
 
 #[derive(Deserialize, Clone)]
@@ -163,7 +163,7 @@ pub struct Monster {
     pub speed: Option<u32>,
     pub style: Option<Vec<String>>,
     pub size: Option<u32>,
-    pub max_hit: Option<u32>,
+    pub max_hit: Option<i32>,
     pub skills: MonsterSkills,
     pub offensive: MonsterOffensive,
     pub defensive: MonsterDefensive,
@@ -174,7 +174,7 @@ pub struct Monster {
 
 #[derive(Serialize)]
 pub struct CalculationResult {
-    pub max_hit: u32,
+    pub max_hit: i32,
     pub accuracy: f64,
     pub effective_strength: u32,
     pub effective_attack: u32,
@@ -187,7 +187,7 @@ pub struct StyleResult {
     pub gear_type: String,
     pub combat_style: String,
     pub attack_type: String,
-    pub max_hit: u32,
+    pub max_hit: i32,
     pub accuracy: f64,
     pub effective_dps: f64,
     pub effective_strength: u32,

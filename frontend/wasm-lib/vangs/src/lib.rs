@@ -60,6 +60,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
         .collect();
     let burning_claws = inventory_items.iter().any(|item| item.name == "Burning claws");
     let voidwaker = inventory_items.iter().any(|item| item.name == "Voidwaker");
+    let weapon_name = player.gear_sets.melee.selected_weapon.as_ref().unwrap().name.clone();
 
     if burning_claws {
         ensure_weapon_swap(&mut player, "Burning claws", None);
@@ -75,10 +76,10 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
     let walk_delay = 18;
     let death_animation = 4;
     let post_room_delay = 4;
-    let mut tick_counts: Vec<usize> = vec![0; trials];
+    let mut tick_counts: Vec<i32> = vec![0; trials];
     let mut phase_list = Vec::with_capacity(trials);
 
-    let max_hp = monsters[0].skills.hp as i32;
+    let max_hp = monsters[0].skills.hp;
     let hp_reset_threshold = (max_hp as f64 * 0.4) as i32;
 
     let mut vang_hps = HashMap::new();
@@ -87,10 +88,10 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
     vang_hps.insert("ranged".to_string(), max_hp);
 
     let mut max_hits = HashMap::new();
-    max_hits.insert("mage".to_string(), best_style_mage.max_hit as i32);
-    max_hits.insert("melee".to_string(), best_style_melee.max_hit as i32);
-    max_hits.insert("ranged".to_string(), best_style_ranged.max_hit as i32);
-    max_hits.insert("spec".to_string(), best_style_spec.max_hit as i32);
+    max_hits.insert("mage".to_string(), best_style_mage.max_hit);
+    max_hits.insert("melee".to_string(), best_style_melee.max_hit);
+    max_hits.insert("ranged".to_string(), best_style_ranged.max_hit);
+    max_hits.insert("spec".to_string(), best_style_spec.max_hit);
 
     let mut accuracies = HashMap::new();
     accuracies.insert("mage".to_string(), best_style_mage.accuracy);
@@ -99,10 +100,10 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
     accuracies.insert("spec".to_string(), best_style_spec.accuracy);
 
     let mut attack_speeds = HashMap::new();
-    attack_speeds.insert("mage".to_string(), best_style_mage.attack_speed as usize);
-    attack_speeds.insert("melee".to_string(), best_style_melee.attack_speed as usize);
-    attack_speeds.insert("ranged".to_string(), best_style_ranged.attack_speed as usize);
-    attack_speeds.insert("spec".to_string(), best_style_spec.attack_speed as usize);
+    attack_speeds.insert("mage".to_string(), best_style_mage.attack_speed);
+    attack_speeds.insert("melee".to_string(), best_style_melee.attack_speed);
+    attack_speeds.insert("ranged".to_string(), best_style_ranged.attack_speed);
+    attack_speeds.insert("spec".to_string(), best_style_spec.attack_speed);
 
     let mut hit_delay_map = HashMap::new();
     hit_delay_map.insert("mage".to_string(), if player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 2 } else { 1 });
@@ -172,9 +173,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
                         spec_count -= 1;
                         if voidwaker {
                             // Voidwaker special: guaranteed hit with 50%-150% damage range
-                            let lower_bound = (max_hits["spec"] as f64 * 0.5).floor() as i32;
-                            let upper_bound = (max_hits["spec"] as f64 * 1.5).floor() as i32;
-                            rng.gen_range(lower_bound..=upper_bound)
+                            dmg_modifier_check(&mut rng, max_hits["spec"], accuracies["spec"], "Voidwaker")
                         } else if burning_claws {
                             let (hits, new_burns) = burning_barrage_special(&mut rng, max_hits["spec"], accuracies["spec"]);
                             if initial_burn_tick == 0 && !new_burns.is_empty() && burns.is_empty() {
@@ -197,10 +196,10 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
                         }
                     } else {
                         cooldown = tick + attack_speeds[combat_type];
-                        if rng.gen::<f64>() < accuracies[combat_type] {
-                            rng.gen_range(0..=max_hits[combat_type]).max(1)
+                        if *combat_type == "melee" {
+                            dmg_modifier_check(&mut rng, max_hits[combat_type], accuracies[combat_type], &weapon_name)
                         } else {
-                            0
+                            dmg_modifier_check(&mut rng, max_hits[combat_type], accuracies[combat_type], "Other")
                         }
                     };
                     let current_hp = vang_hps_trial[combat_type];
@@ -247,17 +246,14 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
     }
 
     // Compute statistics
-    let mean_ttk = tick_counts.iter().sum::<usize>() as f64 / trials as f64;
+    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
 
     // Build cumulative kill probability
-    let max_ticks = match tick_counts.iter().max().copied() {
-        Some(val) => val,
-        None => return "{\"error\": \"No max tick found\"}".to_string(),
-    };
-    let mut kill_prob = vec![0.0f64; max_ticks + 1];
+    let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
+    let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
     for &ticks in &tick_counts {
         for idx in ticks..=max_ticks {
-            kill_prob[idx] += 1.0;
+            kill_prob[idx as usize] += 1.0;
         }
     }
     for prob in &mut kill_prob {

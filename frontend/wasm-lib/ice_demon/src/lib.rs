@@ -19,7 +19,7 @@ fn get_drain_and_heal(kindling: usize) -> (f64, f64) {
     }
 }
 
-fn chop_simulation<R: Rng>(rng: &mut R, total_ticks: usize, base_hp: f64) -> usize {
+fn chop_simulation<R: Rng>(rng: &mut R, total_ticks: i32, base_hp: f64) -> i32 {
     let initial_delay = 34;
     let mut chop_hp = base_hp;
     let mut kindling_count = 0;
@@ -126,9 +126,9 @@ fn ember_light_kill<R: Rng>(
     mut hp: i32,
     max_hit: i32,
     accuracy: &[f64],
-    attack_speed: usize,
-    mut total_ticks: usize,
-) -> usize {
+    attack_speed: i32,
+    mut total_ticks: i32,
+) -> i32 {
     let mut accuracy_val = accuracy[0];
     let mut attack_tick = 0;
     let mut hit_count = 0;
@@ -175,9 +175,9 @@ fn burning_claws_kill<R: Rng>(
     mut hp: i32,
     max_hit: i32,
     accuracy: f64,
-    attack_speed: usize,
-    mut total_ticks: usize,
-) -> usize {
+    attack_speed: i32,
+    mut total_ticks: i32,
+) -> i32 {
     let mut attack_tick = 0;
     let mut hit_count = 0;
     let mut burn_list: Vec<i32> = Vec::new();
@@ -266,22 +266,22 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
         max_hit = style1.max_hit;
         emberlight_accuracy.push(style1.accuracy);
 
-        emberlight_ice_demon.skills.def = ((base_def as f64 * 0.85).floor() - 1.0) as u32;
+        emberlight_ice_demon.skills.def = ((base_def as f64 * 0.85).floor() - 1.0)  as i32;
 
         let style2 = find_best_combat_style(&player, &emberlight_ice_demon, vec!["melee".to_string()]);
         emberlight_accuracy.push(style2.accuracy);
 
-        emberlight_ice_demon.skills.def = ((base_def as f64 * 0.7).floor() - 2.0) as u32;
+        emberlight_ice_demon.skills.def = ((base_def as f64 * 0.7).floor() - 2.0)  as i32;
 
         let style3 = find_best_combat_style(&player, &emberlight_ice_demon, vec!["melee".to_string()]);
         emberlight_accuracy.push(style3.accuracy);
-        attack_speed = style3.attack_speed as usize;
+        attack_speed = style3.attack_speed;
     } else if burning_claws {
         ensure_weapon_swap(&mut player, "Burning claws", None);
         best_style = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
         accuracy = best_style.accuracy;
         max_hit = best_style.max_hit;
-        attack_speed = best_style.attack_speed as usize;
+        attack_speed = best_style.attack_speed;
     } else {
         return "{\"error\": \"No Emberlight or Burning claws found in inventory\"}".to_string();
     }
@@ -289,13 +289,13 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
     let trials = 100_000;
     let post_chop_delay = 10;
     let death_animation = 4;
-    let mut tick_counts = vec![0usize; trials];
-    let mut ice_demon_pop_time = vec![0usize; trials];
+    let mut tick_counts: Vec<i32> = vec![0; trials];
+    let mut ice_demon_pop_time: Vec<i32> = vec![0; trials];
     let mut rng = rand::thread_rng();
 
     for i in 0..trials {
         let mut total_ticks = 0;
-        let ice_demon_hp = monsters[0].skills.hp as i32;
+        let ice_demon_hp = monsters[0].skills.hp;
         total_ticks = chop_simulation(&mut rng, total_ticks, ice_demon_hp as f64);
         ice_demon_pop_time[i] = total_ticks;
 
@@ -303,7 +303,7 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
             total_ticks = ember_light_kill(
                 &mut rng,
                 ice_demon_hp,
-                max_hit as i32,
+                max_hit,
                 &emberlight_accuracy,
                 attack_speed,
                 total_ticks,
@@ -312,7 +312,7 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
             total_ticks = burning_claws_kill(
                 &mut rng,
                 ice_demon_hp,
-                max_hit as i32,
+                max_hit,
                 accuracy,
                 attack_speed,
                 total_ticks,
@@ -340,7 +340,7 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
     for prob in &mut kill_prob {
         *prob /= trials as f64;
     }
-    let mean_ttk = tick_counts.iter().sum::<usize>() as f64 / trials as f64;
+    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
 
     // Collect results for each monster (if you have more than one)
     
