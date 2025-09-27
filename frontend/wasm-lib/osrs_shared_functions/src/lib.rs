@@ -546,19 +546,22 @@ pub fn apply_burns(hp: i32, burn_list: &mut Vec<i32>) -> i32 {
     });
     new_hp
 }
-
-pub fn dmg_modifier_check(rng: &mut impl Rng, max_hit: i32, weapon: &str) -> i32 {
+pub fn dmg_modifier_check(rng: &mut impl Rng, max_hit: i32, accuracy: f64, weapon: &str) -> i32 {
     let hit = if weapon == "Scythe of vitur" {
-        let hit_1 = rng.gen_range(0..=max_hit).max(1);
-        let hit_2 = (max_hit as f64 * 0.5).floor() as i32;
-        let hit_3 = (max_hit as f64 * 0.25).floor() as i32;
+        let hit_1 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=max_hit).max(1) } else { 0 };
+        let hit_2 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=((max_hit as f64 * 0.5).floor() as i32)) } else { 0 };
+        let hit_3 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=((max_hit as f64 * 0.25).floor() as i32)) } else { 0 };
         hit_1 + hit_2 + hit_3
     } else if weapon == "Voidwaker" {
         let lower_bound = (max_hit as f64 * 0.50).floor() as i32;
         let upper_bound = (max_hit as f64 * 1.50).floor() as i32;
         rng.gen_range(lower_bound..=upper_bound)
     } else {
-        rng.gen_range(0..=max_hit).max(1)
+        if rng.gen::<f64>() < accuracy {
+            rng.gen_range(0..=max_hit).max(1)
+        } else {
+            0
+        }
     };
     hit
 }

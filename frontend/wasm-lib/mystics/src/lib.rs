@@ -73,13 +73,13 @@ fn ensure_item_equipped(
     }
 }
 
-fn generate_barrier_delay(rng: &mut ThreadRng) -> usize {
+fn generate_barrier_delay(rng: &mut ThreadRng) -> i32 {
     // Tiles until barrier distribution with frequencies
     let barrier_tiles = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     let frequencies = [4, 4, 6, 2, 6, 10, 6, 14, 6, 7, 2, 1];
     
     // Calculate total frequency for weighted selection
-    let total_frequency: usize = frequencies.iter().sum();
+    let total_frequency: i32 = frequencies.iter().sum();
     let random_value = rng.gen_range(0..total_frequency);
     
     let mut cumulative_frequency = 0;
@@ -182,7 +182,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
                     break;
                 }
                 if spec_count > 0 {
-                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, "Voidwaker");
+                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker");
                     hp -= hit;
                     spec_count -= 1;
                     tick += 4;

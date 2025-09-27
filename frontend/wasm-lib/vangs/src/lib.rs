@@ -173,7 +173,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
                         spec_count -= 1;
                         if voidwaker {
                             // Voidwaker special: guaranteed hit with 50%-150% damage range
-                            dmg_modifier_check(&mut rng, max_hits["spec"], "Voidwaker")
+                            dmg_modifier_check(&mut rng, max_hits["spec"], accuracies["spec"], "Voidwaker")
                         } else if burning_claws {
                             let (hits, new_burns) = burning_barrage_special(&mut rng, max_hits["spec"], accuracies["spec"]);
                             if initial_burn_tick == 0 && !new_burns.is_empty() && burns.is_empty() {
@@ -196,14 +196,10 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
                         }
                     } else {
                         cooldown = tick + attack_speeds[combat_type];
-                        if rng.gen::<f64>() < accuracies[combat_type] {
-                            if *combat_type == "melee" {
-                                dmg_modifier_check(&mut rng, max_hits[combat_type], weapon_name)
-                            } else {
-                                rng.gen_range(0..=max_hits[combat_type]).max(1)
-                            }
+                        if *combat_type == "melee" {
+                            dmg_modifier_check(&mut rng, max_hits[combat_type], accuracies[combat_type], &weapon_name)
                         } else {
-                            0
+                            dmg_modifier_check(&mut rng, max_hits[combat_type], accuracies[combat_type], "Other")
                         }
                     };
                     let current_hp = vang_hps_trial[combat_type];

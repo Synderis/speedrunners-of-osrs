@@ -18,10 +18,7 @@ fn phase_loop(
         ticks_spent += 1;
         *current_phase_ticks += 1;
         if (*current_phase_ticks - 1) % attack_speed == 0 {
-            let mut hit = 0;
-            if rng.gen::<f64>() < accuracy {
-                hit = dmg_modifier_check(rng, max_hit, weapon_name);
-            };
+            let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name);
             *hp -= hit;
         }
         if *hp <= 0 {
@@ -128,7 +125,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                     best_style_specced.attack_speed,
                     best_style_specced.accuracy,
                     best_style_specced.max_hit,
-                    "Elder maul".to_string().as_str(),
+                    weapon_name,
                     &mut rng,
                 );
             } else {

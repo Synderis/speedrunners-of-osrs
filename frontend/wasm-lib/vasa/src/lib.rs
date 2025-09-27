@@ -81,7 +81,6 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
 
     let mut phase_results: Vec<i32> = vec![0; trials];
     let mut tick_counts: Vec<i32> = vec![0; trials];
-    let death_animation = 4;
     let base_max_attacks_crystal = 70;
     let inventory_items: Vec<SelectedItem> = player
         .inventory
@@ -124,7 +123,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         } else {
             vec![20, 15, rng.gen_range(33..=36)]
         };
-        let overkill = if rng.gen_range(1..=(4 * vasa_attack_speed)) == 1 { 1 } else { 0 };
+        let overkill = if rng.gen_range(1..=(4 * best_style_vasa.attack_speed)) == 1 { 1 } else { 0 };
         let hit_delay = if rng.gen_range(1..=8) < 3 { 1 } else { 2 };
 
         while vasa_hp > 0 {
@@ -140,7 +139,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                     if spec_count == 0 {
                         break;
                     }
-                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, "Voidwaker");
+                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker");
                     spec_dmg += hit;
                     spec_count -= 1;
                     spec_ticks += best_style_spec.attack_speed;
@@ -159,9 +158,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                 healing_ticks += 1;
                 let mut hit_crystal = 0;
                 if (crystal_attack_tick - 1) % best_style_crystal.attack_speed == 0 {
-                    if rng.gen::<f64>() < best_style_crystal.accuracy {
-                        hit_crystal = dmg_modifier_check(&mut rng, best_style_crystal.max_hit, &weapon_name);
-                    }
+                    hit_crystal = dmg_modifier_check(&mut rng, best_style_crystal.max_hit, best_style_crystal.accuracy, &weapon_name);
                 }
                 if (crystal_attack_tick - 1) % 4 == 0 {
                     hit_crystal += rng.gen_range(0..=3);
@@ -185,9 +182,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                         break;
                     }
                     total_ticks += 12;
-                    crystal_attack_tick = 0;
                     crystal_attack_tick_total = 0;
-                    healing_ticks = 0;
                     break;
                 }
                 if crystal_hp <= 0 {
@@ -195,8 +190,6 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                     break;
                 }
             }
-            healing_ticks = 0;
-            crystal_hp = crystal_base_hp;
             crystal_attack_tick = 0;
 
             if vasa_attack_tick > 0 {

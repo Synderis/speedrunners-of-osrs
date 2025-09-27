@@ -25,10 +25,7 @@ fn phase_loop(
             return (*tekton_hp, *current_phase_ticks, hit_count, true); // signal to break outer loop
         }
         if *current_phase_ticks == 1 || (*current_phase_ticks - 1) % attack_speed == 0 {
-            let mut hit = 0;
-            if rng.gen::<f64>() < accuracy {
-                hit = dmg_modifier_check(rng, max_hit, weapon_name);
-            }
+            let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name);
             *tekton_hp -= hit;
             hit_count += 1;
         }
@@ -141,11 +138,11 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         while tekton_hp > 0 {
             if spec_phase {
                 total_ticks += 6;
-                tekton_hp -= dmg_modifier_check(&mut rng, max_hit_spec, "Elder maul");
-                if rng.gen::<f64>() < best_style_spec.accuracy {
+                tekton_hp -= dmg_modifier_check(&mut rng, max_hit_spec, 1.0, "Elder maul");
+                let hit = dmg_modifier_check(&mut rng, max_hit_spec, best_style_spec.accuracy, "Elder maul");
+                tekton_hp -= hit;
+                if hit > 0 {
                     specs_hit += 1;
-                    let hit = dmg_modifier_check(&mut rng, max_hit_spec, "Elder maul");
-                    tekton_hp -= hit;
                 }
                 total_ticks += 6;
                 spec_phase = false;
