@@ -139,14 +139,14 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     // let walk_delay = 24;
     let trials = 100000;
     let death_animation = 4;
-    let mut tick_counts = vec![0usize; trials];
+    let mut tick_counts: Vec<i32> = vec![0; trials];
     let mut rng = rand::thread_rng();
 
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string(), "ranged".to_string()]);
-    let max_hit = best_style.max_hit as i32;
+    let max_hit = best_style.max_hit;
     let accuracy = best_style.accuracy;
-    let attack_speed = best_style.attack_speed as usize;
-    let base_hp = monsters[0].skills.hp as i32;
+    let attack_speed = best_style.attack_speed;
+    let base_hp = monsters[0].skills.hp;
     let mut single_monster_ticks : Vec<f64> = Vec::new();
     let hit_delay = if player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 2 } else { 1 };
     let inventory_items: Vec<SelectedItem> = player
@@ -182,9 +182,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
                     break;
                 }
                 if spec_count > 0 {
-                    let lower_bound = (best_style_spec.max_hit as f64 * 0.5).floor() as i32;
-                    let upper_bound = (best_style_spec.max_hit as f64 * 1.5).floor() as i32;
-                    let hit = rng.gen_range(lower_bound..=upper_bound);
+                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, "Voidwaker");
                     hp -= hit;
                     spec_count -= 1;
                     tick += 4;
@@ -227,7 +225,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     for prob in &mut kill_prob {
         *prob /= trials as f64;
     }
-    let mean_ttk = tick_counts.iter().sum::<usize>() as f64 / trials as f64;
+    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
 
     // Collect results for each monster (if you have more than one)
     let mut total_expected_ticks = 0.0;

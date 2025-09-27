@@ -5,12 +5,13 @@ use osrs_shared_functions::*;
 
 fn phase_loop(
     hp: &mut i32,
-    current_phase_ticks: &mut usize,
-    attack_speed: usize,
+    current_phase_ticks: &mut i32,
+    attack_speed: i32,
     accuracy: f64,
     max_hit: i32,
+    weapon_name: &str,
     rng: &mut ThreadRng,
-) -> usize {
+) -> i32 {
     let mut ticks_spent = 0;
     // Rust translation of the provided Python phase_loop
     while *hp > 0 {
@@ -19,7 +20,7 @@ fn phase_loop(
         if (*current_phase_ticks - 1) % attack_speed == 0 {
             let mut hit = 0;
             if rng.gen::<f64>() < accuracy {
-                hit = rng.gen_range(0..=max_hit).max(1);
+                hit = dmg_modifier_check(rng, max_hit, weapon_name);
             };
             *hp -= hit;
         }
@@ -76,8 +77,10 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some("Elder maul") {
         ensure_weapon_swap(&mut player, &swapped_weapon, swapped_offhand.clone());
     }
+    let weapon_name = &player.gear_sets.melee.selected_weapon.as_ref().unwrap().name;
+
     let mut olm_melee_hand_specced = monsters[1].clone();
-    olm_melee_hand_specced.skills.def = (olm_melee_hand_specced.skills.def as f64 * 0.65) as u32;
+    olm_melee_hand_specced.skills.def = (olm_melee_hand_specced.skills.def as f64 * 0.65) as i32;
     let best_style_specced = find_best_combat_style(&player, &olm_melee_hand_specced, vec!["melee".to_string()]);
     let inventory_items: Vec<SelectedItem> = player
         .inventory
@@ -88,18 +91,18 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     // let burning_claws = inventory_items.iter().any(|item| item.name == "Burning claws");
 
     // Prepare simulation
-    let mut tick_counts = vec![0usize; trials];
-    let mut phase_results: Vec<usize> = Vec::new();
+    let mut tick_counts: Vec<i32> = vec![0; trials];
+    let mut phase_results: Vec<i32> = Vec::new();
 
     let delay_list = vec![22, 38, 39];
 
     for i in 0..trials {
         let mut total_ticks = 0;
-        let mut ranged_hp = monsters[2].skills.hp as i32;
+        let mut ranged_hp = monsters[2].skills.hp;
         let mut current_phase_ticks = 0;
         for phase in 0..3 {
-            let mut mage_hp = monsters[0].skills.hp as i32;
-            let mut melee_hp = monsters[1].skills.hp as i32;
+            let mut mage_hp = monsters[0].skills.hp;
+            let mut melee_hp = monsters[1].skills.hp;
             let mage_ticks;
             let mut melee_ticks;
             let mut spec_hit = false;
@@ -108,31 +111,34 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             mage_ticks = phase_loop(
                 &mut mage_hp,
                 &mut current_phase_ticks,
-                best_style_mage.attack_speed as usize,
+                best_style_mage.attack_speed,
                 best_style_mage.accuracy,
-                best_style_mage.max_hit as i32,
+                best_style_mage.max_hit,
+                "Mage".to_string().as_str(),
                 &mut rng,
             );
             if rng.gen::<f64>() < best_style_spec.accuracy {
                 spec_hit = true;
-                melee_hp -= rng.gen_range(0..=best_style_spec.max_hit as i32).max(1);
+                melee_hp -= rng.gen_range(0..=best_style_spec.max_hit).max(1);
             };
             if spec_hit {
                 melee_ticks = phase_loop(
                     &mut melee_hp,
                     &mut current_phase_ticks,
-                    best_style_specced.attack_speed as usize,
+                    best_style_specced.attack_speed,
                     best_style_specced.accuracy,
-                    best_style_specced.max_hit as i32,
+                    best_style_specced.max_hit,
+                    "Elder maul".to_string().as_str(),
                     &mut rng,
                 );
             } else {
                 melee_ticks = phase_loop(
                     &mut melee_hp,
                     &mut current_phase_ticks,
-                    best_style_melee.attack_speed as usize,
+                    best_style_melee.attack_speed,
                     best_style_melee.accuracy,
-                    best_style_melee.max_hit as i32,
+                    best_style_melee.max_hit,
+                    weapon_name,
                     &mut rng,
                 );
             };
@@ -149,9 +155,10 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
         let mut ranged_ticks = phase_loop(
             &mut ranged_hp,
             &mut current_phase_ticks,
-            best_style_ranged.attack_speed as usize,
+            best_style_ranged.attack_speed,
             best_style_ranged.accuracy,
-            best_style_ranged.max_hit as i32,
+            best_style_ranged.max_hit,
+            "Ranged".to_string().as_str(),
             &mut rng,
         );
         if zaryte_crossbow {
@@ -171,17 +178,14 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     }
 
     // Compute statistics
-    let mean_ttk = tick_counts.iter().sum::<usize>() as f64 / trials as f64;
+    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
 
     // Build cumulative kill probability
-    let max_ticks = match tick_counts.iter().max().copied() {
-        Some(val) => val,
-        None => return "{\"error\": \"No max tick found\"}".to_string(),
-    };
-    let mut kill_prob = vec![0.0f64; max_ticks + 1];
+    let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
+    let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
     for &ticks in &tick_counts {
         for idx in ticks..=max_ticks {
-            kill_prob[idx] += 1.0;
+            kill_prob[idx as usize] += 1.0;
         }
     }
     for prob in &mut kill_prob {
