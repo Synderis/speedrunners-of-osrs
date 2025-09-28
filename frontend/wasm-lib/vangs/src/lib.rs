@@ -123,7 +123,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
         let mut current_attack_phase_tick = 0;
         let mut last_vang_attacked = String::new();
         let spawn_delay = rng.gen_range(1..=4) + 6;
-        let mut overkill = if rng.gen_range(1..=4) == 1 { 1 } else { 0 };
+
 
         loop {
             // Exit immediately if all vangs are dead
@@ -227,9 +227,12 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
             }
             tick += 1;
         }
-        if &last_vang_attacked == "melee" {
-            overkill = 1;
-        }
+        let overkill = if &last_vang_attacked == "melee" {
+            1
+        } else {
+            let range_max = if attack_speeds[last_vang_attacked] > 4 { 4 * attack_speeds[last_vang_attacked] } else { 4 };
+            if rng.gen_range(1..=range_max) == 1 { 1 } else { 0 }
+        };
         let hit_delay = hit_delay_map[&last_vang_attacked];
         tick += walk_delay + spawn_delay + hit_delay + death_animation - overkill;
         if tick % 4 != 0 {

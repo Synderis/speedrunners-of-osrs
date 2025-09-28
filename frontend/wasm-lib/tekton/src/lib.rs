@@ -76,8 +76,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     let mut tekton_initial = monsters[0].clone();
     let mut tekton_initial_enraged = monsters[1].clone();
 
-    let first_spec_def_normal = (tekton_initial.skills.def as f64 * 0.65) as i32;
-    tekton_initial.skills.def = (tekton_initial.skills.def as f64 * 0.65) as i32;
+    let first_spec_def_normal = (tekton_initial.skills.def as f64 * 0.65).ceil() as i32;
+    tekton_initial.skills.def = (tekton_initial.skills.def as f64 * 0.65).ceil() as i32;
     let best_style_spec = find_best_combat_style(&player, &tekton_initial, vec!["melee".to_string()]);
     let max_hit_spec = best_style_spec.max_hit;
 
@@ -86,23 +86,23 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     }
     let weapon_name = &player.gear_sets.melee.selected_weapon.as_ref().unwrap().name;
 
-    let first_spec_def_enraged = (tekton_initial_enraged.skills.def as f64 * 0.65) as i32;
-    tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * 0.65) as i32;
+    let first_spec_def_enraged = (tekton_initial_enraged.skills.def as f64 * 0.65).ceil() as i32;
+    tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * 0.65).ceil() as i32;
 
-    tekton_initial.skills.def = (tekton_initial.skills.def as f64 * 0.95) as i32;
+    tekton_initial.skills.def = (tekton_initial.skills.def as f64 * 0.95).ceil() as i32;
     let normal_1_spec_best_style = find_best_combat_style(&player, &tekton_initial, vec!["melee".to_string()]);
     tekton_initial.skills.def = first_spec_def_normal;
-    tekton_initial.skills.def = (tekton_initial.skills.def as f64 * 0.65) as i32;
+    tekton_initial.skills.def = (tekton_initial.skills.def as f64 * 0.65).ceil() as i32;
     let normal_2_spec_best_style = find_best_combat_style(&player, &tekton_initial, vec!["melee".to_string()]);
     let best_styles_normal = vec![
         normal_1_spec_best_style.clone(),
         normal_2_spec_best_style.clone(),
     ];
 
-    tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * 0.95) as i32;
+    tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * 0.95).ceil() as i32;
     let enraged_1_spec_best_style = find_best_combat_style(&player, &tekton_initial_enraged, vec!["melee".to_string()]);
     tekton_initial_enraged.skills.def = first_spec_def_enraged;
-    tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * 0.65) as i32;
+    tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * 0.65).ceil() as i32;
     let enraged_2_spec_best_style = find_best_combat_style(&player, &tekton_initial_enraged, vec!["melee".to_string()]);
     let best_styles_enraged = vec![
         enraged_1_spec_best_style.clone(),

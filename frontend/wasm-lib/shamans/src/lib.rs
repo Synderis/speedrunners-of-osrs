@@ -128,7 +128,8 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
 
     for i in 0..trials {
         let mut tick = 0;
-        let overkill = if rng.gen_range(1..=(4 * attack_speed)) == 1 { 1 } else { 0 };
+        let range_max = if attack_speed > 4 { 4 * attack_speed } else { 4 };
+        let overkill = if rng.gen_range(1..=range_max) == 1 { 1 } else { 0 };
         for _monster in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
