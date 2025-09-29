@@ -16,6 +16,7 @@ import { cmMonsters } from '../data/monsterStats';
 import { calculateDPSWithObjectsShamans } from '../loaders/shamansWasm';
 import { calculateDPSWithObjectsMutta } from '../loaders/muttaWasm';
 import { calculateDPSWithObjectsVangs } from '../loaders/vangsWasm';
+import { calculateDPSWithObjectsThieving } from '../loaders/thievingWasm';
 import ResultPlot from './ResultPlot';
 import ConfigColumns from './ConfigColumns';
 import { calculateDPSWithObjectsOlm } from '../loaders/olmWasm';
@@ -84,7 +85,7 @@ const RAID_FLOORS: Floor[] = [
       { roomId: 'lizardman_shamans', name: 'Shamans' },
       { roomId: 'post_shamans_delay', name: 'Post Shamans', isDelay: true, delayTicks: 36 },
       { roomId: 'vangs', name: 'Vanguards' },
-      { roomId: 'thieving', name: 'Thieving', isDelay: true, delayTicks: 183 },
+      { roomId: 'thieving', name: 'Thieving' },
       { roomId: 'vespula', name: 'Vespula' },
       { roomId: 'tightrope', name: 'Tightrope', isDelay: true, delayTicks: 77 },
       { roomId: 'post_tightrope_delay', name: 'Post Tightrope', isDelay: true, delayTicks: 18 },
@@ -186,7 +187,8 @@ const wasmModelLoaders: Record<string, (player: any, monster: any) => Promise<an
   'muttadile': calculateDPSWithObjectsMutta,
   "olm": calculateDPSWithObjectsOlm,
   "vangs": calculateDPSWithObjectsVangs,
-  "ice_demon": calculateDPSWithObjectsIceDemon
+  "ice_demon": calculateDPSWithObjectsIceDemon,
+  "thieving": calculateDPSWithObjectsThieving
 };
 
 // Add this helper function after the existing helper functions (around line 200)
@@ -360,8 +362,7 @@ const calculateCombinedDistribution = (
       if (combinedPMF[t] > 0 || (combinedData.length > 0 && cumulativeProb !== combinedData[combinedData.length - 1].dps)) {
         combinedData.push({
           time: t,
-          dps: Math.min(1, Math.max(0, cumulativeProb)), // Ensure probability is between 0 and 1
-          accuracy: 0
+          dps: Math.min(1, Math.max(0, cumulativeProb)) // Ensure probability is between 0 and 1
         });
       }
     }
@@ -677,12 +678,20 @@ const PlotSection: React.FC<PlotSectionProps> = ({
         }
         // Get the full monster objects for this room
         const monsters = getMonstersByRoom(room);
-        // Always create a shallow copy of the room with the correct methods array
         const selectedMethodsForRoom = selectedMethods && selectedMethods[room.id];
-        let filteredMethods = room.methods;
+        let filteredMethods: string[] = [];
+
+// Only include methods if they are explicitly selected
         if (selectedMethodsForRoom && Array.isArray(selectedMethodsForRoom) && selectedMethodsForRoom.length > 0) {
           filteredMethods = selectedMethodsForRoom;
+        } else if (room.methods && room.methods.length === 1 && !selectedMethodsForRoom) {
+          // Special case: if there's only one method and no explicit selection, include it
+          filteredMethods = room.methods;
+        } else {
+          // No methods selected - send empty array
+          filteredMethods = [];
         }
+
         const roomPayload = { ...room, methods: filteredMethods, monsters };
         console.log('Sending to WASM:', { room: roomPayload, monsters });
         const result = await loader(playerData, roomPayload);

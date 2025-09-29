@@ -230,7 +230,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
         let overkill = if &last_vang_attacked == "melee" {
             1
         } else {
-            let range_max = if attack_speeds[last_vang_attacked] > 4 { 4 * attack_speeds[last_vang_attacked] } else { 4 };
+            let range_max = if attack_speeds[&last_vang_attacked] > 4 { 4 * attack_speeds[&last_vang_attacked] } else { 4 };
             if rng.gen_range(1..=range_max) == 1 { 1 } else { 0 }
         };
         let hit_delay = hit_delay_map[&last_vang_attacked];

@@ -92,20 +92,20 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    /* 0.75rem * 0.8 */
     padding: 0.6rem 0.8rem;
-    /* 0.75rem 1rem * 0.8 */
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 6.4px;
-    /* 8px * 0.8 */
     transition: all 0.3s ease;
     position: relative;
+    cursor: pointer;
 }
 
 .selected-room-item:hover {
     background: var(--bg-tertiary);
-    border-color: var(--accent-primary);
+    border-color: var(--accent-tertiary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .selected-room-item-image {
@@ -123,35 +123,6 @@
     color: var(--text-primary);
     font-weight: 500;
     font-size: 0.95rem;
-}
-
-.remove-room-btn {
-    background: #dc2626;
-    color: white;
-    border: none;
-    border-radius: 4.8px;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-left: 0.5rem;
-    line-height: 1;
-    padding: 0;
-    flex-shrink: 0;
-}
-
-.remove-room-btn svg {
-    width: 10px;
-    height: 10px;
-    flex-shrink: 0;
-}
-
-.remove-room-btn:hover {
-    background: #b91c1c;
-    transform: scale(1.1);
 }
 
 .no-rooms-selected {

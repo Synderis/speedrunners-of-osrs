@@ -939,8 +939,8 @@ export const rooms: Room[] = [
         image: '/rooms/250px-Chest_(Chambers_of_Xeric,_closed).webp',
         description: 'High-level agility course',
         monsters: [],
-        units: 'Keystones',
-        methods: []
+        units: 'Chests',
+        methods: ['Lockpick']
     },
     {
         id: 'vespula',

@@ -320,6 +320,7 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                                                 <motion.div
                                                     key={room.id}
                                                     className={`selected-room-item ${room.id ? 'has-monster' : 'no-monster'}`}
+                                                    onClick={() => removeRoom(room.id)}
                                                     {...slideInOut}
                                                     {...hoverEffects.cardHover}
                                                 >
@@ -337,15 +338,7 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <button
-                                                        className="remove-room-btn"
-                                                        onClick={() => removeRoom(room.id)}
-                                                        aria-label={`Remove ${room.name}`}
-                                                    >
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M18 6L6 18M6 6L18 18" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                                                        </svg>
-                                                    </button>
+                                                    {/* Remove the button entirely */}
                                                 </motion.div>
                                             ))}
                                         </AnimatePresence>
