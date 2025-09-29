@@ -7,7 +7,7 @@ import PlotSection from './components/PlotSection';
 import FloatingBackground from './components/FloatingBackground';
 import { ThemeProvider } from './context/ThemeContext';
 // import { fetchMonstersFromWiki } from './services/monsterServiceTemp';
-import { fetchEquipmentFromWiki, fetchImageMapFromSupabase } from './services/gearServiceTemp';
+import { fetchEquipmentFromWiki, fetchImageMapFromSupabase, fetchEquipmentFromLocalJson } from './services/gearServiceTemp';
 import type { GearSets, CombatStats, Equipment, InventoryItem } from './types/player';
 import type { SelectedRoomWithMonster } from './components/RoomSelection';
 import './App.css';
@@ -41,6 +41,7 @@ function App() {
   const [selectedRooms, setSelectedRooms] = useState<SelectedRoomWithMonster[]>([]);
   const [selectedMethods, setSelectedMethods] = useState<{ [roomId: string]: string[] }>({});
   const [selectedPreset, setSelectedPreset] = useState<string>('');
+  const [roomSpecs, setRoomSpecs] = useState<{ [roomId: string]: { weapon: string; count: number } }>({});
 
   useEffect(() => {
     // Prevent browser from restoring scroll position
@@ -146,6 +147,9 @@ function App() {
                 selectedMethods={selectedMethods}
                 setSelectedMethods={setSelectedMethods}
                 selectedPreset={selectedPreset}
+                selectedInventoryItems={selectedInventoryItems} // <-- Pass it here
+                roomSpecs={roomSpecs} // <-- Pass this
+                setRoomSpecs={setRoomSpecs} // <-- And this
               />
               <PlotSection
                 gearSets={gearSets}
@@ -153,6 +157,7 @@ function App() {
                 selectedRooms={selectedRooms}
                 selectedInventoryItems={selectedInventoryItems}
                 selectedMethods={selectedMethods}
+                roomSpecs={roomSpecs}
               />
             </>
           )}
@@ -164,7 +169,8 @@ function App() {
 
 async function loadEquipmentWithImages(): Promise<Equipment[]> {
   const [equipment, imageMap] = await Promise.all([
-    fetchEquipmentFromWiki(),
+    // fetchEquipmentFromWiki(),
+    fetchEquipmentFromLocalJson(),
     fetchImageMapFromSupabase()
   ]);
   return equipment.map(eq => ({

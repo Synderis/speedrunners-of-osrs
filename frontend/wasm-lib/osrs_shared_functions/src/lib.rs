@@ -1,17 +1,16 @@
-use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use rand::Rng;
 
-#[wasm_bindgen]
-extern "C" {
-    // fn alert(s: &str);
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
+// #[wasm_bindgen]
+// extern "C" {
+//     // fn alert(s: &str);
+//     #[wasm_bindgen(js_namespace = console)]
+//     fn log(s: &str);
+// }
 
-macro_rules! console_log {
-    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-}
+// macro_rules! console_log {
+//     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+// }
 
 fn tbow_scaling(magic: u32, mode: &str) -> f64 {
     let (factor, base, clamp) = if mode == "accuracy" {
@@ -48,12 +47,12 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
 
         if let Some(weapon) = selected_weapon {
             if let Some(styles) = &weapon.weapon_styles {
-                console_log!(
-                    "Evaluating {} combat styles for {} weapon: {}",
-                    styles.len(),
-                    combat_type,
-                    weapon.name
-                );
+                // console_log!(
+                //     "Evaluating {} combat styles for {} weapon: {}",
+                //     styles.len(),
+                //     combat_type,
+                //     weapon.name
+                // );
                 for style in styles {
                     let (max_hit, _effective_level) = calculate_max_hit_for_style(player, monster, &combat_type, style, gear_stats);
                     let (accuracy, effective_level, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, &combat_type, style, gear_stats);
@@ -65,22 +64,22 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                     };
                     let effective_strength = 0; // Not used for mage/ranged
                     let effective_attack = effective_level;
-                    console_log!(
-                        "Style: {} ({}), effective_level: {}, max_attack_roll: {:.2}%, max_defence_roll: {:.2}%",
-                        style.combat_style,
-                        style.attack_type,
-                        effective_level,
-                        max_attack_roll,
-                        max_defence_roll
-                    );
-                    console_log!(
-                        "Style: {} ({}), Max Hit: {}, Accuracy: {:.2}%, Effective DPS: {:.2}",
-                        style.combat_style,
-                        style.attack_type,
-                        max_hit,
-                        accuracy * 100.0,
-                        effective_dps
-                    );
+                    // console_log!(
+                    //     "Style: {} ({}), effective_level: {}, max_attack_roll: {:.2}%, max_defence_roll: {:.2}%",
+                    //     style.combat_style,
+                    //     style.attack_type,
+                    //     effective_level,
+                    //     max_attack_roll,
+                    //     max_defence_roll
+                    // );
+                    // console_log!(
+                    //     "Style: {} ({}), Max Hit: {}, Accuracy: {:.2}%, Effective DPS: {:.2}",
+                    //     style.combat_style,
+                    //     style.attack_type,
+                    //     max_hit,
+                    //     accuracy * 100.0,
+                    //     effective_dps
+                    // );
                     let style_result = StyleResult {
                         gear_type: combat_type.clone(),
                         combat_style: style.combat_style.clone(),
@@ -104,12 +103,12 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
         }
     }
     let result = best_style.unwrap();
-    console_log!(
-        "🏆 Best combat style selected: {} ({}) with {:.2} effective DPS",
-        result.combat_style,
-        result.attack_type,
-        result.effective_dps
-    );
+    // console_log!(
+    //     "🏆 Best combat style selected: {} ({}) with {:.2} effective DPS",
+    //     result.combat_style,
+    //     result.attack_type,
+    //     result.effective_dps
+    // );
     result
 }
 

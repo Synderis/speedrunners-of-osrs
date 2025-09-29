@@ -1,14 +1,17 @@
-import { calculateDPSWithObjectsTekton } from '../loaders/tektonWasm';
-import { calculateDPSWithObjectsVasa } from '../loaders/vasaWasm';
-import { calculateDPSWithObjectsVespula } from '../loaders/vespulaWasm';
-import { calculateDPSWithObjectsMystics } from '../loaders/mysticsWasm';
-import { calculateDPSWithObjectsShamans } from '../loaders/shamansWasm';
-import { calculateDPSWithObjectsMutta } from '../loaders/muttaWasm';
-import { calculateDPSWithObjectsVangs } from '../loaders/vangsWasm';
-import { calculateDPSWithObjectsThieving } from '../loaders/thievingWasm';
-import { calculateDPSWithObjectsOlm } from '../loaders/olmWasm';
-import { calculateDPSWithObjectsIceDemon } from '../loaders/iceDemonWasm';
-import { calculateDPSWithObjectsGuardians } from '../loaders/guardiansWasm';
+import { 
+    calculateDPSWithObjectsTekton,
+    calculateDPSWithObjectsIceDemon, 
+    calculateDPSWithObjectsShamans, 
+    calculateDPSWithObjectsVangs, 
+    calculateDPSWithObjectsThieving, 
+    calculateDPSWithObjectsVespula, 
+    calculateDPSWithObjectsGuardians, 
+    calculateDPSWithObjectsVasa, 
+    calculateDPSWithObjectsMystics, 
+    calculateDPSWithObjectsMutta, 
+    calculateDPSWithObjectsOlm 
+} from '../loaders/coxCMWasm';
+
 
 export const defaultSlotImages = {
     weapon: '/gear/weapon.webp',

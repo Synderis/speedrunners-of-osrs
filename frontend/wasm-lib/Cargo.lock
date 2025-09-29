@@ -21,6 +21,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2fd1289c04a9ea8cb22300a459a72a385d7c73d3259e2ed7dcb2af674838cfa9"
 
 [[package]]
+name = "cm_cox"
+version = "0.1.0"
+dependencies = [
+ "console_error_panic_hook",
+ "getrandom",
+ "osrs_shared_functions",
+ "osrs_shared_types",
+ "rand",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "web-sys",
+ "wee_alloc",
+]
+
+[[package]]
 name = "console_error_panic_hook"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -41,38 +57,6 @@ dependencies = [
  "libc",
  "wasi",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "guardians"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "getrandom",
- "osrs_shared_functions",
- "osrs_shared_types",
- "rand",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "web-sys",
- "wee_alloc",
-]
-
-[[package]]
-name = "ice_demon"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "getrandom",
- "osrs_shared_functions",
- "osrs_shared_types",
- "rand",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "web-sys",
- "wee_alloc",
 ]
 
 [[package]]
@@ -114,54 +98,6 @@ name = "memory_units"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8452105ba047068f40ff7093dd1d9da90898e63dd61736462e9cdda6a90ad3c3"
-
-[[package]]
-name = "mutta"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "getrandom",
- "osrs_shared_functions",
- "osrs_shared_types",
- "rand",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "web-sys",
- "wee_alloc",
-]
-
-[[package]]
-name = "mystics"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "getrandom",
- "osrs_shared_functions",
- "osrs_shared_types",
- "rand",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "web-sys",
- "wee_alloc",
-]
-
-[[package]]
-name = "olm"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "getrandom",
- "osrs_shared_functions",
- "osrs_shared_types",
- "rand",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "web-sys",
- "wee_alloc",
-]
 
 [[package]]
 name = "once_cell"
@@ -291,22 +227,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "shamans"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "getrandom",
- "osrs_shared_functions",
- "osrs_shared_types",
- "rand",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "web-sys",
- "wee_alloc",
-]
-
-[[package]]
 name = "syn"
 version = "2.0.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -318,90 +238,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "tekton"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "getrandom",
- "osrs_shared_functions",
- "osrs_shared_types",
- "rand",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "web-sys",
- "wee_alloc",
-]
-
-[[package]]
-name = "thieving"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "getrandom",
- "osrs_shared_functions",
- "osrs_shared_types",
- "rand",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "web-sys",
- "wee_alloc",
-]
-
-[[package]]
 name = "unicode-ident"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5a5f39404a5da50712a4c1eecf25e90dd62b613502b7e925fd4e4d19b5c96512"
-
-[[package]]
-name = "vangs"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "getrandom",
- "osrs_shared_functions",
- "osrs_shared_types",
- "rand",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "web-sys",
- "wee_alloc",
-]
-
-[[package]]
-name = "vasa"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "getrandom",
- "osrs_shared_functions",
- "osrs_shared_types",
- "rand",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "web-sys",
- "wee_alloc",
-]
-
-[[package]]
-name = "vespula"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "getrandom",
- "osrs_shared_functions",
- "osrs_shared_types",
- "rand",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "web-sys",
- "wee_alloc",
-]
 
 [[package]]
 name = "wasi"

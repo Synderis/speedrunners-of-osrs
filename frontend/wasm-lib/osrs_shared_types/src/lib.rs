@@ -222,9 +222,17 @@ pub struct Room {
     pub id: String,
     pub name: String,
     pub image: Option<String>,
-    pub description: Option<String>,
     pub monsters: Vec<Monster>,
+    pub units: Option<String>,
     pub methods: Vec<String>,
+    #[serde(rename = "specialAttacks")]
+    pub special_attacks: Option<Vec<SpecialAttack>>,
+}
+
+#[derive(Deserialize)]
+pub struct SpecialAttack {
+    pub name: String,
+    pub count: i32,
 }
 
 impl SelectedItem {

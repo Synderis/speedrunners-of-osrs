@@ -913,7 +913,7 @@ export const RAID_FLOORS: Floor[] = [
         name: 'Complete Raid',
         rooms: [
             { roomId: 'tekton', name: 'Tekton' },
-            { roomId: 'crabs_delay', name: 'Crabs', isDelay: true, delayTicks: 89 },
+            { roomId: 'crabs', name: 'Crabs', isDelay: true, delayTicks: 89 },
             { roomId: 'ice_demon', name: 'Ice Demon' },
             { roomId: 'lizardman_shamans', name: 'Shamans' },
             { roomId: 'post_shamans_delay', name: 'Post Shamans', isDelay: true, delayTicks: 36 },
@@ -936,10 +936,13 @@ export interface Room {
     id: string;
     name: string;
     image: string;
-    description?: string;
     monsters?: string[];
     units: string;
     methods: string[];
+    specialAttacks?: {
+        name: string;
+        count: number;
+    }[];
     methodCategories?: {
         [categoryName: string]: {
             methods: string[];
@@ -953,10 +956,10 @@ export const rooms: Room[] = [
         id: 'tekton',
         name: 'Tekton',
         image: '/rooms/220px-Tekton.webp',
-        description: 'High-level boss encounter',
         monsters: ['7545', '7544'],
         units: 'Anvils',
         methods: ['Tekton Long Lure', 'Tekton Medium Lure', 'Tekton Short Lure', 'Pre-Veng'],
+        specialAttacks: [],
         methodCategories: {
             'Lure Method': {
                 methods: ['Tekton Long Lure', 'Tekton Medium Lure', 'Tekton Short Lure'],
@@ -968,20 +971,10 @@ export const rooms: Room[] = [
             }
         }
     },
-    // {
-    //     id: 'crabs',
-    //     name: 'Crabs',
-    //     image: '/rooms/150px-Jewelled_Crab.webp',
-    //     description: 'Low-level training area',
-    //     monsters: ['crabs'],
-    //     units: 'Crabs',
-    //     methods: []
-    // },
     {
         id: 'ice_demon',
         name: 'Ice Demon',
         image: '/rooms/170px-Ice_demon.webp',
-        description: 'High-level boss encounter',
         monsters: ['7585'],
         units: 'Pop Time',
         methods: []
@@ -990,7 +983,6 @@ export const rooms: Room[] = [
         id: 'lizardman_shamans',
         name: 'Lizardman Shamans',
         image: '/rooms/200px-Lizardman_shaman.webp',
-        description: 'High-level boss encounter',
         monsters: ['7573', '7573'],
         units: 'Lizardman Shamans',
         methods: ["Shamans Slayer Task"]
@@ -999,7 +991,6 @@ export const rooms: Room[] = [
         id: 'vangs',
         name: 'Vanguards',
         image: '/rooms/280px-Vanguard_(magic).webp',
-        description: 'God Wars Dungeon - Zamorak',
         monsters: ['7527', '7528', '7529'],
         units: 'Digs',
         methods: []
@@ -1008,7 +999,6 @@ export const rooms: Room[] = [
         id: 'thieving',
         name: 'Thieving',
         image: '/rooms/250px-Chest_(Chambers_of_Xeric,_closed).webp',
-        description: 'High-level agility course',
         monsters: [],
         units: 'Chests',
         methods: ['Lockpick']
@@ -1017,16 +1007,14 @@ export const rooms: Room[] = [
         id: 'vespula',
         name: 'Vespula',
         image: '/rooms/280px-Vespula.webp',
-        description: 'Barrows Brothers minigame',
         monsters: ['7533'],
         units: 'Portals',
-        methods: []
+        methods: ["Vespula Pots Skip"]
     },
     {
         id: 'guardians',
         name: 'Guardians',
         image: '/rooms/guardians.png',
-        description: 'High-level boss encounter',
         monsters: ['7570', '7570'],
         units: 'Guardians',
         methods: []
@@ -1035,16 +1023,14 @@ export const rooms: Room[] = [
         id: 'vasa',
         name: 'Vasa',
         image: '/rooms/250px-Vasa_Nistirio.webp',
-        description: 'God Wars Dungeon - Zamorak',
         monsters: ['7566', '7568'],
         units: 'Crystals',
-        methods: ['Flame Skip']
+        methods: ['Vasa Flame Skip']
     },
     {
         id: 'mystics',
         name: 'Mystics',
         image: '/rooms/mystics.png',
-        description: 'Barrows Brothers minigame',
         monsters: ['7604', '7604', '7604'],
         units: 'Mystics',
         methods: ['Mystics Slayer Task']
@@ -1053,7 +1039,6 @@ export const rooms: Room[] = [
         id: 'muttadile',
         name: 'Muttadile',
         image: '/rooms/250px-Muttadile.webp',
-        description: 'High-level boss encounter',
         monsters: ['7562', '7561'],
         units: 'Muttadiles',
         methods: []
@@ -1062,7 +1047,6 @@ export const rooms: Room[] = [
         id: 'olm',
         name: 'Olm',
         image: '/rooms/300px-Great_Olm.webp',
-        description: 'High-level boss encounter',
         monsters: ['7553', '7555', '7554'],
         units: 'Olm',
         methods: []
