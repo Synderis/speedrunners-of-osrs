@@ -58,7 +58,7 @@ const RAID_FLOORS: Floor[] = [
     name: 'Floor 2',
     rooms: [
       { roomId: 'vangs', name: 'Vanguards' },
-      { roomId: 'thieving', name: 'Thieving', isDelay: true, delayTicks: 89 }, // Not implemented yet
+      { roomId: 'thieving', name: 'Thieving'}, // Not implemented yet
       { roomId: 'vespula', name: 'Vespula' },
       { roomId: 'tightrope', name: 'Tightrope', isDelay: true, delayTicks: 77 },
       { roomId: 'post_tightrope_delay', name: 'Post Tightrope', isDelay: true, delayTicks: 18 }
