@@ -98,7 +98,7 @@ export const gearSetPresets: GearSetPreset[] = [
             { id: "ice_demon" },
             { id: "lizardman_shamans", method: "Shamans Slayer Task" },
             { id: "vangs" },
-            { id: "thieving" },
+            { id: "thieving", method: "Lockpick" },
             { id: "vespula" },
             { id: "guardians" },
             { id: "vasa", method: "Flame Skip" },

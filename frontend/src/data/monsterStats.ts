@@ -861,6 +861,77 @@ export const cmMonsters: Monster[] = [
     }
 ];
 
+export interface FloorRoom {
+    roomId: string;
+    name: string;
+    isDelay?: boolean;
+    delayTicks?: number;
+}
+
+export interface Floor {
+    id: string;
+    name: string;
+    rooms: FloorRoom[];
+}
+
+export const RAID_FLOORS: Floor[] = [
+    {
+        id: 'floor1',
+        name: 'Floor 1',
+        rooms: [
+            { roomId: 'tekton', name: 'Tekton' },
+            { roomId: 'crabs_delay', name: 'Crabs', isDelay: true, delayTicks: 89 },
+            { roomId: 'ice_demon', name: 'Ice Demon' },
+            { roomId: 'lizardman_shamans', name: 'Shamans' },
+            { roomId: 'post_shamans_delay', name: 'Post Shamans', isDelay: true, delayTicks: 36 }
+        ]
+    },
+    {
+        id: 'floor2',
+        name: 'Floor 2',
+        rooms: [
+            { roomId: 'vangs', name: 'Vanguards' },
+            { roomId: 'thieving', name: 'Thieving' }, // Not implemented yet
+            { roomId: 'vespula', name: 'Vespula' },
+            { roomId: 'tightrope', name: 'Tightrope', isDelay: true, delayTicks: 77 },
+            { roomId: 'post_tightrope_delay', name: 'Post Tightrope', isDelay: true, delayTicks: 18 }
+        ]
+    },
+    {
+        id: 'floor3',
+        name: 'Floor 3',
+        rooms: [
+            { roomId: 'guardians', name: 'Guardians' },
+            { roomId: 'vasa', name: 'Vasa' },
+            { roomId: 'mystics', name: 'Mystics' },
+            { roomId: 'muttadile', name: 'Muttadile' },
+            { roomId: 'post_mutta_delay', name: 'Post Muttadile', isDelay: true, delayTicks: 40 }
+        ]
+    },
+    {
+        id: 'raid_total',
+        name: 'Complete Raid',
+        rooms: [
+            { roomId: 'tekton', name: 'Tekton' },
+            { roomId: 'crabs_delay', name: 'Crabs', isDelay: true, delayTicks: 89 },
+            { roomId: 'ice_demon', name: 'Ice Demon' },
+            { roomId: 'lizardman_shamans', name: 'Shamans' },
+            { roomId: 'post_shamans_delay', name: 'Post Shamans', isDelay: true, delayTicks: 36 },
+            { roomId: 'vangs', name: 'Vanguards' },
+            { roomId: 'thieving', name: 'Thieving' },
+            { roomId: 'vespula', name: 'Vespula' },
+            { roomId: 'tightrope', name: 'Tightrope', isDelay: true, delayTicks: 77 },
+            { roomId: 'post_tightrope_delay', name: 'Post Tightrope', isDelay: true, delayTicks: 18 },
+            { roomId: 'guardians', name: 'Guardians' },
+            { roomId: 'vasa', name: 'Vasa' },
+            { roomId: 'mystics', name: 'Mystics' },
+            { roomId: 'muttadile', name: 'Muttadile' },
+            { roomId: 'post_mutta_delay', name: 'Post Muttadile', isDelay: true, delayTicks: 40 },
+            { roomId: 'olm', name: 'Olm' }
+        ]
+    }
+];
+
 export interface Room {
     id: string;
     name: string;

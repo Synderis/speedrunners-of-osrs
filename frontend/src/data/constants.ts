@@ -1,3 +1,15 @@
+import { calculateDPSWithObjectsTekton } from '../loaders/tektonWasm';
+import { calculateDPSWithObjectsVasa } from '../loaders/vasaWasm';
+import { calculateDPSWithObjectsVespula } from '../loaders/vespulaWasm';
+import { calculateDPSWithObjectsMystics } from '../loaders/mysticsWasm';
+import { calculateDPSWithObjectsShamans } from '../loaders/shamansWasm';
+import { calculateDPSWithObjectsMutta } from '../loaders/muttaWasm';
+import { calculateDPSWithObjectsVangs } from '../loaders/vangsWasm';
+import { calculateDPSWithObjectsThieving } from '../loaders/thievingWasm';
+import { calculateDPSWithObjectsOlm } from '../loaders/olmWasm';
+import { calculateDPSWithObjectsIceDemon } from '../loaders/iceDemonWasm';
+import { calculateDPSWithObjectsGuardians } from '../loaders/guardiansWasm';
+
 export const defaultSlotImages = {
     weapon: '/gear/weapon.webp',
     shield: '/gear/offhand.webp',
@@ -46,4 +58,26 @@ export const miscIcons = {
     light: '/gear/light.webp',
     standard: '/gear/standard.webp',
     heavy: '/gear/heavy.webp'
+};
+
+export const GEAR_TYPES = ['melee', 'mage', 'ranged'] as const;
+
+export const DEFAULT_GEAR_STATS = {
+    bonuses: { str: 0, ranged_str: 0, magic_str: 0, prayer: 0 },
+    offensive: { stab: 0, slash: 0, crush: 0, magic: 0, ranged: 0 },
+    defensive: { stab: 0, slash: 0, crush: 0, magic: 0, ranged: 0 }
+};
+
+export const wasmModelLoaders: Record<string, (player: any, monster: any) => Promise<any>> = {
+    'tekton': calculateDPSWithObjectsTekton,
+    'vasa': calculateDPSWithObjectsVasa,
+    'guardians': calculateDPSWithObjectsGuardians,
+    'vespula': calculateDPSWithObjectsVespula,
+    'mystics': calculateDPSWithObjectsMystics,
+    'lizardman_shamans': calculateDPSWithObjectsShamans,
+    'muttadile': calculateDPSWithObjectsMutta,
+    "olm": calculateDPSWithObjectsOlm,
+    "vangs": calculateDPSWithObjectsVangs,
+    "ice_demon": calculateDPSWithObjectsIceDemon,
+    "thieving": calculateDPSWithObjectsThieving
 };
