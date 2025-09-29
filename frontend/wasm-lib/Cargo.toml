@@ -6,6 +6,7 @@ members = [
     "vasa",
     "guardians",
     "vespula",
+    "thieving",
     "mystics",
     "shamans",
     "mutta",

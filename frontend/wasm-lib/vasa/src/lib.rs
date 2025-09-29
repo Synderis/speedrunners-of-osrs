@@ -123,7 +123,8 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         } else {
             vec![20, 15, rng.gen_range(33..=36)]
         };
-        let overkill = if rng.gen_range(1..=(4 * best_style_vasa.attack_speed)) == 1 { 1 } else { 0 };
+        let range_max = if best_style_vasa.attack_speed > 4 { 4 * best_style_vasa.attack_speed } else { 4 };
+        let overkill = if rng.gen_range(1..=range_max) == 1 { 1 } else { 0 };
         let hit_delay = if rng.gen_range(1..=8) < 3 { 1 } else { 2 };
 
         while vasa_hp > 0 {

@@ -298,6 +298,7 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
         let ice_demon_hp = monsters[0].skills.hp;
         total_ticks = chop_simulation(&mut rng, total_ticks, ice_demon_hp as f64);
         ice_demon_pop_time[i] = total_ticks;
+        let overkill = if rng.gen_range(1..=4) == 1 {1} else {0};
 
         if emberlight {
             total_ticks = ember_light_kill(
@@ -322,7 +323,7 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
         }
 
         total_ticks += post_chop_delay;
-        total_ticks += 1 + death_animation;
+        total_ticks += 1 + death_animation - overkill;
         tick_counts[i] = total_ticks;
     }
     // Defensive: Check tick_counts

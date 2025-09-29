@@ -77,7 +77,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     let weapon_name = &player.gear_sets.melee.selected_weapon.as_ref().unwrap().name;
 
     let mut olm_melee_hand_specced = monsters[1].clone();
-    olm_melee_hand_specced.skills.def = (olm_melee_hand_specced.skills.def as f64 * 0.65) as i32;
+    olm_melee_hand_specced.skills.def = (olm_melee_hand_specced.skills.def as f64 * 0.65).ceil() as i32;
     let best_style_specced = find_best_combat_style(&player, &olm_melee_hand_specced, vec!["melee".to_string()]);
     let inventory_items: Vec<SelectedItem> = player
         .inventory

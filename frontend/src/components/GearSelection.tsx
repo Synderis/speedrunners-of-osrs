@@ -78,8 +78,10 @@ const GearSelection: React.FC<GearSelectionProps> = ({
     // Build the rooms array with methods
     const rooms = selectedRooms.map(room => ({
       id: room.id,
-      methods: selectedMethods[room.id] && selectedMethods[room.id].length > 0 ? selectedMethods[room.id] : undefined,
-      method: selectedMethods[room.id] && selectedMethods[room.id].length === 1 ? selectedMethods[room.id][0] : undefined
+      // Always save the current selectedMethods state, even if empty
+      methods: selectedMethods[room.id] || [],
+      // Remove the legacy method field since we're using methods array now
+      // method: selectedMethods[room.id] && selectedMethods[room.id].length === 1 ? selectedMethods[room.id][0] : undefined
     }));
 
     const newPreset: GearSetPreset = {
@@ -248,6 +250,10 @@ const GearSelection: React.FC<GearSelectionProps> = ({
               newSelectedMethods[r.id] = r.methods;
             } else if (r.method) {
               newSelectedMethods[r.id] = [r.method];
+            }
+            // Add this line to ensure rooms without methods get empty arrays
+            else {
+              newSelectedMethods[r.id] = [];
             }
           });
           setSelectedMethods(newSelectedMethods);

@@ -4,6 +4,8 @@ import statistics
 
 LockpickSuccessRate = 0.8203
 NoLockpickSuccessRate = 0.6094
+NoLockpickSuccessRate = (1.0 + int((((99.0 * (99.0 - 99)) / 98.0) + 
+                                   ((155.0 * (99 - 1.0)) / 98.0) + 0.5))) / 256.0
 
 LeftTurningInitialTicks = [11,13,14,16,18]
 StraightInitialTicks = [16,17,18,19,20]
@@ -34,7 +36,7 @@ def simulation(InitialChests, SubsequentChests, Lockpick):
     dumped = 0
     #Calculate how many ticks until the first dump, as well as how many grubs to dump
 #CHANGE HERE FOR OTHER CONFIGURATIONS
-    timeUntilDump = RightTurningInitialTicks[InitialChests-2]
+    timeUntilDump = StraightInitialTicks[InitialChests-2]
     initialGrubs = 0
     for i in range(InitialChests):
         timeUntilDump += thieveChest(Lockpick)[0]
@@ -45,7 +47,7 @@ def simulation(InitialChests, SubsequentChests, Lockpick):
     #dumps until dumped = 30
     while dumped < 30:
 #CHANGE HERE FOR OTHER CONFIGURATIONS
-        subsequentTimeUntilDump = RightTurningSubsequentTicks[SubsequentChests-2]
+        subsequentTimeUntilDump = StraightSubsequentTicks[SubsequentChests-2]
         subsequentGrubs = 0
         for i in range(SubsequentChests):
             subsequentTimeUntilDump += thieveChest(Lockpick)[0]

@@ -1,20 +1,11 @@
 export interface PlotDataPoint {
     time: number;
     dps: number;
-    accuracy: number;
 }
 
 export interface CalculationSummary {
-    expectedHit: number;
-    expectedHits: number;
-    accuracy: number;
     ticksTimeToKill: number;
     secondsTimeToKill: number;
-    maxHit: number;
-    effectiveStrength: number;
-    effectiveAttack: number;
-    maxAttackRoll: number;
-    maxDefenceRoll: number;
     phaseTimeResults?: any[];
     phaseResults: any[];
 }
@@ -52,21 +43,12 @@ export const createWasmDpsLoader = (
 
             const tickData: PlotDataPoint[] = (parsedResult.encounter_kill_times || []).map((pt: any) => ({
                 time: pt.tick,
-                dps: pt.probability,
-                accuracy: 0
+                dps: pt.probability
             }));
 
             const summary: CalculationSummary = {
-                expectedHit: 0,
-                expectedHits: parsedResult.total_hits,
-                accuracy: 0,
                 ticksTimeToKill: parsedResult.total_expected_ticks,
                 secondsTimeToKill: parsedResult.total_expected_seconds,
-                maxHit: 0,
-                effectiveStrength: 0,
-                effectiveAttack: 0,
-                maxAttackRoll: 0,
-                maxDefenceRoll: 0,
                 phaseTimeResults: parsedResult.phase_time_results || [],
                 phaseResults: parsedResult.phase_results || [],
             };
@@ -77,16 +59,9 @@ export const createWasmDpsLoader = (
             return {
                 tickData: [],
                 summary: {
-                    expectedHit: 0,
-                    expectedHits: 0,
-                    accuracy: 0.8 * 100,
                     ticksTimeToKill: 0,
                     secondsTimeToKill: 0,
-                    maxHit: 50,
-                    effectiveStrength: 0,
-                    effectiveAttack: 0,
-                    maxAttackRoll: 0,
-                    maxDefenceRoll: 0,
+                    phaseTimeResults: [],
                     phaseResults: [],
                 }
             };
