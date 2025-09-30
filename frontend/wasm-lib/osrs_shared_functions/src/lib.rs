@@ -183,6 +183,20 @@ pub fn calculate_max_hit_for_style(
     }) {
         slayer_bonus = 1.15;
     };
+    let inquisitor_count = gear_set.gear_items.iter().filter(|item_opt| {
+        item_opt.as_ref().map_or(false, |item| item.name.starts_with("Inquisitor's"))
+    }).count();
+    let inquisitor_bonus = if combat_type == "melee"  && inquisitor_count > 0 && style.combat_style == "Crush" {
+        if weapon.name == "Inquisitor's mace" {
+            1.0 + inquisitor_count as f64 * 0.025
+        } else if inquisitor_count >= 3 {
+            1.025
+        } else {
+            1.0
+        }
+    } else {
+        1.0
+    };
 
     if combat_type == "magic" {
         if weapon.category == "Powered Staff" {
@@ -222,7 +236,7 @@ pub fn calculate_max_hit_for_style(
             let damage_multiplier = (50.0 + mining_level + level_requirement) / 150.0;
             max_hit = (base_max_hit * damage_multiplier).ceil() as i32;
         } else {
-            max_hit = (0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor() as i32;
+            max_hit = ((0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor() as i32) * inquisitor_bonus as i32;
         };
         if weapon.name == "Emberlight" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
             max_hit = (max_hit as f64 * 1.70).floor() as i32;
@@ -300,17 +314,17 @@ pub fn calculate_max_rolls_for_style(
     let weapon = selected_weapon.unwrap();
     if weapon.name == "Emberlight" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
         max_attack_roll = (max_attack_roll as f64 * 1.70).floor() as u64;
-    };
+    }
     if weapon.name == "Burning claws" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
         max_attack_roll = (max_attack_roll as f64 * 1.05).floor() as u64;
-    };
+    }
     if weapon.name == "Tumeken's shadow" {
         bonus *= 3;
         max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
-    };
+    }
     if weapon.name == "Zamorak godsword" && (style.combat_style == "Slash" || style.combat_style == "Crush") {
         max_attack_roll = max_attack_roll * 2;
-    };
+    }
 
     if weapon.name == "Twisted bow" {
         // OSRS Twisted Bow accuracy multiplier
@@ -319,7 +333,7 @@ pub fn calculate_max_rolls_for_style(
             monster.offensive.magic.clamp(0, 350) as u32,
         );
         tbow_mult = tbow_scaling(magic, "accuracy");
-    };
+    }
     if gear_set.gear_items.iter().any(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name == "Salve amulet(ei)")
     }) {
@@ -328,13 +342,27 @@ pub fn calculate_max_rolls_for_style(
                 salve_bonus = 1.2;
             }
         }
-    };
+    }
     if gear_set.gear_items.iter().any(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name == "Slayer helmet (i)")
     }) {
         slayer_bonus = 7.0 / 6.0;
+    }
+    let inquisitor_count = gear_set.gear_items.iter().filter(|item_opt| {
+        item_opt.as_ref().map_or(false, |item| item.name.starts_with("Inquisitor's"))
+    }).count();
+    let inquisitor_bonus = if combat_type == "melee"  && inquisitor_count > 0 && style.combat_style == "Crush" {
+        if weapon.name == "Inquisitor's mace" {
+            1.0 + inquisitor_count as f64 * 0.025
+        } else if inquisitor_count >= 3 {
+            1.025
+        } else {
+            1.0
+        }
+    } else {
+        1.0
     };
-    max_attack_roll = (max_attack_roll as f64 * slayer_bonus * salve_bonus * tbow_mult).floor() as u64;
+    max_attack_roll = (max_attack_roll as f64 * slayer_bonus * salve_bonus * tbow_mult * inquisitor_bonus).floor() as u64;
     // console_log!("Monster def: {}, monster def bonus: {}", monster.skills.def, defence_bonus);
     let max_defence_roll;
     if combat_type == "magic" {
