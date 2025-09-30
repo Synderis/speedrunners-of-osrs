@@ -1053,4 +1053,29 @@ export const rooms: Room[] = [
     }
 ];
 
+// Default spec counts organized by room and weapon
+export const ROOM_WEAPON_SPEC_DEFAULTS: { [roomId: string]: { [weaponName: string]: number } } = {
+    'vangs': {
+        'Burning claws': 3,
+        'Voidwaker': 2
+    },
+    'ice_demon': {
+        'Burning claws': 4,
+        'Emberlight': 2
+    },
+    'vasa': {
+        'Voidwaker': 2
+    },
+    // Add other rooms as you implement them
+    'tekton': {
+    },
+    'olm': {
+    }
+};
+
+// Helper function to get default spec count for a room/weapon combination
+export const getDefaultSpecCount = (roomId: string, weaponName: string): number => {
+    return ROOM_WEAPON_SPEC_DEFAULTS[roomId]?.[weaponName] || 0;
+};
+
 export default cmMonsters;

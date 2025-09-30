@@ -120,7 +120,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         let mut crystal_count: i32 = 0;
         let mut healing_ticks: i32;
         let mut total_ticks: i32 = 0;
-        let mut spec_count = if voidwaker { 2 } else { 0 };
+        let mut spec_count = spec_count_max;
         let mut pre_crystal_phase = true;
         let mut attack_pattern: Vec<i32>;
         attack_pattern = if room_methods.len() > 0 && room_methods[0] == "Vasa Flame Skip" && voidwaker {

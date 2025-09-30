@@ -25,6 +25,8 @@ interface GearSelectionProps {
   setSelectedRooms: React.Dispatch<React.SetStateAction<SelectedRoomWithMonster[]>>; // <-- add this
   selectedMethods: { [roomId: string]: string[] };
   setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string[] }>>;
+  roomSpecs: { [roomId: string]: { weapon: string; count: number } };
+  setRoomSpecs: React.Dispatch<React.SetStateAction<{ [roomId: string]: { weapon: string; count: number } }>>;
 }
 
 const GearSelection: React.FC<GearSelectionProps> = ({
@@ -43,6 +45,8 @@ const GearSelection: React.FC<GearSelectionProps> = ({
   setSelectedRooms,      // <-- add this
   selectedMethods,
   setSelectedMethods,
+  roomSpecs,
+  setRoomSpecs,
 }) => {
   // Use equipment as the source of gear data
   const [gearData, setGearData] = useState<Equipment[]>([]);
@@ -80,8 +84,8 @@ const GearSelection: React.FC<GearSelectionProps> = ({
       id: room.id,
       // Always save the current selectedMethods state, even if empty
       methods: selectedMethods[room.id] || [],
-      // Remove the legacy method field since we're using methods array now
-      // method: selectedMethods[room.id] && selectedMethods[room.id].length === 1 ? selectedMethods[room.id][0] : undefined
+      // Add spec assignment if it exists for this room
+      specs: roomSpecs[room.id] || undefined
     }));
 
     const newPreset: GearSetPreset = {
@@ -118,7 +122,8 @@ const GearSelection: React.FC<GearSelectionProps> = ({
         magic: combatStats.magic,
         hitpoints: combatStats.hitpoints
       },
-      rooms // <-- Save rooms with method!
+      rooms, // Save rooms with methods and specs
+      roomSpecs // Add the entire roomSpecs object
     };
     console.log('Saving preset:', newPreset);
     const custom = allPresets.filter(p => p.id.startsWith('custom_')).concat(newPreset);
@@ -257,6 +262,20 @@ const GearSelection: React.FC<GearSelectionProps> = ({
             }
           });
           setSelectedMethods(newSelectedMethods);
+
+          // Restore roomSpecs - try both the new roomSpecs field and individual room specs
+          if (preset.roomSpecs) {
+            setRoomSpecs(preset.roomSpecs);
+          } else {
+            // Fallback: build roomSpecs from individual room.specs
+            const restoredRoomSpecs: { [roomId: string]: { weapon: string; count: number } } = {};
+            preset.rooms.forEach(r => {
+              if (r.specs) {
+                restoredRoomSpecs[r.id] = r.specs;
+              }
+            });
+            setRoomSpecs(restoredRoomSpecs);
+          }
         }
         
         // Restore combat stats from preset
@@ -274,7 +293,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
               const selectedItem = slot.items.find(item => item.id.toString() === gearId);
               return { ...slot, selected: selectedItem };
             }
-            return { ...slot, selected: undefined };
+            return slot;
           });
         });
         return updated;
@@ -283,129 +302,128 @@ const GearSelection: React.FC<GearSelectionProps> = ({
   };
 
   return (
-      <section id="gear" className="section">
-        <div className="container">
-          {isGearLoading ? (
-            <div className="loading-state">
-              <div className="loading-spinner" />
-              <p>Loading gear data...</p>
-            </div>
-          ) : (
-            <>
-              <motion.div
-                className="preset-controls"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                <div className="preset-dropdown-container">
-                  <label className="preset-label">Load Preset:</label>
-                  <select
-                    className="preset-dropdown"
-                    onChange={(e) => handlePresetSelect(e.target.value)}
-                    value={selectedPreset}
-                  >
-                    <option value="">Choose a preset...</option>
-                    {allPresets.map(preset => (
-                      <option key={preset.id} value={preset.id}>
-                        {preset.name} - {preset.description}
-                        {preset.id.startsWith('custom_') ? ' (Custom)' : ''}
-                      </option>
-                    ))}
-                  </select>
-                  <button className="btn save-preset-btn" onClick={handleSavePreset} style={{ marginLeft: 8 }}>
-                    Save Preset
-                  </button>
-                  <button
-                    className="btn delete-preset-btn"
-                    onClick={handleDeletePreset}
-                    style={{ marginLeft: 8 }}
-                    disabled={!selectedPreset || !selectedPreset.startsWith('custom_')}
-                  >
-                    Delete Preset
-                  </button>
-                </div>
-                <div className="clear-buttons">
-                  {(['melee', 'mage', 'ranged'] as GearSetType[]).map(gearType => (
-                    <button
-                      key={gearType}
-                      className={`btn clear-type-btn ${gearType}`}
-                      onClick={() => clearGearType(gearType)}
-                    >
-                      Clear {gearType.charAt(0).toUpperCase() + gearType.slice(1)}
-                    </button>
+    <section id="gear" className="section">
+      <div className="container">
+        {isGearLoading ? (
+          <div className="loading-state">
+            <div className="loading-spinner" />
+            <p>Loading gear data...</p>
+          </div>
+        ) : (
+          <>
+            <motion.div
+              className="preset-controls"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="preset-dropdown-container">
+                <label className="preset-label">Load Preset:</label>
+                <select
+                  className="preset-dropdown"
+                  onChange={(e) => handlePresetSelect(e.target.value)}
+                  value={selectedPreset}
+                >
+                  <option value="">Choose a preset...</option>
+                  {allPresets.map(preset => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.name} - {preset.description}
+                      {preset.id.startsWith('custom_') ? ' (Custom)' : ''}
+                    </option>
                   ))}
-                  <button className="btn clear-type-btn all" onClick={clearAllGear}>
-                    Clear All
-                  </button>
-                </div>
-              </motion.div>
-
-              <motion.div
-                className="stats-bar card"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.3 }}
-              >
-                <h3>Combat Stats</h3>
-                <div className="stats-list">
-                  {Object.entries(combatStats).map(([stat, value]) => (
-                    <div key={stat} className="stat-row">
-                      <img
-                        src={statImages[stat as keyof typeof statImages]}
-                        alt={stat}
-                        className="stat-icon"
-                      />
-                      <input
-                        type="number"
-                        min="1"
-                        max="99"
-                        value={value}
-                        onChange={(e) => handleStatChange(stat as keyof typeof combatStats, parseInt(e.target.value) || 1)}
-                        className="stat-input"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-
-              <div className="gear-content">
-                <div className="character-models-container">
-                  <motion.div
-                    className="character-models"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 0.5 }}
-                  >
-                    {(['melee', 'mage', 'ranged'] as GearSetType[]).map((gearType) => (
-                      <GearModelCard
-                        key={gearType}
-                        gearType={gearType}
-                        gearSet={gearSets[gearType]}
-                        setGearSets={setGearSets}
-                        gearData={gearData} // gearData is now Equipment[]
-                      />
-                    ))}
-                  </motion.div>
-                  <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 1.15 }}
-                  >
-                    <InventoryItems 
-                      equipment={gearData}
-                      selectedItems={selectedInventoryItems}
-                      setSelectedItems={setSelectedInventoryItems}
-                    />
-                  </motion.div>
-                </div>
+                </select>
+                <button className="btn save-preset-btn" onClick={handleSavePreset} style={{ marginLeft: 8 }}>
+                  Save Preset
+                </button>
+                <button
+                  className="btn delete-preset-btn"
+                  onClick={handleDeletePreset}
+                  style={{ marginLeft: 8 }}
+                  disabled={!selectedPreset || !selectedPreset.startsWith('custom_')}
+                >
+                  Delete Preset
+                </button>
               </div>
-            </>
-          )}
-        </div>
-      </section>
-    );
-  };
+              <div className="clear-buttons">
+                {(['melee', 'mage', 'ranged'] as GearSetType[]).map(gearType => (
+                  <button
+                    key={gearType}
+                    className={`btn clear-type-btn ${gearType}`}
+                    onClick={() => clearGearType(gearType)}
+                  >
+                    Clear {gearType.charAt(0).toUpperCase() + gearType.slice(1)}
+                  </button>
+                ))}
+                <button className="btn clear-type-btn all" onClick={clearAllGear}>
+                  Clear All
+                </button>
+              </div>
+            </motion.div>
 
+            <motion.div
+              className="stats-bar card"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+            >
+              <h3>Combat Stats</h3>
+              <div className="stats-list">
+                {Object.entries(combatStats).map(([stat, value]) => (
+                  <div key={stat} className="stat-row">
+                    <img
+                      src={statImages[stat as keyof typeof statImages]}
+                      alt={stat}
+                      className="stat-icon"
+                    />
+                    <input
+                      type="number"
+                      min="1"
+                      max="99"
+                      value={value}
+                      onChange={(e) => handleStatChange(stat as keyof typeof combatStats, parseInt(e.target.value) || 1)}
+                      className="stat-input"
+                    />
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            <div className="gear-content">
+              <div className="character-models-container">
+                <motion.div
+                  className="character-models"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                >
+                  {(['melee', 'mage', 'ranged'] as GearSetType[]).map((gearType) => (
+                    <GearModelCard
+                      key={gearType}
+                      gearType={gearType}
+                      gearSet={gearSets[gearType]}
+                      setGearSets={setGearSets}
+                      gearData={gearData}
+                    />
+                  ))}
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 1.15 }}
+                >
+                  <InventoryItems 
+                    equipment={gearData}
+                    selectedItems={selectedInventoryItems}
+                    setSelectedItems={setSelectedInventoryItems}
+                  />
+                </motion.div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  );
+};
 
 export default GearSelection;

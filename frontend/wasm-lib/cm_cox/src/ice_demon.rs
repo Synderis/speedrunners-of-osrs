@@ -244,7 +244,7 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
     let mut player = payload.player;
     let monsters = payload.room.monsters;
     let spec_count_dict = payload.room.special_attacks;
-    let mut spec_count_max = 0;
+    let spec_count_max;
 
     let inventory_items: Vec<SelectedItem> = player
         .inventory

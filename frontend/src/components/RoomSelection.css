@@ -47,10 +47,10 @@
     transition: all 0.3s ease;
 }
 
-.clear-room-btn:hover:not(:disabled) {
+/* .clear-room-btn:hover:not(:disabled) {
     background: linear-gradient(135deg, #4b5563, #374151);
     box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
-}
+} */
 
 .clear-room-btn:disabled {
     opacity: 0.5;
@@ -342,7 +342,9 @@
 .spec-dropdown {
     margin-top: 8px;
     padding: 16px;
-    background: #2223;
+    /* background: #2223; */
+    /* background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); */
+    background: var(--bg-card);
     border-radius: 6px;
     display: flex;
     flex-direction: column;
@@ -405,6 +407,65 @@
 
 .method-indicator.radio {
     font-size: 1.2rem;
+}
+
+.weapon-spec-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.weapon-spec-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.weapon-spec-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.weapon-spec-button:hover {
+    background: #3a3a3a;
+    border-color: #666;
+}
+
+.weapon-spec-button.selected {
+    background: #4a9eff;
+    border-color: #4a9eff;
+}
+
+.weapon-name {
+    font-weight: 500;
+}
+
+.spec-count {
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.spec-count-input {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.spec-count-input input {
+    width: 60px;
+    padding: 4px 8px;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: #fff;
+    border-radius: 4px;
 }
 
 @media (max-width: 768px) {

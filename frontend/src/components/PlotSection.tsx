@@ -900,7 +900,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
               })}
             </div>
             <button
-              className="config-toggle-btn"
+              className="btn"
               style={{ margin: '0.5rem 0' }}
               onClick={() => setShowConfig(v => !v)}
               type="button"

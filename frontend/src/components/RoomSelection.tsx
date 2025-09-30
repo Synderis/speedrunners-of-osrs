@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { fadeInOut, slideInOut, hoverEffects } from '../utils/animations';
-import { cmMonsters, rooms, type Monster, type Room } from '../data/monsterStats';
+import { cmMonsters, rooms, type Monster, type Room, getDefaultSpecCount } from '../data/monsterStats';
 import type { InventoryItem } from '../types/player';
 import { gearSetPresets } from '../data/gearTemplates';
 import './RoomSelection.css';
@@ -485,77 +485,111 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                             }
                         })}
                     </div>
-                    {/* Spec Assignment Dropdown (for all rooms) */}
-                    {selectedRooms.length > 0 && (
-                        <div className="spec-assignment-container">
-                            <button
-                                className="spec-dropdown-toggle"
-                                style={{ margin: '16px 0' }}
-                                onClick={() => setSpecDropdownOpen(open => !open)}
-                            >
-                                {specDropdownOpen ? 'Hide Spec Assignment' : 'Assign Specs'}
-                            </button>
-                            <AnimatePresence>
-                                {specDropdownOpen && (
-                                    <motion.div
-                                        className="spec-dropdown"
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <h2 className="section-title">Spec Assignment</h2>
-                                        {selectedRooms.map(room => (
-                                            <div key={room.id} className="spec-assignment-room">
-                                                <span className="room-name">{room.name}</span>
-                                                <label>
-                                                    Weapon:
-                                                    <select
-                                                        value={roomSpecs[room.id]?.weapon || ''}
-                                                        onChange={e =>
-                                                            setRoomSpecs(prev => ({
-                                                                ...prev,
-                                                                [room.id]: {
-                                                                    ...prev[room.id],
-                                                                    weapon: e.target.value
-                                                                }
-                                                            }))
-                                                        }
+                    {/* Spec Assignment Section (only show rooms/weapons with defaults) */}
+                    {selectedRooms.some(room => 
+    selectedInventoryItems.some(item => 
+        item.equipment?.slot === 'weapon' && getDefaultSpecCount(room.id, item.name) > 0
+    )
+) && (
+    <div className="spec-assignment-container">
+        <button
+            className="btn"
+            style={{ margin: '16px 0' }}
+            onClick={() => setSpecDropdownOpen(open => !open)}
+        >
+            {specDropdownOpen ? 'Hide Spec Assignment' : 'Manually Assign Specs'}
+        </button>
+        <AnimatePresence>
+            {specDropdownOpen && (
+                <motion.div
+                    className="spec-dropdown"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    <h2 className="section-title">Spec Assignment</h2>
+                    {selectedRooms
+                        .filter(room => 
+                            selectedInventoryItems.some(item => 
+                                item.equipment?.slot === 'weapon' && getDefaultSpecCount(room.id, item.name) > 0
+                            )
+                        )
+                        .map(room => {
+                            // Get weapons that have defaults for this room
+                            const availableWeapons = selectedInventoryItems
+                                .filter(item => 
+                                    item.equipment?.slot === 'weapon' && 
+                                    getDefaultSpecCount(room.id, item.name) > 0
+                                );
+
+                            return (
+                                <div key={room.id} className="spec-assignment-room">
+                                    <span className="room-name">{room.name}</span>
+                                    <div className="weapon-spec-list">
+                                        {availableWeapons.map(item => {
+                                            const defaultCount = getDefaultSpecCount(room.id, item.name);
+                                            const currentAssignment = roomSpecs[room.id];
+                                            const isSelected = currentAssignment?.weapon === item.name;
+                                            
+                                            return (
+                                                <div key={item.equipment?.id} className="weapon-spec-item">
+                                                    <button
+                                                        className={`weapon-spec-button ${isSelected ? 'selected' : ''}`}
+                                                        onClick={() => {
+                                                            if (isSelected) {
+                                                                // Deselect if already selected
+                                                                setRoomSpecs(prev => {
+                                                                    const newSpecs = { ...prev };
+                                                                    delete newSpecs[room.id];
+                                                                    return newSpecs;
+                                                                });
+                                                            } else {
+                                                                // Select with default count
+                                                                setRoomSpecs(prev => ({
+                                                                    ...prev,
+                                                                    [room.id]: {
+                                                                        weapon: item.name,
+                                                                        count: defaultCount
+                                                                    }
+                                                                }));
+                                                            }
+                                                        }}
                                                     >
-                                                        <option value="">Select weapon</option>
-                                                        {selectedInventoryItems
-                                                            .filter(item => item.equipment?.slot === 'weapon')
-                                                            .map(item => (
-                                                                <option key={item.equipment?.id} value={item.name}>
-                                                                    {item.name}
-                                                                </option>
-                                                            ))}
-                                                    </select>
-                                                </label>
-                                                <label>
-                                                    Spec Count:
-                                                    <input
-                                                        type="number"
-                                                        min={0}
-                                                        value={roomSpecs[room.id]?.count || 0}
-                                                        onChange={e =>
-                                                            setRoomSpecs(prev => ({
-                                                                ...prev,
-                                                                [room.id]: {
-                                                                    ...prev[room.id],
-                                                                    count: Number(e.target.value)
+                                                        <span className="weapon-name">{item.name}</span>
+                                                        <span className="spec-count">(Default: {defaultCount} specs)</span>
+                                                    </button>
+                                                    {isSelected && (
+                                                        <label className="spec-count-input">
+                                                            <input
+                                                                type="number"
+                                                                min={0}
+                                                                value={currentAssignment?.count || defaultCount}
+                                                                onChange={e =>
+                                                                    setRoomSpecs(prev => ({
+                                                                        ...prev,
+                                                                        [room.id]: {
+                                                                            ...prev[room.id],
+                                                                            weapon: item.name,
+                                                                            count: Number(e.target.value)
+                                                                        }
+                                                                    }))
                                                                 }
-                                                            }))
-                                                        }
-                                                    />
-                                                </label>
-                                            </div>
-                                        ))}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    )}
+                                                            />
+                                                        </label>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                </motion.div>
+            )}
+        </AnimatePresence>
+    </div>
+)}
                 </motion.div>
 
             </div>

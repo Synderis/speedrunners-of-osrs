@@ -7,7 +7,7 @@ import PlotSection from './components/PlotSection';
 import FloatingBackground from './components/FloatingBackground';
 import { ThemeProvider } from './context/ThemeContext';
 // import { fetchMonstersFromWiki } from './services/monsterServiceTemp';
-import { fetchEquipmentFromWiki, fetchImageMapFromSupabase, fetchEquipmentFromLocalJson } from './services/gearServiceTemp';
+import { fetchEquipmentFromWiki, fetchImageMapFromSupabase } from './services/gearServiceTemp';
 import type { GearSets, CombatStats, Equipment, InventoryItem } from './types/player';
 import type { SelectedRoomWithMonster } from './components/RoomSelection';
 import './App.css';
@@ -138,6 +138,8 @@ function App() {
             setSelectedRooms={setSelectedRooms}
             selectedMethods={selectedMethods}
             setSelectedMethods={setSelectedMethods}
+            roomSpecs={roomSpecs}
+            setRoomSpecs={setRoomSpecs}
           />
           {!isGearLoading && (
             <>
@@ -169,8 +171,8 @@ function App() {
 
 async function loadEquipmentWithImages(): Promise<Equipment[]> {
   const [equipment, imageMap] = await Promise.all([
-    // fetchEquipmentFromWiki(),
-    fetchEquipmentFromLocalJson(),
+    fetchEquipmentFromWiki(),
+    // fetchEquipmentFromLocalJson(),
     fetchImageMapFromSupabase()
   ]);
   return equipment.map(eq => ({
