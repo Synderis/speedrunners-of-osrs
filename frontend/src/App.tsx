@@ -12,6 +12,18 @@ import type { GearSets, CombatStats, Equipment, InventoryItem } from './types/pl
 import type { SelectedRoomWithMonster } from './components/RoomSelection';
 import './App.css';
 
+// Move this outside the App component
+async function loadEquipmentWithImages(): Promise<Equipment[]> {
+  const [equipment, imageMap] = await Promise.all([
+    fetchEquipmentFromWiki(),
+    fetchImageMapFromSupabase()
+  ]);
+  return equipment.map(eq => ({
+    ...eq,
+    image: imageMap[eq.image] || eq.image
+  }));
+}
+
 function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isGearLoading, setIsGearLoading] = useState(true);
@@ -91,11 +103,18 @@ function App() {
   }, []);
 
   useEffect(() => {
+    console.log('Equipment useEffect running...');
     setIsGearLoading(true);
-    loadEquipmentWithImages().then(equip => {
-      setEquipment(equip);
-      setIsGearLoading(false);
-    });
+    loadEquipmentWithImages()
+      .then(equip => {
+        console.log('Equipment loaded successfully, length:', equip.length);
+        setEquipment(equip);
+        setIsGearLoading(false);
+      })
+      .catch(error => {
+        console.error('Equipment loading failed:', error);
+        setIsGearLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -167,18 +186,6 @@ function App() {
       </div>
     </ThemeProvider>
   );
-}
-
-async function loadEquipmentWithImages(): Promise<Equipment[]> {
-  const [equipment, imageMap] = await Promise.all([
-    fetchEquipmentFromWiki(),
-    // fetchEquipmentFromLocalJson(),
-    fetchImageMapFromSupabase()
-  ]);
-  return equipment.map(eq => ({
-    ...eq,
-    image: imageMap[eq.image] || eq.image // replace with base64 if found
-  }));
 }
 
 export default App;

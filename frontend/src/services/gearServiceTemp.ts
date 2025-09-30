@@ -21,32 +21,33 @@ export function resolveBaseItemId(itemId: string | number): string | number {
     return equipmentAliasReverseMap[idStr] || idStr;
 }
 import type { Equipment } from '../types/player';
-const WIKI_BASE = 'https://oldschool.runescape.wiki';
-const API_BASE = `${WIKI_BASE}/api.php`;
+import { SUPABASE_CONFIG } from './supabaseConfig';
+// const WIKI_BASE = 'https://oldschool.runescape.wiki';
+// const API_BASE = `${WIKI_BASE}/api.php`;
 
-const REQUIRED_PRINTOUTS = [
-    'Crush attack bonus',
-    'Crush defence bonus',
-    'Equipment slot',
-    'Item ID',
-    'Image',
-    'Magic Damage bonus',
-    'Magic attack bonus',
-    'Magic defence bonus',
-    'Prayer bonus',
-    'Range attack bonus',
-    'Ranged Strength bonus',
-    'Range defence bonus',
-    'Slash attack bonus',
-    'Slash defence bonus',
-    'Stab attack bonus',
-    'Stab defence bonus',
-    'Strength bonus',
-    'Version anchor',
-    'Weapon attack range',
-    'Weapon attack speed',
-    'Combat style'
-];
+// const REQUIRED_PRINTOUTS = [
+//     'Crush attack bonus',
+//     'Crush defence bonus',
+//     'Equipment slot',
+//     'Item ID',
+//     'Image',
+//     'Magic Damage bonus',
+//     'Magic attack bonus',
+//     'Magic defence bonus',
+//     'Prayer bonus',
+//     'Range attack bonus',
+//     'Ranged Strength bonus',
+//     'Range defence bonus',
+//     'Slash attack bonus',
+//     'Slash defence bonus',
+//     'Stab attack bonus',
+//     'Stab defence bonus',
+//     'Strength bonus',
+//     'Version anchor',
+//     'Weapon attack range',
+//     'Weapon attack speed',
+//     'Combat style'
+// ];
 
 const ITEMS_TO_SKIP = [
     'The dogsword',
@@ -74,93 +75,76 @@ const ITEMS_TO_SKIP = [
     'Centurion cuirass'
 ];
 
-function getPrintoutValue<T>(prop: T[]): T | null {
-    if (!prop || prop.length === 0) return null;
-    return prop[0];
-}
+// function getPrintoutValue<T>(prop: T[]): T | null {
+//     if (!prop || prop.length === 0) return null;
+//     return prop[0];
+// }
 
 function getMagicDamageValue(prop: any[]): number | null {
     if (!prop || prop.length === 0) return null;
     return Math.round(Number(prop[0]) * 10);
 }
 
-export async function fetchEquipmentFromLocalJson(): Promise<Equipment[]> {
-    // Dynamically import the local JSON file
-    const localEquipment = await import(
-        'C:/Users/DylanTocci/github_repos/osrs_speedrun/speedrunners-of-osrs/equipment.json'
-    );
-    // The imported object may be under .default depending on your bundler
-    const equipmentArr: Equipment[] = Array.isArray(localEquipment.default)
-        ? localEquipment.default
-        : localEquipment;
+// export async function fetchEquipmentFromLocalJson(): Promise<Equipment[]> {
+//     // Dynamically import the local JSON file
+//     const localEquipment = await import(
+//         'C:/Users/DylanTocci/github_repos/osrs_speedrun/speedrunners-of-osrs/equipment.json'
+//     );
+//     // The imported object may be under .default depending on your bundler
+//     const equipmentArr: Equipment[] = Array.isArray(localEquipment.default)
+//         ? localEquipment.default
+//         : localEquipment;
 
-    // Apply the same filtering as fetchEquipmentFromWiki
-    const allVariantIds = new Set(Object.values(equipmentIds).flat().map(String));
-    const filteredResult = equipmentArr.filter(item => !allVariantIds.has(String(item.id)));
+//     // Apply the same filtering as fetchEquipmentFromWiki
+//     const allVariantIds = new Set(Object.values(equipmentIds).flat().map(String));
+//     const filteredResult = equipmentArr.filter(item => !allVariantIds.has(String(item.id)));
 
-    // Optionally sort by name
-    filteredResult.sort((a, b) => a.name.localeCompare(b.name));
-    return filteredResult;
-}
+//     // Optionally sort by name
+//     filteredResult.sort((a, b) => a.name.localeCompare(b.name));
+//     return filteredResult;
+// }
 
 async function fetchEquipmentFromWiki(): Promise<Equipment[]> {
-    let equipment: Record<string, any> = {};
-    let offset = 0;
+    // let equipment: Record<string, any> = {};
+    // let offset = 0;
 
-    while (true) {
-        const query = new URLSearchParams({
-            action: 'ask',
-            format: 'json',
-            query: `[[Equipment slot::+]][[Item ID::+]]|?${REQUIRED_PRINTOUTS.join('|?')}|limit=5000|offset=${offset}`
-        }).toString();
+    // while (true) {
+    //     const query = new URLSearchParams({
+    //         action: 'ask',
+    //         format: 'json',
+    //         query: `[[Equipment slot::+]][[Item ID::+]]|?${REQUIRED_PRINTOUTS.join('|?')}|limit=5000|offset=${offset}`
+    //     }).toString();
 
-        const url = `${API_BASE}?${query}`;
-        const resp = await fetch(url);
-        const data = await resp.json();
+    //     const url = `${API_BASE}?${query}`;
+    //     const resp = await fetch(url);
+    //     const data = await resp.json();
         
 
-        if (!data.query?.results) break;
-        equipment = { ...equipment, ...data.query.results };
+    //     if (!data.query?.results) break;
+    //     equipment = { ...equipment, ...data.query.results };
 
-        if (!data['query-continue-offset'] || Number(data['query-continue-offset']) <= offset) break;
-        offset = data['query-continue-offset'];
+    //     if (!data['query-continue-offset'] || Number(data['query-continue-offset']) <= offset) break;
+    //     offset = data['query-continue-offset'];
+    // }
+    const url = `${SUPABASE_CONFIG.url}/storage/v1/object/public/${SUPABASE_CONFIG.bucket}/equipment.json`;
+    const resp = await fetch(url);
+    const equipment = await resp.json();
+    console.log('Fetched equipment data:', equipment);
+    if (!resp.ok) {
+        throw new Error(`Failed to fetch equipment data: ${resp.status} ${resp.statusText}`);
     }
 
     const result: Equipment[] = [];
-    for (const k in equipment) {
-        const v = equipment[k];
-        if (!v.printouts) continue;
-        const po = v.printouts;
-        const item_id_raw = getPrintoutValue(po['Item ID']);
-        // Ensure id is string or number, fallback to empty string if unknown
-        const item_id: string | number = typeof item_id_raw === 'string' || typeof item_id_raw === 'number'
-            ? item_id_raw
-            : '';
-
-        // Remove if this id is a variant in the alias list
-        const allVariantIds = new Set(Object.values(equipmentIds).flat().map(String));
-        if (allVariantIds.has(String(item_id))) continue;
-
-        const name = k.split('#', 1)[0];
-        let slot_raw = getPrintoutValue(po['Equipment slot']);
-        let slot = typeof slot_raw === 'string' ? slot_raw : '';
-        let two_handed = false;
-        if (slot === '2h') {
-            slot = 'weapon';
-            two_handed = true;
-        }
-
-        let version_raw = getPrintoutValue(po['Version anchor']);
-        let version = typeof version_raw === 'string' ? version_raw : '';
-        if (version === 'Nightmare Zone') version = '';
-
-        if (name.includes('(Last Man Standing)')) continue;
-        if (ITEMS_TO_SKIP.includes(name)) continue;
-        if (name.includes('Keris partisan of amascut') && k.includes('Outside ToA')) continue;
+    for (const equipmentItem of equipment) {
+        // Skip items that should be excluded
+        if (ITEMS_TO_SKIP.includes(equipmentItem.name)) continue;
+        
         const isExcluded = (name: string) =>
             equipmentNameExclusions.some(exclusion => name.includes(exclusion));
-        if (isExcluded(name)) continue;
-        const versionLower = version.toLowerCase();
+        if (isExcluded(equipmentItem.name)) continue;
+        
+        // Version filtering - your S3 data already has clean version strings
+        const versionLower = equipmentItem.version.toLowerCase();
         if (
             versionLower !== '' &&
             versionLower !== 'unpoisoned' &&
@@ -173,44 +157,12 @@ async function fetchEquipmentFromWiki(): Promise<Equipment[]> {
             versionLower !== 'active'
         ) continue;
 
-        const equipmentItem: Equipment = {
-            name,
-            id: Number(resolveBaseItemId(item_id)),
-            version,
-            slot,
-            image: po['Image']?.[0]?.fulltext?.replace('File:', '') || '',
-            speed: Number(getPrintoutValue(po['Weapon attack speed'])) || 0,
-            category: getPrintoutValue(po['Combat style']) || '',
-            bonuses: {
-                str: getPrintoutValue(po['Strength bonus']),
-                ranged_str: getPrintoutValue(po['Ranged Strength bonus']),
-                magic_str: getMagicDamageValue(po['Magic Damage bonus']),
-                prayer: getPrintoutValue(po['Prayer bonus']),
-            },
-            offensive: {
-                stab: getPrintoutValue(po['Stab attack bonus']),
-                slash: getPrintoutValue(po['Slash attack bonus']),
-                crush: getPrintoutValue(po['Crush attack bonus']),
-                magic: getPrintoutValue(po['Magic attack bonus']),
-                ranged: getPrintoutValue(po['Range attack bonus']),
-            },
-            defensive: {
-                stab: getPrintoutValue(po['Stab defence bonus']),
-                slash: getPrintoutValue(po['Slash defence bonus']),
-                crush: getPrintoutValue(po['Crush defence bonus']),
-                magic: getPrintoutValue(po['Magic defence bonus']),
-                ranged: getPrintoutValue(po['Range defence bonus']),
-            },
-            two_handed,
-        };
-
-        // Filter: skip if all bonuses, offensive, and defensive stats are 0
-
+        // Apply the stat filtering
         const b = equipmentItem.bonuses;
         const o = equipmentItem.offensive;
         const d = equipmentItem.defensive;
         const allStats = [
-            b.str, b.ranged_str, b.magic_str, b.prayer,
+            b.str, b.ranged_str, getMagicDamageValue(b.magic_str), b.prayer,
             o.stab, o.slash, o.crush, o.magic, o.ranged,
             d.stab, d.slash, d.crush, d.magic, d.ranged
         ];
@@ -224,14 +176,14 @@ async function fetchEquipmentFromWiki(): Promise<Equipment[]> {
         result.push(equipmentItem);
     }
 
-    // Optionally sort by name
-    result.sort((a, b) => a.name.localeCompare(b.name));
-    // Remove duplicate ids, keeping the first occurrence
-    // Remove any items whose id appears as a variant in the alias list
-    const allVariantIds = new Set(
-        Object.values(equipmentIds).flat().map(String)
-    );
+    // Remove variant IDs
+    const allVariantIds = new Set(Object.values(equipmentIds).flat().map(String));
     const filteredResult = result.filter(item => !allVariantIds.has(String(item.id)));
+
+    // Sort by name
+    filteredResult.sort((a, b) => a.name.localeCompare(b.name));
+    
+    console.log('Processed equipment length:', filteredResult.length);
     return filteredResult;
 }
 
