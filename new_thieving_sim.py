@@ -35,14 +35,14 @@ class ScavengerSimulation:
         # Calculate random pre_dump_walk_delay for this trial
         base_delay = 17
         
-        # Add 1 with 1/3 chance
+        # # Add 1 with 1/3 chance
         if np.random.rand() < 1/3:
             base_delay += 1
         
         # Add one of 3, 5, or 8 with equal chance
         additional_delay = np.random.choice([3, 5, 8])
         
-        self.pre_dump_walk_delay = base_delay + additional_delay + 2 + 4
+        self.pre_dump_walk_delay = base_delay + additional_delay + 2
 
     def attempt_chest(self):
         """Attempt to open a chest, returns True if successful"""
@@ -212,7 +212,8 @@ class ScavengerSimulation:
                 break
             
             self.tick += 1
-        self.tick += (4 - (self.tick % 4)) # Align to next 4-tick cycle
+        if self.tick % 4 != 0:
+            self.tick += (4 - (self.tick % 4)) # Align to next 4-tick cycle
         return self.tick, self.chest_attempts  # Return both tick count and chest attempts
 
 def run_simulation():
@@ -220,7 +221,7 @@ def run_simulation():
     start_time = time.time()
 
     # Load parameters
-    with open("/home/synderis/Documents/github_repos/speedrunners-of-osrs/vangs_payload.json", "r") as f:
+    with open("vangs_payload.json", "r") as f:
         payload = json.load(f)
     
     player = payload["player"]
@@ -264,7 +265,7 @@ def run_simulation():
 
 if __name__ == "__main__":
     tick_counts, chest_attempt_counts, trials, elapsed = run_simulation()
-
+    print(int(min(tick_counts)))
     max_ticks = int(max(tick_counts))
     kill_prob = np.zeros(max_ticks + 1)
     for ticks in tick_counts:
@@ -306,4 +307,4 @@ if __name__ == "__main__":
         legend_title="Legend",
         hovermode="x unified"
     )
-    # fig.show()
+    fig.show()

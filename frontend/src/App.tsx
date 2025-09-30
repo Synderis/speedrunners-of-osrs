@@ -41,6 +41,7 @@ function App() {
   const [selectedRooms, setSelectedRooms] = useState<SelectedRoomWithMonster[]>([]);
   const [selectedMethods, setSelectedMethods] = useState<{ [roomId: string]: string[] }>({});
   const [selectedPreset, setSelectedPreset] = useState<string>('');
+  const [roomSpecs, setRoomSpecs] = useState<{ [roomId: string]: { weapon: string; count: number } }>({});
 
   useEffect(() => {
     // Prevent browser from restoring scroll position
@@ -137,6 +138,8 @@ function App() {
             setSelectedRooms={setSelectedRooms}
             selectedMethods={selectedMethods}
             setSelectedMethods={setSelectedMethods}
+            roomSpecs={roomSpecs}
+            setRoomSpecs={setRoomSpecs}
           />
           {!isGearLoading && (
             <>
@@ -146,6 +149,9 @@ function App() {
                 selectedMethods={selectedMethods}
                 setSelectedMethods={setSelectedMethods}
                 selectedPreset={selectedPreset}
+                selectedInventoryItems={selectedInventoryItems} // <-- Pass it here
+                roomSpecs={roomSpecs} // <-- Pass this
+                setRoomSpecs={setRoomSpecs} // <-- And this
               />
               <PlotSection
                 gearSets={gearSets}
@@ -153,6 +159,7 @@ function App() {
                 selectedRooms={selectedRooms}
                 selectedInventoryItems={selectedInventoryItems}
                 selectedMethods={selectedMethods}
+                roomSpecs={roomSpecs}
               />
             </>
           )}
@@ -165,6 +172,7 @@ function App() {
 async function loadEquipmentWithImages(): Promise<Equipment[]> {
   const [equipment, imageMap] = await Promise.all([
     fetchEquipmentFromWiki(),
+    // fetchEquipmentFromLocalJson(),
     fetchImageMapFromSupabase()
   ]);
   return equipment.map(eq => ({

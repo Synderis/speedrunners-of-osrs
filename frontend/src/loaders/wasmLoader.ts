@@ -32,7 +32,6 @@ export const createWasmDpsLoader = (
         const payload = { player, room, config: { cap } };
         try {
             const result = calcFn(JSON.stringify(payload));
-            console.log("WASM result string:", result);
             const parsedResult = JSON.parse(result);
             if (parsedResult.error) {
                 console.error("WASM error string:", parsedResult.error);

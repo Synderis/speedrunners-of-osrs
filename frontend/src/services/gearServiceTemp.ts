@@ -84,6 +84,25 @@ function getMagicDamageValue(prop: any[]): number | null {
     return Math.round(Number(prop[0]) * 10);
 }
 
+export async function fetchEquipmentFromLocalJson(): Promise<Equipment[]> {
+    // Dynamically import the local JSON file
+    const localEquipment = await import(
+        'C:/Users/DylanTocci/github_repos/osrs_speedrun/speedrunners-of-osrs/equipment.json'
+    );
+    // The imported object may be under .default depending on your bundler
+    const equipmentArr: Equipment[] = Array.isArray(localEquipment.default)
+        ? localEquipment.default
+        : localEquipment;
+
+    // Apply the same filtering as fetchEquipmentFromWiki
+    const allVariantIds = new Set(Object.values(equipmentIds).flat().map(String));
+    const filteredResult = equipmentArr.filter(item => !allVariantIds.has(String(item.id)));
+
+    // Optionally sort by name
+    filteredResult.sort((a, b) => a.name.localeCompare(b.name));
+    return filteredResult;
+}
+
 async function fetchEquipmentFromWiki(): Promise<Equipment[]> {
     let equipment: Record<string, any> = {};
     let offset = 0;
@@ -98,6 +117,7 @@ async function fetchEquipmentFromWiki(): Promise<Equipment[]> {
         const url = `${API_BASE}?${query}`;
         const resp = await fetch(url);
         const data = await resp.json();
+        
 
         if (!data.query?.results) break;
         equipment = { ...equipment, ...data.query.results };

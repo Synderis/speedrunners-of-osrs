@@ -2,6 +2,7 @@ export interface PresetRoom {
     id: string;
     method?: string;
     methods?: string[]; // Support for multiple methods
+    specs?: { weapon: string; count: number }; // Add spec assignment
 }
 
 export interface GearSetPreset {
@@ -15,6 +16,7 @@ export interface GearSetPreset {
     };
     inventoryItems: string[]; // Array of inventory item IDs
     rooms: PresetRoom[]; // Array of room IDs where this preset is applicable
+    roomSpecs?: { [roomId: string]: { weapon: string; count: number } }; // Add this line
     combatStats?: {
         attack: number;
         strength: number;

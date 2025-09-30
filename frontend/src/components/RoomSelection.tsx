@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { fadeInOut, slideInOut, hoverEffects } from '../utils/animations';
-import { cmMonsters, rooms, type Monster, type Room } from '../data/monsterStats';
+import { cmMonsters, rooms, type Monster, type Room, getDefaultSpecCount } from '../data/monsterStats';
+import type { InventoryItem } from '../types/player';
 import { gearSetPresets } from '../data/gearTemplates';
 import './RoomSelection.css';
 
@@ -12,9 +13,12 @@ export interface SelectedRoomWithMonster extends Room {
 interface RoomSelectionProps {
     selectedRooms: SelectedRoomWithMonster[];
     setSelectedRooms: React.Dispatch<React.SetStateAction<SelectedRoomWithMonster[]>>;
-    selectedMethods: { [roomId: string]: string[] }; // Changed from string | null to string[]
+    selectedMethods: { [roomId: string]: string[] };
     setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string[] }>>;
     selectedPreset: string;
+    selectedInventoryItems: InventoryItem[]; // <-- Use InventoryItem here
+    roomSpecs: { [roomId: string]: { weapon: string; count: number } };
+  setRoomSpecs: React.Dispatch<React.SetStateAction<{ [roomId: string]: { weapon: string; count: number } }>>;
 }
 
 const RoomSelection: React.FC<RoomSelectionProps> = ({
@@ -22,9 +26,14 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
     setSelectedRooms,
     selectedMethods,
     setSelectedMethods,
-    selectedPreset
+    selectedPreset,
+    selectedInventoryItems,
+    roomSpecs,
+    setRoomSpecs
 }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const [specDropdownOpen, setSpecDropdownOpen] = useState(false);
+    // const [roomSpecs, setRoomSpecs] = useState<{ [roomId: string]: { weapon: string; count: number } }>({});
 
     const headerRef = useRef(null);
     const displayRef = useRef(null);
@@ -81,11 +90,11 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
     const selectAll = () => {
         const roomsWithMonsters: SelectedRoomWithMonster[] = rooms.map(room => {
             const monster = getMonsterByRoom(room);
-            
+
             // Check if this room already has a selected method from preset
             const existingRoom = selectedRooms.find(r => r.id === room.id);
             const hasPresetMethod = selectedMethods[room.id];
-            
+
             let methods: string[];
             if (hasPresetMethod && existingRoom) {
                 // Preserve the preset method selection
@@ -94,7 +103,7 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                 // Default behavior for rooms without preset methods
                 methods = room.methods && room.methods.length === 1 ? [] : room.methods;
             }
-            
+
             return {
                 ...room,
                 monster,
@@ -152,7 +161,7 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
 
         setSelectedMethods(prev => {
             const currentMethods = prev[room.id] || [];
-            
+
             if (allowMultiple) {
                 // Checkbox behavior - toggle the method
                 if (currentMethods.includes(method)) {
@@ -170,7 +179,7 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                 // Radio button behavior - replace other methods in same category
                 const categoryMethods = originalRoom.methodCategories?.[methodCategory]?.methods || [];
                 const methodsFromOtherCategories = currentMethods.filter(m => !categoryMethods.includes(m));
-                
+
                 if (currentMethods.includes(method)) {
                     // Deselecting current method
                     return {
@@ -190,11 +199,11 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
         // Update room methods in selectedRooms
         setSelectedRooms(prevRooms => prevRooms.map(r => {
             if (r.id !== room.id) return r;
-            
+
             // Get the updated methods list
             const updatedMethods = (() => {
                 const currentMethods = selectedMethods[room.id] || [];
-                
+
                 if (allowMultiple) {
                     if (currentMethods.includes(method)) {
                         return currentMethods.filter(m => m !== method);
@@ -204,7 +213,7 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                 } else {
                     const categoryMethods = originalRoom.methodCategories?.[methodCategory]?.methods || [];
                     const methodsFromOtherCategories = currentMethods.filter(m => !categoryMethods.includes(m));
-                    
+
                     if (currentMethods.includes(method)) {
                         return methodsFromOtherCategories;
                     } else {
@@ -415,56 +424,51 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                             )}
                         </AnimatePresence>
                     </motion.div>
-                    {selectedRooms.map(room => {
-                        const originalRoom = rooms.find(orig => orig.id === room.id);
-                        
-                        // Use method categories if available, otherwise fall back to simple methods
-                        if (originalRoom?.methodCategories) {
-                            // Flatten all methods from all categories into a single row
-                            const allCategoryMethods = Object.entries(originalRoom.methodCategories).flatMap(([categoryName, categoryData]) => 
-                                categoryData.methods.map(method => ({
-                                    method,
-                                    allowMultiple: categoryData.allowMultiple,
-                                    categoryName
-                                }))
-                            );
+                    <h2 className="section-title">Room Methods</h2>
+                    <div className="all-room-methods">
 
-                            return (
-                                <div key={room.id} className="selected-room-methods">
-                                    <div className="room-method-buttons">
-                                        {allCategoryMethods.map(({ method, allowMultiple }) => {
-                                            const isSelected = selectedMethods[room.id]?.includes(method) || false;
-                                            const inputType = allowMultiple ? 'checkbox' : 'radio';
-                                            
-                                            return (
-                                                <button
-                                                    key={method}
-                                                    className={`method-tab ${isSelected ? 'active' : ''} ${inputType}`}
-                                                    onClick={() => handleMethodSelect(room, method)}
-                                                >
-                                                    {/* <span className={`method-indicator ${inputType}`}>
-                                                        {allowMultiple ? 
-                                                            (isSelected ? '☑' : '☐') : 
-                                                            (isSelected ? '●' : '○')
-                                                        }
-                                                    </span> */}
-                                                    {method}
-                                                </button>
-                                            );
-                                        })}
+                        {selectedRooms.map(room => {
+                            const originalRoom = rooms.find(orig => orig.id === room.id);
+
+                            // Use method categories if available, otherwise fall back to simple methods
+                            if (originalRoom?.methodCategories) {
+                                const allCategoryMethods = Object.entries(originalRoom.methodCategories).flatMap(([categoryName, categoryData]) =>
+                                    categoryData.methods.map(method => ({
+                                        method,
+                                        allowMultiple: categoryData.allowMultiple,
+                                        categoryName
+                                    }))
+                                );
+                                if (allCategoryMethods.length === 0) return null; // Only render if there are methods
+
+                                return (
+                                    <div key={room.id} className="selected-room-methods">
+                                        <div className="room-method-buttons">
+                                            {allCategoryMethods.map(({ method, allowMultiple }) => {
+                                                const isSelected = selectedMethods[room.id]?.includes(method) || false;
+                                                const inputType = allowMultiple ? 'checkbox' : 'radio';
+                                                return (
+                                                    <button
+                                                        key={method}
+                                                        className={`method-tab ${isSelected ? 'active' : ''} ${inputType}`}
+                                                        onClick={() => handleMethodSelect(room, method)}
+                                                    >
+                                                        {method}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
-                                </div>
-                            );
-                        } else {
-                            // Fallback to old method rendering
-                            const showSingleMethod = originalRoom && originalRoom.methods && originalRoom.methods.length === 1;
-                            const methodsToShow = (room.methods && room.methods.length > 0)
-                                ? room.methods
-                                : (showSingleMethod ? originalRoom.methods : []);
-                                
-                            return (
-                                <div key={room.id} className="selected-room-methods">
-                                    {methodsToShow && methodsToShow.length > 0 && (
+                                );
+                            } else {
+                                const showSingleMethod = originalRoom && originalRoom.methods && originalRoom.methods.length === 1;
+                                const methodsToShow = (room.methods && room.methods.length > 0)
+                                    ? room.methods
+                                    : (showSingleMethod ? originalRoom.methods : []);
+                                if (!methodsToShow || methodsToShow.length === 0) return null; // Only render if there are methods
+
+                                return (
+                                    <div key={room.id} className="selected-room-methods">
                                         <div className="room-method-buttons">
                                             {methodsToShow.map(method => (
                                                 <button
@@ -476,13 +480,118 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                                                 </button>
                                             ))}
                                         </div>
-                                    )}
+                                    </div>
+                                );
+                            }
+                        })}
+                    </div>
+                    {/* Spec Assignment Section (only show rooms/weapons with defaults) */}
+                    {selectedRooms.some(room => 
+    selectedInventoryItems.some(item => 
+        item.equipment?.slot === 'weapon' && getDefaultSpecCount(room.id, item.name) > 0
+    )
+) && (
+    <div className="spec-assignment-container">
+        <button
+            className="btn"
+            style={{ margin: '16px 0' }}
+            onClick={() => setSpecDropdownOpen(open => !open)}
+        >
+            {specDropdownOpen ? 'Hide Spec Assignment' : 'Manually Assign Specs'}
+        </button>
+        <AnimatePresence>
+            {specDropdownOpen && (
+                <motion.div
+                    className="spec-dropdown"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    <h2 className="section-title">Spec Assignment</h2>
+                    {selectedRooms
+                        .filter(room => 
+                            selectedInventoryItems.some(item => 
+                                item.equipment?.slot === 'weapon' && getDefaultSpecCount(room.id, item.name) > 0
+                            )
+                        )
+                        .map(room => {
+                            // Get weapons that have defaults for this room
+                            const availableWeapons = selectedInventoryItems
+                                .filter(item => 
+                                    item.equipment?.slot === 'weapon' && 
+                                    getDefaultSpecCount(room.id, item.name) > 0
+                                );
+
+                            return (
+                                <div key={room.id} className="spec-assignment-room">
+                                    <span className="room-name">{room.name}</span>
+                                    <div className="weapon-spec-list">
+                                        {availableWeapons.map(item => {
+                                            const defaultCount = getDefaultSpecCount(room.id, item.name);
+                                            const currentAssignment = roomSpecs[room.id];
+                                            const isSelected = currentAssignment?.weapon === item.name;
+                                            
+                                            return (
+                                                <div key={item.equipment?.id} className="weapon-spec-item">
+                                                    <button
+                                                        className={`weapon-spec-button ${isSelected ? 'selected' : ''}`}
+                                                        onClick={() => {
+                                                            if (isSelected) {
+                                                                // Deselect if already selected
+                                                                setRoomSpecs(prev => {
+                                                                    const newSpecs = { ...prev };
+                                                                    delete newSpecs[room.id];
+                                                                    return newSpecs;
+                                                                });
+                                                            } else {
+                                                                // Select with default count
+                                                                setRoomSpecs(prev => ({
+                                                                    ...prev,
+                                                                    [room.id]: {
+                                                                        weapon: item.name,
+                                                                        count: defaultCount
+                                                                    }
+                                                                }));
+                                                            }
+                                                        }}
+                                                    >
+                                                        <span className="weapon-name">{item.name}</span>
+                                                        <span className="spec-count">(Default: {defaultCount} specs)</span>
+                                                    </button>
+                                                    {isSelected && (
+                                                        <label className="spec-count-input">
+                                                            <input
+                                                                type="number"
+                                                                min={0}
+                                                                value={currentAssignment?.count || defaultCount}
+                                                                onChange={e =>
+                                                                    setRoomSpecs(prev => ({
+                                                                        ...prev,
+                                                                        [room.id]: {
+                                                                            ...prev[room.id],
+                                                                            weapon: item.name,
+                                                                            count: Number(e.target.value)
+                                                                        }
+                                                                    }))
+                                                                }
+                                                            />
+                                                        </label>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             );
-                        }
-                    })}
+                        })}
                 </motion.div>
-                
+            )}
+        </AnimatePresence>
+    </div>
+)}
+                </motion.div>
+
             </div>
         </section>
     );

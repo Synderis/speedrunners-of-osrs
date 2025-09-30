@@ -19,10 +19,12 @@ interface PlotSectionProps {
   selectedRooms?: Room[];
   selectedInventoryItems?: InventoryItem[];
   selectedMethods?: { [roomId: string]: string[] }; // Changed to match RoomSelection format
+  roomSpecs?: { [roomId: string]: { weapon: string; count: number } };
 }
 
 type Stats = {
   total_hits: number;
+  total_expected_seconds: number;
   total_expected_ticks: number;
   result?: any;
   phase_time_results?: any[];
@@ -35,29 +37,26 @@ const calculateGearStatsForSet = (
   gearSets: GearSets
 ) => {
   if (!gearSets || !gearSets[gearType]) return { ...DEFAULT_GEAR_STATS };
-
   // Deep clone to avoid mutation
   const totalStats = JSON.parse(JSON.stringify(DEFAULT_GEAR_STATS));
   for (const slot of gearSets[gearType]) {
     const eq = slot.selected as Equipment | undefined;
     if (eq) {
-      // Bonuses
+      // Bonuses (keep special logic for magic_str)
       totalStats.bonuses.str += eq.bonuses.str ?? 0;
       totalStats.bonuses.ranged_str += eq.bonuses.ranged_str ?? 0;
       totalStats.bonuses.magic_str += (eq.bonuses.magic_str ? eq.bonuses.magic_str * 0.1 : 0);
       totalStats.bonuses.prayer += eq.bonuses.prayer ?? 0;
-      // Offensive
-      totalStats.offensive.stab += eq.offensive.stab ?? 0;
-      totalStats.offensive.slash += eq.offensive.slash ?? 0;
-      totalStats.offensive.crush += eq.offensive.crush ?? 0;
-      totalStats.offensive.magic += eq.offensive.magic ?? 0;
-      totalStats.offensive.ranged += eq.offensive.ranged ?? 0;
-      // Defensive
-      totalStats.defensive.stab += eq.defensive.stab ?? 0;
-      totalStats.defensive.slash += eq.defensive.slash ?? 0;
-      totalStats.defensive.crush += eq.defensive.crush ?? 0;
-      totalStats.defensive.magic += eq.defensive.magic ?? 0;
-      totalStats.defensive.ranged += eq.defensive.ranged ?? 0;
+      // Offensive stats
+      for (const statName of Object.keys(totalStats.offensive)) {
+        totalStats.offensive[statName as keyof typeof totalStats.offensive] += 
+          eq.offensive[statName as keyof typeof eq.offensive] ?? 0;
+      }
+      // Defensive stats
+      for (const statName of Object.keys(totalStats.defensive)) {
+        totalStats.defensive[statName as keyof typeof totalStats.defensive] += 
+          eq.defensive[statName as keyof typeof eq.defensive] ?? 0;
+      }
     }
   }
   return totalStats;
@@ -106,16 +105,6 @@ const calculateCombinedDistribution = (
   try {
     // Validate data structure
     const validateData = (data: PlotDataPoint[], name: string) => {
-      console.log(`Validating ${name} data:`, {
-        length: data.length,
-        sample: data.slice(0, 3),
-        types: data.slice(0, 3).map(p => ({
-          time: typeof p.time,
-          dps: typeof p.dps,
-          timeValue: p.time,
-          dpsValue: p.dps
-        }))
-      });
 
       for (let i = 0; i < data.length; i++) {
         const point = data[i];
@@ -134,7 +123,6 @@ const calculateCombinedDistribution = (
           return false;
         }
       }
-      console.log(`${name} data validation passed`);
       return true;
     };
 
@@ -162,11 +150,6 @@ const calculateCombinedDistribution = (
     const convertToPMF = (data: PlotDataPoint[], maxTime: number) => {
       const pmf = new Array(Math.floor(maxTime) + 1).fill(0);
 
-      console.log(`Converting to PMF for maxTime ${maxTime}, data length: ${data.length}`);
-      console.log(`Data sample - first 5:`, data.slice(0, 5));
-      console.log(`Data sample - middle 5:`, data.slice(Math.floor(data.length / 2) - 2, Math.floor(data.length / 2) + 3));
-      console.log(`Data sample - last 5:`, data.slice(-5));
-
       let totalMassAdded = 0;
       let nonZeroCount = 0;
 
@@ -177,21 +160,12 @@ const calculateCombinedDistribution = (
         const probMass = Math.max(0, nextProb - currentProb);
         const timeIndex = Math.floor(data[i].time);
 
-        // Log a few examples
-        if (i < 5 || i > data.length - 6 || (i > data.length / 2 - 3 && i < data.length / 2 + 3)) {
-          console.log(`PMF conversion i=${i}: currentProb=${currentProb}, nextProb=${nextProb}, probMass=${probMass}, timeIndex=${timeIndex}`);
-        }
-
         if (timeIndex >= 0 && timeIndex < pmf.length && probMass > 0 && isFinite(probMass)) {
           pmf[timeIndex] = probMass;
           totalMassAdded += probMass;
           nonZeroCount++;
         }
       }
-
-      console.log(`PMF conversion result: totalMass=${totalMassAdded}, nonZeroCount=${nonZeroCount}, pmfLength=${pmf.length}`);
-      console.log(`PMF sample (first 100):`, pmf.slice(0, 10));
-      console.log(`PMF sample (last 10):`, pmf.slice(-10));
 
       return pmf;
     };
@@ -228,8 +202,6 @@ const calculateCombinedDistribution = (
     const combinedData: PlotDataPoint[] = [];
     let cumulativeProb = 0;
 
-    console.log('Converting PMF back to CDF, combinedPMF length:', combinedPMF.length);
-
     // For increasing CDF, we build from left to right (time 0 to max)
     for (let t = 0; t < combinedPMF.length; t++) {
       if (isFinite(combinedPMF[t])) {
@@ -245,27 +217,14 @@ const calculateCombinedDistribution = (
       }
     }
 
-    console.log('Combined data before cropping:', {
-      length: combinedData.length,
-      maxDps: Math.max(...combinedData.map(d => d.dps))
-    });
-
     // Crop the distribution to 99.9%
     const croppedData = cropDistributionTo999(combinedData);
-
-    console.log('Combined data after cropping to 99.9%:', {
-      originalLength: combinedData.length,
-      croppedLength: croppedData.length,
-      reduction: `${(((combinedData.length - croppedData.length) / combinedData.length) * 100).toFixed(1)}%`,
-      lastPoint: croppedData[croppedData.length - 1]
-    });
 
     if (!croppedData.length) {
       console.error('No combined data generated after cropping');
       return [];
     }
 
-    console.log(`Generated ${croppedData.length} combined data points (cropped to 99.9%)`);
     return croppedData;
   } catch (error) {
     console.error('Error calculating combined distribution:', error);
@@ -294,7 +253,8 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   },
   selectedRooms = [],
   selectedInventoryItems = [],
-  selectedMethods = {}
+  selectedMethods = {},
+  roomSpecs = {}
 }) => {
   // --- Theme & Chart Colors ---
   const { theme } = useTheme();
@@ -342,6 +302,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
     total_hits: 0,
     phase_time_results: [],
     phase_results: [],
+    total_expected_seconds: 0,
     total_expected_ticks: 0,
   };
 
@@ -362,13 +323,6 @@ const PlotSection: React.FC<PlotSectionProps> = ({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  // Force combined plot re-render when data changes
-  // useEffect(() => {
-  //   if (selectedRooms.length >= 2 && Object.keys(plotDataDict).length >= 2) {
-  //     setCombinedPlotKey(prev => prev + 1);
-  //   }
-  // }, [plotDataDict, statsDict, selectedRooms, activeFloor]);
 
   useEffect(() => {
     if (
@@ -543,16 +497,13 @@ const PlotSection: React.FC<PlotSectionProps> = ({
       };
       console.log('Player Data for WASM:', playerData);
 
-      // Loop over all selected monsters
-      const plotDataUpdates: Record<string, PlotDataPoint[]> = {};
-      const statsUpdates: Record<string, Stats> = {};
-
-      for (const room of selectedRooms) {
+      // Loop over all selected monsters (PARALLELIZED)
+      const roomPromises = selectedRooms.map(async (room) => {
         const model = room.id || 'tekton';
         const loader = wasmModelLoaders[model] || wasmModelLoaders['tekton'];
         if (!loader) {
           console.error(`No WASM loader for model: ${model}`);
-          continue;
+          return null;
         }
         // Get the full monster objects for this room
         const monsters = getMonstersByRoom(room);
@@ -570,26 +521,57 @@ const PlotSection: React.FC<PlotSectionProps> = ({
           filteredMethods = [];
         }
 
-        const roomPayload = { ...room, methods: filteredMethods, monsters };
+        const roomPayload = {
+          ...room,
+          methods: filteredMethods,
+          monsters,
+          specialAttacks: roomSpecs[room.id] && roomSpecs[room.id].weapon
+            ? [{ name: roomSpecs[room.id].weapon, count: roomSpecs[room.id].count }]
+            : []
+        };
         console.log('Sending to WASM:', { room: roomPayload, monsters });
         const result = await loader(playerData, roomPayload);
         const key = String(room.id || 'default');
         console.log(`WASM result for room ${room.name} (${key}):`, result, result.perMonster);
-        plotDataUpdates[key] = result.tickData;
-        statsUpdates[key] = {
-          total_hits: result.summary.expectedHits,
-          total_expected_ticks: result.summary.ticksTimeToKill,
-          result: result.perMonster,
-          phase_time_results: result.summary.phaseTimeResults || [],
-          phase_results: result.summary.phaseResults || [],
+        return {
+          key,
+          plotData: result.tickData,
+          stats: {
+            total_hits: result.summary.expectedHits,
+            total_expected_ticks: result.summary.ticksTimeToKill,
+            total_expected_seconds: result.summary.secondsTimeToKill,
+            result: result.perMonster,
+            phase_time_results: result.summary.phaseTimeResults || [],
+            phase_results: result.summary.phaseResults || [],
+          }
         };
+      });
+
+      const results = await Promise.all(roomPromises);
+
+      const plotDataUpdates: Record<string, PlotDataPoint[]> = {};
+      const statsUpdates: Record<string, Stats> = {};
+
+      results.forEach(res => {
+        if (res) {
+          plotDataUpdates[res.key] = res.plotData;
+          statsUpdates[res.key] = res.stats;
+        }
+      });
+
+      // setPlotDataDict(prev => ({ ...prev, ...plotDataUpdates }));
+      // setStatsDict(prev => ({ ...prev, ...statsUpdates }));
+      setPlotDataDict(plotDataUpdates);
+      setStatsDict(statsUpdates);
+
+      // Check if Vespula Pots Skip is selected
+      let tightropeDelayAdjustment = 0;
+      if (selectedMethods && selectedMethods['vespula'] && selectedMethods['vespula'].includes('Vespula Pots Skip')) {
+        tightropeDelayAdjustment = 11;
       }
 
-      setPlotDataDict(prev => ({ ...prev, ...plotDataUpdates }));
-      setStatsDict(prev => ({ ...prev, ...statsUpdates }));
-
-      // Calculate combined floor analysis after individual room data is ready
-      calculateCombinedFloorAnalysis(plotDataUpdates, statsUpdates);
+      // Pass adjustment to combined floor analysis
+      calculateCombinedFloorAnalysis(plotDataUpdates, statsUpdates, tightropeDelayAdjustment);
 
     } catch (error) {
       console.error('WASM calculation failed:', error);
@@ -600,7 +582,8 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   // New function to calculate combined analysis
   const calculateCombinedFloorAnalysis = (
     plotData: Record<string, PlotDataPoint[]>,
-    statsData: Record<string, Stats>
+    statsData: Record<string, Stats>,
+    tightropeDelayAdjustment: number = 0
   ) => {
     console.log('Calculating combined floor analysis');
 
@@ -644,8 +627,13 @@ const PlotSection: React.FC<PlotSectionProps> = ({
           const room = floor.rooms[i];
 
           if (room.isDelay) {
-            pendingDelay += room.delayTicks || 0;
-            totalExpectedTime += room.delayTicks || 0;
+            let delayTicks = room.delayTicks || 0;
+            // If this is tightrope, apply adjustment
+            if (room.roomId === 'tightrope' && tightropeDelayAdjustment > 0) {
+              delayTicks = Math.max(0, delayTicks - tightropeDelayAdjustment);
+            }
+            pendingDelay += delayTicks;
+            totalExpectedTime += delayTicks;
           } else {
             const roomData = plotData[room.roomId];
             const roomStatsData = statsData[room.roomId];
@@ -700,9 +688,23 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   };
 
   const formatSeconds = (seconds: number) => {
+    // Always show tenths, rounded
     const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    const secsFloat = seconds % 60;
+    const secs = Math.floor(secsFloat);
+    let tenths = Math.round((secsFloat - secs) * 10);
+    // Handle rollover (e.g., 59.95 rounds to 60.0)
+    let displaySecs = secs;
+    let displayMins = mins;
+    if (tenths === 10) {
+      tenths = 0;
+      displaySecs += 1;
+      if (displaySecs === 60) {
+        displaySecs = 0;
+        displayMins += 1;
+      }
+    }
+    return `${displayMins}:${displaySecs.toString().padStart(2, '0')}.${tenths}`;
   };
 
   const statCards = [
@@ -782,7 +784,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
       title: 'Time to Kill',
       value: activeStats.total_expected_ticks > 0
         ? (showSeconds
-          ? formatSeconds(activeStats.total_expected_ticks * 0.6)
+          ? formatSeconds(activeStats.total_expected_seconds)
           : activeStats.total_expected_ticks.toFixed(1))
         : '--',
       unit: showSeconds ? 'min:sec' : 'ticks'
@@ -898,7 +900,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
               })}
             </div>
             <button
-              className="config-toggle-btn"
+              className="btn"
               style={{ margin: '0.5rem 0' }}
               onClick={() => setShowConfig(v => !v)}
               type="button"
@@ -970,7 +972,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
             theme={theme}
             formatSeconds={formatSeconds}
             fadeInOut={fadeInOut}
-            expectedTTK={showSeconds ? (activeStats.total_expected_ticks * 0.6).toFixed(1) : activeStats.total_expected_ticks.toFixed(1)}
+            expectedTTK={showSeconds ? activeStats.total_expected_seconds.toFixed(1) : activeStats.total_expected_ticks.toFixed(1)}
           />
 
           {/* NEW COMBINED ROOMS PLOT SECTION - NOW FLOOR BASED */}
@@ -1113,6 +1115,12 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                         const floor = RAID_FLOORS.find(f => f.id === activeFloor);
                         if (!floor) return null;
 
+                        // Determine if Vespula Pots Skip is selected
+                        let tightropeDelayAdjustment = 0;
+                        if (selectedMethods && selectedMethods['vespula'] && selectedMethods['vespula'].includes('Vespula Pots Skip')) {
+                          tightropeDelayAdjustment = 11;
+                        }
+
                         let runningTotal = 0;
                         const rows: JSX.Element[] = [];
                         let roomStatsIndex = 0;
@@ -1122,14 +1130,42 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                           const floorRoom = floor.rooms[i];
 
                           if (floorRoom.isDelay) {
-                            // Add delay ticks to running total but don't show a row
-                            runningTotal += floorRoom.delayTicks || 0;
+                            // Adjust tightrope delay if needed
+                            let delayTicks = floorRoom.delayTicks || 0;
+                            if (floorRoom.roomId === 'tightrope' && tightropeDelayAdjustment > 0) {
+                              delayTicks = Math.max(0, delayTicks - tightropeDelayAdjustment);
+                            }
+                            runningTotal += delayTicks;
+                            rows.push(
+                              <div key={i} style={{
+                                display: 'grid',
+                                gridTemplateColumns: '2fr 1fr 1fr',
+                                gap: '0.5rem',
+                                padding: '0.3rem 0',
+                                borderBottom: `1px solid ${chartColors.text}20`,
+                                fontStyle: 'italic',
+                                color: chartColors.text + '99'
+                              }}>
+                                <div><strong>{floorRoom.name || 'Delay'}</strong></div>
+                                <div style={{ textAlign: 'center' }}>
+                                  {showSeconds
+                                    ? formatSeconds(delayTicks * 0.6)
+                                    : delayTicks.toFixed(1)
+                                  }
+                                </div>
+                                <div style={{ textAlign: 'center', color: chartColors.primary }}>
+                                  {showSeconds
+                                    ? formatSeconds(runningTotal * 0.6)
+                                    : runningTotal.toFixed(1)
+                                  }
+                                </div>
+                              </div>
+                            );
                           } else {
                             // This is a combat room
                             const roomStat = combinedRoomAnalysis[activeFloor]!.roomStats![roomStatsIndex];
                             if (roomStat) {
                               runningTotal += roomStat.stats.total_expected_ticks;
-
                               rows.push(
                                 <div key={i} style={{
                                   display: 'grid',
@@ -1143,7 +1179,7 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                                   <div><strong>{roomStat.name}</strong></div>
                                   <div style={{ textAlign: 'center' }}>
                                     {showSeconds
-                                      ? formatSeconds(roomStat.stats.total_expected_ticks * 0.6)
+                                      ? formatSeconds(roomStat.stats.total_expected_seconds)
                                       : roomStat.stats.total_expected_ticks.toFixed(1)
                                     }
                                   </div>
@@ -1155,7 +1191,6 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                                   </div>
                                 </div>
                               );
-
                               roomStatsIndex++;
                             }
                           }
