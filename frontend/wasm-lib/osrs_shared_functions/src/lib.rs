@@ -1,16 +1,19 @@
 use osrs_shared_types::*;
 use rand::Rng;
+use wasm_bindgen::prelude::*;
 
-// #[wasm_bindgen]
-// extern "C" {
-//     // fn alert(s: &str);
-//     #[wasm_bindgen(js_namespace = console)]
-//     fn log(s: &str);
-// }
+use web_sys::console;
 
-// macro_rules! console_log {
-//     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-// }
+#[cfg(feature = "wee_alloc")]
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
+#[wasm_bindgen]
+extern "C" {
+    fn alert(s: &str);
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
 
 fn tbow_scaling(magic: u32, mode: &str) -> f64 {
     let (factor, base, clamp) = if mode == "accuracy" {
@@ -184,11 +187,12 @@ pub fn calculate_max_hit_for_style(
         slayer_bonus = 1.15;
     };
     let inquisitor_count = gear_set.gear_items.iter().filter(|item_opt| {
-        item_opt.as_ref().map_or(false, |item| item.name.starts_with("Inquisitor's"))
+        item_opt.as_ref().map_or(false, |item| item.name.starts_with("Inquisitor's") && item.name != "Inquisitor's mace")
     }).count();
     let inquisitor_bonus = if combat_type == "melee"  && inquisitor_count > 0 && style.combat_style == "Crush" {
         if weapon.name == "Inquisitor's mace" {
-            1.0 + inquisitor_count as f64 * 0.025
+            let inq_bonus_amt = inquisitor_count as f64 * 0.025;
+            1.0 + inq_bonus_amt
         } else if inquisitor_count >= 3 {
             1.025
         } else {
@@ -349,7 +353,7 @@ pub fn calculate_max_rolls_for_style(
         slayer_bonus = 7.0 / 6.0;
     }
     let inquisitor_count = gear_set.gear_items.iter().filter(|item_opt| {
-        item_opt.as_ref().map_or(false, |item| item.name.starts_with("Inquisitor's"))
+        item_opt.as_ref().map_or(false, |item| item.name.starts_with("Inquisitor's") && item.name != "Inquisitor's mace")
     }).count();
     let inquisitor_bonus = if combat_type == "melee"  && inquisitor_count > 0 && style.combat_style == "Crush" {
         if weapon.name == "Inquisitor's mace" {
@@ -511,6 +515,44 @@ pub fn ensure_weapon_swap(
         return Some((prev_weapon.name.clone(), current_offhand));
     }
     None
+}
+
+pub fn monster_stat_scaling(monster: &Monster, player_hp: i32) -> MonsterSkills {
+    let cm_scale = if monster.name == "Tekton" || monster.name == "Tekton (enraged)" {
+        1.2
+    } else {
+        1.5
+    };
+    let hp_scaling = ((player_hp as f64 * (4.0/9.0)).floor() + 55.0) / 99.0;
+    console::log_1(&format!("Monster stat scaling factor: {:.2}", hp_scaling).into());
+    let new_atk = (((monster.skills.atk as f64 / cm_scale).floor() * hp_scaling).floor() * cm_scale).floor() as i32;
+    let new_def = (((monster.skills.def as f64 / cm_scale).floor() * hp_scaling).floor() * cm_scale).floor() as i32;
+    let new_magic = (((monster.skills.magic as f64 / cm_scale).floor() * hp_scaling).floor() * cm_scale).floor() as i32;
+    let new_ranged = (((monster.skills.ranged as f64 / cm_scale).floor() * hp_scaling).floor() * cm_scale).floor() as i32;
+    let new_str = (((monster.skills.str as f64 / cm_scale).floor() * hp_scaling).floor() * cm_scale).floor() as i32;
+    MonsterSkills {
+        atk: new_atk,
+        def: new_def,
+        hp: monster.skills.hp,
+        magic: new_magic,
+        ranged: new_ranged,
+        str: new_str,
+    }
+}
+
+pub fn monster_hp_scaling(monster: &Monster, combat_stats: &CombatStats) -> i32 {
+    let base = (combat_stats.defense + combat_stats.hitpoints + (combat_stats.prayer as f64 * 1.0/2.0).floor() as i32) as f64 * 1.0/4.0;
+    let melee = (combat_stats.attack + combat_stats.strength) as f64 * 13.0 / 40.0;
+    let ranged = (combat_stats.ranged as f64 * 3.0/2.0) * 13.0 / 40.0;
+    let magic = (combat_stats.magic as f64 * 3.0/2.0) * 13.0 / 40.0;
+    console::log_1(&format!("Base combat factor: {:.2}", base).into());
+    console::log_1(&format!("Melee combat factor: {:.2}", melee).into());
+    console::log_1(&format!("Ranged combat factor: {:.2}", ranged).into());
+    console::log_1(&format!("Magic combat factor: {:.2}", magic).into());
+    let combat_level = (base + melee.max(ranged).max(magic)).floor() as i32;
+    console::log_1(&format!("Combat level: {}", combat_level).into());
+    console::log_1(&format!("Monster hp scaling factor: {:.2}", combat_level as f64 / 126.0).into());
+    (monster.skills.hp as f64 * (combat_level as f64 / 126.0)).floor() as i32
 }
 
 pub fn burning_barrage_special<R: Rng>(rng: &mut R, max_hit: i32, accuracy: f64) -> (Vec<i32>, Vec<i32>) {

@@ -2,6 +2,7 @@ use rand::prelude::*;
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
+use web_sys::console;
 
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
@@ -63,7 +64,22 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         }
     };
     let mut player = payload.player;
-    let monsters = &payload.room.monsters;
+    let mut monsters = payload.room.monsters;
+    for monster in &mut monsters {
+        console::log_1(&format!("Processing monster: {}", monster.name).into());
+        console::log_1(&format!("Original HP: {}, Original skills: {:?}", monster.skills.hp, monster.skills).into());
+        
+        if player.combat_stats.hitpoints != 99 {
+            let old_hp = monster.skills.hp;
+            monster.skills.hp = monster_hp_scaling(monster, &player.combat_stats);
+            console::log_1(&format!("HP scaled from {} to {} (player HP: {})", old_hp, monster.skills.hp, player.combat_stats.hitpoints).into());
+        }
+        
+        let old_skills = monster.skills.clone();
+        monster.skills = monster_stat_scaling(monster, player.combat_stats.hitpoints);
+        console::log_1(&format!("Skills scaled from {:?} to {:?}", old_skills, monster.skills).into());
+        console::log_1(&"---".into());
+    }
     let room_methods = &payload.room.methods;
     let spec_count_dict = payload.room.special_attacks;
     let mut spec_count_max = 0;

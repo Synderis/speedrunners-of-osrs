@@ -10,3 +10,8 @@ serde_json = "1.0"
 osrs_shared_types = { path = "../osrs_shared_types" }
 rand = "0.8"
 getrandom = { version = "0.2", features = ["js"] }
+[dependencies.web-sys]
+version = "0.3"
+features = [
+  "console",
+]

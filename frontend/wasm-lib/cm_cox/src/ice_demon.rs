@@ -2,6 +2,18 @@ use rand::prelude::*;
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
+use web_sys::console;
+
+#[cfg(feature = "wee_alloc")]
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
+#[wasm_bindgen]
+extern "C" {
+    fn alert(s: &str);
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
 
 fn get_drain_and_heal(kindling: usize) -> (f64, f64) {
     if kindling == 0 {
@@ -242,8 +254,23 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
     };
 
     let mut player = payload.player;
-    let monsters = payload.room.monsters;
+    let mut monsters = payload.room.monsters;
     let spec_count_dict = payload.room.special_attacks;
+    for monster in &mut monsters {
+        console::log_1(&format!("Processing monster: {}", monster.name).into());
+        console::log_1(&format!("Original HP: {}, Original skills: {:?}", monster.skills.hp, monster.skills).into());
+        
+        if player.combat_stats.hitpoints != 99 {
+            let old_hp = monster.skills.hp;
+            monster.skills.hp = monster_hp_scaling(monster, &player.combat_stats);
+            console::log_1(&format!("HP scaled from {} to {} (player HP: {})", old_hp, monster.skills.hp, player.combat_stats.hitpoints).into());
+        }
+        
+        let old_skills = monster.skills.clone();
+        monster.skills = monster_stat_scaling(monster, player.combat_stats.hitpoints);
+        console::log_1(&format!("Skills scaled from {:?} to {:?}", old_skills, monster.skills).into());
+        console::log_1(&"---".into());
+    }
     let spec_count_max;
 
     let inventory_items: Vec<SelectedItem> = player
