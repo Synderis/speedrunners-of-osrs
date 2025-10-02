@@ -7,7 +7,7 @@ const statIconMap: Record<string, keyof typeof miscIcons> = {
     'combat': 'levels',
     'attack': 'attack',
     'strength': 'strength',
-    'defence': 'defense',
+    'defence': 'defence',
     'ranged': 'ranged',
     'hitpoints': 'hitpoints',
     'magic': 'magic',

@@ -232,6 +232,52 @@ const calculateCombinedDistribution = (
   }
 };
 
+function monsterStatScaling(monster: Monster, playerHp: number) {
+  if (monster.name === "Head" || monster.name === "Melee Hand" || monster.name === "Mage Hand") {
+    return monster.skills; // No scaling for Olm forms
+  }
+  const isTekton = monster.name === "Tekton" || monster.name === "Tekton (enraged)";
+  const cmScale = isTekton ? 1.2 : 1.5;
+  const hpScaling = (Math.floor(playerHp * (4.0 / 9.0)) + 55.0) / 99.0;
+
+  const scale = (val: number) =>
+    Math.floor(Math.floor(Math.floor(val / cmScale) * hpScaling) * cmScale);
+
+  return {
+    atk: scale(monster.skills.atk),
+    def: scale(monster.skills.def),
+    hp: monster.skills.hp,
+    magic: scale(monster.skills.magic),
+    ranged: scale(monster.skills.ranged),
+    str: scale(monster.skills.str),
+  };
+}
+
+function monsterHpScaling(monster: Monster, combatStats: CombatStats) {
+  if (monster.name === "Head" || monster.name === "Melee Hand" || monster.name === "Mage Hand") {
+    return monster.skills.hp; // No scaling for Olm forms
+  }
+  const base =
+    (combatStats.defence +
+      combatStats.hitpoints +
+      Math.floor(combatStats.prayer * 0.5)) *
+    0.25;
+  const melee = ((combatStats.attack + combatStats.strength) * 13.0) / 40.0;
+  const ranged = ((combatStats.ranged * 1.5) * 13.0) / 40.0;
+  const magic = ((combatStats.magic * 1.5) * 13.0) / 40.0;
+  const cmScale = 1.5;
+
+  let baseHp: number;
+  if (monster.name === "Guardian (Chambers of Xeric)") {
+    const reducedHp = Math.floor(monster.skills.hp / cmScale);
+    baseHp = Math.floor(reducedHp - 99.0 + combatStats.mining);
+  } else {
+    baseHp = Math.floor(monster.skills.hp / cmScale);
+  }
+  const combatLevel = Math.floor(base + Math.max(melee, ranged, magic));
+  return Math.floor(Math.floor(baseHp * (combatLevel / 126.0)) * cmScale);
+}
+
 // --- Main Component ---
 const PlotSection: React.FC<PlotSectionProps> = ({
   gearSets = {
@@ -392,38 +438,76 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   const configSections = [
     ...gearConfigSections,
     {
-      key: 'monster',
-      title: 'Monster Stats',
-      data: {
+  key: 'monster',
+  title: 'Monster Stats',
+  data: (() => {
+    if (!currentMonster) {
+      return {
         'Combat Levels': {
-          'hitpoints': currentMonster?.skills.hp || 0,
-          'attack': currentMonster?.skills.atk || 0,
-          'strength': currentMonster?.skills.str || 0,
-          'defence': currentMonster?.skills.def || 0,
-          'ranged': currentMonster?.skills.ranged || 0,
-          'magic': currentMonster?.skills.magic || 0
+          'hitpoints': 0,
+          'attack': 0,
+          'strength': 0,
+          'defence': 0,
+          'ranged': 0,
+          'magic': 0
         },
         'Offensive Bonuses': {
-          'max_hit': currentMonster?.max_hit || 0,
-          'attack': currentMonster?.offensive.atk || 0,
-          'strength': currentMonster?.offensive.str || 0,
-          'ranged': currentMonster?.offensive.ranged || 0,
-          'magic': currentMonster?.offensive.magic || 0,
-          'ranged_strength': currentMonster?.offensive.ranged_str || 0,
-          'magic_strength': currentMonster?.offensive.magic_str || 0,
+          'max_hit': 0,
+          'attack': 0,
+          'strength': 0,
+          'ranged': 0,
+          'magic': 0,
+          'ranged_strength': 0,
+          'magic_strength': 0,
         },
         'Defensive Bonuses': {
-          'stab': currentMonster?.defensive.stab || 0,
-          'slash': currentMonster?.defensive.slash || 0,
-          'crush': currentMonster?.defensive.crush || 0,
-          'magic_defence': currentMonster?.defensive.magic || 0,
-          'light': currentMonster?.defensive.light || 0,
-          'standard': currentMonster?.defensive.standard || 0,
-          'heavy': currentMonster?.defensive.heavy || 0,
-          'flat_armor': currentMonster?.defensive.flat_armour || 0,
+          'stab': 0,
+          'slash': 0,
+          'crush': 0,
+          'magic_defence': 0,
+          'light': 0,
+          'standard': 0,
+          'heavy': 0,
+          'flat_armor': 0,
         }
-      }
+      };
     }
+
+    // Apply scaling (returns raw stats for Olm, scaled stats for others)
+    const scaledStats = monsterStatScaling(currentMonster, combatStats.hitpoints);
+    const scaledHp = monsterHpScaling(currentMonster, combatStats);
+
+    return {
+      'Combat Levels': {
+        'hitpoints': scaledHp,
+        'attack': scaledStats.atk,
+        'strength': scaledStats.str,
+        'defence': scaledStats.def,
+        'ranged': scaledStats.ranged,
+        'magic': scaledStats.magic
+      },
+      'Offensive Bonuses': {
+        'max_hit': currentMonster.max_hit || 0,
+        'attack': currentMonster.offensive.atk || 0,
+        'strength': currentMonster.offensive.str || 0,
+        'ranged': currentMonster.offensive.ranged || 0,
+        'magic': currentMonster.offensive.magic || 0,
+        'ranged_strength': currentMonster.offensive.ranged_str || 0,
+        'magic_strength': currentMonster.offensive.magic_str || 0,
+      },
+      'Defensive Bonuses': {
+        'stab': currentMonster.defensive.stab || 0,
+        'slash': currentMonster.defensive.slash || 0,
+        'crush': currentMonster.defensive.crush || 0,
+        'magic_defence': currentMonster.defensive.magic || 0,
+        'light': currentMonster.defensive.light || 0,
+        'standard': currentMonster.defensive.standard || 0,
+        'heavy': currentMonster.defensive.heavy || 0,
+        'flat_armor': currentMonster.defensive.flat_armour || 0,
+      }
+    };
+  })()
+}
   ];
 
   const loadData = async () => {

@@ -526,7 +526,7 @@ pub fn monster_stat_scaling(monster: &Monster, player_hp: i32) -> MonsterSkills 
 }
 
 pub fn monster_hp_scaling(monster: &Monster, combat_stats: &CombatStats) -> i32 {
-    let base = (combat_stats.defense + combat_stats.hitpoints + (combat_stats.prayer as f64 * 1.0/2.0).floor() as i32) as f64 * 1.0/4.0;
+    let base = (combat_stats.defence + combat_stats.hitpoints + (combat_stats.prayer as f64 * 1.0/2.0).floor() as i32) as f64 * 1.0/4.0;
     let melee = (combat_stats.attack + combat_stats.strength) as f64 * 13.0 / 40.0;
     let ranged = (combat_stats.ranged as f64 * 3.0/2.0) * 13.0 / 40.0;
     let magic = (combat_stats.magic as f64 * 3.0/2.0) * 13.0 / 40.0;

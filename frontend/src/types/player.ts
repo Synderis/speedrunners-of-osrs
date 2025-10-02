@@ -74,7 +74,7 @@ export interface WeaponStyles {
 export interface CombatStats {
     attack: number;
     strength: number;
-    defense: number;
+    defence: number;
     ranged: number;
     magic: number;
     hitpoints: number;

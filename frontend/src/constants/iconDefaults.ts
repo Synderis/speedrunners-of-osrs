@@ -15,7 +15,7 @@ export const DEFAULT_SLOT_IMAGES = {
 export const PLAYER_STAT_ICON_DEFAULTS = {
     attack: '/gear/attack.webp',
     strength: '/gear/strength.webp',
-    defense: '/gear/defence.webp',
+    defence: '/gear/defence.webp',
     ranged: '/gear/ranged.webp',
     hitpoints: '/gear/hitpoints.webp',
     magic: '/gear/magic.webp',
@@ -29,7 +29,7 @@ export const MONSTER_STAT_ICON_DEFAULTS = {
     levels: '/gear/levels.webp',
     attack: '/gear/attack.webp',
     strength: '/gear/strength.webp',
-    defense: '/gear/defence.webp',
+    defence: '/gear/defence.webp',
     ranged: '/gear/ranged.webp',
     hitpoints: '/gear/hitpoints.webp',
     magic: '/gear/magic.webp',

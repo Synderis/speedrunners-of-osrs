@@ -102,7 +102,7 @@ player = {
 	"combatStats": {
 		"attack": 99,
 		"strength": 99,
-		"defense": 99,
+		"defence": 99,
 		"ranged": 99,
 		"magic": 99,
 		"hitpoints": 99,
