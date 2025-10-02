@@ -87,7 +87,13 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
     };
 
     let mut player = payload.player;
-    let monsters = payload.room.monsters;
+    let mut monsters = payload.room.monsters;
+    for monster in &mut monsters {
+        if player.combat_stats.hitpoints != 99 {
+            monster.skills.hp = monster_hp_scaling(monster, &player.combat_stats);
+        }
+        monster.skills = monster_stat_scaling(monster, player.combat_stats.hitpoints);
+    }
     let room_methods = payload.room.methods;
     let inventory_items: Vec<SelectedItem> = player
         .inventory

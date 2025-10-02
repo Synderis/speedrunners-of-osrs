@@ -98,9 +98,15 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
     };
 
     let mut player = payload.player;
-    let monsters = payload.room.monsters;
+    let mut monsters = payload.room.monsters;
     let trials = 100_000;
     let mut rng = rand::thread_rng();
+    for monster in &mut monsters {
+        if player.combat_stats.hitpoints != 99 {
+            monster.skills.hp = monster_hp_scaling(monster, &player.combat_stats);
+        }
+        monster.skills = monster_stat_scaling(monster, player.combat_stats.hitpoints);
+    }
     
 
     // Defensive: Check monsters

@@ -1,17 +1,6 @@
 use osrs_shared_types::*;
 use rand::Rng;
 
-// #[wasm_bindgen]
-// extern "C" {
-//     // fn alert(s: &str);
-//     #[wasm_bindgen(js_namespace = console)]
-//     fn log(s: &str);
-// }
-
-// macro_rules! console_log {
-//     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-// }
-
 fn tbow_scaling(magic: u32, mode: &str) -> f64 {
     let (factor, base, clamp) = if mode == "accuracy" {
         (10.0, 140.0, 1.4)
@@ -183,6 +172,21 @@ pub fn calculate_max_hit_for_style(
     }) {
         slayer_bonus = 1.15;
     };
+    let inquisitor_count = gear_set.gear_items.iter().filter(|item_opt| {
+        item_opt.as_ref().map_or(false, |item| item.name.starts_with("Inquisitor's") && item.name != "Inquisitor's mace")
+    }).count();
+    let inquisitor_bonus = if combat_type == "melee"  && inquisitor_count > 0 && style.combat_style == "Crush" {
+        if weapon.name == "Inquisitor's mace" {
+            let inq_bonus_amt = inquisitor_count as f64 * 0.025;
+            1.0 + inq_bonus_amt
+        } else if inquisitor_count >= 3 {
+            1.025
+        } else {
+            1.0
+        }
+    } else {
+        1.0
+    };
 
     if combat_type == "magic" {
         if weapon.category == "Powered Staff" {
@@ -222,7 +226,7 @@ pub fn calculate_max_hit_for_style(
             let damage_multiplier = (50.0 + mining_level + level_requirement) / 150.0;
             max_hit = (base_max_hit * damage_multiplier).ceil() as i32;
         } else {
-            max_hit = (0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor() as i32;
+            max_hit = ((0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor() as i32) * inquisitor_bonus as i32;
         };
         if weapon.name == "Emberlight" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
             max_hit = (max_hit as f64 * 1.70).floor() as i32;
@@ -300,17 +304,17 @@ pub fn calculate_max_rolls_for_style(
     let weapon = selected_weapon.unwrap();
     if weapon.name == "Emberlight" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
         max_attack_roll = (max_attack_roll as f64 * 1.70).floor() as u64;
-    };
+    }
     if weapon.name == "Burning claws" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
         max_attack_roll = (max_attack_roll as f64 * 1.05).floor() as u64;
-    };
+    }
     if weapon.name == "Tumeken's shadow" {
         bonus *= 3;
         max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
-    };
+    }
     if weapon.name == "Zamorak godsword" && (style.combat_style == "Slash" || style.combat_style == "Crush") {
         max_attack_roll = max_attack_roll * 2;
-    };
+    }
 
     if weapon.name == "Twisted bow" {
         // OSRS Twisted Bow accuracy multiplier
@@ -319,7 +323,7 @@ pub fn calculate_max_rolls_for_style(
             monster.offensive.magic.clamp(0, 350) as u32,
         );
         tbow_mult = tbow_scaling(magic, "accuracy");
-    };
+    }
     if gear_set.gear_items.iter().any(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name == "Salve amulet(ei)")
     }) {
@@ -328,13 +332,27 @@ pub fn calculate_max_rolls_for_style(
                 salve_bonus = 1.2;
             }
         }
-    };
+    }
     if gear_set.gear_items.iter().any(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name == "Slayer helmet (i)")
     }) {
         slayer_bonus = 7.0 / 6.0;
+    }
+    let inquisitor_count = gear_set.gear_items.iter().filter(|item_opt| {
+        item_opt.as_ref().map_or(false, |item| item.name.starts_with("Inquisitor's") && item.name != "Inquisitor's mace")
+    }).count();
+    let inquisitor_bonus = if combat_type == "melee"  && inquisitor_count > 0 && style.combat_style == "Crush" {
+        if weapon.name == "Inquisitor's mace" {
+            1.0 + inquisitor_count as f64 * 0.025
+        } else if inquisitor_count >= 3 {
+            1.025
+        } else {
+            1.0
+        }
+    } else {
+        1.0
     };
-    max_attack_roll = (max_attack_roll as f64 * slayer_bonus * salve_bonus * tbow_mult).floor() as u64;
+    max_attack_roll = (max_attack_roll as f64 * slayer_bonus * salve_bonus * tbow_mult * inquisitor_bonus).floor() as u64;
     // console_log!("Monster def: {}, monster def bonus: {}", monster.skills.def, defence_bonus);
     let max_defence_roll;
     if combat_type == "magic" {
@@ -483,6 +501,45 @@ pub fn ensure_weapon_swap(
         return Some((prev_weapon.name.clone(), current_offhand));
     }
     None
+}
+
+pub fn monster_stat_scaling(monster: &Monster, player_hp: i32) -> MonsterSkills {
+    let cm_scale = if monster.name == "Tekton" || monster.name == "Tekton (enraged)" {
+        1.2
+    } else {
+        1.5
+    };
+    let hp_scaling = ((player_hp as f64 * (4.0/9.0)).floor() + 55.0) / 99.0;
+    let new_atk = (((monster.skills.atk as f64 / cm_scale).floor() * hp_scaling).floor() * cm_scale).floor() as i32;
+    let new_def = (((monster.skills.def as f64 / cm_scale).floor() * hp_scaling).floor() * cm_scale).floor() as i32;
+    let new_magic = (((monster.skills.magic as f64 / cm_scale).floor() * hp_scaling).floor() * cm_scale).floor() as i32;
+    let new_ranged = (((monster.skills.ranged as f64 / cm_scale).floor() * hp_scaling).floor() * cm_scale).floor() as i32;
+    let new_str = (((monster.skills.str as f64 / cm_scale).floor() * hp_scaling).floor() * cm_scale).floor() as i32;
+    MonsterSkills {
+        atk: new_atk,
+        def: new_def,
+        hp: monster.skills.hp,
+        magic: new_magic,
+        ranged: new_ranged,
+        str: new_str,
+    }
+}
+
+pub fn monster_hp_scaling(monster: &Monster, combat_stats: &CombatStats) -> i32 {
+    let base = (combat_stats.defense + combat_stats.hitpoints + (combat_stats.prayer as f64 * 1.0/2.0).floor() as i32) as f64 * 1.0/4.0;
+    let melee = (combat_stats.attack + combat_stats.strength) as f64 * 13.0 / 40.0;
+    let ranged = (combat_stats.ranged as f64 * 3.0/2.0) * 13.0 / 40.0;
+    let magic = (combat_stats.magic as f64 * 3.0/2.0) * 13.0 / 40.0;
+    let cm_scale = 1.5;
+
+    let base_hp = if monster.name == "Guardian (Chambers of Xeric)" {
+        let reduced_hp = (monster.skills.hp as f64 / cm_scale).floor();
+        (reduced_hp - 99.0 + combat_stats.mining as f64).floor()
+    } else {
+        (monster.skills.hp as f64 / cm_scale).floor()
+    };
+    let combat_level = (base + melee.max(ranged).max(magic)).floor() as i32;
+    ((base_hp as f64 * (combat_level as f64 / 126.0)).floor() * cm_scale).floor() as i32
 }
 
 pub fn burning_barrage_special<R: Rng>(rng: &mut R, max_hit: i32, accuracy: f64) -> (Vec<i32>, Vec<i32>) {

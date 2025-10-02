@@ -119,7 +119,7 @@ pub struct Player {
     pub inventory: Vec<InventoryItem>,
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct MonsterSkills {
     pub atk: i32,
     pub def: i32,

@@ -103,7 +103,7 @@ export const gearSetPresets: GearSetPreset[] = [
             { id: "thieving", method: "Lockpick" },
             { id: "vespula" },
             { id: "guardians" },
-            { id: "vasa", method: "Flame Skip" },
+            { id: "vasa", method: "Vasa Flame Skip" },
             { id: "mystics" },
             { id: "muttadile" },
             { id: "olm"}
