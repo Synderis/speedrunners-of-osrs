@@ -116,7 +116,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
       combatStats: {
         attack: combatStats.attack,
         strength: combatStats.strength,
-        defense: combatStats.defense,
+        defence: combatStats.defence,
         ranged: combatStats.ranged,
         prayer: combatStats.prayer,
         magic: combatStats.magic,

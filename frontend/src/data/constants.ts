@@ -30,7 +30,7 @@ export const defaultSlotImages = {
 export const statImages = {
     attack: '/gear/attack.webp',
     strength: '/gear/strength.webp',
-    defense: '/gear/defence.webp',
+    defence: '/gear/defence.webp',
     ranged: '/gear/ranged.webp',
     hitpoints: '/gear/hitpoints.webp',
     magic: '/gear/magic.webp',
@@ -44,7 +44,7 @@ export const miscIcons = {
     levels: '/gear/levels.webp',
     attack: '/gear/attack.webp',
     strength: '/gear/strength.webp',
-    defense: '/gear/defence.webp',
+    defence: '/gear/defence.webp',
     ranged: '/gear/ranged.webp',
     hitpoints: '/gear/hitpoints.webp',
     magic: '/gear/magic.webp',

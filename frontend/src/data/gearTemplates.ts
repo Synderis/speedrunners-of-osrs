@@ -20,7 +20,7 @@ export interface GearSetPreset {
     combatStats?: {
         attack: number;
         strength: number;
-        defense: number;
+        defence: number;
         ranged: number;
         prayer: number;
         magic: number;
@@ -89,7 +89,7 @@ export const gearSetPresets: GearSetPreset[] = [
         combatStats: {
             attack: 99,
             strength: 99,
-            defense: 99,
+            defence: 99,
             ranged: 99,
             prayer: 99,
             magic: 99,

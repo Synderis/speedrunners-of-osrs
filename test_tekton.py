@@ -7,7 +7,7 @@ def extract_combat_stats(obj):
     return {
         "attack": obj.get("attack", 0),
         "strength": obj.get("strength", 0),
-        "defense": obj.get("defense", 0),
+        "defence": obj.get("defence", 0),
         "ranged": obj.get("ranged", 0),
         "magic": obj.get("magic", 0),
         "hitpoints": obj.get("hitpoints", 0),
@@ -322,9 +322,9 @@ if __name__ == "__main__":
         gear_defensive = orig_defensive.copy()
         weapon = orig_weapon
         style = orig_style
-        # Save original monster defense
+        # Save original monster defence
         orig_monster_def = monster["skills"]["def"]
-        # First hit: 35% defense reduction
+        # First hit: 35% defence reduction
         curr_monster_def = int(orig_monster_def * 0.65)
         # Remove original weapon bonuses
         apply_bonuses(gear_bonuses, orig_weapon["bonuses"], -1)
@@ -336,7 +336,7 @@ if __name__ == "__main__":
         apply_bonuses(gear_defensive, em_defensive, 1)
         weapon = elder_maul
         style = em_style
-        # Use reduced defense for this attack
+        # Use reduced defence for this attack
         monster_for_attack = dict(monster)
         monster_for_attack["skills"] = dict(monster["skills"])
         monster_for_attack["skills"]["def"] = curr_monster_def
@@ -364,7 +364,7 @@ if __name__ == "__main__":
         if hp <= 0:
             kill_attack_counts.append(attacks)
             continue
-        # Second hit: 35% defense reduction if hit, else 5%, applied to already reduced defense
+        # Second hit: 35% defence reduction if hit, else 5%, applied to already reduced defence
         apply_bonuses(gear_bonuses, orig_weapon["bonuses"], -1)
         apply_bonuses(gear_offensive, orig_weapon["offensive"], -1)
         apply_bonuses(gear_defensive, orig_weapon["defensive"], -1)
@@ -402,7 +402,7 @@ if __name__ == "__main__":
         if hp <= 0:
             kill_attack_counts.append(attacks)
             continue
-        # All subsequent attacks use the final reduced defense
+        # All subsequent attacks use the final reduced defence
         while hp > 0 and attacks < max_attacks:
             monster_for_attack3 = dict(monster)
             monster_for_attack3["skills"] = dict(monster["skills"])

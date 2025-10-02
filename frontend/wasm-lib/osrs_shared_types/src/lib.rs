@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 pub struct CombatStats {
     pub attack: i32,
     pub strength: i32,
-    pub defense: i32,
+    pub defence: i32,
     pub ranged: i32,
     pub magic: i32,
     pub hitpoints: i32,

@@ -6,7 +6,7 @@ use std::env;
 pub struct CombatStats {
     pub attack: u32,
     pub strength: u32,
-    pub defense: u32,
+    pub defence: u32,
     pub ranged: u32,
     pub magic: u32,
     pub hitpoints: u32,

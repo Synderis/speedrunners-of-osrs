@@ -8,7 +8,7 @@ def extract_combat_stats(obj):
     return {
         "attack": obj.get("attack", 0),
         "strength": obj.get("strength", 0),
-        "defense": obj.get("defense", 0),
+        "defence": obj.get("defence", 0),
         "ranged": obj.get("ranged", 0),
         "magic": obj.get("magic", 0),
         "hitpoints": obj.get("hitpoints", 0),
