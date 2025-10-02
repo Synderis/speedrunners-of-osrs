@@ -15,7 +15,13 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
 
     // Make mutable copies for gear/inventory mutation
     let mut player = payload.player;
-    let monsters = payload.room.monsters;
+    let mut monsters = payload.room.monsters;
+    for monster in &mut monsters { 
+        if player.combat_stats.hitpoints != 99 {
+            monster.skills.hp = monster_hp_scaling(monster, &player.combat_stats);
+        }
+        monster.skills = monster_stat_scaling(monster, player.combat_stats.hitpoints);
+    }
 
     // --- Ensure pickaxe is equipped in melee gear if present in inventory ---
     // Collect inventory weapons (flattened from inventory items with equipment)
