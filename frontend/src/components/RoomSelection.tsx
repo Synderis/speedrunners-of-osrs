@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { fadeInOut, slideInOut, hoverEffects } from '../utils/animations';
-import { cmMonsters, rooms, type Monster, type Room, getDefaultSpecCount } from '../data/monsterStats';
+import { cmMonsters, rooms, type Monster, type Room} from '../data/monsterStats';
 import type { InventoryItem } from '../types/player';
 import { gearSetPresets } from '../data/gearTemplates';
+import { getMonstersByRoom } from '../utils/helpers';
+import SpecAssignment from './SpecAssignment';
 import './RoomSelection.css';
 
 export interface SelectedRoomWithMonster extends Room {
@@ -17,8 +19,8 @@ interface RoomSelectionProps {
     setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string[] }>>;
     selectedPreset: string;
     selectedInventoryItems: InventoryItem[]; // <-- Use InventoryItem here
-    roomSpecs: { [roomId: string]: { weapon: string; count: number } };
-  setRoomSpecs: React.Dispatch<React.SetStateAction<{ [roomId: string]: { weapon: string; count: number } }>>;
+    roomSpecs: { [roomId: string]: { [weaponName: string]: number } };
+    setRoomSpecs: React.Dispatch<React.SetStateAction<{ [roomId: string]: { [weaponName: string]: number } }>>;
 }
 
 const RoomSelection: React.FC<RoomSelectionProps> = ({
@@ -32,7 +34,7 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
     setRoomSpecs
 }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-    const [specDropdownOpen, setSpecDropdownOpen] = useState(false);
+    // const [specDropdownOpen, setSpecDropdownOpen] = useState(false);
     // const [roomSpecs, setRoomSpecs] = useState<{ [roomId: string]: { weapon: string; count: number } }>({});
 
     const headerRef = useRef(null);
@@ -49,24 +51,10 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
         return cmMonsters.find(monster => monster.id.toString() === room.id);
     };
 
-    // Helper function to get all monsters for a room
-    const getMonstersByRoom = (room: Room): Monster[] => {
-        if (!room.monsters) return [];
-        return room.monsters
-            .map(monsterId => cmMonsters.find(m => m.id.toString() === monsterId))
-            .filter((m): m is Monster => m !== undefined);
-    };
-
     // Get all selected monsters for WASM input
     const getSelectedMonsters = (): Monster[] => {
         return selectedRooms.flatMap(room => getMonstersByRoom(room));
     };
-
-    // Update the parent state whenever selected rooms change
-    // useEffect(() => {
-    //     const monsters = getSelectedMonsters();
-    //     setSelectedMonsters(monsters);
-    // }, [selectedRooms, setSelectedMonsters]);
 
     const handleRoomSelect = (room: Room) => {
         setSelectedRooms(prev => {
@@ -198,7 +186,7 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
 
         // Update room methods in selectedRooms
         setSelectedRooms(prevRooms => prevRooms.map(r => {
-            if (r.id !== room.id) return r;
+            if (r.id !== room.id) return r; // Add parentheses here
 
             // Get the updated methods list
             const updatedMethods = (() => {
@@ -228,20 +216,20 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
 
     useEffect(() => {
         const selectedGearPreset = gearSetPresets.find(p => p.id === selectedPreset);
-        if (selectedGearPreset) {
+        if (selectedGearPreset && selectedGearPreset.rooms) {
             const allowedRoomIds = selectedGearPreset.rooms.map(r => r.id);
             const presetRooms: SelectedRoomWithMonster[] = rooms
                 .filter(room => allowedRoomIds.includes(room.id))
                 .map(room => {
-                    const presetRoom = selectedGearPreset.rooms.find(r => r.id === room.id);
+                    const presetRoom = selectedGearPreset.rooms!.find(r => r.id === room.id);
                     let methods: string[] = [];
-                    if (presetRoom?.methods) {
+                    if (presetRoom?.methods && Array.isArray(presetRoom.methods)) {
                         methods = presetRoom.methods;
                     } else if (presetRoom?.method) {
                         methods = [presetRoom.method];
                     } else if (room.methods && room.methods.length > 1) {
                         methods = room.methods;
-                    } // else leave as []
+                    }
                     return {
                         ...room,
                         monster: getMonsterByRoom(room),
@@ -253,18 +241,29 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
             // Set selectedMethods if method is specified
             const newSelectedMethods: { [roomId: string]: string[] } = {};
             selectedGearPreset.rooms.forEach(r => {
-                if (r.methods) {
+                if (r.methods && Array.isArray(r.methods)) {
                     newSelectedMethods[r.id] = r.methods;
                 } else if (r.method) {
                     newSelectedMethods[r.id] = [r.method];
+                } else {
+                    newSelectedMethods[r.id] = [];
                 }
             });
             setSelectedMethods(newSelectedMethods);
+
+            // Set roomSpecs if they exist in the preset
+            if (selectedGearPreset.roomSpecs) {
+                setRoomSpecs(selectedGearPreset.roomSpecs);
+            } else {
+                // Clear roomSpecs if preset doesn't have any
+                setRoomSpecs({});
+            }
         } else {
             setSelectedRooms([]);
             setSelectedMethods({});
+            setRoomSpecs({});
         }
-    }, [selectedPreset]);
+    }, [selectedPreset, setSelectedRooms, setSelectedMethods, setRoomSpecs]);
 
     return (
         <section id="rooms" className="section">
@@ -486,110 +485,12 @@ const RoomSelection: React.FC<RoomSelectionProps> = ({
                         })}
                     </div>
                     {/* Spec Assignment Section (only show rooms/weapons with defaults) */}
-                    {selectedRooms.some(room => 
-    selectedInventoryItems.some(item => 
-        item.equipment?.slot === 'weapon' && getDefaultSpecCount(room.id, item.name) > 0
-    )
-) && (
-    <div className="spec-assignment-container">
-        <button
-            className="btn"
-            style={{ margin: '16px 0' }}
-            onClick={() => setSpecDropdownOpen(open => !open)}
-        >
-            {specDropdownOpen ? 'Hide Spec Assignment' : 'Manually Assign Specs'}
-        </button>
-        <AnimatePresence>
-            {specDropdownOpen && (
-                <motion.div
-                    className="spec-dropdown"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                >
-                    <h2 className="section-title">Spec Assignment</h2>
-                    {selectedRooms
-                        .filter(room => 
-                            selectedInventoryItems.some(item => 
-                                item.equipment?.slot === 'weapon' && getDefaultSpecCount(room.id, item.name) > 0
-                            )
-                        )
-                        .map(room => {
-                            // Get weapons that have defaults for this room
-                            const availableWeapons = selectedInventoryItems
-                                .filter(item => 
-                                    item.equipment?.slot === 'weapon' && 
-                                    getDefaultSpecCount(room.id, item.name) > 0
-                                );
-
-                            return (
-                                <div key={room.id} className="spec-assignment-room">
-                                    <span className="room-name">{room.name}</span>
-                                    <div className="weapon-spec-list">
-                                        {availableWeapons.map(item => {
-                                            const defaultCount = getDefaultSpecCount(room.id, item.name);
-                                            const currentAssignment = roomSpecs[room.id];
-                                            const isSelected = currentAssignment?.weapon === item.name;
-                                            
-                                            return (
-                                                <div key={item.equipment?.id} className="weapon-spec-item">
-                                                    <button
-                                                        className={`weapon-spec-button ${isSelected ? 'selected' : ''}`}
-                                                        onClick={() => {
-                                                            if (isSelected) {
-                                                                // Deselect if already selected
-                                                                setRoomSpecs(prev => {
-                                                                    const newSpecs = { ...prev };
-                                                                    delete newSpecs[room.id];
-                                                                    return newSpecs;
-                                                                });
-                                                            } else {
-                                                                // Select with default count
-                                                                setRoomSpecs(prev => ({
-                                                                    ...prev,
-                                                                    [room.id]: {
-                                                                        weapon: item.name,
-                                                                        count: defaultCount
-                                                                    }
-                                                                }));
-                                                            }
-                                                        }}
-                                                    >
-                                                        <span className="weapon-name">{item.name}</span>
-                                                        <span className="spec-count">(Default: {defaultCount} specs)</span>
-                                                    </button>
-                                                    {isSelected && (
-                                                        <label className="spec-count-input">
-                                                            <input
-                                                                type="number"
-                                                                min={0}
-                                                                value={currentAssignment?.count || defaultCount}
-                                                                onChange={e =>
-                                                                    setRoomSpecs(prev => ({
-                                                                        ...prev,
-                                                                        [room.id]: {
-                                                                            ...prev[room.id],
-                                                                            weapon: item.name,
-                                                                            count: Number(e.target.value)
-                                                                        }
-                                                                    }))
-                                                                }
-                                                            />
-                                                        </label>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                </motion.div>
-            )}
-        </AnimatePresence>
-    </div>
-)}
+                    <SpecAssignment
+                        selectedRooms={selectedRooms}
+                        selectedInventoryItems={selectedInventoryItems}
+                        roomSpecs={roomSpecs}
+                        setRoomSpecs={setRoomSpecs}
+                    />
                 </motion.div>
 
             </div>

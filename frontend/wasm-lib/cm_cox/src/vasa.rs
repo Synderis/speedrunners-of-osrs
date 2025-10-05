@@ -92,6 +92,17 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
             .and_then(|vec| vec.iter().find(|sa| sa.name == "Voidwaker").map(|sa| sa.count))
             .unwrap_or(2);
         
+        // If zaryte crossbow is present and has specs, disable voidwaker specs
+        if zaryte_crossbow {
+            let zaryte_spec_count = spec_count_dict
+                .as_ref()
+                .and_then(|vec| vec.iter().find(|sa| sa.name == "Zaryte crossbow").map(|sa| sa.count))
+                .unwrap_or(0);
+            
+            if zaryte_spec_count > 0 {
+                spec_count_max = 0;
+            }
+        }
         let avernic_defender = inventory_items.iter().find(|item| item.name == "Avernic defender").cloned();
         ensure_weapon_swap(&mut player, "Voidwaker", avernic_defender);
     }

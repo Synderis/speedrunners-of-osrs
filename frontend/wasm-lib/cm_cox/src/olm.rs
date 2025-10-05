@@ -162,9 +162,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             ranged_ticks += 5;
         }
         total_ticks += ranged_ticks;
-        if total_ticks % 4 != 0 {
-            total_ticks += 4 - (total_ticks % 4);
-        };
         tick_counts[i] = total_ticks;
     }
 

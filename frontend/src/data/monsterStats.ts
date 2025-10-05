@@ -959,7 +959,6 @@ export const rooms: Room[] = [
         monsters: ['7545', '7544'],
         units: 'Anvils',
         methods: ['Tekton Long Lure', 'Tekton Medium Lure', 'Tekton Short Lure', 'Pre-Veng'],
-        specialAttacks: [],
         methodCategories: {
             'Lure Method': {
                 methods: ['Tekton Long Lure', 'Tekton Medium Lure', 'Tekton Short Lure'],
@@ -1064,7 +1063,8 @@ export const ROOM_WEAPON_SPEC_DEFAULTS: { [roomId: string]: { [weaponName: strin
         'Emberlight': 2
     },
     'vasa': {
-        'Voidwaker': 2
+        'Voidwaker': 2,
+        'Zaryte crossbow': 1
     },
     // Add other rooms as you implement them
     'tekton': {

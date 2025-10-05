@@ -1,8 +1,8 @@
 export interface PresetRoom {
     id: string;
-    method?: string;
-    methods?: string[]; // Support for multiple methods
-    specs?: { weapon: string; count: number }; // Add spec assignment
+    method?: string; // legacy support
+    methods?: string[];
+    specs?: { weapon: string; count: number; }[]; // Change this from single object to array
 }
 
 export interface GearSetPreset {
@@ -14,9 +14,7 @@ export interface GearSetPreset {
         mage: Record<string, string>;
         ranged: Record<string, string>;
     };
-    inventoryItems: string[]; // Array of inventory item IDs
-    rooms: PresetRoom[]; // Array of room IDs where this preset is applicable
-    roomSpecs?: { [roomId: string]: { weapon: string; count: number } }; // Add this line
+    inventoryItems?: string[];
     combatStats?: {
         attack: number;
         strength: number;
@@ -26,6 +24,13 @@ export interface GearSetPreset {
         magic: number;
         hitpoints: number;
     };
+    rooms?: Array<{
+        id: string;
+        method?: string;
+        methods?: string[];
+        specs?: Array<{ weapon: string; count: number }>;
+    }>;
+    roomSpecs?: { [roomId: string]: { [weaponName: string]: number } };
 }
 
 export type GearSetType = "melee" | "mage" | "ranged";

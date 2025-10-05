@@ -25,8 +25,8 @@ interface GearSelectionProps {
   setSelectedRooms: React.Dispatch<React.SetStateAction<SelectedRoomWithMonster[]>>; // <-- add this
   selectedMethods: { [roomId: string]: string[] };
   setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string[] }>>;
-  roomSpecs: { [roomId: string]: { weapon: string; count: number } };
-  setRoomSpecs: React.Dispatch<React.SetStateAction<{ [roomId: string]: { weapon: string; count: number } }>>;
+  roomSpecs: { [roomId: string]: { [weaponName: string]: number } };
+  setRoomSpecs: React.Dispatch<React.SetStateAction<{ [roomId: string]: { [weaponName: string]: number } }>>;
 }
 
 const GearSelection: React.FC<GearSelectionProps> = ({
@@ -39,10 +39,10 @@ const GearSelection: React.FC<GearSelectionProps> = ({
   setIsGearLoading,
   isGearLoading,
   equipment,
-  selectedPreset,        // <-- add this
+  selectedPreset,
   setSelectedPreset,
   selectedRooms,
-  setSelectedRooms,      // <-- add this
+  setSelectedRooms,
   selectedMethods,
   setSelectedMethods,
   roomSpecs,
@@ -85,7 +85,10 @@ const GearSelection: React.FC<GearSelectionProps> = ({
       // Always save the current selectedMethods state, even if empty
       methods: selectedMethods[room.id] || [],
       // Add spec assignment if it exists for this room
-      specs: roomSpecs[room.id] || undefined
+      specs: roomSpecs[room.id] ? Object.entries(roomSpecs[room.id]).map(([weapon, count]) => ({
+        weapon,
+        count
+      })) : undefined
     }));
 
     const newPreset: GearSetPreset = {
@@ -268,10 +271,15 @@ const GearSelection: React.FC<GearSelectionProps> = ({
             setRoomSpecs(preset.roomSpecs);
           } else {
             // Fallback: build roomSpecs from individual room.specs
-            const restoredRoomSpecs: { [roomId: string]: { weapon: string; count: number } } = {};
+            const restoredRoomSpecs: { [roomId: string]: { [weaponName: string]: number } } = {};
             preset.rooms.forEach(r => {
-              if (r.specs) {
-                restoredRoomSpecs[r.id] = r.specs;
+              if (r.specs && Array.isArray(r.specs)) {
+                // Convert array format back to object format
+                const specsObj: { [weaponName: string]: number } = {};
+                r.specs.forEach(spec => {
+                  specsObj[spec.weapon] = spec.count;
+                });
+                restoredRoomSpecs[r.id] = specsObj;
               }
             });
             setRoomSpecs(restoredRoomSpecs);
@@ -299,6 +307,9 @@ const GearSelection: React.FC<GearSelectionProps> = ({
         return updated;
       });
     });
+    
+    // Reset dropdown to default after loading preset
+    setSelectedPreset('');
   };
 
   return (

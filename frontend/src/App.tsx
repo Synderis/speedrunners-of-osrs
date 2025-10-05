@@ -53,7 +53,7 @@ function App() {
   const [selectedRooms, setSelectedRooms] = useState<SelectedRoomWithMonster[]>([]);
   const [selectedMethods, setSelectedMethods] = useState<{ [roomId: string]: string[] }>({});
   const [selectedPreset, setSelectedPreset] = useState<string>('');
-  const [roomSpecs, setRoomSpecs] = useState<{ [roomId: string]: { weapon: string; count: number } }>({});
+  const [roomSpecs, setRoomSpecs] = useState<{ [roomId: string]: { [weaponName: string]: number } }>({});
 
   useEffect(() => {
     // Prevent browser from restoring scroll position
