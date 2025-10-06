@@ -88,10 +88,13 @@ impl ScavengerSimulation {
         }
         
         // Add one of 3, 5, or 8 with equal chance
-        let additional_delays = [3, 5, 8];
-        let additional_delay = additional_delays[rng.gen_range(0..3)];
+        let additional_delays = [0, 3, 5, 8];
+        let additional_delay = additional_delays[rng.gen_range(0..=3)];
+        if additional_delay == 0 && base_delay == 18 {
+            base_delay -= 1; // Adjust for 0 case
+        }
         
-        self.pre_dump_walk_delay = base_delay + additional_delay + 2 + 4;
+        self.pre_dump_walk_delay = base_delay + additional_delay + 2;
     }
     
     fn attempt_chest(&mut self, rng: &mut ThreadRng) -> bool {
@@ -302,7 +305,8 @@ impl ScavengerSimulation {
         }
         
         // Align to next 4-tick cycle
-        self.tick += 4 - (self.tick % 4);
+        // self.tick += 4 - (self.tick % 4);
+        self.tick += rng.gen_range(0..=4);
         (self.tick, self.chest_attempts)
     }
 }

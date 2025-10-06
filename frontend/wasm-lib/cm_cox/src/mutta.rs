@@ -157,11 +157,12 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
         let mut total_ticks = 0;
         let range_max = if attack_speed_large_mutta > 4 { 4 * attack_speed_large_mutta } else { 4 };
         let overkill_large_mutta = if rng.gen_range(1..=range_max) == 1 { 1 } else { 0 };
+        let tick_cycle_offset = rng.gen_range(0..=4);
         if has_zgs {
             total_ticks = sim_freeze_mutta(total_ticks, hp_small_mutta, &monsters[0], &best_style_small_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
             total_ticks -= attack_speed_small_mutta;
             total_ticks += 1 + hit_delay_small_mutta;
-            total_ticks += 4 - (total_ticks % 4);
+            total_ticks += tick_cycle_offset;
             // Large mutta leaving the lake
             total_ticks += 5;
             total_ticks = sim_freeze_mutta(total_ticks, hp_large_mutta, &monsters[1], &best_style_large_mutta, zgs_best_style.as_ref().unwrap(), &mut rng);
@@ -172,7 +173,7 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
             total_ticks = new_total_ticks;
             total_ticks -= attack_speed_small_mutta;
             total_ticks += 1 + hit_delay_small_mutta;
-            total_ticks += 4 - (total_ticks % 4);
+            total_ticks += tick_cycle_offset;
             // Large mutta leaving the lake
             total_ticks += 5;
             while hp_large_mutta > 0 {
@@ -187,7 +188,8 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
         }
         total_ticks -= attack_speed_large_mutta;
         total_ticks += 1 + hit_delay + death_animation - overkill_large_mutta + post_room_delay;
-        total_ticks += 4 - (total_ticks % 4);
+        // Align to next 4-tick cycle starting at the tick_cycle_offset
+        total_ticks += (tick_cycle_offset + 4 - (total_ticks % 4)) % 4;
         tick_counts[i] = total_ticks;
     }
 
