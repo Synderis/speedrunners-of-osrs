@@ -103,6 +103,10 @@ const PlotSection: React.FC<PlotSectionProps> = ({
     floorId: string;
   } | null>>({});
 
+  // --- Target Time state ---
+  const [targetTime, setTargetTime] = useState<number>(0); // in ticks
+  // const [showTargetTimeInput, setShowTargetTimeInput] = useState(false);
+
   // --- Default Stats (needed for combined room analysis) ---
   const defaultStats: Stats = {
     total_hits: 0,
@@ -480,6 +484,8 @@ const PlotSection: React.FC<PlotSectionProps> = ({
               delayTicks = Math.max(0, delayTicks - tightropeDelayAdjustment);
             }
             pendingDelay += delayTicks;
+            console.log(`Delay for ${room.name}: ${delayTicks} ticks`);
+            console.log(`Pending delay: ${pendingDelay} ticks`);
             totalExpectedTime += delayTicks;
           } else {
             const roomData = plotData[room.roomId];
@@ -667,6 +673,29 @@ const PlotSection: React.FC<PlotSectionProps> = ({
     combinedRoomAnalysis[activeFloor]?.plotData?.length,
     combinedPlotDataToShow.length
   ]);
+
+  // --- Helper Functions ---
+  const formatTimeInput = (ticks: number): string => {
+    if (showSeconds) {
+      return formatSeconds(ticks * 0.6);
+    }
+    return ticks.toString();
+  };
+
+  const parseTimeInput = (value: string): number => {
+    if (showSeconds) {
+      // Parse mm:ss.t format
+      const parts = value.split(':');
+      if (parts.length === 2) {
+        const minutes = parseInt(parts[0]) || 0;
+        const secondsParts = parts[1].split('.');
+        const seconds = parseInt(secondsParts[0]) || 0;
+        const tenths = parseInt(secondsParts[1]) || 0;
+        return Math.round((minutes * 60 + seconds + tenths / 10) / 0.6);
+      }
+    }
+    return parseInt(value) || 0;
+  };
 
   return (
     <motion.section
@@ -907,6 +936,217 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                       : combinedRoomAnalysis[activeFloor]!.expectedTime.toFixed(1)
                     ) : '0'}
                   />
+                  
+                  {/* Target Time Input Section - Always Visible */}
+                  <div 
+                    className="stat-card card" 
+                    style={{
+                      marginTop: '1rem',
+                      background: `linear-gradient(135deg, ${chartColors.primary}15, ${chartColors.secondary}15)`,
+                      border: `1px solid ${chartColors.secondary}40`
+                    }}
+                  >
+                      {/* Target Time Input */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '1rem', 
+                        marginBottom: '1rem',
+                        justifyContent: 'center',
+                        flexWrap: 'wrap'
+                      }}>
+                        <label style={{ 
+                          color: chartColors.text,
+                          fontSize: '0.9rem',
+                          fontWeight: 'bold'
+                        }}>
+                          Target Complete Raid Time ({showSeconds ? 'mm:ss.t' : 'ticks'}):
+                        </label>
+                        <input
+                          type="text"
+                          value={targetTime > 0 ? formatTimeInput(targetTime) : ''}
+                          onChange={(e) => setTargetTime(parseTimeInput(e.target.value))}
+                          placeholder={showSeconds ? "15:30.0" : "1550"}
+                          style={{
+                            width: '120px',
+                            padding: '6px 10px',
+                            borderRadius: '4px',
+                            border: `1px solid ${chartColors.primary}50`,
+                            backgroundColor: theme === 'light' ? 'white' : '#2a2a2a',
+                            color: chartColors.text,
+                            textAlign: 'center',
+                            fontSize: '0.9rem'
+                          }}
+                        />
+                        <button
+                          className="btn"
+                          onClick={() => {
+                            // Add your reset threshold calculation logic here
+                            console.log('Calculating reset thresholds for target time:', targetTime);
+                            // You can add the actual calculation function here
+                          }}
+                          disabled={targetTime <= 0}
+                          style={{
+                            fontSize: '0.8rem',
+                            padding: '6px 12px',
+                            backgroundColor: targetTime > 0 ? chartColors.secondary : '#6c757d',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: targetTime > 0 ? 'pointer' : 'not-allowed',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          Calculate Reset Thresholds
+                        </button>
+                      </div>
+                      
+                      {/* Floor Times Inline */}
+                      {availableFloors.length > 0 && (
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          gap: '2rem',
+                          flexWrap: 'wrap',
+                          padding: '0.75rem',
+                          backgroundColor: `${chartColors.secondary}10`,
+                          borderRadius: '6px',
+                          border: `1px solid ${chartColors.secondary}30`
+                        }}>
+                          {availableFloors.map((floor, index) => {
+                            const floorAnalysis = combinedRoomAnalysis[floor.id];
+                            const expectedTime = floorAnalysis?.expectedTime || 0;
+                            
+                            return (
+                              <div key={floor.id} style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                                minWidth: '100px',
+                                position: 'relative'
+                              }}>
+                                <span style={{ 
+                                  fontSize: '0.8rem', 
+                                  fontWeight: 'bold',
+                                  color: chartColors.text 
+                                }}>
+                                  {floor.name}
+                                </span>
+                                <span style={{ 
+                                  fontSize: '1rem', 
+                                  fontWeight: 'bold', 
+                                  color: chartColors.secondary 
+                                }}>
+                                  {showSeconds 
+                                    ? formatSeconds(expectedTime * 0.6) 
+                                    : expectedTime.toFixed(1)
+                                  }
+                                </span>
+                                {index < availableFloors.length - 1 && (
+                                  <span style={{ 
+                                    position: 'absolute',
+                                    right: '-1rem',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    color: chartColors.text + '60',
+                                    fontSize: '1.2rem'
+                                  }}>
+                                    →
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                          
+                          {/* Total Time */}
+                          <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            minWidth: '100px',
+                            paddingLeft: '1rem',
+                            borderLeft: `2px solid ${chartColors.text}30`
+                          }}>
+                            <span style={{ 
+                              fontSize: '0.8rem', 
+                              fontWeight: 'bold',
+                              color: chartColors.text 
+                            }}>
+                              Total Expected
+                            </span>
+                            <span style={{ 
+                              fontSize: '1rem', 
+                              fontWeight: 'bold', 
+                              color: chartColors.primary 
+                            }}>
+                              {(() => {
+                                const totalTime = availableFloors.reduce((sum, floor) => {
+                                  const floorAnalysis = combinedRoomAnalysis[floor.id];
+                                  return sum + (floorAnalysis?.expectedTime || 0);
+                                }, 0);
+                                return showSeconds 
+                                  ? formatSeconds(totalTime * 0.6) 
+                                  : totalTime.toFixed(1);
+                              })()}
+                            </span>
+                          </div>
+
+                          {/* Target vs Expected Comparison */}
+                          {targetTime > 0 && (
+                            <div style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              minWidth: '100px',
+                              paddingLeft: '1rem',
+                              borderLeft: `2px solid ${chartColors.text}30`
+                            }}>
+                              <span style={{ 
+                                fontSize: '0.8rem', 
+                                fontWeight: 'bold',
+                                color: chartColors.text 
+                              }}>
+                                Target
+                              </span>
+                              <span style={{ 
+                                fontSize: '1rem', 
+                                fontWeight: 'bold', 
+                                color: (() => {
+                                  const totalExpected = availableFloors.reduce((sum, floor) => {
+                                    const floorAnalysis = combinedRoomAnalysis[floor.id];
+                                    return sum + (floorAnalysis?.expectedTime || 0);
+                                  }, 0);
+                                  return targetTime <= totalExpected ? '#28a745' : '#dc3545';
+                                })()
+                              }}>
+                                {showSeconds ? formatSeconds(targetTime * 0.6) : targetTime.toFixed(1)}
+                              </span>
+                              <span style={{ 
+                                fontSize: '0.7rem',
+                                color: (() => {
+                                  const totalExpected = availableFloors.reduce((sum, floor) => {
+                                    const floorAnalysis = combinedRoomAnalysis[floor.id];
+                                    return sum + (floorAnalysis?.expectedTime || 0);
+                                  }, 0);
+                                  return targetTime <= totalExpected ? '#28a745' : '#dc3545';
+                                })() + '80'
+                              }}>
+                                {(() => {
+                                  const totalExpected = availableFloors.reduce((sum, floor) => {
+                                    const floorAnalysis = combinedRoomAnalysis[floor.id];
+                                    return sum + (floorAnalysis?.expectedTime || 0);
+                                  }, 0);
+                                  return targetTime <= totalExpected ? '✅ Achievable' : '⚠️ Ambitious';
+                                })()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                  </div>
                 </div>
 
                 {/* Combined Stats Card - Right Side */}

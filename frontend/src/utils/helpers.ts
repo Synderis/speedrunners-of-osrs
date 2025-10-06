@@ -103,7 +103,6 @@ export const monsterHpScaling = (monster: Monster, combatStats: CombatStats) => 
     return Math.floor(Math.floor(baseHp * (combatLevel / 126.0)) * cmScale);
 };
 
-
 export const calculateCombinedDistribution = (
     room1Data: PlotDataPoint[],
     room2Data: PlotDataPoint[],
@@ -121,129 +120,145 @@ export const calculateCombinedDistribution = (
     }
 
     try {
-        // Validate data structure
-        const validateData = (data: PlotDataPoint[], name: string) => {
+        // Sort data by time to ensure proper ordering
+        const sortedRoom1 = [...room1Data].sort((a, b) => a.time - b.time);
+        const sortedRoom2 = [...room2Data].sort((a, b) => a.time - b.time);
 
-            for (let i = 0; i < data.length; i++) {
-                const point = data[i];
-                if (!point || typeof point.time !== 'number' || typeof point.dps !== 'number') {
-                    console.error(`Invalid data point in ${name} at index ${i}:`, point);
-                    return false;
-                }
-                // Relax the validation - allow dps values greater than 1 since they might be cumulative probabilities
-                if (isNaN(point.time) || isNaN(point.dps) || point.time < 0 || point.dps < 0) {
-                    console.error(`Invalid values in ${name} at index ${i}:`, point, {
-                        timeNaN: isNaN(point.time),
-                        dpsNaN: isNaN(point.dps),
-                        timeNegative: point.time < 0,
-                        dpsNegative: point.dps < 0
-                    });
-                    return false;
-                }
-            }
-            return true;
-        };
-
-        if (!validateData(room1Data, 'room1') || !validateData(room2Data, 'room2')) {
-            return [];
-        }
-
-        // Get the max times for both distributions
-        const maxTime1 = Math.max(...room1Data.map(d => d.time));
-        const maxTime2 = Math.max(...room2Data.map(d => d.time));
-
-        if (!isFinite(maxTime1) || !isFinite(maxTime2) || maxTime1 <= 0 || maxTime2 <= 0) {
-            console.error('Invalid max times:', { maxTime1, maxTime2 });
-            return [];
-        }
-
-        const maxCombinedTime = maxTime1 + maxTime2 + delayTicks;
-
-        if (maxCombinedTime > 10000) { // Prevent memory issues
-            console.error('Combined time too large:', maxCombinedTime);
-            return [];
-        }
-
-        // Convert cumulative distributions to probability mass functions
-        const convertToPMF = (data: PlotDataPoint[], maxTime: number) => {
-            const pmf = new Array(Math.floor(maxTime) + 1).fill(0);
-
-            let totalMassAdded = 0;
-            let nonZeroCount = 0;
-
-            for (let i = 0; i < data.length - 1; i++) {
+        // CORRECTED: Convert CDF to PMF properly
+        const convertToPMF = (data: PlotDataPoint[]) => {
+            const pmf: { [time: number]: number } = {};
+            
+            // Skip the first point - it represents cumulative probability up to that time
+            // The actual probability mass starts from the differences between consecutive points
+            
+            for (let i = 1; i < data.length; i++) {
+                const currentTime = Math.floor(data[i].time);
                 const currentProb = data[i].dps;
-                const nextProb = data[i + 1]?.dps || 0;
-                // For increasing CDF, probability mass is nextProb - currentProb
-                const probMass = Math.max(0, nextProb - currentProb);
-                const timeIndex = Math.floor(data[i].time);
-
-                if (timeIndex >= 0 && timeIndex < pmf.length && probMass > 0 && isFinite(probMass)) {
-                    pmf[timeIndex] = probMass;
-                    totalMassAdded += probMass;
-                    nonZeroCount++;
+                const prevProb = data[i - 1].dps;
+                
+                const probMass = Math.max(0, currentProb - prevProb);
+                
+                if (probMass > 0 && isFinite(probMass)) {
+                    pmf[currentTime] = (pmf[currentTime] || 0) + probMass;
                 }
             }
-
+            
+            // Handle any remaining probability mass at the end
+            const lastPoint = data[data.length - 1];
+            const remainingProb = Math.max(0, 1.0 - lastPoint.dps);
+            if (remainingProb > 0.001) { // Only if significant
+                const lastTime = Math.floor(lastPoint.time);
+                pmf[lastTime + 1] = (pmf[lastTime + 1] || 0) + remainingProb;
+            }
+            
+            // Normalize the PMF to ensure it sums to 1
+            const totalMass = Object.values(pmf).reduce((sum, prob) => sum + prob, 0);
+            if (totalMass > 0) {
+                Object.keys(pmf).forEach(time => {
+                    pmf[parseInt(time)] = pmf[parseInt(time)] / totalMass;
+                });
+            }
+            
             return pmf;
         };
 
-        const pmf1 = convertToPMF(room1Data, maxTime1);
-        const pmf2 = convertToPMF(room2Data, maxTime2);
+        const pmf1 = convertToPMF(sortedRoom1);
+        const pmf2 = convertToPMF(sortedRoom2);
 
-        // Validate PMFs
-        if (!pmf1.length || !pmf2.length) {
-            console.error('Failed to create PMFs');
+        // Calculate expected values from PMFs to verify
+        const calculateExpectedValue = (pmf: { [time: number]: number }) => {
+            return Object.entries(pmf).reduce((sum, [time, prob]) => {
+                return sum + parseInt(time) * prob;
+            }, 0);
+        };
+
+        const expected1 = calculateExpectedValue(pmf1);
+        const expected2 = calculateExpectedValue(pmf2);
+        const expectedCombined = expected1 + expected2 + delayTicks;
+
+        console.log('PMF Expected Values:', {
+            room1: expected1.toFixed(1),
+            room2: expected2.toFixed(1),
+            delay: delayTicks,
+            expectedSum: expectedCombined.toFixed(1)
+        });
+
+        const times1 = Object.keys(pmf1).map(Number).sort((a, b) => a - b);
+        const times2 = Object.keys(pmf2).map(Number).sort((a, b) => a - b);
+        
+        if (times1.length === 0 || times2.length === 0) {
+            console.error('Failed to create valid PMFs');
             return [];
         }
 
-        // Convolve the distributions with delay
-        const combinedPMF = new Array(Math.floor(maxCombinedTime) + 1).fill(0);
+        // Convolve the distributions
+        const combinedPMF: { [time: number]: number } = {};
 
-        for (let t1 = 0; t1 < pmf1.length; t1++) {
-            if (pmf1[t1] > 0) {
-                for (let t2 = 0; t2 < pmf2.length; t2++) {
-                    if (pmf2[t2] > 0) {
+        for (const t1 of times1) {
+            const prob1 = pmf1[t1];
+            if (prob1 > 0) {
+                for (const t2 of times2) {
+                    const prob2 = pmf2[t2];
+                    if (prob2 > 0) {
                         const combinedTime = t1 + t2 + delayTicks;
-                        if (combinedTime >= 0 && combinedTime < combinedPMF.length) {
-                            const product = pmf1[t1] * pmf2[t2];
-                            if (isFinite(product)) {
-                                combinedPMF[combinedTime] += product;
-                            }
+                        const combinedProb = prob1 * prob2;
+                        
+                        if (isFinite(combinedProb) && combinedProb > 0) {
+                            combinedPMF[combinedTime] = (combinedPMF[combinedTime] || 0) + combinedProb;
                         }
                     }
                 }
             }
         }
 
-        // Convert back to cumulative distribution - ONLY ADD NON-ZERO POINTS
+        // Normalize the combined PMF
+        const totalCombinedMass = Object.values(combinedPMF).reduce((sum, prob) => sum + prob, 0);
+        if (totalCombinedMass > 0) {
+            Object.keys(combinedPMF).forEach(time => {
+                combinedPMF[parseInt(time)] = combinedPMF[parseInt(time)] / totalCombinedMass;
+            });
+        }
+
+        // Convert back to CDF
+        const combinedTimes = Object.keys(combinedPMF).map(Number).sort((a, b) => a - b);
         const combinedData: PlotDataPoint[] = [];
         let cumulativeProb = 0;
 
-        // For increasing CDF, we build from left to right (time 0 to max)
-        for (let t = 0; t < combinedPMF.length; t++) {
-            if (isFinite(combinedPMF[t])) {
-                cumulativeProb += combinedPMF[t];
-            }
+        for (const time of combinedTimes) {
+            cumulativeProb += combinedPMF[time];
+            combinedData.push({
+                time: time,
+                dps: Math.min(1, Math.max(0, cumulativeProb))
+            });
+        }
 
-            // ONLY add data points where there's actual probability mass or where cumulative changes
-            if (combinedPMF[t] > 0 || (combinedData.length > 0 && cumulativeProb !== combinedData[combinedData.length - 1].dps)) {
+        // Ensure we end at probability 1.0
+        if (combinedData.length > 0) {
+            const lastPoint = combinedData[combinedData.length - 1];
+            if (lastPoint.dps < 0.999) {
                 combinedData.push({
-                    time: t,
-                    dps: Math.min(1, Math.max(0, cumulativeProb)) // Ensure probability is between 0 and 1
+                    time: lastPoint.time + 1,
+                    dps: 1.0
                 });
             }
         }
 
+        // Calculate expected value from the combined PMF
+        const actualExpectedValue = calculateExpectedValue(combinedPMF);
+
+        console.log('Combined distribution verification:', {
+            expectedFromSum: expectedCombined.toFixed(1),
+            actualExpectedValue: actualExpectedValue.toFixed(1),
+            difference: (actualExpectedValue - expectedCombined).toFixed(1),
+            totalProbabilityMass: totalCombinedMass.toFixed(6),
+            distributionRange: [combinedTimes[0], combinedTimes[combinedTimes.length - 1]],
+            dataPoints: combinedData.length
+        });
+
         // Crop the distribution to 99.9%
         const croppedData = cropDistributionTo999(combinedData);
-
-        if (!croppedData.length) {
-            console.error('No combined data generated after cropping');
-            return [];
-        }
-
         return croppedData;
+
     } catch (error) {
         console.error('Error calculating combined distribution:', error);
         return [];
