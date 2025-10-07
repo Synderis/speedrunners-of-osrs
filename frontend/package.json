@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:wasm:distribution_normalizer": "cd wasm-lib/distribution_normalizer && wasm-pack build --target web --out-dir ../../src/wasm/distribution_normalizer --out-name distribution_normalizer_wasm",
     "build:wasm:cm_cox": "cd wasm-lib/cm_cox && wasm-pack build --target web --out-dir ../../src/wasm/cm_cox --out-name cm_cox_wasm",
-    "build:wasm:all": "npm run build:wasm:cm_cox",
-    "build:wasm:current": "npm run build:wasm:cm_cox",
-    "prebuild": "npm run build:wasm:cm_cox",
-    "predev": "npm run build:wasm:cm_cox",
+    "build:wasm:all": "npm run build:wasm:distribution_normalizer && npm run build:wasm:cm_cox",
+    "build:wasm:current": "npm run build:wasm:distribution_normalizer && npm run build:wasm:cm_cox",
+    "prebuild": "npm run build:wasm:cm_cox && npm run build:wasm:distribution_normalizer",
+    "predev": "npm run build:wasm:cm_cox && npm run build:wasm:distribution_normalizer",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },

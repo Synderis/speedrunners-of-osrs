@@ -203,7 +203,7 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
                                     />
                                     <Line
                                         type="monotone"
-                                        dataKey="dps"
+                                        dataKey="probability"
                                         stroke={chartColors.primary}
                                         strokeWidth={2}
                                         dot={{ fill: chartColors.primary, strokeWidth: 2, r: 3 }}
@@ -234,9 +234,9 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
                                         }}
                                     />
                                     <Bar
-                                        dataKey="dps"
+                                        dataKey="probability"
                                         fill={chartColors.primary}
-                                        name="DPS"
+                                        name="Probability"
                                         radius={[2, 2, 0, 0]}
                                     />
                                 </BarChart>

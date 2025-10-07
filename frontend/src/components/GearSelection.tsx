@@ -2,55 +2,38 @@ import GearModelCard from './GearModelCard';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { gearSetPresets, type GearSetType, type GearSetPreset } from '../data/gearTemplates';
-import type { GearSets, CombatStats, Equipment, InventoryItem } from '../types/player';
+import type { Equipment, InventoryItem } from '../types/player';
 import { statImages } from '../data/constants';
 import './GearSelection.css';
 import InventoryItems from './InventoryItems';
 import type { SelectedRoomWithMonster } from './RoomSelection';
 import { rooms } from '../data/monsterStats';
+import { useAppContext } from '../context/AppContext';
 
 interface GearSelectionProps {
-  gearSets: GearSets;
-  setGearSets: React.Dispatch<React.SetStateAction<GearSets>>;
-  selectedInventoryItems: InventoryItem[];
-  setSelectedInventoryItems: React.Dispatch<React.SetStateAction<InventoryItem[]>>;
-  combatStats: CombatStats;
-  setCombatStats: React.Dispatch<React.SetStateAction<CombatStats>>;
   setIsGearLoading: React.Dispatch<React.SetStateAction<boolean>>;
   isGearLoading: boolean;
   equipment: Equipment[];
-  selectedPreset: string;
-  setSelectedPreset: React.Dispatch<React.SetStateAction<string>>;
-  selectedRooms: SelectedRoomWithMonster[];
-  setSelectedRooms: React.Dispatch<React.SetStateAction<SelectedRoomWithMonster[]>>; // <-- add this
-  selectedMethods: { [roomId: string]: string[] };
-  setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string[] }>>;
-  roomSpecs: { [roomId: string]: { [weaponName: string]: number } };
-  setRoomSpecs: React.Dispatch<React.SetStateAction<{ [roomId: string]: { [weaponName: string]: number } }>>;
 }
 
 const GearSelection: React.FC<GearSelectionProps> = ({
-  gearSets,
-  setGearSets,
-  selectedInventoryItems,
-  setSelectedInventoryItems,
-  combatStats,
-  setCombatStats,
   setIsGearLoading,
   isGearLoading,
   equipment,
-  selectedPreset,
-  setSelectedPreset,
-  selectedRooms,
-  setSelectedRooms,
-  selectedMethods,
-  setSelectedMethods,
-  roomSpecs,
-  setRoomSpecs,
 }) => {
+  // Get all the state from context instead of props
+  const {
+    gearSets, setGearSets,
+    selectedInventoryItems, setSelectedInventoryItems,
+    combatStats, setCombatStats,
+    selectedPreset, setSelectedPreset,
+    selectedRooms, setSelectedRooms,
+    selectedMethods, setSelectedMethods,
+    roomSpecs, setRoomSpecs
+  } = useAppContext();
+
   // Use equipment as the source of gear data
   const [gearData, setGearData] = useState<Equipment[]>([]);
-  // const [selectedPreset, setSelectedPreset] = useState('');
   const [allPresets, setAllPresets] = useState<GearSetPreset[]>([...gearSetPresets]);
 
   // Load custom presets from localStorage on mount and merge with defaults

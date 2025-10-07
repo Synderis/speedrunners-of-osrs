@@ -3,5 +3,6 @@ resolver = "2"
 members = [
     "cm_cox",
     "osrs_shared_types",
-    "osrs_shared_functions"
+    "osrs_shared_functions",
+    "distribution_normalizer"
 ]

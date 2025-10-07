@@ -198,6 +198,14 @@
   height: 400px;
 }
 
+.config-columns {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+}
+
 .config-breakdown {
   display: flex;
   gap: 6px;
@@ -264,75 +272,147 @@
   color: #3b82f6;
 }
 
-/* Two-column layout for config display */
-.config-columns {
+/* Floor tabs */
+.floor-tabs {
   display: flex;
-  /* grid-template-columns: repeat(auto-fit, minmax(220px, 2fr)); */
-  gap: 2rem;
-  justify-content: space-between;
-  /* justify-items: center; */
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
-.config-toggle-btn {
-  background: #3b82f6;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  padding: 0.5rem 1.2rem;
-  cursor: pointer;
+
+.floor-tabs .plot-tab {
+  padding: 12px 24px;
   font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Combined plot section */
+.combined-plot-section {
+  margin-top: 1rem;
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  min-height: 400px;
+  padding: 20px;
+}
+
+.combined-plot-title {
+  text-align: center;
+  margin: 2rem 0 1rem 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding-bottom: 0.5rem;
+  opacity: 1;
+}
+
+.combined-plot-container {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.combined-plot-chart {
+  flex: 1;
+  min-width: 600px;
+}
+
+.combined-stats-card {
+  flex-shrink: 0;
+  width: 350px;
+  height: fit-content;
+  text-align: center;
+  position: sticky;
+  top: 20px;
+}
+
+.combined-stats-card .stat-value {
+  font-size: 2rem;
+  opacity: 1;
+}
+
+/* Room breakdown table */
+.room-breakdown {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.room-breakdown-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  font-weight: bold;
   margin-bottom: 0.5rem;
 }
 
-@media (max-width: 900px) {
-  .config-columns {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
+.room-breakdown-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
 }
 
-/* Responsive design for smaller screens */
-@media (max-width: 768px) {
-  .stats-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .stat-value {
-    font-size: 2rem;
-  }
-
-  .control-group {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-  }
-
-  .control-group label {
-    min-width: auto;
-  }
-
-  .config-breakdown {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .config-type {
-    text-align: center;
-  }
+.room-breakdown-row.delay {
+  font-style: italic;
 }
 
+.room-breakdown-row:not(:last-child) {
+  border-bottom: 1px solid var(--border-color-20);
+}
 
+.room-breakdown-header {
+  border-bottom: 1px solid var(--border-color-40);
+}
+
+.room-breakdown-cell {
+  text-align: center;
+}
+
+.room-breakdown-cell.name {
+  text-align: left;
+}
+
+.room-breakdown-cell.total {
+  color: var(--primary-color);
+}
+
+/* Monster tabs */
 .monster-tab {
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    border-radius: 4.8px;
-    background: rgba(255, 255, 255, 0.1);
-    font-weight: 500;
-    color: inherit;
-    cursor: pointer;
-    transition: border 0.2s, background 0.2s, color 0.2s;
+  padding: 8px 18px;
 }
 
-.monster-tab.active {
-    border: 2px solid #3b82f6;
-    background: rgba(59, 130, 246, 0.08);
-    color: #3b82f6;
+/* Tab containers */
+.plot-tabs > div:first-child {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.monster-tabs-container {
+  margin-left: 0;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* CSS Variables for colors (add to :root) */
+:root {
+  --border-color-20: rgba(255, 255, 255, 0.2);
+  --border-color-40: rgba(255, 255, 255, 0.4);
+  --primary-color: #3b82f6;
+  --text-color-80: rgba(255, 255, 255, 0.8);
+  --text-color-99: rgba(255, 255, 255, 0.99);
+}
+
+/* Light theme overrides */
+[data-theme="light"] {
+  --border-color-20: rgba(0, 0, 0, 0.2);
+  --border-color-40: rgba(0, 0, 0, 0.4);
+  --text-color-80: rgba(0, 0, 0, 0.8);
+  --text-color-99: rgba(0, 0, 0, 0.99);
 }

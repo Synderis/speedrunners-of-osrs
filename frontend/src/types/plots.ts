@@ -1,6 +1,6 @@
 export interface PlotDataPoint {
     time: number;
-    dps: number;
+    probability: number;
     accuracy: number;
 }
 
