@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-N_TRIALS = 100_000
+N_TRIALS = 100000
 TARGET = 2300
 
 def sample_from_pmf(time_axis, pmf, n):
@@ -87,4 +87,16 @@ if __name__ == "__main__":
         "prob_complete_after_floor1_2_3": prob_complete_after_f123,
         "total": successful_total
     })
-    df.to_csv("successful_mc_trials.csv", index=False)
+    df = df[df["total"] <= TARGET]
+    df = df[
+        (df["prob_reach_floor1"] <= df["prob_complete_after_floor1"]) &
+        (df["prob_reach_floor1_2"] <= df["prob_complete_after_floor1_2"]) &
+        (df["prob_reach_floor1_2_3"] <= df["prob_complete_after_floor1_2_3"])
+    ]
+    floor_1_threshold = max(df["floor1"])
+    floor_1_2_threshold = max(df["floor1_2"])
+    floor_1_2_3_threshold = max(df["floor1_2_3"])
+    print(f"Floor 1 threshold: {floor_1_threshold} ticks ({floor_1_threshold * 0.6:.2f} seconds)")
+    print(f"Floor 1+2 threshold: {floor_1_2_threshold} ticks ({floor_1_2_threshold * 0.6:.2f} seconds)")
+    print(f"Floor 1+2+3 threshold: {floor_1_2_3_threshold} ticks ({floor_1_2_3_threshold * 0.6:.2f} seconds)")
+    # df.to_csv("successful_mc_trials.csv", index=False)

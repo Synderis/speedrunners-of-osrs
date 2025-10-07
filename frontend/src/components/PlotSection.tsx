@@ -461,8 +461,8 @@ const PlotSection: React.FC = () => {
               delayTicks = Math.max(0, delayTicks - tightropeDelayAdjustment);
             }
             pendingDelay += delayTicks;
-            console.log(`Delay for ${room.name}: ${delayTicks} ticks`);
-            console.log(`Pending delay: ${pendingDelay} ticks`);
+            // console.log(`Delay for ${room.name}: ${delayTicks} ticks`);
+            // console.log(`Pending delay: ${pendingDelay} ticks`);
             totalExpectedTime += delayTicks;
           } else {
             const roomData = plotData[room.roomId];

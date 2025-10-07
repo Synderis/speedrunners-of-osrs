@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import type { Floor } from '../data/monsterStats';
 import type { PlotDataPoint } from '../types/loaders';
-import { calculateResetThresholds } from '../utils/helpers';
+// import { calculateResetThresholds } from '../utils/helpers';
+import { 
+    calculateResetThresholds
+} from '../loaders/miscWasm';
 
 interface ThresholdCardProps {
     chartColors: {
@@ -35,14 +38,11 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
     const [targetTimeDisplay, setTargetTimeDisplay] = useState<string>('');
     const [thresholdResults, setThresholdResults] = useState<{
         input_target: number;
-        p_success_if_restart_now: number;
         thresholds: {
             [floorId: string]: {
                 threshold: number | null;
-                decision_rule: string;
             };
         };
-        notes: string;
     } | null>(null);
 
     // Helper functions:
@@ -129,8 +129,8 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
         }
     };
 
-    const handleCalculateThresholds = () => {
-        console.log('Calculating reset thresholds for target time (ticks):', targetTimeTicks);
+    const handleCalculateThresholds = async () => {
+        // console.log('Calculating reset thresholds for target time (ticks):', targetTimeTicks);
         
         // Get the floor distributions from combinedRoomAnalysis
         const floor1Data = combinedRoomAnalysis['floor1']?.plotData || [];
@@ -138,13 +138,13 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
         const floor3Data = combinedRoomAnalysis['floor3']?.plotData || [];
         const completeRaidData = combinedRoomAnalysis['raid_total']?.plotData || [];
         
-        console.log('Distribution data:', {
-            floor1: floor1Data.length,
-            floor2: floor2Data.length,
-            floor3: floor3Data.length,
-            olm: olmDistribution.length,
-            completeRaid: completeRaidData.length
-        });
+        // console.log('Distribution data:', {
+        //     floor1: floor1Data.length,
+        //     floor2: floor2Data.length,
+        //     floor3: floor3Data.length,
+        //     olm: olmDistribution.length,
+        //     completeRaid: completeRaidData.length
+        // });
         
         if (!floor1Data.length || !floor2Data.length || !floor3Data.length || 
             !olmDistribution.length || !completeRaidData.length) {
@@ -152,7 +152,7 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
             return;
         }
         
-        const thresholds = calculateResetThresholds(
+        const thresholds = await calculateResetThresholds(
             targetTimeTicks,
             floor1Data,
             floor2Data,
@@ -162,13 +162,35 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
         );
         
         if (thresholds) {
-            console.log('Reset Thresholds:', thresholds);
+            // console.log('Reset Thresholds:', thresholds);
             setThresholdResults(thresholds); // Store the results in state
         } else {
             console.error('Failed to calculate thresholds');
             setThresholdResults(null);
         }
     };
+    const handleButtonClick = async () => {
+        const parsedTicks = parseDisplayToTicks(targetTimeDisplay);
+        setTargetTimeTicks(parsedTicks);
+
+        // Optionally update the display format
+        if (parsedTicks > 0) {
+            setTargetTimeDisplay(formatDisplayValue(parsedTicks, showSeconds));
+        } else {
+            setTargetTimeDisplay('');
+        }
+
+        // Wait for state update before calculation (optional, but safe)
+        await handleCalculateThresholds();
+    };
+
+    // Re-calculate thresholds when targetTimeDisplay changes (debounced)
+    // useEffect(() => {
+    //     if (targetTimeDisplay.length === 4) {
+    //         handleCalculateThresholds();
+    //     }
+    //     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, [targetTimeDisplay]);
 
     return (
         <div
@@ -201,7 +223,7 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
                     onChange={(e) => setTargetTimeDisplay(e.target.value)}
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
-                    placeholder={showSeconds ? "2435 or 24:35" : "3000"}
+                    placeholder={showSeconds ? "24:00" : "2400"}
                     style={{
                         width: '120px',
                         padding: '6px 10px',
@@ -215,8 +237,7 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
                 />
                 <button
                     className="btn"
-                    onClick={handleCalculateThresholds}
-                    disabled={targetTimeTicks <= 0}
+                    onClick={handleButtonClick}
                     style={{
                         fontSize: '0.8rem',
                         padding: '6px 12px',
@@ -224,7 +245,6 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
                         color: 'white',
                         border: 'none',
                         borderRadius: '4px',
-                        cursor: targetTimeTicks > 0 ? 'pointer' : 'not-allowed',
                         whiteSpace: 'nowrap'
                     }}
                 >
@@ -243,13 +263,11 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
                         border: `1px solid ${chartColors.secondary}30`
                     }}>
                         {availableFloors.slice(0, -1).map((floor, index) => {
-                            const floorAnalysis = combinedRoomAnalysis[floor.id];
-                            
                             // Get threshold value or fall back to expected time
                             const thresholdData = thresholdResults?.thresholds[floor.id];
                             const displayValue = (thresholdData?.threshold !== null && thresholdData?.threshold !== undefined) 
                                 ? thresholdData.threshold 
-                                : (floorAnalysis?.expectedTime || 0);
+                                : (0);
 
                             return (
                                 <div key={floor.id} style={{

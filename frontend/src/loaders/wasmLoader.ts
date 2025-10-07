@@ -12,6 +12,7 @@ export interface CalculationSummary {
 
 type WasmInit = (options: any) => Promise<void>;
 type WasmCalc = (payload: string) => string;
+type WasmThresholdsCalc = (payload: string) => string;
 
 export const createWasmDpsLoader = (
     init: WasmInit,
@@ -64,6 +65,62 @@ export const createWasmDpsLoader = (
                     phaseResults: [],
                 }
             };
+        }
+    };
+};
+
+
+export interface ThresholdInfo {
+    threshold: number | null;
+}
+
+export interface ThresholdResults {
+    input_target: number;
+    thresholds: {
+        [floorId: string]: ThresholdInfo;
+    };
+}
+
+export const createWasmThresholdsLoader = (
+    init: WasmInit,
+    wasmUrl: string,
+    calcFn: WasmThresholdsCalc
+) => {
+    let wasmInitialized = false;
+
+    const initWasm = async () => {
+        if (!wasmInitialized) {
+            await init({ module_or_path: wasmUrl });
+            wasmInitialized = true;
+        }
+    };
+
+    return async (
+        targetTicks: number,
+        floor1: PlotDataPoint[],
+        floor2: PlotDataPoint[],
+        floor3: PlotDataPoint[],
+        olm: PlotDataPoint[],
+        raidTotal: PlotDataPoint[]
+    ): Promise<ThresholdResults | null> => {
+        await initWasm();
+        console.log('Calling WASM threshold function...');
+        try {
+            const payload = {
+                target_ticks: targetTicks,
+                floor1,
+                floor2,
+                floor3,
+                olm,
+                raid_total: raidTotal
+            };
+            const result = calcFn(JSON.stringify(payload));
+            const parsedResult: ThresholdResults = JSON.parse(result);
+
+            return parsedResult;
+        } catch (error) {
+            console.error('WASM threshold calculation error:', error);
+            return null;
         }
     };
 };
