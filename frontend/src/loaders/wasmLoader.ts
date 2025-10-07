@@ -1,6 +1,6 @@
 export interface PlotDataPoint {
     time: number;
-    dps: number;
+    probability: number;
 }
 
 export interface CalculationSummary {
@@ -42,7 +42,7 @@ export const createWasmDpsLoader = (
 
             const tickData: PlotDataPoint[] = (parsedResult.encounter_kill_times || []).map((pt: any) => ({
                 time: pt.tick,
-                dps: pt.probability
+                probability: pt.probability
             }));
 
             const summary: CalculationSummary = {

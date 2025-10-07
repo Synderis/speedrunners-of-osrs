@@ -6,10 +6,9 @@ import RoomSelection from './components/RoomSelection';
 import PlotSection from './components/PlotSection';
 import FloatingBackground from './components/FloatingBackground';
 import { ThemeProvider } from './context/ThemeContext';
-// import { fetchMonstersFromWiki } from './services/monsterServiceTemp';
+import { AppProvider } from './context/AppContext';
 import { fetchEquipmentFromWiki, fetchImageMapFromSupabase } from './services/gearServiceTemp';
-import type { GearSets, CombatStats, Equipment, InventoryItem } from './types/player';
-import type { SelectedRoomWithMonster } from './components/RoomSelection';
+import type { Equipment } from './types/player';
 import './App.css';
 
 // Move this outside the App component
@@ -26,34 +25,9 @@ async function loadEquipmentWithImages(): Promise<Equipment[]> {
 
 function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [isGearLoading, setIsGearLoading] = useState(true);
   // State for selected inventory items
-  const [selectedInventoryItems, setSelectedInventoryItems] = useState<InventoryItem[]>([]);
-  // const [monsters, setMonsters] = useState<Monster[]>([]);
-
-  // Shared state for gear and monsters
-  const [gearSets, setGearSets] = useState<GearSets>({
-    melee: [],
-    mage: [],
-    ranged: []
-  });
-  const [combatStats, setCombatStats] = useState<CombatStats>({
-    attack: 99,
-    strength: 99,
-    defence: 99,
-    ranged: 99,
-    magic: 99,
-    hitpoints: 99,
-    prayer: 99,
-    woodcutting: 99,
-    mining: 99,
-    thieving: 99
-  });
-  const [equipment, setEquipment] = useState<Equipment[]>([]);
-  const [selectedRooms, setSelectedRooms] = useState<SelectedRoomWithMonster[]>([]);
-  const [selectedMethods, setSelectedMethods] = useState<{ [roomId: string]: string[] }>({});
-  const [selectedPreset, setSelectedPreset] = useState<string>('');
-  const [roomSpecs, setRoomSpecs] = useState<{ [roomId: string]: { [weaponName: string]: number } }>({});
 
   useEffect(() => {
     // Prevent browser from restoring scroll position
@@ -125,65 +99,37 @@ function App() {
 
   return (
     <ThemeProvider>
-      <div className="app">
-        <motion.div
-          className="scroll-progress"
-          style={{ width: `${scrollProgress}%` }}
-          initial={{ width: 0 }}
-          animate={{ width: `${scrollProgress}%` }}
-          transition={{ duration: 0.1, ease: "easeOut" }}
-        />
-        <FloatingBackground />
-        <Header />
-        <motion.main
-          className="main-content"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <GearSelection
-            gearSets={gearSets}
-            setGearSets={setGearSets}
-            selectedInventoryItems={selectedInventoryItems}
-            setSelectedInventoryItems={setSelectedInventoryItems}
-            combatStats={combatStats}
-            setCombatStats={setCombatStats}
-            setIsGearLoading={setIsGearLoading}
-            isGearLoading={isGearLoading}
-            equipment={equipment} // <-- Pass equipment here
-            setSelectedPreset={setSelectedPreset}
-            selectedPreset={selectedPreset}
-            selectedRooms={selectedRooms}
-            setSelectedRooms={setSelectedRooms}
-            selectedMethods={selectedMethods}
-            setSelectedMethods={setSelectedMethods}
-            roomSpecs={roomSpecs}
-            setRoomSpecs={setRoomSpecs}
+      <AppProvider>
+        <div className="app">
+          <motion.div
+            className="scroll-progress"
+            style={{ width: `${scrollProgress}%` }}
+            initial={{ width: 0 }}
+            animate={{ width: `${scrollProgress}%` }}
+            transition={{ duration: 0.1, ease: "easeOut" }}
           />
-          {!isGearLoading && (
-            <>
-              <RoomSelection
-                selectedRooms={selectedRooms}
-                setSelectedRooms={setSelectedRooms}
-                selectedMethods={selectedMethods}
-                setSelectedMethods={setSelectedMethods}
-                selectedPreset={selectedPreset}
-                selectedInventoryItems={selectedInventoryItems} // <-- Pass it here
-                roomSpecs={roomSpecs} // <-- Pass this
-                setRoomSpecs={setRoomSpecs} // <-- And this
-              />
-              <PlotSection
-                gearSets={gearSets}
-                combatStats={combatStats}
-                selectedRooms={selectedRooms}
-                selectedInventoryItems={selectedInventoryItems}
-                selectedMethods={selectedMethods}
-                roomSpecs={roomSpecs}
-              />
-            </>
-          )}
-        </motion.main>
-      </div>
+          <FloatingBackground />
+          <Header />
+          <motion.main
+            className="main-content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <GearSelection
+              setIsGearLoading={setIsGearLoading}
+              isGearLoading={isGearLoading}
+              equipment={equipment}
+            />
+            {!isGearLoading && (
+              <>
+                <RoomSelection />
+                <PlotSection />
+              </>
+            )}
+          </motion.main>
+        </div>
+      </AppProvider>
     </ThemeProvider>
   );
 }

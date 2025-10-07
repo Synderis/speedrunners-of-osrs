@@ -45,7 +45,7 @@ const cropDistributionTo999 = (data: PlotDataPoint[]): PlotDataPoint[] => {
     if (!data || data.length === 0) return data;
 
     // Find the index where cumulative probability reaches 0.999
-    const cropIndex = data.findIndex(point => point.dps >= 0.999);
+    const cropIndex = data.findIndex(point => point.probability >= 0.999);
 
     if (cropIndex === -1) {
         // If we never reach 0.999, return the full distribution
@@ -127,30 +127,30 @@ export const calculateCombinedDistribution = (
         // CORRECTED: Convert CDF to PMF properly
         const convertToPMF = (data: PlotDataPoint[]) => {
             const pmf: { [time: number]: number } = {};
-            
+
             // Skip the first point - it represents cumulative probability up to that time
             // The actual probability mass starts from the differences between consecutive points
-            
+
             for (let i = 1; i < data.length; i++) {
                 const currentTime = Math.floor(data[i].time);
-                const currentProb = data[i].dps;
-                const prevProb = data[i - 1].dps;
-                
+                const currentProb = data[i].probability;
+                const prevProb = data[i - 1].probability;
+
                 const probMass = Math.max(0, currentProb - prevProb);
-                
+
                 if (probMass > 0 && isFinite(probMass)) {
                     pmf[currentTime] = (pmf[currentTime] || 0) + probMass;
                 }
             }
-            
+
             // Handle any remaining probability mass at the end
             const lastPoint = data[data.length - 1];
-            const remainingProb = Math.max(0, 1.0 - lastPoint.dps);
+            const remainingProb = Math.max(0, 1.0 - lastPoint.probability);
             if (remainingProb > 0.001) { // Only if significant
                 const lastTime = Math.floor(lastPoint.time);
                 pmf[lastTime + 1] = (pmf[lastTime + 1] || 0) + remainingProb;
             }
-            
+
             // Normalize the PMF to ensure it sums to 1
             const totalMass = Object.values(pmf).reduce((sum, prob) => sum + prob, 0);
             if (totalMass > 0) {
@@ -158,7 +158,7 @@ export const calculateCombinedDistribution = (
                     pmf[parseInt(time)] = pmf[parseInt(time)] / totalMass;
                 });
             }
-            
+
             return pmf;
         };
 
@@ -185,7 +185,7 @@ export const calculateCombinedDistribution = (
 
         const times1 = Object.keys(pmf1).map(Number).sort((a, b) => a - b);
         const times2 = Object.keys(pmf2).map(Number).sort((a, b) => a - b);
-        
+
         if (times1.length === 0 || times2.length === 0) {
             console.error('Failed to create valid PMFs');
             return [];
@@ -202,7 +202,7 @@ export const calculateCombinedDistribution = (
                     if (prob2 > 0) {
                         const combinedTime = t1 + t2 + delayTicks;
                         const combinedProb = prob1 * prob2;
-                        
+
                         if (isFinite(combinedProb) && combinedProb > 0) {
                             combinedPMF[combinedTime] = (combinedPMF[combinedTime] || 0) + combinedProb;
                         }
@@ -228,17 +228,17 @@ export const calculateCombinedDistribution = (
             cumulativeProb += combinedPMF[time];
             combinedData.push({
                 time: time,
-                dps: Math.min(1, Math.max(0, cumulativeProb))
+                probability: Math.min(1, Math.max(0, cumulativeProb))
             });
         }
 
         // Ensure we end at probability 1.0
         if (combinedData.length > 0) {
             const lastPoint = combinedData[combinedData.length - 1];
-            if (lastPoint.dps < 0.999) {
+            if (lastPoint.probability < 0.999) {
                 combinedData.push({
                     time: lastPoint.time + 1,
-                    dps: 1.0
+                    probability: 1.0
                 });
             }
         }
@@ -262,5 +262,205 @@ export const calculateCombinedDistribution = (
     } catch (error) {
         console.error('Error calculating combined distribution:', error);
         return [];
+    }
+};
+
+// Convert CDF to PMF
+const cdfToPmf = (data: PlotDataPoint[]): { timeAxis: number[], pmf: number[] } => {
+    if (!data || data.length === 0) return { timeAxis: [], pmf: [] };
+
+    const sortedData = [...data].sort((a, b) => a.time - b.time); // Use .time not .ticks
+    const t = sortedData.map(d => Math.round(d.time));
+    const c = sortedData.map(d => Math.max(0, Math.min(1, d.probability)));
+
+    // Ensure CDF is monotonic
+    for (let i = 1; i < c.length; i++) {
+        c[i] = Math.max(c[i], c[i - 1]);
+    }
+
+    const tMin = Math.min(...t);
+    const tMax = Math.max(...t);
+    const fullT = Array.from({ length: tMax - tMin + 1 }, (_, i) => tMin + i);
+
+    // Interpolate CDF values
+    const fullC = fullT.map(time => {
+        if (time <= t[0]) return c[0];
+        if (time >= t[t.length - 1]) return c[c.length - 1];
+
+        // Linear interpolation
+        let i = 0;
+        while (i < t.length - 1 && t[i + 1] < time) i++;
+        if (t[i] === time) return c[i];
+
+        const ratio = (time - t[i]) / (t[i + 1] - t[i]);
+        return c[i] + ratio * (c[i + 1] - c[i]);
+    });
+
+    // Convert CDF to PMF
+    const pmf = [fullC[0]];
+    for (let i = 1; i < fullC.length; i++) {
+        pmf.push(Math.max(0, fullC[i] - fullC[i - 1]));
+    }
+
+    // Normalize PMF
+    const sum = pmf.reduce((a, b) => a + b, 0);
+    if (sum > 0) {
+        for (let i = 0; i < pmf.length; i++) {
+            pmf[i] /= sum;
+        }
+    }
+
+    return { timeAxis: fullT, pmf };
+};
+
+// Convert PMF to CDF
+const pmfToCdf = (pmf: number[]): number[] => {
+    const cdf = [];
+    let cumSum = 0;
+    for (const p of pmf) {
+        cumSum += p;
+        cdf.push(Math.max(0, Math.min(1, cumSum)));
+    }
+    return cdf;
+};
+
+// Probability of completing within time limit
+const probLeqTime = (timeAxis: number[], cdf: number[], tLimit: number): number => {
+    if (tLimit < timeAxis[0]) return 0;
+    if (tLimit >= timeAxis[timeAxis.length - 1]) return cdf[cdf.length - 1];
+
+    // Find the index
+    let idx = 0;
+    while (idx < timeAxis.length - 1 && timeAxis[idx + 1] <= tLimit) idx++;
+    return cdf[idx];
+};
+
+// Convolve two PMFs
+const convolvePmfs = (a: number[], b: number[]): number[] => {
+    const result = new Array(a.length + b.length - 1).fill(0);
+    for (let i = 0; i < a.length; i++) {
+        for (let j = 0; j < b.length; j++) {
+            result[i + j] += a[i] * b[j];
+        }
+    }
+    return result;
+};
+
+// Main threshold calculation function
+export const calculateResetThresholds = (
+    targetTicks: number,
+    floor1Data: PlotDataPoint[],
+    floor2Data: PlotDataPoint[],
+    floor3Data: PlotDataPoint[],
+    olmData: PlotDataPoint[],
+    completeRaidData: PlotDataPoint[]
+) => {
+    try {
+        // Convert all CDFs to PMFs
+        const { timeAxis: t1, pmf: pmf1 } = cdfToPmf(floor1Data);
+        const { timeAxis: t2, pmf: pmf2 } = cdfToPmf(floor2Data);
+        const { timeAxis: t3, pmf: pmf3 } = cdfToPmf(floor3Data);
+        const { timeAxis: to, pmf: pmfo } = cdfToPmf(olmData);
+        const { timeAxis: tr, pmf: pmfr } = cdfToPmf(completeRaidData);
+
+        if (pmf1.length === 0 || pmf2.length === 0 || pmf3.length === 0 || pmfo.length === 0 || pmfr.length === 0) {
+            throw new Error('Invalid or empty distribution data');
+        }
+
+        // Build remaining-content PMFs via convolution
+        // Remaining after Floor 1: F2 + F3 + Olm
+        const pmf_23o = convolvePmfs(convolvePmfs(pmf2, pmf3), pmfo);
+        const t_23o_min = Math.min(...t2) + Math.min(...t3) + Math.min(...to);
+        const t_23o_max = Math.max(...t2) + Math.max(...t3) + Math.max(...to);
+        const t_23o = Array.from({ length: t_23o_max - t_23o_min + 1 }, (_, i) => t_23o_min + i);
+
+        // Remaining after Floor 2: F3 + Olm
+        const pmf_3o = convolvePmfs(pmf3, pmfo);
+        const t_3o_min = Math.min(...t3) + Math.min(...to);
+        const t_3o_max = Math.max(...t3) + Math.max(...to);
+        const t_3o = Array.from({ length: t_3o_max - t_3o_min + 1 }, (_, i) => t_3o_min + i);
+
+        // Remaining after Floor 3: Olm
+        const pmf_o = pmfo;
+        const t_o = to;
+
+        // Elapsed supports for checkpoints
+        const pmf12 = convolvePmfs(pmf1, pmf2);
+        const t12_min = Math.min(...t1) + Math.min(...t2);
+        const t12_max = Math.max(...t1) + Math.max(...t2);
+        const t12 = Array.from({ length: t12_max - t12_min + 1 }, (_, i) => t12_min + i);
+
+        const pmf123 = convolvePmfs(pmf12, pmf3);
+        const t123_min = t12_min + Math.min(...t3);
+        const t123_max = t12_max + Math.max(...t3);
+        const t123 = Array.from({ length: t123_max - t123_min + 1 }, (_, i) => t123_min + i);
+
+        // CDFs for remaining segments and full raid
+        const cdf_23o = pmfToCdf(pmf_23o);
+        const cdf_3o = pmfToCdf(pmf_3o);
+        const cdf_o = pmfToCdf(pmf_o);
+        const cdfr = pmfToCdf(pmfr);
+
+        // Baseline: success prob if restarting now
+        const p_restart = probLeqTime(tr, cdfr, targetTicks);
+
+        // Floor 1 checkpoint
+        const E1_candidates = Array.from({ length: Math.max(...t1) - Math.min(...t1) + 1 }, (_, i) => Math.min(...t1) + i);
+        const cont_f1 = E1_candidates.map(E1 => probLeqTime(t_23o, cdf_23o, targetTicks - E1));
+        const mask1 = cont_f1.map(p => p >= p_restart);
+
+        let E1_thr: number | null = null;
+        let rule1 = "never reset";
+        if (mask1.some(Boolean)) {
+            const validE1s = E1_candidates.filter((_, i) => mask1[i]);
+            E1_thr = Math.max(...validE1s) + 1;
+            rule1 = "continue if E1 < threshold; reset if E1 ≥ threshold";
+        } else if (cont_f1.every(p => p < p_restart)) {
+            rule1 = "reset always";
+        }
+
+        // Floor 2 checkpoint
+        const E2_candidates = Array.from({ length: t12_max - t12_min + 1 }, (_, i) => t12_min + i);
+        const cont_f2 = E2_candidates.map(E2 => probLeqTime(t_3o, cdf_3o, targetTicks - E2));
+        const mask2 = cont_f2.map(p => p >= p_restart);
+
+        let E2_thr: number | null = null;
+        let rule2 = "never reset";
+        if (mask2.some(Boolean)) {
+            const validE2s = E2_candidates.filter((_, i) => mask2[i]);
+            E2_thr = Math.max(...validE2s) + 1;
+            rule2 = "continue if total E2 < threshold; reset if E2 ≥ threshold";
+        } else if (cont_f2.every(p => p < p_restart)) {
+            rule2 = "reset always";
+        }
+
+        // Floor 3 checkpoint (entering Olm)
+        const E3_candidates = Array.from({ length: t123_max - t123_min + 1 }, (_, i) => t123_min + i);
+        const cont_f3 = E3_candidates.map(E3 => probLeqTime(t_o, cdf_o, targetTicks - E3));
+        const mask3 = cont_f3.map(p => p >= p_restart);
+
+        let E3_thr: number | null = null;
+        let rule3 = "never reset";
+        if (mask3.some(Boolean)) {
+            const validE3s = E3_candidates.filter((_, i) => mask3[i]);
+            E3_thr = Math.max(...validE3s) + 1;
+            rule3 = "continue if total E3 < threshold; reset if E3 ≥ threshold";
+        } else if (cont_f3.every(p => p < p_restart)) {
+            rule3 = "reset always";
+        }
+
+        return {
+            input_target: targetTicks,
+            p_success_if_restart_now: p_restart,
+            thresholds: {
+                floor1: { threshold: E1_thr, decision_rule: rule1 },
+                floor2: { threshold: E2_thr, decision_rule: rule2 },
+                floor3: { threshold: E3_thr, decision_rule: rule3 }
+            },
+            notes: "Thresholds compare continue-vs-restart probabilities at target time."
+        };
+    } catch (error) {
+        console.error('Error calculating thresholds:', error);
+        return null;
     }
 };

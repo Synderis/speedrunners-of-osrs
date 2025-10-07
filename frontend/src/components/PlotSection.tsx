@@ -2,32 +2,25 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { fadeInOut } from '../utils/animations';
 import type { PlotDataPoint } from '../types/loaders';
-import type { Floor, Room } from '../data/monsterStats';
+import type { Floor } from '../data/monsterStats';
 import { useTheme } from '../hooks/useTheme';
-import type { GearSets, CombatStats, Equipment, InventoryItem } from '../types/player';
+import type { Equipment } from '../types/player';
 import './PlotSection.css';
 import { getCombatStylesForCategory } from '../services/weaponStylesService';
 import { RAID_FLOORS } from '../data/monsterStats';
 import ResultPlot from './ResultPlot';
 import ConfigColumns from './ConfigColumns';
 import { GEAR_TYPES, DEFAULT_GEAR_STATS, wasmModelLoaders } from '../data/constants';
-import { 
-  calculateGearStatsForSet, 
-  monsterStatScaling, 
+import {
+  calculateGearStatsForSet,
+  monsterStatScaling,
   monsterHpScaling,
   getMonstersByRoom,
   calculateCombinedDistribution,
 } from '../utils/helpers';
-
-
-interface PlotSectionProps {
-  gearSets?: GearSets;
-  combatStats?: CombatStats;
-  selectedRooms?: Room[];
-  selectedInventoryItems?: InventoryItem[];
-  selectedMethods?: { [roomId: string]: string[] }; // Changed to match RoomSelection format
-  roomSpecs?: { [roomId: string]: { [weaponName: string]: number } };
-}
+import { useAppContext } from '../context/AppContext';
+import ThresholdCard from './ThresholdCard';
+import CombinedStatsCard from './CombinedStatsCard';
 
 type Stats = {
   total_hits: number;
@@ -39,29 +32,17 @@ type Stats = {
 };
 
 // --- Main Component ---
-const PlotSection: React.FC<PlotSectionProps> = ({
-  gearSets = {
-    melee: [],
-    mage: [],
-    ranged: []
-  },
-  combatStats = {
-    attack: 99,
-    strength: 99,
-    defence: 99,
-    ranged: 99,
-    magic: 99,
-    hitpoints: 99,
-    prayer: 99,
-    woodcutting: 99,
-    mining: 99,
-    thieving: 99
-  },
-  selectedRooms = [],
-  selectedInventoryItems = [],
-  selectedMethods = {},
-  roomSpecs = {}
-}) => {
+const PlotSection: React.FC = () => {
+  // Get all state from context
+  const {
+    gearSets,
+    combatStats,
+    selectedRooms,
+    selectedInventoryItems,
+    selectedMethods,
+    roomSpecs
+  } = useAppContext();
+
   // --- Theme & Chart Colors ---
   const { theme } = useTheme();
   const chartColors = {
@@ -102,10 +83,6 @@ const PlotSection: React.FC<PlotSectionProps> = ({
     roomStats: Array<{ name: string; stats: Stats }>;
     floorId: string;
   } | null>>({});
-
-  // --- Target Time state ---
-  const [targetTime, setTargetTime] = useState<number>(0); // in ticks
-  // const [showTargetTimeInput, setShowTargetTimeInput] = useState(false);
 
   // --- Default Stats (needed for combined room analysis) ---
   const defaultStats: Stats = {
@@ -202,76 +179,76 @@ const PlotSection: React.FC<PlotSectionProps> = ({
   const configSections = [
     ...gearConfigSections,
     {
-  key: 'monster',
-  title: 'Monster Stats',
-  data: (() => {
-    if (!currentMonster) {
-      return {
-        'Combat Levels': {
-          'hitpoints': 0,
-          'attack': 0,
-          'strength': 0,
-          'defence': 0,
-          'ranged': 0,
-          'magic': 0
-        },
-        'Offensive Bonuses': {
-          'max_hit': 0,
-          'attack': 0,
-          'strength': 0,
-          'ranged': 0,
-          'magic': 0,
-          'ranged_strength': 0,
-          'magic_strength': 0,
-        },
-        'Defensive Bonuses': {
-          'stab': 0,
-          'slash': 0,
-          'crush': 0,
-          'magic_defence': 0,
-          'light': 0,
-          'standard': 0,
-          'heavy': 0,
-          'flat_armor': 0,
+      key: 'monster',
+      title: 'Monster Stats',
+      data: (() => {
+        if (!currentMonster) {
+          return {
+            'Combat Levels': {
+              'hitpoints': 0,
+              'attack': 0,
+              'strength': 0,
+              'defence': 0,
+              'ranged': 0,
+              'magic': 0
+            },
+            'Offensive Bonuses': {
+              'max_hit': 0,
+              'attack': 0,
+              'strength': 0,
+              'ranged': 0,
+              'magic': 0,
+              'ranged_strength': 0,
+              'magic_strength': 0,
+            },
+            'Defensive Bonuses': {
+              'stab': 0,
+              'slash': 0,
+              'crush': 0,
+              'magic_defence': 0,
+              'light': 0,
+              'standard': 0,
+              'heavy': 0,
+              'flat_armor': 0,
+            }
+          };
         }
-      };
+
+        // Apply scaling (returns raw stats for Olm, scaled stats for others)
+        const scaledStats = monsterStatScaling(currentMonster, combatStats.hitpoints);
+        const scaledHp = monsterHpScaling(currentMonster, combatStats);
+
+        return {
+          'Combat Levels': {
+            'hitpoints': scaledHp,
+            'attack': scaledStats.atk,
+            'strength': scaledStats.str,
+            'defence': scaledStats.def,
+            'ranged': scaledStats.ranged,
+            'magic': scaledStats.magic
+          },
+          'Offensive Bonuses': {
+            'max_hit': currentMonster.max_hit || 0,
+            'attack': currentMonster.offensive.atk || 0,
+            'strength': currentMonster.offensive.str || 0,
+            'ranged': currentMonster.offensive.ranged || 0,
+            'magic': currentMonster.offensive.magic || 0,
+            'ranged_strength': currentMonster.offensive.ranged_str || 0,
+            'magic_strength': currentMonster.offensive.magic_str || 0,
+          },
+          'Defensive Bonuses': {
+            'stab': currentMonster.defensive.stab || 0,
+            'slash': currentMonster.defensive.slash || 0,
+            'crush': currentMonster.defensive.crush || 0,
+            'magic_defence': currentMonster.defensive.magic || 0,
+            'light': currentMonster.defensive.light || 0,
+            'standard': currentMonster.defensive.standard || 0,
+            'heavy': currentMonster.defensive.heavy || 0,
+            'flat_armor': currentMonster.defensive.flat_armour || 0,
+          }
+        };
+      })()
     }
-
-    // Apply scaling (returns raw stats for Olm, scaled stats for others)
-    const scaledStats = monsterStatScaling(currentMonster, combatStats.hitpoints);
-    const scaledHp = monsterHpScaling(currentMonster, combatStats);
-
-    return {
-      'Combat Levels': {
-        'hitpoints': scaledHp,
-        'attack': scaledStats.atk,
-        'strength': scaledStats.str,
-        'defence': scaledStats.def,
-        'ranged': scaledStats.ranged,
-        'magic': scaledStats.magic
-      },
-      'Offensive Bonuses': {
-        'max_hit': currentMonster.max_hit || 0,
-        'attack': currentMonster.offensive.atk || 0,
-        'strength': currentMonster.offensive.str || 0,
-        'ranged': currentMonster.offensive.ranged || 0,
-        'magic': currentMonster.offensive.magic || 0,
-        'ranged_strength': currentMonster.offensive.ranged_str || 0,
-        'magic_strength': currentMonster.offensive.magic_str || 0,
-      },
-      'Defensive Bonuses': {
-        'stab': currentMonster.defensive.stab || 0,
-        'slash': currentMonster.defensive.slash || 0,
-        'crush': currentMonster.defensive.crush || 0,
-        'magic_defence': currentMonster.defensive.magic || 0,
-        'light': currentMonster.defensive.light || 0,
-        'standard': currentMonster.defensive.standard || 0,
-        'heavy': currentMonster.defensive.heavy || 0,
-        'flat_armor': currentMonster.defensive.flat_armour || 0,
-      }
-    };
-  })()
-}
   ];
 
   const loadData = async () => {
@@ -373,11 +350,11 @@ const PlotSection: React.FC<PlotSectionProps> = ({
           ...room,
           methods: filteredMethods,
           monsters,
-          specialAttacks: roomSpecs[room.id] 
+          specialAttacks: roomSpecs[room.id]
             ? Object.entries(roomSpecs[room.id]).map(([weaponName, count]) => ({
-                name: weaponName,
-                count: count
-              }))
+              name: weaponName,
+              count: count
+            }))
             : []
         };
         console.log('Sending to WASM:', { room: roomPayload, monsters });
@@ -674,29 +651,6 @@ const PlotSection: React.FC<PlotSectionProps> = ({
     combinedPlotDataToShow.length
   ]);
 
-  // --- Helper Functions ---
-  const formatTimeInput = (ticks: number): string => {
-    if (showSeconds) {
-      return formatSeconds(ticks * 0.6);
-    }
-    return ticks.toString();
-  };
-
-  const parseTimeInput = (value: string): number => {
-    if (showSeconds) {
-      // Parse mm:ss.t format
-      const parts = value.split(':');
-      if (parts.length === 2) {
-        const minutes = parseInt(parts[0]) || 0;
-        const secondsParts = parts[1].split('.');
-        const seconds = parseInt(secondsParts[0]) || 0;
-        const tenths = parseInt(secondsParts[1]) || 0;
-        return Math.round((minutes * 60 + seconds + tenths / 10) / 0.6);
-      }
-    }
-    return parseInt(value) || 0;
-  };
-
   return (
     <motion.section
       id="plots"
@@ -853,35 +807,15 @@ const PlotSection: React.FC<PlotSectionProps> = ({
 
           {/* NEW COMBINED ROOMS PLOT SECTION - NOW FLOOR BASED */}
           {shouldShowCombinedPlot && (
-            <div
-              className="combined-plot-section"
-              style={{
-                marginTop: '1rem',
-                display: 'block',
-                visibility: 'visible',
-                opacity: 1,
-                minHeight: '400px',
-                padding: '20px'
-              }}
-            >
-              {/* Floor Tabs */}
+            <div className="combined-plot-section">
+              {/* Add Floor Tabs */}
               {availableFloors.length > 1 && (
-                <div className="floor-tabs" style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: '1rem',
-                  marginBottom: '2rem'
-                }}>
+                <div className="floor-tabs">
                   {availableFloors.map(floor => (
                     <button
                       key={floor.id}
                       className={`plot-tab${activeFloor === floor.id ? ' active' : ''}`}
                       onClick={() => setActiveFloor(floor.id)}
-                      style={{
-                        padding: '12px 24px',
-                        fontSize: '1rem',
-                        fontWeight: '600'
-                      }}
                     >
                       {floor.name}
                     </button>
@@ -889,32 +823,18 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                 </div>
               )}
 
-              {/* Combined Plot Title */}
               <h3
                 className="combined-plot-title"
                 style={{
-                  textAlign: 'center',
-                  margin: '2rem 0 1rem 0',
                   color: chartColors.text,
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  borderBottom: `2px solid ${chartColors.primary}`,
-                  paddingBottom: '0.5rem',
-                  opacity: 1
+                  borderBottom: `2px solid ${chartColors.primary}`
                 }}
               >
                 {combinedRoomAnalysis[activeFloor]?.floorName} Analysis
               </h3>
 
-              {/* Plot and Stats Container - Side by Side */}
-              <div style={{
-                display: 'flex',
-                gap: '2rem',
-                alignItems: 'flex-start',
-                justifyContent: 'center'
-              }}>
-                {/* Combined Plot - Left Side */}
-                <div style={{ flex: '1', minWidth: '600px' }}>
+              <div className="combined-plot-container">
+                <div className="combined-plot-chart">
                   <ResultPlot
                     key={`combined-plot-${activeFloor}`}
                     chartRef={combinedChartRef}
@@ -936,358 +856,24 @@ const PlotSection: React.FC<PlotSectionProps> = ({
                       : combinedRoomAnalysis[activeFloor]!.expectedTime.toFixed(1)
                     ) : '0'}
                   />
-                  
-                  {/* Target Time Input Section - Always Visible */}
-                  <div 
-                    className="stat-card card" 
-                    style={{
-                      marginTop: '1rem',
-                      background: `linear-gradient(135deg, ${chartColors.primary}15, ${chartColors.secondary}15)`,
-                      border: `1px solid ${chartColors.secondary}40`
-                    }}
-                  >
-                      {/* Target Time Input */}
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '1rem', 
-                        marginBottom: '1rem',
-                        justifyContent: 'center',
-                        flexWrap: 'wrap'
-                      }}>
-                        <label style={{ 
-                          color: chartColors.text,
-                          fontSize: '0.9rem',
-                          fontWeight: 'bold'
-                        }}>
-                          Target Complete Raid Time ({showSeconds ? 'mm:ss.t' : 'ticks'}):
-                        </label>
-                        <input
-                          type="text"
-                          value={targetTime > 0 ? formatTimeInput(targetTime) : ''}
-                          onChange={(e) => setTargetTime(parseTimeInput(e.target.value))}
-                          placeholder={showSeconds ? "15:30.0" : "1550"}
-                          style={{
-                            width: '120px',
-                            padding: '6px 10px',
-                            borderRadius: '4px',
-                            border: `1px solid ${chartColors.primary}50`,
-                            backgroundColor: theme === 'light' ? 'white' : '#2a2a2a',
-                            color: chartColors.text,
-                            textAlign: 'center',
-                            fontSize: '0.9rem'
-                          }}
-                        />
-                        <button
-                          className="btn"
-                          onClick={() => {
-                            // Add your reset threshold calculation logic here
-                            console.log('Calculating reset thresholds for target time:', targetTime);
-                            // You can add the actual calculation function here
-                          }}
-                          disabled={targetTime <= 0}
-                          style={{
-                            fontSize: '0.8rem',
-                            padding: '6px 12px',
-                            backgroundColor: targetTime > 0 ? chartColors.secondary : '#6c757d',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: targetTime > 0 ? 'pointer' : 'not-allowed',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          Calculate Reset Thresholds
-                        </button>
-                      </div>
-                      
-                      {/* Floor Times Inline */}
-                      {availableFloors.length > 0 && (
-                        <div style={{
-                          display: 'flex',
-                          justifyContent: 'center',
-                          gap: '2rem',
-                          flexWrap: 'wrap',
-                          padding: '0.75rem',
-                          backgroundColor: `${chartColors.secondary}10`,
-                          borderRadius: '6px',
-                          border: `1px solid ${chartColors.secondary}30`
-                        }}>
-                          {availableFloors.map((floor, index) => {
-                            const floorAnalysis = combinedRoomAnalysis[floor.id];
-                            const expectedTime = floorAnalysis?.expectedTime || 0;
-                            
-                            return (
-                              <div key={floor.id} style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: '0.25rem',
-                                minWidth: '100px',
-                                position: 'relative'
-                              }}>
-                                <span style={{ 
-                                  fontSize: '0.8rem', 
-                                  fontWeight: 'bold',
-                                  color: chartColors.text 
-                                }}>
-                                  {floor.name}
-                                </span>
-                                <span style={{ 
-                                  fontSize: '1rem', 
-                                  fontWeight: 'bold', 
-                                  color: chartColors.secondary 
-                                }}>
-                                  {showSeconds 
-                                    ? formatSeconds(expectedTime * 0.6) 
-                                    : expectedTime.toFixed(1)
-                                  }
-                                </span>
-                                {index < availableFloors.length - 1 && (
-                                  <span style={{ 
-                                    position: 'absolute',
-                                    right: '-1rem',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    color: chartColors.text + '60',
-                                    fontSize: '1.2rem'
-                                  }}>
-                                    →
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })}
-                          
-                          {/* Total Time */}
-                          <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: '0.25rem',
-                            minWidth: '100px',
-                            paddingLeft: '1rem',
-                            borderLeft: `2px solid ${chartColors.text}30`
-                          }}>
-                            <span style={{ 
-                              fontSize: '0.8rem', 
-                              fontWeight: 'bold',
-                              color: chartColors.text 
-                            }}>
-                              Total Expected
-                            </span>
-                            <span style={{ 
-                              fontSize: '1rem', 
-                              fontWeight: 'bold', 
-                              color: chartColors.primary 
-                            }}>
-                              {(() => {
-                                const totalTime = availableFloors.reduce((sum, floor) => {
-                                  const floorAnalysis = combinedRoomAnalysis[floor.id];
-                                  return sum + (floorAnalysis?.expectedTime || 0);
-                                }, 0);
-                                return showSeconds 
-                                  ? formatSeconds(totalTime * 0.6) 
-                                  : totalTime.toFixed(1);
-                              })()}
-                            </span>
-                          </div>
-
-                          {/* Target vs Expected Comparison */}
-                          {targetTime > 0 && (
-                            <div style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              gap: '0.25rem',
-                              minWidth: '100px',
-                              paddingLeft: '1rem',
-                              borderLeft: `2px solid ${chartColors.text}30`
-                            }}>
-                              <span style={{ 
-                                fontSize: '0.8rem', 
-                                fontWeight: 'bold',
-                                color: chartColors.text 
-                              }}>
-                                Target
-                              </span>
-                              <span style={{ 
-                                fontSize: '1rem', 
-                                fontWeight: 'bold', 
-                                color: (() => {
-                                  const totalExpected = availableFloors.reduce((sum, floor) => {
-                                    const floorAnalysis = combinedRoomAnalysis[floor.id];
-                                    return sum + (floorAnalysis?.expectedTime || 0);
-                                  }, 0);
-                                  return targetTime <= totalExpected ? '#28a745' : '#dc3545';
-                                })()
-                              }}>
-                                {showSeconds ? formatSeconds(targetTime * 0.6) : targetTime.toFixed(1)}
-                              </span>
-                              <span style={{ 
-                                fontSize: '0.7rem',
-                                color: (() => {
-                                  const totalExpected = availableFloors.reduce((sum, floor) => {
-                                    const floorAnalysis = combinedRoomAnalysis[floor.id];
-                                    return sum + (floorAnalysis?.expectedTime || 0);
-                                  }, 0);
-                                  return targetTime <= totalExpected ? '#28a745' : '#dc3545';
-                                })() + '80'
-                              }}>
-                                {(() => {
-                                  const totalExpected = availableFloors.reduce((sum, floor) => {
-                                    const floorAnalysis = combinedRoomAnalysis[floor.id];
-                                    return sum + (floorAnalysis?.expectedTime || 0);
-                                  }, 0);
-                                  return targetTime <= totalExpected ? '✅ Achievable' : '⚠️ Ambitious';
-                                })()}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                  </div>
+                  <ThresholdCard
+                    chartColors={chartColors}
+                    theme={theme}
+                    showSeconds={showSeconds}
+                    formatSeconds={formatSeconds}
+                    availableFloors={availableFloors}
+                    combinedRoomAnalysis={combinedRoomAnalysis}
+                    olmDistribution={plotDataDict['olm'] || []}
+                  />
                 </div>
-
-                {/* Combined Stats Card - Right Side */}
-                <div style={{ flexShrink: 0, width: '350px' }}>
-                  <div
-                    className="stat-card card combined-stat-card"
-                    style={{
-                      height: 'fit-content',
-                      textAlign: 'center',
-                      background: `linear-gradient(135deg, ${chartColors.primary}20, ${chartColors.secondary}20)`,
-                      opacity: 1,
-                      position: 'sticky',
-                      top: '20px'
-                    }}
-                  >
-                    <h3>Total Expected {combinedRoomAnalysis[activeFloor]?.floorName || 'Floor'} Time</h3>
-                    <p
-                      className="stat-value"
-                      style={{ fontSize: '2rem', color: chartColors.primary, opacity: 1 }}
-                    >
-                      {combinedRoomAnalysis[activeFloor] ? (showSeconds
-                        ? formatSeconds(combinedRoomAnalysis[activeFloor]!.expectedTime * 0.6)
-                        : combinedRoomAnalysis[activeFloor]!.expectedTime.toFixed(1)
-                      ) : '--'}
-                    </p>
-                    <span className="stat-unit">
-                      {showSeconds ? 'min:sec' : 'ticks'} (including delays)
-                    </span>
-                    <div style={{
-                      marginTop: '1rem',
-                      fontSize: '0.9rem',
-                      color: chartColors.text + '80'
-                    }}>
-                      {/* Header Row */}
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: '2fr 1fr 1fr',
-                        gap: '0.5rem',
-                        padding: '0.5rem 0',
-                        borderBottom: `1px solid ${chartColors.text}40`,
-                        fontWeight: 'bold',
-                        marginBottom: '0.5rem'
-                      }}>
-                        <div>Room</div>
-                        <div style={{ textAlign: 'center' }}>Time</div>
-                        <div style={{ textAlign: 'center' }}>Total</div>
-                      </div>
-
-                      {/* Data Rows */}
-                      {(() => {
-                        if (!combinedRoomAnalysis[activeFloor]?.roomStats) return null;
-
-                        const floor = RAID_FLOORS.find(f => f.id === activeFloor);
-                        if (!floor) return null;
-
-                        // Determine if Vespula Pots Skip is selected
-                        let tightropeDelayAdjustment = 0;
-                        if (selectedMethods && selectedMethods['vespula'] && selectedMethods['vespula'].includes('Vespula Pots Skip')) {
-                          tightropeDelayAdjustment = 11;
-                        }
-
-                        let runningTotal = 0;
-                        const rows: JSX.Element[] = [];
-                        let roomStatsIndex = 0;
-
-                        // Iterate through floor.rooms to maintain proper order and include delays
-                        for (let i = 0; i < floor.rooms.length; i++) {
-                          const floorRoom = floor.rooms[i];
-
-                          if (floorRoom.isDelay) {
-                            // Adjust tightrope delay if needed
-                            let delayTicks = floorRoom.delayTicks || 0;
-                            if (floorRoom.roomId === 'tightrope' && tightropeDelayAdjustment > 0) {
-                              delayTicks = Math.max(0, delayTicks - tightropeDelayAdjustment);
-                            }
-                            runningTotal += delayTicks;
-                            rows.push(
-                              <div key={i} style={{
-                                display: 'grid',
-                                gridTemplateColumns: '2fr 1fr 1fr',
-                                gap: '0.5rem',
-                                padding: '0.3rem 0',
-                                borderBottom: `1px solid ${chartColors.text}20`,
-                                fontStyle: 'italic',
-                                color: chartColors.text + '99'
-                              }}>
-                                <div><strong>{floorRoom.name || 'Delay'}</strong></div>
-                                <div style={{ textAlign: 'center' }}>
-                                  {showSeconds
-                                    ? formatSeconds(delayTicks * 0.6)
-                                    : delayTicks.toFixed(1)
-                                  }
-                                </div>
-                                <div style={{ textAlign: 'center', color: chartColors.primary }}>
-                                  {showSeconds
-                                    ? formatSeconds(runningTotal * 0.6)
-                                    : runningTotal.toFixed(1)
-                                  }
-                                </div>
-                              </div>
-                            );
-                          } else {
-                            // This is a combat room
-                            const roomStat = combinedRoomAnalysis[activeFloor]!.roomStats![roomStatsIndex];
-                            if (roomStat) {
-                              runningTotal += roomStat.stats.total_expected_ticks;
-                              rows.push(
-                                <div key={i} style={{
-                                  display: 'grid',
-                                  gridTemplateColumns: '2fr 1fr 1fr',
-                                  gap: '0.5rem',
-                                  padding: '0.3rem 0',
-                                  borderBottom: roomStatsIndex < combinedRoomAnalysis[activeFloor]!.roomStats!.length - 1
-                                    ? `1px solid ${chartColors.text}20`
-                                    : 'none'
-                                }}>
-                                  <div><strong>{roomStat.name}</strong></div>
-                                  <div style={{ textAlign: 'center' }}>
-                                    {showSeconds
-                                      ? formatSeconds(roomStat.stats.total_expected_seconds)
-                                      : roomStat.stats.total_expected_ticks.toFixed(1)
-                                    }
-                                  </div>
-                                  <div style={{ textAlign: 'center', color: chartColors.primary }}>
-                                    {showSeconds
-                                      ? formatSeconds(runningTotal * 0.6)
-                                      : runningTotal.toFixed(1)
-                                    }
-                                  </div>
-                                </div>
-                              );
-                              roomStatsIndex++;
-                            }
-                          }
-                        }
-
-                        return rows;
-                      })()}
-                    </div>
-                  </div>
-                </div>
+                <CombinedStatsCard
+                  chartColors={chartColors}
+                  showSeconds={showSeconds}
+                  formatSeconds={formatSeconds}
+                  activeFloor={activeFloor}
+                  combinedRoomAnalysis={combinedRoomAnalysis}
+                  selectedMethods={selectedMethods}
+                />
               </div>
             </div>
           )}
@@ -1298,4 +884,3 @@ const PlotSection: React.FC<PlotSectionProps> = ({
 };
 
 export default PlotSection;
-

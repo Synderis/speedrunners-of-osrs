@@ -1,38 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { fadeInOut, slideInOut, hoverEffects } from '../utils/animations';
-import { cmMonsters, rooms, type Monster, type Room} from '../data/monsterStats';
-import type { InventoryItem } from '../types/player';
+import { cmMonsters, rooms, type Monster, type Room } from '../data/monsterStats';
 import { gearSetPresets } from '../data/gearTemplates';
 import { getMonstersByRoom } from '../utils/helpers';
 import SpecAssignment from './SpecAssignment';
+import { useAppContext } from '../context/AppContext';
 import './RoomSelection.css';
 
 export interface SelectedRoomWithMonster extends Room {
     monster?: Monster;
 }
 
-interface RoomSelectionProps {
-    selectedRooms: SelectedRoomWithMonster[];
-    setSelectedRooms: React.Dispatch<React.SetStateAction<SelectedRoomWithMonster[]>>;
-    selectedMethods: { [roomId: string]: string[] };
-    setSelectedMethods: React.Dispatch<React.SetStateAction<{ [roomId: string]: string[] }>>;
-    selectedPreset: string;
-    selectedInventoryItems: InventoryItem[]; // <-- Use InventoryItem here
-    roomSpecs: { [roomId: string]: { [weaponName: string]: number } };
-    setRoomSpecs: React.Dispatch<React.SetStateAction<{ [roomId: string]: { [weaponName: string]: number } }>>;
-}
+const RoomSelection: React.FC = () => {
+    // Get all the state from context instead of props
+    const {
+        selectedRooms, setSelectedRooms,
+        selectedMethods, setSelectedMethods,
+        selectedPreset,
+        selectedInventoryItems,
+        roomSpecs, setRoomSpecs
+    } = useAppContext();
 
-const RoomSelection: React.FC<RoomSelectionProps> = ({
-    selectedRooms,
-    setSelectedRooms,
-    selectedMethods,
-    setSelectedMethods,
-    selectedPreset,
-    selectedInventoryItems,
-    roomSpecs,
-    setRoomSpecs
-}) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     // const [specDropdownOpen, setSpecDropdownOpen] = useState(false);
     // const [roomSpecs, setRoomSpecs] = useState<{ [roomId: string]: { weapon: string; count: number } }>({});
