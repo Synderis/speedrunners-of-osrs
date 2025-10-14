@@ -176,14 +176,14 @@
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 1.6rem; /* 2rem * 0.8 */
+  gap: 1.6rem;
   width: 90%;
   margin: 0 auto;
-  margin-bottom: 2.4rem; /* 3rem * 0.8 */
-  padding: 1.2rem; /* 1.5rem * 0.8 */
+  margin-bottom: 2.4rem;
+  padding: 1.2rem;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 9.6px; /* 12px * 0.8 */
+  border-radius: 9.6px;
   box-shadow: var(--shadow);
 }
 
@@ -192,6 +192,76 @@
   align-items: center;
   gap: 1rem;
   justify-self: start;
+}
+
+select.preset-dropdown {
+  /* base box to mirror .preset-dropdown__control */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  min-height: 38px;              /* matches your control min-height */
+  min-width: 340px;              /* matches your control min-width */
+
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  /* border: 1px solid var(--accent-primary); */
+  border-radius: 6.4px;
+
+  font-family: inherit;
+  line-height: 1.2;
+  padding: 8px 36px 8px 12px;    /* leave space for the chevron */
+  cursor: pointer;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+  /* chevron like react-select indicator (pure CSS) */
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-secondary, #9aa0a6) 50%),
+    linear-gradient(135deg, var(--text-secondary, #9aa0a6) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 12px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+/* Hover: subtly highlight like your react-select control */
+select.preset-dropdown:hover {
+  border-color: var(--accent-primary);
+}
+
+/* Focus: mimic .preset-dropdown__control--is-focused */
+select.preset-dropdown:focus {
+  outline: none;
+}
+
+select.preset-dropdown.preset-dropdown--is-focused {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Disabled state */
+select.preset-dropdown:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Option popup colors (when the list is open) */
+select.preset-dropdown option {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* Placeholder-like style when value === "" (optional helper class) */
+select.preset-dropdown.is-placeholder {
+  color: var(--text-secondary);
+}
+
+/* Firefox keyboard focus legibility */
+select.preset-dropdown:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 var(--text-primary);
 }
 
 .clear-buttons {
@@ -322,7 +392,7 @@
   border-color: var(--accent-primary);
 }
 
-.preset-dropdown {
+/* .preset-dropdown {
   width: 400px;
   padding: 12px 16px;
   background: var(--bg-tertiary);
@@ -333,7 +403,7 @@
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-}
+} */
 
 .clear-type-btn.all {
   background: linear-gradient(135deg, #6b7280, #4b5563);
