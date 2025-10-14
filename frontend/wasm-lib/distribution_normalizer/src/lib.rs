@@ -1,9 +1,6 @@
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json;
-use rand::prelude::*;
-
-const N_TRIALS: usize = 100_000;
 
 #[derive(Deserialize)]
 pub struct PlotDataPoint {
@@ -35,42 +32,44 @@ pub struct ThresholdInput {
 fn cdf_to_pmf(data: &[PlotDataPoint]) -> (Vec<u32>, Vec<f64>, Vec<f64>) {
     let times: Vec<u32> = data.iter().map(|d| d.time).collect();
     let mut probs: Vec<f64> = data.iter().map(|d| d.probability).collect();
+    
     // Ensure monotonic
     for i in 1..probs.len() {
         if probs[i] < probs[i - 1] {
             probs[i] = probs[i - 1];
         }
     }
+    
     let min_t = *times.iter().min().unwrap();
     let max_t = *times.iter().max().unwrap();
     let full_t: Vec<u32> = (min_t..=max_t).collect();
+    
+    // Interpolate CDF values
     let mut full_c = Vec::with_capacity(full_t.len());
     for &t in &full_t {
-        // Linear interpolation
         let mut idx = 0;
         while idx < times.len() - 1 && times[idx + 1] <= t {
             idx += 1;
         }
         full_c.push(probs[idx]);
     }
+    
+    // Convert CDF to PMF
     let mut pmf = Vec::with_capacity(full_c.len());
     pmf.push(full_c[0]);
     for i in 1..full_c.len() {
         pmf.push((full_c[i] - full_c[i - 1]).max(0.0));
     }
+    
+    // Normalize PMF
     let s: f64 = pmf.iter().sum();
     if s > 0.0 {
         for p in pmf.iter_mut() {
             *p /= s;
         }
     }
+    
     (full_t, pmf, full_c)
-}
-
-fn sample_from_pmf(time_axis: &[u32], pmf: &[f64], n: usize) -> Vec<u32> {
-    let mut rng = thread_rng();
-    let dist = rand::distributions::WeightedIndex::new(pmf).unwrap();
-    (0..n).map(|_| time_axis[dist.sample(&mut rng)]).collect()
 }
 
 fn convolve_pmfs(a: &[f64], b: &[f64]) -> Vec<f64> {
@@ -83,6 +82,133 @@ fn convolve_pmfs(a: &[f64], b: &[f64]) -> Vec<f64> {
     result
 }
 
+fn interpolate(x: u32, x_vals: &[u32], y_vals: &[f64]) -> f64 {
+    if x_vals.is_empty() {
+        return 0.0;
+    }
+    if x <= x_vals[0] {
+        return 0.0;
+    }
+    if x >= x_vals[x_vals.len() - 1] {
+        return 1.0;
+    }
+    
+    let mut idx = 0;
+    while idx < x_vals.len() - 1 && x_vals[idx + 1] <= x {
+        idx += 1;
+    }
+    
+    y_vals[idx]
+}
+
+fn find_analytical_thresholds(
+    target: u32,
+    t1: &[u32], pmf1: &[f64], cdf1: &[f64],
+    t2: &[u32], pmf2: &[f64],
+    t3: &[u32], pmf3: &[f64],
+    to: &[u32], pmfo: &[f64], cdfo: &[f64]
+) -> (Option<u32>, Option<u32>, Option<u32>) {
+    
+    // Build convolved CDFs for remaining stages
+    
+    // Floor2+3+Olm
+    let pmf_23 = convolve_pmfs(pmf2, pmf3);
+    let pmf_23o = convolve_pmfs(&pmf_23, pmfo);
+    let t_23o_min = t2[0] + t3[0] + to[0];
+    let t_23o: Vec<u32> = (0..pmf_23o.len()).map(|i| t_23o_min + i as u32).collect();
+    let cdf_23o: Vec<f64> = {
+        let mut cdf = Vec::with_capacity(pmf_23o.len());
+        let mut sum = 0.0;
+        for &p in &pmf_23o {
+            sum += p;
+            cdf.push(sum.min(1.0));
+        }
+        cdf
+    };
+    
+    // Floor3+Olm  
+    let pmf_3o = convolve_pmfs(pmf3, pmfo);
+    let t_3o_min = t3[0] + to[0];
+    let t_3o: Vec<u32> = (0..pmf_3o.len()).map(|i| t_3o_min + i as u32).collect();
+    let cdf_3o: Vec<f64> = {
+        let mut cdf = Vec::with_capacity(pmf_3o.len());
+        let mut sum = 0.0;
+        for &p in &pmf_3o {
+            sum += p;
+            cdf.push(sum.min(1.0));
+        }
+        cdf
+    };
+    
+    // Floor1+2
+    let pmf_12 = convolve_pmfs(pmf1, pmf2);
+    let t_12_min = t1[0] + t2[0];
+    let t_12: Vec<u32> = (0..pmf_12.len()).map(|i| t_12_min + i as u32).collect();
+    let cdf_12: Vec<f64> = {
+        let mut cdf = Vec::with_capacity(pmf_12.len());
+        let mut sum = 0.0;
+        for &p in &pmf_12 {
+            sum += p;
+            cdf.push(sum.min(1.0));
+        }
+        cdf
+    };
+    
+    // Floor1+2+3
+    let pmf_123 = convolve_pmfs(&pmf_12, pmf3);
+    let t_123_min = t_12_min + t3[0];
+    let t_123: Vec<u32> = (0..pmf_123.len()).map(|i| t_123_min + i as u32).collect();
+    let cdf_123: Vec<f64> = {
+        let mut cdf = Vec::with_capacity(pmf_123.len());
+        let mut sum = 0.0;
+        for &p in &pmf_123 {
+            sum += p;
+            cdf.push(sum.min(1.0));
+        }
+        cdf
+    };
+    
+    // Find thresholds where prob_reach <= prob_complete_remaining
+    
+    // Floor 1 threshold
+    let mut floor_1_threshold = None;
+    for i in 0..t1.len() {
+        let t = t1[i];
+        if t >= target { break; }
+        let remaining = target - t;
+        let prob_complete = interpolate(remaining, &t_23o, &cdf_23o);
+        if cdf1[i] <= prob_complete {
+            floor_1_threshold = Some(t);
+        }
+    }
+    
+    // Floor 1+2 threshold  
+    let mut floor_12_threshold = None;
+    for i in 0..t_12.len() {
+        let t = t_12[i];
+        if t >= target { break; }
+        let remaining = target - t;
+        let prob_complete = interpolate(remaining, &t_3o, &cdf_3o);
+        if cdf_12[i] <= prob_complete {
+            floor_12_threshold = Some(t);
+        }
+    }
+    
+    // Floor 1+2+3 threshold
+    let mut floor_123_threshold = None;
+    for i in 0..t_123.len() {
+        let t = t_123[i];
+        if t >= target { break; }
+        let remaining = target - t;
+        let prob_complete = interpolate(remaining, to, cdfo);
+        if cdf_123[i] <= prob_complete {
+            floor_123_threshold = Some(t);
+        }
+    }
+    
+    (floor_1_threshold, floor_12_threshold, floor_123_threshold)
+}
+
 #[wasm_bindgen]
 pub fn calculate_reset_thresholds_wasm(input: &str) -> String {
     let parsed: ThresholdInput = match serde_json::from_str(input) {
@@ -93,116 +219,19 @@ pub fn calculate_reset_thresholds_wasm(input: &str) -> String {
     };
 
     let target_ticks = parsed.target_ticks;
-    let (t1, pmf1, _cdf1) = cdf_to_pmf(&parsed.floor1);
+    let (t1, pmf1, cdf1) = cdf_to_pmf(&parsed.floor1);
     let (t2, pmf2, _cdf2) = cdf_to_pmf(&parsed.floor2);
     let (t3, pmf3, _cdf3) = cdf_to_pmf(&parsed.floor3);
     let (to, pmfo, cdfo) = cdf_to_pmf(&parsed.olm);
-    let (_tr, _pmfr, _cdfr) = cdf_to_pmf(&parsed.raid_total);
 
-    // Monte Carlo sampling
-    let f1_times = sample_from_pmf(&t1, &pmf1, N_TRIALS);
-    let f2_times = sample_from_pmf(&t2, &pmf2, N_TRIALS);
-    let f3_times = sample_from_pmf(&t3, &pmf3, N_TRIALS);
-    let olm_times = sample_from_pmf(&to, &pmfo, N_TRIALS);
-
-    let total_times: Vec<u32> = f1_times.iter().zip(&f2_times).zip(&f3_times).zip(&olm_times)
-        .map(|(((a, b), c), d)| a + b + c + d).collect();
-
-    // Filter successful runs
-    let mask: Vec<bool> = total_times.iter().map(|&t| t <= target_ticks).collect();
-    let successful_f1: Vec<u32> = f1_times.iter().zip(&mask).filter_map(|(&t, &m)| if m { Some(t) } else { None }).collect();
-    let successful_f2: Vec<u32> = f2_times.iter().zip(&mask).filter_map(|(&t, &m)| if m { Some(t) } else { None }).collect();
-    let successful_f3: Vec<u32> = f3_times.iter().zip(&mask).filter_map(|(&t, &m)| if m { Some(t) } else { None }).collect();
-    let _successful_olm: Vec<u32> = olm_times.iter().zip(&mask).filter_map(|(&t, &m)| if m { Some(t) } else { None }).collect();
-    let successful_f12: Vec<u32> = successful_f1.iter().zip(&successful_f2).map(|(&a, &b)| a + b).collect();
-    let successful_f123: Vec<u32> = successful_f12.iter().zip(&successful_f3).map(|(&a, &b)| a + b).collect();
-    let successful_total: Vec<u32> = total_times.iter().zip(&mask).filter_map(|(&t, &m)| if m { Some(t) } else { None }).collect();
-
-    // Empirical probabilities
-    let prob_f1: Vec<f64> = successful_f1.iter().map(|&t| {
-        let count = f1_times.iter().filter(|&&x| x <= t).count();
-        count as f64 / N_TRIALS as f64
-    }).collect();
-    let prob_f12: Vec<f64> = successful_f12.iter().map(|&t| {
-        let count = f1_times.iter().zip(&f2_times).filter(|(&a, &b)| a + b <= t).count();
-        count as f64 / N_TRIALS as f64
-    }).collect();
-    let prob_f123: Vec<f64> = successful_f123.iter().map(|&t| {
-        let count = f1_times.iter().zip(&f2_times).zip(&f3_times)
-            .filter(|((&a, &b), &c)| a + b + c <= t).count();
-        count as f64 / N_TRIALS as f64
-    }).collect();
-
-    // Remaining time after each checkpoint
-    let remaining_after_f1: Vec<u32> = successful_f1.iter().map(|&t| target_ticks.saturating_sub(t)).collect();
-    let remaining_after_f12: Vec<u32> = successful_f12.iter().map(|&t| target_ticks.saturating_sub(t)).collect();
-    let remaining_after_f123: Vec<u32> = successful_f123.iter().map(|&t| target_ticks.saturating_sub(t)).collect();
-
-    // CDFs for remaining segments
-    let pmf_23o: Vec<f64> = {
-        let tmp = convolve_pmfs(&pmf2, &pmf3);
-        convolve_pmfs(&tmp, &pmfo)
-    };
-    let t_23o_min = t2[0] + t3[0] + to[0];
-    let t_23o: Vec<u32> = (0..pmf_23o.len()).map(|i| t_23o_min + i as u32).collect();
-    let cdf_23o: Vec<f64> = {
-        let mut cdf = Vec::with_capacity(pmf_23o.len());
-        let mut sum = 0.0;
-        for &p in &pmf_23o {
-            sum += p;
-            cdf.push(sum.min(1.0).max(0.0));
-        }
-        cdf
-    };
-
-    let pmf_3o = convolve_pmfs(&pmf3, &pmfo);
-    let t_3o_min = t3[0] + to[0];
-    let t_3o: Vec<u32> = (0..pmf_3o.len()).map(|i| t_3o_min + i as u32).collect();
-    let cdf_3o: Vec<f64> = {
-        let mut cdf = Vec::with_capacity(pmf_3o.len());
-        let mut sum = 0.0;
-        for &p in &pmf_3o {
-            sum += p;
-            cdf.push(sum.min(1.0).max(0.0));
-        }
-        cdf
-    };
-
-    // Probability to complete after each checkpoint
-    let prob_complete_after_f1: Vec<f64> = remaining_after_f1.iter()
-        .map(|&t| {
-            let idx = t_23o.iter().position(|&x| x > t).unwrap_or(t_23o.len() - 1);
-            cdf_23o[idx]
-        }).collect();
-    let prob_complete_after_f12: Vec<f64> = remaining_after_f12.iter()
-        .map(|&t| {
-            let idx = t_3o.iter().position(|&x| x > t).unwrap_or(t_3o.len() - 1);
-            cdf_3o[idx]
-        }).collect();
-    let prob_complete_after_f123: Vec<f64> = remaining_after_f123.iter()
-        .map(|&t| {
-            let idx = to.iter().position(|&x| x > t).unwrap_or(to.len() - 1);
-            cdfo[idx]
-        }).collect();
-
-    // Build DataFrame-like structure and filter
-    let mut filtered: Vec<(u32, u32, u32)> = Vec::new();
-    for i in 0..successful_total.len() {
-        if successful_total[i] > target_ticks { continue; }
-        if prob_f1[i] <= prob_complete_after_f1[i]
-            && prob_f12[i] <= prob_complete_after_f12[i]
-            && prob_f123[i] <= prob_complete_after_f123[i] {
-            filtered.push((successful_f1[i], successful_f12[i], successful_f123[i]));
-        }
-    }
-    let floor1_threshold = filtered.iter().map(|x| x.0).max();
-    let floor12_threshold = filtered.iter().map(|x| x.1).max();
-    let floor123_threshold = filtered.iter().map(|x| x.2).max();
+    let (floor_1_threshold, floor_12_threshold, floor_123_threshold) = find_analytical_thresholds(
+        target_ticks, &t1, &pmf1, &cdf1, &t2, &pmf2, &t3, &pmf3, &to, &pmfo, &cdfo
+    );
 
     let mut thresholds = std::collections::HashMap::new();
-    thresholds.insert("floor1".to_string(), ThresholdInfo { threshold: floor1_threshold });
-    thresholds.insert("floor2".to_string(), ThresholdInfo { threshold: floor12_threshold });
-    thresholds.insert("floor3".to_string(), ThresholdInfo { threshold: floor123_threshold });
+    thresholds.insert("floor1".to_string(), ThresholdInfo { threshold: floor_1_threshold });
+    thresholds.insert("floor2".to_string(), ThresholdInfo { threshold: floor_12_threshold });
+    thresholds.insert("floor3".to_string(), ThresholdInfo { threshold: floor_123_threshold });
 
     let result = ThresholdResult {
         input_target: target_ticks,

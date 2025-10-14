@@ -1,5 +1,7 @@
 import React from 'react';
 import { RAID_FLOORS } from '../data/monsterStats';
+import { useTheme } from '../hooks/useTheme';
+
 
 // Map each room name in raid_total to its floor id and name
 const raidRoomToFloor = (() => {
@@ -23,11 +25,6 @@ type Stats = {
 };
 
 interface CombinedStatsCardProps {
-    chartColors: {
-        primary: string;
-        secondary: string;
-        text: string;
-    };
     showSeconds: boolean;
     formatSeconds: (seconds: number) => string;
     activeFloor: string;
@@ -42,13 +39,20 @@ interface CombinedStatsCardProps {
 }
 
 const CombinedStatsCard: React.FC<CombinedStatsCardProps> = ({
-    chartColors,
     showSeconds,
     formatSeconds,
     activeFloor,
     combinedRoomAnalysis,
     selectedMethods
 }) => {
+    const { theme } = useTheme();
+    const chartColors = {
+        primary: '#3b82f6',
+        secondary: '#6366f1',
+        grid: theme === 'light' ? '#e9ecef' : '#333333',
+        text: theme === 'light' ? '#0a0a0a' : '#ffffff',
+        background: 'transparent'
+    };
     return (
         <div className="combined-stats-card">
             <div

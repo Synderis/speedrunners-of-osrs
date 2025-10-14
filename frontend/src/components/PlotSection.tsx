@@ -3,7 +3,6 @@ import { motion, useInView } from 'framer-motion';
 import { fadeInOut } from '../utils/animations';
 import type { PlotDataPoint } from '../types/loaders';
 import type { Floor } from '../data/monsterStats';
-import { useTheme } from '../hooks/useTheme';
 import type { Equipment } from '../types/player';
 import './PlotSection.css';
 import { getCombatStylesForCategory } from '../services/weaponStylesService';
@@ -11,6 +10,7 @@ import { RAID_FLOORS } from '../data/monsterStats';
 import ResultPlot from './ResultPlot';
 import ConfigColumns from './ConfigColumns';
 import { GEAR_TYPES, DEFAULT_GEAR_STATS, wasmModelLoaders } from '../data/constants';
+import { createStatCards } from '../utils/statCards';
 import {
   calculateGearStatsForSet,
   monsterStatScaling,
@@ -43,19 +43,8 @@ const PlotSection: React.FC = () => {
     roomSpecs
   } = useAppContext();
 
-  // --- Theme & Chart Colors ---
-  const { theme } = useTheme();
-  const chartColors = {
-    primary: '#3b82f6',
-    secondary: '#6366f1',
-    grid: theme === 'light' ? '#e9ecef' : '#333333',
-    text: theme === 'light' ? '#0a0a0a' : '#ffffff',
-    background: 'transparent'
-  };
-
   // --- State ---
   const [isLoading, setIsLoading] = useState(false);
-  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [activeTab, setActiveTab] = useState<string>(
     selectedRooms.length > 0 ? selectedRooms[0].id : ''
@@ -537,89 +526,13 @@ const PlotSection: React.FC = () => {
     return `${displayMins}:${displaySecs.toString().padStart(2, '0')}.${tenths}`;
   };
 
-  const statCards = [
-    {
-      title: 'Combat Type', value: (() => {
-        if (!activeRoom) return '--';
-        const monsters = getMonstersByRoom(activeRoom);
-        const monster = monsters[selectedMonsterIdx];
-        const perMonsterArr = activeStats.result || [];
-        // Find the matching perMonster entry by monster_id
-        const perMonster = monster
-          ? perMonsterArr.find((pm: any) => String(pm.monster_id) === String(monster.id))
-          : null;
-        return perMonster
-          ? `${perMonster.combat_type}`
-          : '--';
-      })()
-    },
-    {
-      title: 'Attack Style', value: (() => {
-        if (!activeRoom) return '--';
-        const monsters = getMonstersByRoom(activeRoom);
-        const monster = monsters[selectedMonsterIdx];
-        const perMonsterArr = activeStats.result || [];
-        // Find the matching perMonster entry by monster_id
-        const perMonster = monster
-          ? perMonsterArr.find((pm: any) => String(pm.monster_id) === String(monster.id))
-          : null;
-        return perMonster
-          ? `${perMonster.attack_style}`
-          : '--';
-      })()
-    },
-
-    // { title: 'Total Hit Value', value: activeStats.total_hits > 0 ? activeStats.total_hits.toFixed(1) : '--' },
-    {
-      title: 'Avg Phase Count',
-      value: (() => {
-        const phaseResults = activeStats.phase_results || [];
-        if (!phaseResults.length) return null;
-        const avg = phaseResults.reduce((sum, val) => sum + val, 0) / phaseResults.length;
-        if (!avg || avg <= 0) return null;
-        return avg.toFixed(2);
-      })(),
-      unit: activeRoom?.units || 'units'
-    },
-    {
-      title: 'One Phase Odds',
-      value: (() => {
-        const phaseResults = activeStats.phase_results || [];
-        if (!phaseResults.length) return null;
-        const onePhaseCount = phaseResults.filter(val => val <= 1).length;
-        if (phaseResults.filter(val => val > 0).length === 0) return null;
-        const odds = onePhaseCount / phaseResults.length;
-        if (!odds || odds <= 0) return null;
-        return (odds * 100).toFixed(2) + '%';
-      })(),
-      unit: activeRoom?.units || 'units'
-    },
-    {
-      title: 'Avg Phase Time',
-      value: (() => {
-        const phaseTimeResults = activeStats.phase_time_results || [];
-        if (!phaseTimeResults.length) return null;
-        const avg = phaseTimeResults.reduce((sum, val) => sum + val, 0) / phaseTimeResults.length;
-        if (showSeconds) {
-          return formatSeconds(avg * 0.6);
-        } else {
-          return avg.toFixed(1);
-        }
-      })(),
-      unit: showSeconds ? 'min:sec' : 'ticks'
-    },
-    // { title: 'Total Hit Count', value: activeStats.total_expected_ticks > 0 ? activeStats.total_expected_ticks.toFixed(1) : '--' },
-    // { title: 'Accuracy', value: activeStats.accuracy > 0 ? `${activeStats.accuracy.toFixed(1)}%` : '--', unit: 'hit rate' },
-    {
-      title: 'Time to Kill',
-      value: activeStats.total_expected_ticks > 0
-        ? (showSeconds
-          ? formatSeconds(activeStats.total_expected_seconds)
-          : activeStats.total_expected_ticks.toFixed(1))
-        : '--',
-      unit: showSeconds ? 'min:sec' : 'ticks'
-    },
-  ].filter(stat => stat.value !== null);
+  const statCards = createStatCards(
+    activeRoom,
+    selectedMonsterIdx, 
+    activeStats,
+    showSeconds,
+    formatSeconds
+  );
 
   // Computed value for combined plot data to show
   const combinedPlotDataToShow = useMemo(() => {
@@ -795,11 +708,7 @@ const PlotSection: React.FC = () => {
             handleRecalculate={handleRecalculate}
             showSeconds={showSeconds}
             setShowSeconds={setShowSeconds}
-            chartType={chartType}
-            setChartType={setChartType}
             plotDataToShow={plotDataToShow}
-            chartColors={chartColors}
-            theme={theme}
             formatSeconds={formatSeconds}
             fadeInOut={fadeInOut}
             expectedTTK={showSeconds ? activeStats.total_expected_seconds.toFixed(1) : activeStats.total_expected_ticks.toFixed(1)}
@@ -826,8 +735,8 @@ const PlotSection: React.FC = () => {
               <h3
                 className="combined-plot-title"
                 style={{
-                  color: chartColors.text,
-                  borderBottom: `2px solid ${chartColors.primary}`
+                  color: '#ffffff',
+                  borderBottom: `2px solid #3b82f6`
                 }}
               >
                 {combinedRoomAnalysis[activeFloor]?.floorName} Analysis
@@ -844,11 +753,7 @@ const PlotSection: React.FC = () => {
                     handleRecalculate={() => { }}
                     showSeconds={showSeconds}
                     setShowSeconds={setShowSeconds}
-                    chartType={chartType}
-                    setChartType={setChartType}
                     plotDataToShow={combinedPlotDataToShow || []}
-                    chartColors={{ ...chartColors, primary: chartColors.secondary }}
-                    theme={theme}
                     formatSeconds={formatSeconds}
                     fadeInOut={fadeInOut}
                     expectedTTK={combinedRoomAnalysis[activeFloor] ? (showSeconds
@@ -857,8 +762,6 @@ const PlotSection: React.FC = () => {
                     ) : '0'}
                   />
                   <ThresholdCard
-                    chartColors={chartColors}
-                    theme={theme}
                     showSeconds={showSeconds}
                     formatSeconds={formatSeconds}
                     availableFloors={availableFloors}
@@ -867,7 +770,6 @@ const PlotSection: React.FC = () => {
                   />
                 </div>
                 <CombinedStatsCard
-                  chartColors={chartColors}
                   showSeconds={showSeconds}
                   formatSeconds={formatSeconds}
                   activeFloor={activeFloor}
