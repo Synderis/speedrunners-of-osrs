@@ -23,6 +23,9 @@ export interface GearSetPreset {
         prayer: number;
         magic: number;
         hitpoints: number;
+        woodcutting: number;
+        mining: number;
+        thieving: number;
     };
     rooms?: Array<{
         id: string;
@@ -98,7 +101,10 @@ export const gearSetPresets: GearSetPreset[] = [
             ranged: 99,
             prayer: 99,
             magic: 99,
-            hitpoints: 99
+            hitpoints: 99,
+            woodcutting: 99,
+            mining: 99,
+            thieving: 99
         },
         rooms: [
             { id: "tekton", methods: ["Tekton Short Lure", "Pre-Veng"] }, // Multiple methods example

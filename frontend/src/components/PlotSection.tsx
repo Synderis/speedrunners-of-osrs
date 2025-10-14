@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { fadeInOut } from '../utils/animations';
 import type { PlotDataPoint } from '../types/loaders';
 import type { Floor } from '../data/monsterStats';
@@ -595,7 +595,7 @@ const PlotSection: React.FC = () => {
               {/* Room tabs (top row) */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '0.5rem' }}>
                 {selectedRooms.map(room => (
-                  <button
+                  <motion.button
                     key={room.id}
                     className={`plot-tab${activeTab === room.id ? ' active' : ''}`}
                     onClick={() => {
@@ -604,43 +604,52 @@ const PlotSection: React.FC = () => {
                     }}
                   >
                     {room.name}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
-              {/* Monster selector buttons (below) */}
-              {selectedRooms.map(room => {
-                const monsters = getMonstersByRoom(room);
-                // Get unique monster IDs
-                const uniqueIds = Array.from(new Set(monsters.map(m => m.id)));
-                return (
-                  activeTab === room.id && uniqueIds.length > 1 && (
-                    <div
-                      key={room.id}
-                      style={{
-                        marginLeft: 0,
-                        marginTop: 8,
-                        marginBottom: 8,
-                        display: 'flex',
-                        gap: '2rem',
-                        flexWrap: 'wrap',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      {monsters.map((monster, idx) => (
-                        <button
-                          key={monster.id}
-                          className={`plot-tab monster-tab${selectedMonsterIdx === idx ? ' active' : ''}`}
-                          style={{ padding: '8px 18px' }}
-                          onClick={() => setSelectedMonsterIdx(idx)}
-                          type="button"
-                        >
-                          {monster.name}
-                        </button>
-                      ))}
-                    </div>
-                  )
-                );
-              })}
+              {/* Monster selector buttons (below) - always render container, animate height/opacity */}
+              <motion.div
+                style={{
+                  marginLeft: 0,
+                  marginTop: 8,
+                  marginBottom: 8,
+                  display: 'flex',
+                  gap: '2rem',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                  overflow: 'hidden'
+                }}
+                initial={false}
+                animate={(() => {
+                  const monsters = activeRoom ? getMonstersByRoom(activeRoom) : [];
+                  const uniqueIds = Array.from(new Set(monsters.map(m => m.id)));
+                  if (uniqueIds.length > 1) {
+                    return { height: 'auto', opacity: 1 };
+                  } else {
+                    return { height: 0, opacity: 0 };
+                  }
+                })()}
+                transition={{ height: { duration: 0.4 }, opacity: { duration: 0.3 } }}
+              >
+                {(() => {
+                  const monsters = activeRoom ? getMonstersByRoom(activeRoom) : [];
+                  const uniqueIds = Array.from(new Set(monsters.map(m => m.id)));
+                  if (uniqueIds.length > 1) {
+                    return monsters.map((monster, idx) => (
+                      <motion.button
+                        key={monster.id}
+                        className={`plot-tab monster-tab${selectedMonsterIdx === idx ? ' active' : ''}`}
+                        style={{ padding: '8px 18px' }}
+                        onClick={() => setSelectedMonsterIdx(idx)}
+                        type="button"
+                      >
+                        {monster.name}
+                      </motion.button>
+                    ));
+                  }
+                  return null;
+                })()}
+              </motion.div>
             </div>
             <button
               className="btn"
@@ -650,9 +659,42 @@ const PlotSection: React.FC = () => {
             >
               {showConfig ? 'Hide Gear/Monster Config' : 'Show Gear/Monster Config'}
             </button>
-            {showConfig && (
-              <ConfigColumns configSections={configSections} />
-            )}
+            <motion.div
+              initial={false}
+              animate={{
+                height: showConfig ? "auto" : 0,
+                opacity: showConfig ? 1 : 0
+              }}
+              transition={{
+                height: {
+                  duration: 0.5,
+                  ease: [0.04, 0.62, 0.23, 0.98]
+                },
+                opacity: {
+                  duration: showConfig ? 0.5 : 0.25,
+                  delay: showConfig ? 0.15 : 0
+                }
+              }}
+              style={{ 
+                overflow: "hidden",
+                willChange: "height, opacity"
+              }}
+              layout
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ 
+                  duration: 0.4, 
+                  ease: "easeOut",
+                  scale: { duration: 0.3 }
+                }}
+                layout
+                style={{ willChange: "transform, opacity" }}
+              >
+                <ConfigColumns configSections={configSections} />
+              </motion.div>
+            </motion.div>
           </motion.div>
 
           {/* Stats Cards */}
@@ -702,6 +744,7 @@ const PlotSection: React.FC = () => {
           {/* Chart */}
           <ResultPlot
             chartRef={chartRef}
+            encounterName={activeRoom ? activeRoom.name : 'No Room Selected'}
             chartName='result-plot'
             chartInView={chartInView}
             isLoading={isLoading}
@@ -746,6 +789,7 @@ const PlotSection: React.FC = () => {
                 <div className="combined-plot-chart">
                   <ResultPlot
                     key={`combined-plot-${activeFloor}`}
+                    encounterName={combinedRoomAnalysis[activeFloor]?.floorName || 'Combined Floor'}
                     chartRef={combinedChartRef}
                     chartName='combined-plot'
                     chartInView={true}
@@ -769,13 +813,29 @@ const PlotSection: React.FC = () => {
                     olmDistribution={plotDataDict['olm'] || []}
                   />
                 </div>
-                <CombinedStatsCard
-                  showSeconds={showSeconds}
-                  formatSeconds={formatSeconds}
-                  activeFloor={activeFloor}
-                  combinedRoomAnalysis={combinedRoomAnalysis}
-                  selectedMethods={selectedMethods}
-                />
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeFloor}
+                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                    transition={{
+                      duration: 0.25,
+                      ease: "easeOut",
+                      scale: { duration: 0.2 },
+                      y: { duration: 0.3 }
+                    }}
+                    style={{ willChange: "transform, opacity" }}
+                  >
+                    <CombinedStatsCard
+                      showSeconds={showSeconds}
+                      formatSeconds={formatSeconds}
+                      activeFloor={activeFloor}
+                      combinedRoomAnalysis={combinedRoomAnalysis}
+                      selectedMethods={selectedMethods}
+                    />
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
           )}

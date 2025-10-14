@@ -276,7 +276,7 @@ const RoomSelection: React.FC = () => {
                                 {selectedRooms.length} room{selectedRooms.length !== 1 ? 's' : ''} selected
                                 {getSelectedMonsters().length > 0 && (
                                     <span className="monster-count">
-                                        ({getSelectedMonsters().length} with monster data)
+                                        (with data for {getSelectedMonsters().length} monsters)
                                     </span>
                                 )}
                             </span>

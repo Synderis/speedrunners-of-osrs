@@ -131,21 +131,11 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
     };
 
     const handleCalculateThresholds = async () => {
-        // console.log('Calculating reset thresholds for target time (ticks):', targetTimeTicks);
-        
-        // Get the floor distributions from combinedRoomAnalysis
         const floor1Data = combinedRoomAnalysis['floor1']?.plotData || [];
         const floor2Data = combinedRoomAnalysis['floor2']?.plotData || [];
         const floor3Data = combinedRoomAnalysis['floor3']?.plotData || [];
         const completeRaidData = combinedRoomAnalysis['raid_total']?.plotData || [];
         
-        // console.log('Distribution data:', {
-        //     floor1: floor1Data.length,
-        //     floor2: floor2Data.length,
-        //     floor3: floor3Data.length,
-        //     olm: olmDistribution.length,
-        //     completeRaid: completeRaidData.length
-        // });
         
         if (!floor1Data.length || !floor2Data.length || !floor3Data.length || 
             !olmDistribution.length || !completeRaidData.length) {
@@ -185,14 +175,6 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
         await handleCalculateThresholds();
     };
 
-    // Re-calculate thresholds when targetTimeDisplay changes (debounced)
-    // useEffect(() => {
-    //     if (targetTimeDisplay.length === 4) {
-    //         handleCalculateThresholds();
-    //     }
-    //     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, [targetTimeDisplay]);
-
     return (
         <div
             className="stat-card card"
@@ -221,20 +203,11 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
                 <input
                     type="text"
                     value={targetTimeDisplay}
+                    className='threshold-input'
                     onChange={(e) => setTargetTimeDisplay(e.target.value)}
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
                     placeholder={showSeconds ? "24:00" : "2400"}
-                    style={{
-                        width: '120px',
-                        padding: '6px 10px',
-                        borderRadius: '4px',
-                        border: `1px solid ${chartColors.primary}50`,
-                        backgroundColor: theme === 'light' ? 'white' : '#2a2a2a',
-                        color: chartColors.text,
-                        textAlign: 'center',
-                        fontSize: '0.9rem'
-                    }}
                 />
                 <button
                     className="btn"

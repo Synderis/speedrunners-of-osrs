@@ -1,4 +1,5 @@
 import GearModelCard from './GearModelCard';
+import Select from 'react-select';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { gearSetPresets, type GearSetType, type GearSetPreset } from '../data/gearTemplates';
@@ -99,15 +100,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
         ) as Record<string, string>,
       },
       inventoryItems: selectedInventoryItems.map(item => item.equipment?.id?.toString() || ''),
-      combatStats: {
-        attack: combatStats.attack,
-        strength: combatStats.strength,
-        defence: combatStats.defence,
-        ranged: combatStats.ranged,
-        prayer: combatStats.prayer,
-        magic: combatStats.magic,
-        hitpoints: combatStats.hitpoints
-      },
+      combatStats: { ...combatStats },
       rooms, // Save rooms with methods and specs
       roomSpecs // Add the entire roomSpecs object
     };
@@ -201,63 +194,60 @@ const GearSelection: React.FC<GearSelectionProps> = ({
     }));
   };
 
+  // Controlled menu open state for react-select
+  const [presetMenuOpen, setPresetMenuOpen] = useState(false);
+
   const handlePresetSelect = (presetId: string) => {
     setSelectedPreset(presetId);
+    setPresetMenuOpen(false);
     if (!presetId) return;
     const preset = allPresets.find(p => p.id === presetId);
     if (!preset) return;
     requestAnimationFrame(() => {
       setGearSets(prev => {
         const updated = { ...prev };
-        // Reconstruct selectedInventoryItems from preset.inventoryItems (string[] of IDs)
+        // ...existing code...
         setSelectedInventoryItems(
           (preset.inventoryItems || [])
             .map(id => {
-              // Search all equipment for a match
               const eq = gearData.find(e => e.id.toString() === id);
               return eq ? { name: eq.name, equipment: eq } : null;
             })
             .filter(Boolean) as InventoryItem[]
         );
-        // Restore rooms and methods from preset
+        // ...existing code...
         if (preset.rooms) {
-          // Find the full room objects for each id
+          // ...existing code...
           const presetRooms = preset.rooms
             .map(r => {
               const roomObj = rooms.find(room => room.id === r.id);
               if (!roomObj) return null;
               return {
                 ...roomObj,
-                monster: undefined, // or getMonsterByRoom(roomObj) if you want
+                monster: undefined,
                 methods: r.method ? [r.method] : roomObj.methods
               };
             })
             .filter(Boolean);
           setSelectedRooms(presetRooms as SelectedRoomWithMonster[]);
-          // Restore selectedMethods - handle both new methods array and legacy method format
           const newSelectedMethods: { [roomId: string]: string[] } = {};
           preset.rooms.forEach(r => {
             if (r.methods) {
               newSelectedMethods[r.id] = r.methods;
             } else if (r.method) {
               newSelectedMethods[r.id] = [r.method];
-            }
-            // Add this line to ensure rooms without methods get empty arrays
-            else {
+            } else {
               newSelectedMethods[r.id] = [];
             }
           });
           setSelectedMethods(newSelectedMethods);
 
-          // Restore roomSpecs - try both the new roomSpecs field and individual room specs
           if (preset.roomSpecs) {
             setRoomSpecs(preset.roomSpecs);
           } else {
-            // Fallback: build roomSpecs from individual room.specs
             const restoredRoomSpecs: { [roomId: string]: { [weaponName: string]: number } } = {};
             preset.rooms.forEach(r => {
               if (r.specs && Array.isArray(r.specs)) {
-                // Convert array format back to object format
                 const specsObj: { [weaponName: string]: number } = {};
                 r.specs.forEach(spec => {
                   specsObj[spec.weapon] = spec.count;
@@ -268,8 +258,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
             setRoomSpecs(restoredRoomSpecs);
           }
         }
-        
-        // Restore combat stats from preset
+        // ...existing code...
         if (preset.combatStats) {
           setCombatStats(prev => ({
             ...prev,
@@ -283,16 +272,14 @@ const GearSelection: React.FC<GearSelectionProps> = ({
             if (gearId) {
               const selectedItem = slot.items.find(item => item.id.toString() === gearId);
               return { ...slot, selected: selectedItem };
+            } else {
+              return { ...slot, selected: undefined };
             }
-            return slot;
           });
         });
         return updated;
       });
     });
-    
-    // Reset dropdown to default after loading preset
-    setSelectedPreset('');
   };
 
   return (
@@ -313,19 +300,47 @@ const GearSelection: React.FC<GearSelectionProps> = ({
             >
               <div className="preset-dropdown-container">
                 <label className="preset-label">Load Preset:</label>
-                <select
-                  className="preset-dropdown"
-                  onChange={(e) => handlePresetSelect(e.target.value)}
-                  value={selectedPreset}
-                >
-                  <option value="">Choose a preset...</option>
-                  {allPresets.map(preset => (
-                    <option key={preset.id} value={preset.id}>
-                      {preset.name} - {preset.description}
-                      {preset.id.startsWith('custom_') ? ' (Custom)' : ''}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  classNamePrefix="preset-dropdown"
+                  options={allPresets.map(preset => ({
+                    value: preset.id,
+                    label: `${preset.name} - ${preset.description}${preset.id.startsWith('custom_') ? ' (Custom)' : ''}`,
+                    preset
+                  }))}
+                  value={allPresets
+                    .filter(p => p.id === selectedPreset)
+                    .map(p => ({
+                      value: p.id,
+                      label: `${p.name} - ${p.description}${p.id.startsWith('custom_') ? ' (Custom)' : ''}`,
+                      preset: p
+                    }))}
+                  onChange={option => {
+                    if (option && option.value) handlePresetSelect(option.value);
+                  }}
+                  onMenuOpen={() => setPresetMenuOpen(true)}
+                  onMenuClose={() => setPresetMenuOpen(false)}
+                  menuIsOpen={presetMenuOpen}
+                  placeholder="Choose a preset..."
+                  isSearchable={true}
+                  styles={{
+                    menu: base => ({ ...base, zIndex: 9999 }),
+                    control: base => ({ ...base, minHeight: 38 }),
+                  }}
+                  components={{
+                    Option: (props) => {
+                      const { data, innerProps, isFocused, isSelected } = props;
+                      return (
+                        <div
+                          {...innerProps}
+                          className={`preset-dropdown__option${isFocused ? ' preset-dropdown__option--is-focused' : ''}${isSelected ? ' preset-dropdown__option--is-selected' : ''}`}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                        >
+                          <span>{data.label}</span>
+                        </div>
+                      );
+                    }
+                  }}
+                />
                 <button className="btn save-preset-btn" onClick={handleSavePreset} style={{ marginLeft: 8 }}>
                   Save Preset
                 </button>

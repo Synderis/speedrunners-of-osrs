@@ -6,6 +6,7 @@ import { useTheme } from '../hooks/useTheme';
 interface ResultPlotProps {
     chartRef: React.RefObject<HTMLDivElement>;
     chartName: string;
+    encounterName?: string;
     chartInView: boolean;
     isLoading: boolean;
     handleRecalculate: () => void;
@@ -20,6 +21,7 @@ interface ResultPlotProps {
 const ResultPlot: React.FC<ResultPlotProps> = ({
     chartRef,
     chartName,
+    encounterName,
     chartInView,
     isLoading,
     handleRecalculate,
@@ -65,7 +67,7 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
-        link.setAttribute('download', `plot_data_${new Date().toISOString().split('T')[0]}.csv`);
+        link.setAttribute('download', `${encounterName}_${new Date().toISOString().split('T')[0]}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
@@ -84,35 +86,29 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
             {/* Chart type and unit toggle buttons above the chart */}
             <div className="chart-controls">
                 {chartName === 'result-plot' && (
-                    <motion.button
+                    <button
                         className="btn"
                         onClick={handleRecalculate}
                         disabled={isLoading}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
                     >
                         {isLoading ? 'Calculating...' : 'Calculate'}
-                    </motion.button>
+                    </button>
                 )}
-                <motion.button
+                <button
                     className="btn"
                     onClick={() => setShowSeconds(s => !s)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                     style={{ marginLeft: 8 }}
                 >
                     Show in {showSeconds ? 'Ticks' : 'Seconds'}
-                </motion.button>
-                <motion.button
+                </button>
+                <button
                     className="btn download-btn"
                     onClick={downloadPlotData}
                     disabled={plotDataToShow.length === 0}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                     style={{ marginLeft: 8 }}
                 >
                     📊 Download Data
-                </motion.button>
+                </button>
             </div>
 
             <AnimatePresence mode="wait">
