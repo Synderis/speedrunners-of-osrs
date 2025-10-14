@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar, ReferenceLine } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
+import { useTheme } from '../hooks/useTheme';
 
 interface ResultPlotProps {
     chartRef: React.RefObject<HTMLDivElement>;
@@ -10,11 +11,7 @@ interface ResultPlotProps {
     handleRecalculate: () => void;
     showSeconds: boolean;
     setShowSeconds: React.Dispatch<React.SetStateAction<boolean>>;
-    chartType: 'line' | 'bar';
-    setChartType: React.Dispatch<React.SetStateAction<'line' | 'bar'>>;
     plotDataToShow: any[];
-    chartColors: any;
-    theme: string;
     formatSeconds: (seconds: number) => string;
     fadeInOut: any;
     expectedTTK: string;
@@ -28,15 +25,19 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
     handleRecalculate,
     showSeconds,
     setShowSeconds,
-    chartType,
-    setChartType,
     plotDataToShow,
-    chartColors,
-    theme,
     formatSeconds,
     fadeInOut,
     expectedTTK
 }) => {
+    const { theme } = useTheme();
+    const chartColors = {
+        primary: '#3b82f6',
+        secondary: '#6366f1',
+        grid: theme === 'light' ? '#e9ecef' : '#333333',
+        text: theme === 'light' ? '#0a0a0a' : '#ffffff',
+        background: 'transparent'
+    };
     const downloadPlotData = () => {
         if (plotDataToShow.length === 0) {
             alert('No data to download. Please calculate first.');
@@ -112,17 +113,6 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
                 >
                     📊 Download Data
                 </motion.button>
-                {['line', 'bar'].map((type) => (
-                    <motion.button
-                        key={type}
-                        className={`chart-type-btn ${chartType === type ? 'active' : ''}`}
-                        onClick={() => setChartType(type as 'line' | 'bar')}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        {type.charAt(0).toUpperCase() + type.slice(1)} Chart
-                    </motion.button>
-                ))}
             </div>
 
             <AnimatePresence mode="wait">
@@ -151,7 +141,6 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
                         transition={{ duration: 0.5 }}
                     >
                         <ResponsiveContainer width="100%" height={400}>
-                            {chartType === 'line' ? (
                                 <LineChart data={plotDataToShow} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                                     <XAxis
@@ -212,35 +201,6 @@ const ResultPlot: React.FC<ResultPlotProps> = ({
                                     />
 
                                 </LineChart>
-                            ) : (
-                                <BarChart data={plotDataToShow} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
-                                    <XAxis
-                                        dataKey="time"
-                                        stroke={chartColors.text}
-                                        fontSize={12}
-                                        label={{ value: showSeconds ? 'Seconds' : 'Tick', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: chartColors.text } }}
-                                    />
-                                    <YAxis
-                                        stroke={chartColors.text}
-                                        fontSize={12}
-                                    />
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: theme === 'light' ? '#ffffff' : '#2a2a2a',
-                                            border: `1px solid ${chartColors.grid}`,
-                                            borderRadius: '8px',
-                                            color: chartColors.text
-                                        }}
-                                    />
-                                    <Bar
-                                        dataKey="probability"
-                                        fill={chartColors.primary}
-                                        name="Probability"
-                                        radius={[2, 2, 0, 0]}
-                                    />
-                                </BarChart>
-                            )}
                         </ResponsiveContainer>
                     </motion.div>
                 ) : (

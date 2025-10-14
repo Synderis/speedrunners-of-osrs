@@ -2,17 +2,12 @@ import React, { useState, useEffect } from 'react';
 import type { Floor } from '../data/monsterStats';
 import type { PlotDataPoint } from '../types/loaders';
 // import { calculateResetThresholds } from '../utils/helpers';
+import { useTheme } from '../hooks/useTheme';
 import { 
     calculateResetThresholds
 } from '../loaders/miscWasm';
 
 interface ThresholdCardProps {
-    chartColors: {
-        primary: string;
-        secondary: string;
-        text: string;
-    };
-    theme: string;
     showSeconds: boolean;
     formatSeconds: (seconds: number) => string;
     availableFloors: Floor[];
@@ -25,14 +20,20 @@ interface ThresholdCardProps {
 }
 
 const ThresholdCard: React.FC<ThresholdCardProps> = ({
-    chartColors,
-    theme,
     showSeconds,
     formatSeconds,
     availableFloors,
     combinedRoomAnalysis,
     olmDistribution
 }) => {
+    const { theme } = useTheme();
+    const chartColors = {
+        primary: '#3b82f6',
+        secondary: '#6366f1',
+        grid: theme === 'light' ? '#e9ecef' : '#333333',
+        text: theme === 'light' ? '#0a0a0a' : '#ffffff',
+        background: 'transparent'
+    };
     // --- Target Time state ---
     const [targetTimeTicks, setTargetTimeTicks] = useState<number>(0);
     const [targetTimeDisplay, setTargetTimeDisplay] = useState<string>('');

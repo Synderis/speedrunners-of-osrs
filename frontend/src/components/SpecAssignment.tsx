@@ -48,7 +48,7 @@ const SpecAssignment: React.FC<SpecAssignmentProps> = ({
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.3 }}
                     >
-                        <h2 className="section-title">Spec Assignment</h2>
+                        <h2 className="section-title" style={{ marginBottom: '0px'}}>Spec Assignment</h2>
                         {selectedRooms
                             .filter(room =>
                                 selectedInventoryItems.some(item =>
