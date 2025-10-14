@@ -1,6 +1,6 @@
 # Speedrunners of OSRS
 
-A comprehensive analysis tool for Old School RuneScape's Chambers of Xeric (CoX) speedrun optimization. This application provides detailed statistical analysis of gear setups, combat strategies, and optimal reset thresholds for competitive raiding.
+A comprehensive analysis tool for Old School RuneScape's Chambers of Xeric (CoX) speedrun optimization. This application provides detailed statistical analysis of gear setups, combat strategies, and optimal reset thresholds for competitive raiding. Currently hosted here: https://speedrunners-of-osrs.vercel.app/
 
 ## 🚀 Features
 
