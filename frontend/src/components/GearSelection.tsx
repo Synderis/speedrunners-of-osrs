@@ -1,4 +1,5 @@
 import GearModelCard from './GearModelCard';
+import Select from 'react-select';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { gearSetPresets, type GearSetType, type GearSetPreset } from '../data/gearTemplates';
@@ -193,12 +194,12 @@ const GearSelection: React.FC<GearSelectionProps> = ({
     }));
   };
 
-  // Controlled focus state for dropdown
-  const [presetDropdownFocused, setPresetDropdownFocused] = useState(false);
+  // Controlled menu open state for react-select
+  const [presetMenuOpen, setPresetMenuOpen] = useState(false);
 
   const handlePresetSelect = (presetId: string) => {
     setSelectedPreset(presetId);
-    setPresetDropdownFocused(false); // Always remove highlight on select
+    setPresetMenuOpen(false);
     if (!presetId) return;
     const preset = allPresets.find(p => p.id === presetId);
     if (!preset) return;
@@ -299,23 +300,47 @@ const GearSelection: React.FC<GearSelectionProps> = ({
             >
               <div className="preset-dropdown-container">
                 <label className="preset-label">Load Preset:</label>
-                <select
-                  className={`preset-dropdown${presetDropdownFocused ? ' preset-dropdown--is-focused' : ''}`}
-                  onChange={e => {
-                    handlePresetSelect(e.target.value);
+                <Select
+                  classNamePrefix="preset-dropdown"
+                  options={allPresets.map(preset => ({
+                    value: preset.id,
+                    label: `${preset.name} - ${preset.description}${preset.id.startsWith('custom_') ? ' (Custom)' : ''}`,
+                    preset
+                  }))}
+                  value={allPresets
+                    .filter(p => p.id === selectedPreset)
+                    .map(p => ({
+                      value: p.id,
+                      label: `${p.name} - ${p.description}${p.id.startsWith('custom_') ? ' (Custom)' : ''}`,
+                      preset: p
+                    }))}
+                  onChange={option => {
+                    if (option && option.value) handlePresetSelect(option.value);
                   }}
-                  value={selectedPreset}
-                  onFocus={() => setPresetDropdownFocused(true)}
-                  onBlur={() => setPresetDropdownFocused(false)}
-                >
-                  <option value="">Choose a preset...</option>
-                  {allPresets.map(preset => (
-                    <option key={preset.id} value={preset.id}>
-                      {preset.name} - {preset.description}
-                      {preset.id.startsWith('custom_') ? ' (Custom)' : ''}
-                    </option>
-                  ))}
-                </select>
+                  onMenuOpen={() => setPresetMenuOpen(true)}
+                  onMenuClose={() => setPresetMenuOpen(false)}
+                  menuIsOpen={presetMenuOpen}
+                  placeholder="Choose a preset..."
+                  isSearchable={true}
+                  styles={{
+                    menu: base => ({ ...base, zIndex: 9999 }),
+                    control: base => ({ ...base, minHeight: 38 }),
+                  }}
+                  components={{
+                    Option: (props) => {
+                      const { data, innerProps, isFocused, isSelected } = props;
+                      return (
+                        <div
+                          {...innerProps}
+                          className={`preset-dropdown__option${isFocused ? ' preset-dropdown__option--is-focused' : ''}${isSelected ? ' preset-dropdown__option--is-selected' : ''}`}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                        >
+                          <span>{data.label}</span>
+                        </div>
+                      );
+                    }
+                  }}
+                />
                 <button className="btn save-preset-btn" onClick={handleSavePreset} style={{ marginLeft: 8 }}>
                   Save Preset
                 </button>

@@ -172,6 +172,13 @@
   grid-area: ring;
 }
 
+.preset-dropdown-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-self: start;
+}
+
 .preset-controls {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -187,81 +194,69 @@
   box-shadow: var(--shadow);
 }
 
-.preset-dropdown-container {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  justify-self: start;
+.preset-dropdown__control {
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6.4px !important;
+  color: var(--text-primary) !important;
+  font-family: inherit !important;
+  font-size: 15.2px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  min-height: 38px;
 }
-
-select.preset-dropdown {
-  /* base box to mirror .preset-dropdown__control */
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  min-height: 38px;              /* matches your control min-height */
-  min-width: 340px;              /* matches your control min-width */
-
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  /* border: 1px solid var(--accent-primary); */
-  border-radius: 6.4px;
-
-  font-family: inherit;
-  line-height: 1.2;
-  padding: 8px 36px 8px 12px;    /* leave space for the chevron */
-  cursor: pointer;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-
-  /* chevron like react-select indicator (pure CSS) */
-  background-image:
-    linear-gradient(45deg, transparent 50%, var(--text-secondary, #9aa0a6) 50%),
-    linear-gradient(135deg, var(--text-secondary, #9aa0a6) 50%, transparent 50%);
-  background-position:
-    calc(100% - 18px) 50%,
-    calc(100% - 12px) 50%;
-  background-size: 6px 6px, 6px 6px;
-  background-repeat: no-repeat;
+.preset-dropdown__control--is-focused {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
 }
-
-/* Hover: subtly highlight like your react-select control */
-select.preset-dropdown:hover {
-  border-color: var(--accent-primary);
+.preset-dropdown__value-container {
+  padding: 2px 0px 0px 4px !important;
 }
-
-/* Focus: mimic .preset-dropdown__control--is-focused */
-select.preset-dropdown:focus {
-  outline: none;
+.preset-dropdown__single-value {
+  color: var(--text-primary) !important;
+  font-size: 13px !important;
 }
-
-select.preset-dropdown.preset-dropdown--is-focused {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.preset-dropdown__input-container {
+  color: var(--text-primary) !important;
+  font-size: 13px !important;
 }
-
-/* Disabled state */
-select.preset-dropdown:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.preset-dropdown__indicator {
+  color: var(--text-primary) !important;
+  padding-left: 0 !important;
 }
-
-/* Option popup colors (when the list is open) */
-select.preset-dropdown option {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
+.preset-dropdown__indicator-separator {
+  display: none !important;
 }
-
-/* Placeholder-like style when value === "" (optional helper class) */
-select.preset-dropdown.is-placeholder {
-  color: var(--text-secondary);
+.preset-dropdown__menu {
+  min-width: max-content !important;
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--accent-primary) !important;
+  border-radius: 6.4px !important;
+  overflow: hidden !important;
+  z-index: 2147483647 !important;
 }
-
-/* Firefox keyboard focus legibility */
-select.preset-dropdown:-moz-focusring {
-  color: transparent;
-  text-shadow: 0 0 0 var(--text-primary);
+.preset-dropdown__option {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  font-size: 13px !important;
+  border-radius: 6.4px !important;
+  cursor: pointer !important;
+}
+.preset-dropdown__option--is-focused {
+  background: var(--bg-secondary) !important;
+  border-radius: 6.4px !important;
+  color: var(--text-primary) !important;
+}
+.preset-dropdown__option--is-selected {
+  background: var(--accent-primary) !important;
+  color: #fff !important;
+}
+.preset-dropdown__placeholder {
+  color: var(--text-secondary) !important;
+  font-size: 13px !important;
+}
+.preset-dropdown__menu-list {
+  padding: 2px 2px 2px 2px !important;
 }
 
 .clear-buttons {
