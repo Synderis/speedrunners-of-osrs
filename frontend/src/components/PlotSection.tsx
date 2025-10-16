@@ -13,10 +13,10 @@ import { GEAR_TYPES, DEFAULT_GEAR_STATS, wasmModelLoaders } from '../data/consta
 import { createStatCards } from '../utils/statCards';
 import {
   calculateGearStatsForSet,
-  monsterStatScaling,
-  monsterHpScaling,
   getMonstersByRoom,
   calculateCombinedDistribution,
+  buildMonsterConfigFromStats,
+  buildPlayerConfigFromStats,
 } from '../utils/helpers';
 import { useAppContext } from '../context/AppContext';
 import ThresholdCard from './ThresholdCard';
@@ -142,105 +142,20 @@ const PlotSection: React.FC = () => {
     .map(type => ({
       key: type,
       title: `${type.charAt(0).toUpperCase() + type.slice(1)} Gear`,
-      data: {
-        'Offensive Bonuses': {
-          'stab': allGearStats[type].offensive.stab || 0,
-          'slash': allGearStats[type].offensive.slash || 0,
-          'crush': allGearStats[type].offensive.crush || 0,
-          'ranged': allGearStats[type].offensive.ranged || 0,
-          'magic': allGearStats[type].offensive.magic || 0
-        },
-        'Strength Bonus': {
-          'strength': allGearStats[type].bonuses.str || 0,
-          'ranged_strength': allGearStats[type].bonuses.ranged_str || 0,
-          'magic_strength': allGearStats[type].bonuses.magic_str || 0
-        },
-        'Defence Bonus': {
-          'stab': allGearStats[type].defensive.stab || 0,
-          'slash': allGearStats[type].defensive.slash || 0,
-          'crush': allGearStats[type].defensive.crush || 0,
-          'magic_defence': allGearStats[type].defensive.magic || 0,
-          'ranged_defence': allGearStats[type].defensive.ranged || 0
-        }
-      }
+      data: buildPlayerConfigFromStats(allGearStats[type])
     }));
-
+  const monsterData = buildMonsterConfigFromStats(currentMonster, combatStats);
   const configSections = [
     ...gearConfigSections,
     {
       key: 'monster',
       title: 'Monster Stats',
-      data: (() => {
-        if (!currentMonster) {
-          return {
-            'Combat Levels': {
-              'hitpoints': 0,
-              'attack': 0,
-              'strength': 0,
-              'defence': 0,
-              'ranged': 0,
-              'magic': 0
-            },
-            'Offensive Bonuses': {
-              'max_hit': 0,
-              'attack': 0,
-              'strength': 0,
-              'ranged': 0,
-              'magic': 0,
-              'ranged_strength': 0,
-              'magic_strength': 0,
-            },
-            'Defensive Bonuses': {
-              'stab': 0,
-              'slash': 0,
-              'crush': 0,
-              'magic_defence': 0,
-              'light': 0,
-              'standard': 0,
-              'heavy': 0,
-              'flat_armor': 0,
-            }
-          };
-        }
-
-        // Apply scaling (returns raw stats for Olm, scaled stats for others)
-        const scaledStats = monsterStatScaling(currentMonster, combatStats.hitpoints);
-        const scaledHp = monsterHpScaling(currentMonster, combatStats);
-
-        return {
-          'Combat Levels': {
-            'hitpoints': scaledHp,
-            'attack': scaledStats.atk,
-            'strength': scaledStats.str,
-            'defence': scaledStats.def,
-            'ranged': scaledStats.ranged,
-            'magic': scaledStats.magic
-          },
-          'Offensive Bonuses': {
-            'max_hit': currentMonster.max_hit || 0,
-            'attack': currentMonster.offensive.atk || 0,
-            'strength': currentMonster.offensive.str || 0,
-            'ranged': currentMonster.offensive.ranged || 0,
-            'magic': currentMonster.offensive.magic || 0,
-            'ranged_strength': currentMonster.offensive.ranged_str || 0,
-            'magic_strength': currentMonster.offensive.magic_str || 0,
-          },
-          'Defensive Bonuses': {
-            'stab': currentMonster.defensive.stab || 0,
-            'slash': currentMonster.defensive.slash || 0,
-            'crush': currentMonster.defensive.crush || 0,
-            'magic_defence': currentMonster.defensive.magic || 0,
-            'light': currentMonster.defensive.light || 0,
-            'standard': currentMonster.defensive.standard || 0,
-            'heavy': currentMonster.defensive.heavy || 0,
-            'flat_armor': currentMonster.defensive.flat_armour || 0,
-          }
-        };
-      })()
+      data: monsterData
     }
   ];
 
   const loadData = async () => {
+    const startTime = performance.now();
     setIsLoading(true);
     try {
       if (!selectedRooms.length) {
@@ -309,7 +224,6 @@ const PlotSection: React.FC = () => {
         }, {} as any),
         inventory: inventoryWithStyles
       };
-      console.log('Player Data for WASM:', playerData);
 
       // Loop over all selected monsters (PARALLELIZED)
       const roomPromises = selectedRooms.map(async (room) => {
@@ -346,7 +260,7 @@ const PlotSection: React.FC = () => {
             }))
             : []
         };
-        console.log('Sending to WASM:', { room: roomPayload, monsters });
+        console.log('Sending to WASM:', { playerData, rooms: roomPayload });
         const result = await loader(playerData, roomPayload);
         const key = String(room.id || 'default');
         console.log(`WASM result for room ${room.name} (${key}):`, result, result.perMonster);
@@ -376,8 +290,6 @@ const PlotSection: React.FC = () => {
         }
       });
 
-      // setPlotDataDict(prev => ({ ...prev, ...plotDataUpdates }));
-      // setStatsDict(prev => ({ ...prev, ...statsUpdates }));
       setPlotDataDict(plotDataUpdates);
       setStatsDict(statsUpdates);
 
@@ -394,6 +306,8 @@ const PlotSection: React.FC = () => {
       console.error('WASM calculation failed:', error);
     }
     setIsLoading(false);
+    const endTime = performance.now();
+    console.log(`Data load completed in ${((endTime - startTime) / 1000).toFixed(2)} s`);
   };
 
   // New function to calculate combined analysis

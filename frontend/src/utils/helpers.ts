@@ -265,333 +265,86 @@ export const calculateCombinedDistribution = (
     }
 };
 
-// Convert CDF to PMF
-// const cdfToPmf = (data: PlotDataPoint[]): { timeAxis: number[], pmf: number[] } => {
-//     if (!data || data.length === 0) return { timeAxis: [], pmf: [] };
+export const buildMonsterConfigFromStats = (m: any | null, cbStats: any) => {
+    if (!m) {
+        return {
+            'Combat Levels': {
+                hitpoints: 0, attack: 0, strength: 0, defence: 0, ranged: 0, magic: 0
+            },
+            'Offensive Bonuses': {
+                max_hit: 0, attack: 0, strength: 0, ranged: 0, magic: 0, ranged_strength: 0, magic_strength: 0
+            },
+            'Defensive Bonuses': {
+                stab: 0, slash: 0, crush: 0, magic_defence: 0, light: 0, standard: 0, heavy: 0, flat_armor: 0
+            }
+        };
+    }
 
-//     const sortedData = [...data].sort((a, b) => a.time - b.time); // Use .time not .ticks
-//     const t = sortedData.map(d => Math.round(d.time));
-//     const c = sortedData.map(d => Math.max(0, Math.min(1, d.probability)));
+    const scaledStats = monsterStatScaling(m, cbStats.hitpoints);
+    const scaledHp = monsterHpScaling(m, cbStats);
 
-//     // Ensure CDF is monotonic
-//     for (let i = 1; i < c.length; i++) {
-//         c[i] = Math.max(c[i], c[i - 1]);
-//     }
+    const off = m.offensive ?? {};
+    const def = m.defensive ?? {};
 
-//     const tMin = Math.min(...t);
-//     const tMax = Math.max(...t);
-//     const fullT = Array.from({ length: tMax - tMin + 1 }, (_, i) => tMin + i);
+    return {
+        'Combat Levels': {
+            hitpoints: scaledHp,
+            attack: scaledStats.atk,
+            strength: scaledStats.str,
+            defence: scaledStats.def,
+            ranged: scaledStats.ranged,
+            magic: scaledStats.magic
+        },
+        'Offensive Bonuses': {
+            max_hit: m.max_hit ?? 0,
+            attack: off.atk ?? 0,
+            strength: off.str ?? 0,
+            ranged: off.ranged ?? 0,
+            magic: off.magic ?? 0,
+            ranged_strength: off.ranged_str ?? 0,
+            magic_strength: off.magic_str ?? 0
+        },
+        'Defensive Bonuses': {
+            stab: def.stab ?? 0,
+            slash: def.slash ?? 0,
+            crush: def.crush ?? 0,
+            magic_defence: def.magic ?? 0,
+            light: def.light ?? 0,
+            standard: def.standard ?? 0,
+            heavy: def.heavy ?? 0,
+            flat_armor: def.flat_armour ?? 0
+        }
+    };
+};
 
-//     // Interpolate CDF values
-//     const fullC = fullT.map(time => {
-//         if (time <= t[0]) return c[0];
-//         if (time >= t[t.length - 1]) return c[c.length - 1];
+// Build the player/gear configuration sections from a gear stats object
+// Example input: one entry from `allGearStats[type]` (has offensive, bonuses, defensive)
+export const buildPlayerConfigFromStats = (stats: any) => {
+    const off = stats?.offensive ?? {};
+    const bon = stats?.bonuses ?? {};
+    const def = stats?.defensive ?? {};
 
-//         // Linear interpolation
-//         let i = 0;
-//         while (i < t.length - 1 && t[i + 1] < time) i++;
-//         if (t[i] === time) return c[i];
+    const offensiveKeys = ['stab', 'slash', 'crush', 'ranged', 'magic'];
+    const offensive: Record<string, number> = {};
+    offensiveKeys.forEach(k => { offensive[k] = off[k] ?? 0; });
 
-//         const ratio = (time - t[i]) / (t[i + 1] - t[i]);
-//         return c[i] + ratio * (c[i + 1] - c[i]);
-//     });
+    const strength = {
+        strength: bon.str ?? 0,
+        ranged_strength: bon.ranged_str ?? 0,
+        magic_strength: bon.magic_str ?? 0
+    };
 
-//     // Convert CDF to PMF
-//     const pmf = [fullC[0]];
-//     for (let i = 1; i < fullC.length; i++) {
-//         pmf.push(Math.max(0, fullC[i] - fullC[i - 1]));
-//     }
+    const defence: Record<string, number> = {};
+    // note: defensive 'magic_defence' maps from def.magic
+    defence['stab'] = def.stab ?? 0;
+    defence['slash'] = def.slash ?? 0;
+    defence['crush'] = def.crush ?? 0;
+    defence['magic_defence'] = def.magic ?? 0;
+    defence['ranged_defence'] = def.ranged ?? 0;
 
-//     // Normalize PMF
-//     const sum = pmf.reduce((a, b) => a + b, 0);
-//     if (sum > 0) {
-//         for (let i = 0; i < pmf.length; i++) {
-//             pmf[i] /= sum;
-//         }
-//     }
-
-//     return { timeAxis: fullT, pmf };
-// };
-
-// Probability of completing within time limit
-// const probLeqTime = (timeAxis: number[], cdf: number[], tLimit: number): number => {
-//     if (tLimit < timeAxis[0]) return 0;
-//     if (tLimit >= timeAxis[timeAxis.length - 1]) return cdf[cdf.length - 1];
-
-//     // Find the index
-//     let idx = 0;
-//     while (idx < timeAxis.length - 1 && timeAxis[idx + 1] <= tLimit) idx++;
-//     return cdf[idx];
-// };
-
-// Convolve two PMFs
-// const convolvePmfs = (a: number[], b: number[]): number[] => {
-//     const result = new Array(a.length + b.length - 1).fill(0);
-//     for (let i = 0; i < a.length; i++) {
-//         for (let j = 0; j < b.length; j++) {
-//             result[i + j] += a[i] * b[j];
-//         }
-//     }
-//     return result;
-// };
-
-// Main threshold calculation function
-// export const calculateResetThresholds = (
-//     targetTicks: number,
-//     floor1Data: PlotDataPoint[],
-//     floor2Data: PlotDataPoint[],
-//     floor3Data: PlotDataPoint[],
-//     olmData: PlotDataPoint[],
-//     completeRaidData: PlotDataPoint[]
-// ) => {
-//     try {
-//         // Convert all CDFs to PMFs
-//         const { timeAxis: t1, pmf: pmf1 } = cdfToPmf(floor1Data);
-//         const { timeAxis: t2, pmf: pmf2 } = cdfToPmf(floor2Data);
-//         const { timeAxis: t3, pmf: pmf3 } = cdfToPmf(floor3Data);
-//         const { timeAxis: to, pmf: pmfo } = cdfToPmf(olmData);
-//         const { timeAxis: tr, pmf: pmfr } = cdfToPmf(completeRaidData);
-
-//         if (pmf1.length === 0 || pmf2.length === 0 || pmf3.length === 0 || pmfo.length === 0 || pmfr.length === 0) {
-//             throw new Error('Invalid or empty distribution data');
-//         }
-
-//         // Build remaining-content PMFs via convolution
-//         // Remaining after Floor 1: F2 + F3 + Olm
-//         const pmf_23o = convolvePmfs(convolvePmfs(pmf2, pmf3), pmfo);
-//         const t_23o_min = Math.min(...t2) + Math.min(...t3) + Math.min(...to);
-//         const t_23o_max = Math.max(...t2) + Math.max(...t3) + Math.max(...to);
-//         const t_23o = Array.from({ length: t_23o_max - t_23o_min + 1 }, (_, i) => t_23o_min + i);
-
-//         // Remaining after Floor 2: F3 + Olm
-//         const pmf_3o = convolvePmfs(pmf3, pmfo);
-//         const t_3o_min = Math.min(...t3) + Math.min(...to);
-//         const t_3o_max = Math.max(...t3) + Math.max(...to);
-//         const t_3o = Array.from({ length: t_3o_max - t_3o_min + 1 }, (_, i) => t_3o_min + i);
-
-//         // Remaining after Floor 3: Olm
-//         const pmf_o = pmfo;
-//         const t_o = to;
-
-//         // Elapsed supports for checkpoints
-//         const pmf12 = convolvePmfs(pmf1, pmf2);
-//         const t12_min = Math.min(...t1) + Math.min(...t2);
-//         const t12_max = Math.max(...t1) + Math.max(...t2);
-//         const t12 = Array.from({ length: t12_max - t12_min + 1 }, (_, i) => t12_min + i);
-
-//         const pmf123 = convolvePmfs(pmf12, pmf3);
-//         const t123_min = t12_min + Math.min(...t3);
-//         const t123_max = t12_max + Math.max(...t3);
-//         const t123 = Array.from({ length: t123_max - t123_min + 1 }, (_, i) => t123_min + i);
-
-//         // CDFs for remaining segments and full raid
-//         const cdf_23o = pmfToCdf(pmf_23o);
-//         const cdf_3o = pmfToCdf(pmf_3o);
-//         const cdf_o = pmfToCdf(pmf_o);
-//         const cdfr = pmfToCdf(pmfr);
-
-//         // Baseline: success prob if restarting now
-//         const p_restart = probLeqTime(tr, cdfr, targetTicks);
-
-//         // Floor 1 checkpoint
-//         const E1_candidates = Array.from({ length: Math.max(...t1) - Math.min(...t1) + 1 }, (_, i) => Math.min(...t1) + i);
-//         const cont_f1 = E1_candidates.map(E1 => probLeqTime(t_23o, cdf_23o, targetTicks - E1));
-//         const mask1 = cont_f1.map(p => p >= p_restart);
-
-//         let E1_thr: number | null = null;
-//         let rule1 = "never reset";
-//         if (mask1.some(Boolean)) {
-//             const validE1s = E1_candidates.filter((_, i) => mask1[i]);
-//             E1_thr = Math.max(...validE1s) + 1;
-//             rule1 = "continue if E1 < threshold; reset if E1 ≥ threshold";
-//         } else if (cont_f1.every(p => p < p_restart)) {
-//             rule1 = "reset always";
-//         }
-
-//         // Floor 2 checkpoint
-//         const E2_candidates = Array.from({ length: t12_max - t12_min + 1 }, (_, i) => t12_min + i);
-//         const cont_f2 = E2_candidates.map(E2 => probLeqTime(t_3o, cdf_3o, targetTicks - E2));
-//         const mask2 = cont_f2.map(p => p >= p_restart);
-
-//         let E2_thr: number | null = null;
-//         let rule2 = "never reset";
-//         if (mask2.some(Boolean)) {
-//             const validE2s = E2_candidates.filter((_, i) => mask2[i]);
-//             E2_thr = Math.max(...validE2s) + 1;
-//             rule2 = "continue if total E2 < threshold; reset if E2 ≥ threshold";
-//         } else if (cont_f2.every(p => p < p_restart)) {
-//             rule2 = "reset always";
-//         }
-
-//         // Floor 3 checkpoint (entering Olm)
-//         const E3_candidates = Array.from({ length: t123_max - t123_min + 1 }, (_, i) => t123_min + i);
-//         const cont_f3 = E3_candidates.map(E3 => probLeqTime(t_o, cdf_o, targetTicks - E3));
-//         const mask3 = cont_f3.map(p => p >= p_restart);
-
-//         let E3_thr: number | null = null;
-//         let rule3 = "never reset";
-//         if (mask3.some(Boolean)) {
-//             const validE3s = E3_candidates.filter((_, i) => mask3[i]);
-//             E3_thr = Math.max(...validE3s) + 1;
-//             rule3 = "continue if total E3 < threshold; reset if E3 ≥ threshold";
-//         } else if (cont_f3.every(p => p < p_restart)) {
-//             rule3 = "reset always";
-//         }
-
-//         return {
-//             input_target: targetTicks,
-//             p_success_if_restart_now: p_restart,
-//             thresholds: {
-//                 floor1: { threshold: E1_thr, decision_rule: rule1 },
-//                 floor2: { threshold: E2_thr, decision_rule: rule2 },
-//                 floor3: { threshold: E3_thr, decision_rule: rule3 }
-//             },
-//             notes: "Thresholds compare continue-vs-restart probabilities at target time."
-//         };
-//     } catch (error) {
-//         console.error('Error calculating thresholds:', error);
-//         return null;
-//     }
-// };
-
-// export const calculateResetThresholds = (
-//     targetTicks: number,
-//     floor1Data: PlotDataPoint[],
-//     floor2Data: PlotDataPoint[],
-//     floor3Data: PlotDataPoint[],
-//     olmData: PlotDataPoint[],
-//     completeRaidData: PlotDataPoint[]
-// ) => {
-//     // Convert CDFs to PMFs and time axes
-//     const { timeAxis: t1, pmf: pmf1 } = cdfToPmf(floor1Data);
-//     const { timeAxis: t2, pmf: pmf2 } = cdfToPmf(floor2Data);
-//     const { timeAxis: t3, pmf: pmf3 } = cdfToPmf(floor3Data);
-//     const { timeAxis: to, pmf: pmfo } = cdfToPmf(olmData);
-
-//     // Helper to get CDF from PMF
-//     const pmfToCdf = (pmf: number[]) => {
-//         const cdf: number[] = [];
-//         let sum = 0;
-//         for (const p of pmf) {
-//             sum += p;
-//             cdf.push(Math.max(0, Math.min(1, sum)));
-//         }
-//         return cdf;
-//     };
-
-//     // Convolve PMFs for remaining floors
-//     const pmf_23o = convolvePmfs(convolvePmfs(pmf2, pmf3), pmfo);
-//     const t_23o_min = t2[0] + t3[0] + to[0];
-//     const t_23o = Array.from({ length: pmf_23o.length }, (_, i) => t_23o_min + i);
-//     const cdf_23o = pmfToCdf(pmf_23o);
-
-//     const pmf_3o = convolvePmfs(pmf3, pmfo);
-//     const t_3o_min = t3[0] + to[0];
-//     const t_3o = Array.from({ length: pmf_3o.length }, (_, i) => t_3o_min + i);
-//     const cdf_3o = pmfToCdf(pmf_3o);
-
-//     // Floor 1 threshold
-//     const possible_mask1 = pmf1.map(p => p > 0);
-//     const E1_candidates = t1.filter((_, i) => possible_mask1[i]);
-//     const cdf1_masked = pmfToCdf(pmf1.filter((p, i) => possible_mask1[i]));
-//     const remaining_after_f1 = E1_candidates.map(E1 => targetTicks - E1);
-//     const prob_complete_after_f1 = remaining_after_f1.map(t => probLeqTime(t_23o, cdf_23o, t));
-//     let floor1Threshold: number | null = null;
-//     for (let i = E1_candidates.length - 1; i >= 0; --i) {
-//         if (cdf1_masked[i] <= prob_complete_after_f1[i]) {
-//             floor1Threshold = E1_candidates[i];
-//             break;
-//         }
-//     }
-
-//     // Floor 1+2 threshold
-//     const t12: number[] = [];
-//     const pmf12: number[] = [];
-//     for (let i = 0; i < t1.length; ++i) {
-//         for (let j = 0; j < t2.length; ++j) {
-//             const total = t1[i] + t2[j];
-//             const prob = pmf1[i] * pmf2[j];
-//             if (prob > 0 && total + t3[0] + to[0] <= targetTicks) {
-//                 t12.push(total);
-//                 pmf12.push(prob);
-//             }
-//         }
-//     }
-//     const sortIdx12 = t12.map((t, i) => [t, i]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
-//     const t12_sorted = sortIdx12.map(i => t12[i]);
-//     const pmf12_sorted = sortIdx12.map(i => pmf12[i]);
-//     const cdf12_sorted = pmfToCdf(pmf12_sorted);
-//     const remaining_after_f12 = t12_sorted.map(E2 => targetTicks - E2);
-//     const prob_complete_after_f12 = remaining_after_f12.map(t => probLeqTime(t_3o, cdf_3o, t));
-//     let floor12Threshold: number | null = null;
-//     for (let i = t12_sorted.length - 1; i >= 0; --i) {
-//         if (cdf12_sorted[i] <= prob_complete_after_f12[i]) {
-//             floor12Threshold = t12_sorted[i];
-//             break;
-//         }
-//     }
-
-//     // Floor 1+2+3 threshold
-//     const t123: number[] = [];
-//     const pmf123: number[] = [];
-//     for (let i = 0; i < t1.length; ++i) {
-//         for (let j = 0; j < t2.length; ++j) {
-//             for (let k = 0; k < t3.length; ++k) {
-//                 const total = t1[i] + t2[j] + t3[k];
-//                 const prob = pmf1[i] * pmf2[j] * pmf3[k];
-//                 if (prob > 0 && total + to[0] <= targetTicks) {
-//                     t123.push(total);
-//                     pmf123.push(prob);
-//                 }
-//             }
-//         }
-//     }
-//     const sortIdx123 = t123.map((t, i) => [t, i]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
-//     const t123_sorted = sortIdx123.map(i => t123[i]);
-//     const pmf123_sorted = sortIdx123.map(i => pmf123[i]);
-//     const cdf123_sorted = pmfToCdf(pmf123_sorted);
-//     const remaining_after_f123 = t123_sorted.map(E3 => targetTicks - E3);
-//     const prob_complete_after_f123 = remaining_after_f123.map(t => probLeqTime(to, pmfToCdf(pmfo), t));
-//     let floor123Threshold: number | null = null;
-//     for (let i = t123_sorted.length - 1; i >= 0; --i) {
-//         if (cdf123_sorted[i] <= prob_complete_after_f123[i]) {
-//             floor123Threshold = t123_sorted[i];
-//             break;
-//         }
-//     }
-
-//     const { timeAxis: tr, pmf: pmfr } = cdfToPmf(completeRaidData);
-//     const cdfr = pmfToCdf(pmfr);
-//     const p_success_if_restart_now = probLeqTime(tr, cdfr, targetTicks);
-
-//     // Decision rules
-//     const rule1 = floor1Threshold !== null
-//         ? "continue if E1 < threshold; reset if E1 ≥ threshold"
-//         : "never reset";
-//     const rule2 = floor12Threshold !== null
-//         ? "continue if total E2 < threshold; reset if E2 ≥ threshold"
-//         : "never reset";
-//     const rule3 = floor123Threshold !== null
-//         ? "continue if total E3 < threshold; reset if E3 ≥ threshold"
-//         : "never reset";
-
-//     return {
-//         input_target: targetTicks,
-//         p_success_if_restart_now,
-//         thresholds: {
-//             floor1: {
-//                 threshold: floor1Threshold,
-//                 decision_rule: rule1
-//             },
-//             floor2: {
-//                 threshold: floor12Threshold,
-//                 decision_rule: rule2
-//             },
-//             floor3: {
-//                 threshold: floor123Threshold,
-//                 decision_rule: rule3
-//             }
-//         },
-//         notes: "Thresholds compare continue-vs-restart probabilities at target time."
-//     };
-// };
+    return {
+        'Offensive Bonuses': offensive,
+        'Strength Bonus': strength,
+        'Defence Bonus': defence
+    };
+};

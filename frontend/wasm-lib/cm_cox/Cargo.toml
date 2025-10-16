@@ -4,35 +4,36 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
+# cdylib is required for wasm-bindgen output; you can also keep rlib if you want to unit-test natively.
 crate-type = ["cdylib"]
 
 [dependencies]
+# Keep a broad 0.2 constraint; works with current ecosystem
 wasm-bindgen = "0.2"
+
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+# Path deps (adjust paths if your layout differs)
 osrs_shared_types = { path = "../osrs_shared_types" }
 osrs_shared_functions = { path = "../osrs_shared_functions" }
 
-# The `console_error_panic_hook` crate provides better debugging of panics by
-# logging them with `console.error`. This is great for development, but requires
-# all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
-# code size when deploying.
-console_error_panic_hook = { version = "0.1.6", optional = true }
+# Use SmallRng + Uniform. The "small_rng" feature pulls in the faster small PRNG.
+rand = { version = "0.8", features = ["small_rng"] }
 
-# `wee_alloc` is a tiny allocator for wasm that is only ~1K in code size
-# compared to the default allocator's ~10K. It is slower than the default
-# allocator, however.
-#
-# Unfortunately, `wee_alloc` requires nightly Rust when targeting wasm for now.
-wee_alloc = { version = "0.4.5", optional = true }
-rand = "0.8"
+# Only needed for WASM to source entropy; put it behind a wasm32 cfg so native builds don’t pull "js".
+[target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }
+
+# Optional goodies
+console_error_panic_hook = { version = "0.1.6", optional = true }
+wee_alloc = { version = "0.4.5", optional = true }
 
 [dependencies.web-sys]
 version = "0.3"
-features = [
-  "console",
-]
+features = ["console"]
 
 [features]
+# If you like having the panic hook by default in dev, keep it here.
+# For production size, consider removing it from default and enabling only in debug.
 default = ["console_error_panic_hook"]

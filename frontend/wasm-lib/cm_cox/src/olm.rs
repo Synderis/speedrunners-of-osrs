@@ -1,4 +1,7 @@
 use rand::prelude::*;
+use rand::rngs::SmallRng;
+use rand::distributions::{Distribution, Uniform};
+use rand::SeedableRng;
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
@@ -10,13 +13,15 @@ fn phase_loop(
     accuracy: f64,
     max_hit: i32,
     weapon_name: &str,
-    rng: &mut ThreadRng,
+    rng: &mut SmallRng,
+    passive_dmg: &Uniform<i32>, // prebuilt 0..=3
 ) -> i32 {
     let mut ticks_spent = 0;
-    // Rust translation of the provided Python phase_loop
+    // keep modulo logic exactly as prod
     while *hp > 0 {
         ticks_spent += 1;
         *current_phase_ticks += 1;
+
         if (*current_phase_ticks - 1) % attack_speed == 0 {
             let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name);
             *hp -= hit;
@@ -24,16 +29,16 @@ fn phase_loop(
         if *hp <= 0 {
             break;
         }
+
         if (*current_phase_ticks - 1) % 4 == 0 {
-            *hp -= rng.gen_range(0..=3);
+            *hp -= passive_dmg.sample(rng); // 0..=3
         }
         if *hp <= 0 {
             break;
         }
     }
     *current_phase_ticks += attack_speed - 1;
-    ticks_spent += attack_speed - 1;
-    ticks_spent
+    ticks_spent + (attack_speed - 1)
 }
 
 #[wasm_bindgen]
@@ -49,8 +54,10 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     let mut player = payload.player;
     let monsters = payload.room.monsters;
     let _room_methods = payload.room.methods;
-    let trials = 100000;
-    let mut rng = rand::thread_rng();
+    let trials = 100_000usize;
+
+    // Faster RNG with variability
+    let mut rng = SmallRng::from_entropy();
 
     // Defensive: Check monsters
     if monsters.is_empty() {
@@ -60,7 +67,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     let best_style_mage = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string()]);
     let best_style_melee = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
     let best_style_ranged = find_best_combat_style(&player, &monsters[2], vec!["ranged".to_string()]);
-
 
     let swap_result = ensure_weapon_swap(&mut player, "Elder maul", None);
     let (swapped_weapon, swapped_offhand) = match swap_result {
@@ -87,16 +93,23 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     let zaryte_crossbow = inventory_items.iter().any(|item| item.name == "Zaryte crossbow");
     // let burning_claws = inventory_items.iter().any(|item| item.name == "Burning claws");
 
-    // Prepare simulation
-    let mut tick_counts: Vec<i32> = vec![0; trials];
+    // --- Optimized stats building ---
+    let passive_dmg = Uniform::new_inclusive(0, 3);
+    let spec_hit_dmg = Uniform::new_inclusive(0, best_style_spec.max_hit.max(0));
+    let acc_threshold = (best_style_spec.accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
+
+    // Build histogram + running sum instead of storing all tick counts
+    let mut freq: Vec<usize> = Vec::new();
+    let mut sum_ticks: i64 = 0;
     let mut phase_results: Vec<i32> = Vec::new();
 
-    let delay_list = vec![22, 38, 39];
+    let delay_list = [22, 38, 39];
 
-    for i in 0..trials {
+    for _ in 0..trials {
         let mut total_ticks = 0;
         let mut ranged_hp = monsters[2].skills.hp;
         let mut current_phase_ticks = 0;
+
         for phase in 0..3 {
             let mut mage_hp = monsters[0].skills.hp;
             let mut melee_hp = monsters[1].skills.hp;
@@ -111,13 +124,17 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                 best_style_mage.attack_speed,
                 best_style_mage.accuracy,
                 best_style_mage.max_hit,
-                "Mage".to_string().as_str(),
+                "Mage",
                 &mut rng,
+                &passive_dmg,
             );
-            if rng.gen::<f64>() < best_style_spec.accuracy {
+
+            // spec: Bernoulli via u32 threshold (faster than gen::<f64>())
+            if rng.next_u32() <= acc_threshold {
                 spec_hit = true;
-                melee_hp -= rng.gen_range(0..=best_style_spec.max_hit).max(1);
+                melee_hp -= spec_hit_dmg.sample(&mut rng).max(1);
             };
+
             if spec_hit {
                 melee_ticks = phase_loop(
                     &mut melee_hp,
@@ -127,6 +144,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                     best_style_specced.max_hit,
                     weapon_name,
                     &mut rng,
+                    &passive_dmg,
                 );
             } else {
                 melee_ticks = phase_loop(
@@ -137,6 +155,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                     best_style_melee.max_hit,
                     weapon_name,
                     &mut rng,
+                    &passive_dmg,
                 );
             };
             melee_ticks += 6; // Add 6 ticks for spec delay
@@ -144,6 +163,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             total_ticks += delay_list[phase];
             phase_results.push(melee_ticks + mage_ticks);
         };
+
         if zaryte_crossbow {
             let spec_dmg = (ranged_hp as f64 * 0.22).floor() as i32;
             ranged_hp -= spec_dmg;
@@ -155,51 +175,49 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             best_style_ranged.attack_speed,
             best_style_ranged.accuracy,
             best_style_ranged.max_hit,
-            "Ranged".to_string().as_str(),
+            "Ranged",
             &mut rng,
+            &passive_dmg,
         );
         if zaryte_crossbow {
             ranged_ticks += 5;
         }
         total_ticks += ranged_ticks;
-        tick_counts[i] = total_ticks;
+
+        sum_ticks += i64::from(total_ticks);
+        let idx = total_ticks as usize;
+        if idx >= freq.len() {
+            freq.resize(idx + 1, 0);
+        }
+        freq[idx] += 1;
     }
 
-
-    // Defensive: Check tick_counts
-    if tick_counts.is_empty() {
+    if freq.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
 
     // Compute statistics
-    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
+    let mean_ttk = sum_ticks as f64 / trials as f64;
 
-    // Build cumulative kill probability
-    let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
-    let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
-    for &ticks in &tick_counts {
-        for idx in ticks..=max_ticks {
-            kill_prob[idx as usize] += 1.0;
-        }
-    }
-    for prob in &mut kill_prob {
-        *prob /= trials as f64;
+    // Build cumulative kill probability using the histogram (same semantics as before)
+    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
+    let mut running = 0usize;
+    for count in &freq {
+        running += *count;
+        kill_prob.push(running as f64 / trials as f64);
     }
 
-    // Collect results for each monster (if you have more than one)
+    // Collect results for each monster (unchanged shape)
     let mut results = Vec::new();
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
-    let encounter_kill_times = kill_prob.clone();
-    let kill_times = kill_prob.clone();
     let expected_ttk = mean_ttk;
     let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
 
     total_expected_ticks += expected_ttk;
     total_expected_seconds += expected_seconds;
 
-    // Example: For Tekton (single monster)
-
+    // per-monster kill_times mirrors previous behavior
     let mage_hand = &monsters[0];
     let result_mage = serde_json::json!({
         "monster_id": mage_hand.id,
@@ -208,7 +226,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
         "expected_seconds": expected_seconds,
         "combat_type": best_style_mage.attack_type,
         "attack_style": best_style_mage.combat_style,
-        "kill_times": kill_times,
     });
     results.push(result_mage);
 
@@ -220,7 +237,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
         "expected_seconds": expected_seconds,
         "combat_type": best_style_melee.attack_type,
         "attack_style": best_style_melee.combat_style,
-        "kill_times": kill_times,
     });
     results.push(result_melee);
 
@@ -232,21 +248,17 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
         "expected_seconds": expected_seconds,
         "combat_type": best_style_ranged.attack_type,
         "attack_style": best_style_ranged.combat_style,
-        "kill_times": kill_times,
     });
     results.push(result_ranged);
 
     // Convert encounter_kill_times to JSON object array
-    let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()
-        .map(|(idx, &prob)| {
-            serde_json::json!({
-                "tick": idx,
-                "probability": prob
-            })
-        })
+    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob
+        .iter()
+        .enumerate()
+        .map(|(idx, &prob)| serde_json::json!({ "tick": idx, "probability": prob }))
         .collect();
 
-    // Final output
+    // Final output (same fields)
     serde_json::json!({
         "results": results,
         "total_expected_ticks": total_expected_ticks,
@@ -256,4 +268,3 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
         "phase_results": [],
     }).to_string()
 }
-

@@ -1,8 +1,11 @@
 use rand::prelude::*;
+use rand::rngs::SmallRng;
+use rand::SeedableRng;
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
 
+/// Kindling → (heal %, drain %)
 fn get_drain_and_heal(kindling: usize) -> (f64, f64) {
     if kindling == 0 {
         (0.01, 0.0)
@@ -115,47 +118,64 @@ fn chop_simulation<R: Rng>(rng: &mut R, total_ticks: i32, base_hp: f64) -> i32 {
     chop_ticks + time_after_dump + initial_delay - 1
 }
 
+#[inline]
 fn thrall_hit<R: Rng>(rng: &mut R, hp: i32) -> i32 {
-    let hit_thrall = rng.gen_range(0..4);
-    let hit_thrall = if hit_thrall == 3 { 1 } else { 0 };
-    hp - hit_thrall
+    let roll = rng.gen_range(0..4);
+    let add = if roll == 3 { 1 } else { 0 };
+    hp - add
 }
 
 fn ember_light_kill<R: Rng>(
     rng: &mut R,
     mut hp: i32,
     max_hit: i32,
-    accuracy: &[f64],
+    accuracy: &[f64],     // [p0, p1, p2]
     attack_speed: i32,
     mut total_ticks: i32,
     spec_count_max: i32,
 ) -> i32 {
-    let mut accuracy_val = accuracy[0];
+    // precompute thresholds for p0, p1, p2
+    let to_thr = |p: f64| -> u32 { (p.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32 };
+    let p0 = to_thr(accuracy[0]);
+    let p1 = to_thr(accuracy[1]);
+    let p2 = to_thr(accuracy[2]);
+
+    // we’ll track which threshold we’re on using an index
+    let mut acc_idx = 0; // start at p0
     let mut attack_tick = 0;
     let mut hit_count = 0;
+
+    // first: specials
     while hit_count < spec_count_max {
         attack_tick += 1;
         if (attack_tick - 1) % attack_speed == 0 {
-            if rng.gen::<f64>() < accuracy_val {
+            // roll
+            let thr = [p0, p1, p2][acc_idx];
+            if rng.next_u32() <= thr {
                 let hit = rng.gen_range(0..=max_hit).max(1);
-                if (accuracy_val - accuracy[1]).abs() < f64::EPSILON {
-                    accuracy_val = accuracy[2];
-                } else {
-                    accuracy_val = accuracy[1];
-                }
                 hp -= hit;
+                // toggle p1/p2 when we land a hit (matches original behavior)
+                if acc_idx == 1 {
+                    acc_idx = 2;
+                } else {
+                    acc_idx = 1;
+                }
             }
             hp = thrall_hit(rng, hp);
             hit_count += 1;
         }
     }
+
     total_ticks += attack_tick + attack_speed - 1;
+
+    // then: regulars until death
     attack_tick = 0;
     while hp > 0 {
         attack_tick += 1;
         if (attack_tick - 1) % attack_speed == 0 {
+            let thr = [p0, p1, p2][acc_idx];
             let mut hit = 0;
-            if rng.gen::<f64>() < accuracy_val {
+            if rng.next_u32() <= thr {
                 hit = rng.gen_range(0..=max_hit).max(1);
             }
             hp -= hit;
@@ -163,11 +183,11 @@ fn ember_light_kill<R: Rng>(
             hp = thrall_hit(rng, hp);
         }
         if hp <= 0 {
-            // You can handle early_death logic here if needed
             total_ticks += attack_tick - 1;
             break;
         }
     }
+
     total_ticks
 }
 
@@ -180,11 +200,13 @@ fn burning_claws_kill<R: Rng>(
     mut total_ticks: i32,
     spec_count_max: i32,
 ) -> i32 {
+    let acc_thr: u32 = (accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
+
     let mut attack_tick = 0;
     let mut hit_count = 0;
     let mut burn_list: Vec<i32> = Vec::new();
 
-    // First phase: 4 special attacks
+    // First phase: specials
     while hit_count < spec_count_max && hp > 0 {
         attack_tick += 1;
         if (attack_tick - 1) % attack_speed == 0 {
@@ -202,7 +224,6 @@ fn burning_claws_kill<R: Rng>(
     }
 
     if hp <= 0 {
-        // You can handle early_death logic here if needed
         total_ticks += attack_tick - 1;
         return total_ticks;
     }
@@ -210,11 +231,11 @@ fn burning_claws_kill<R: Rng>(
     total_ticks += attack_tick + attack_speed - 1;
     attack_tick = 0;
 
-    // Second phase: regular attacks
+    // Second phase: regulars
     while hp > 0 {
         attack_tick += 1;
         if (attack_tick - 1) % attack_speed == 0 {
-            let hit = if rng.gen::<f64>() < accuracy {
+            let hit = if rng.next_u32() <= acc_thr {
                 rng.gen_range(0..=max_hit).max(1)
             } else {
                 0
@@ -229,6 +250,7 @@ fn burning_claws_kill<R: Rng>(
             break;
         }
     }
+
     total_ticks
 }
 
@@ -244,13 +266,13 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
     let mut player = payload.player;
     let mut monsters = payload.room.monsters;
     let spec_count_dict = payload.room.special_attacks;
+
     for monster in &mut monsters {
         if player.combat_stats.hitpoints != 99 {
             monster.skills.hp = monster_hp_scaling(monster, &player.combat_stats);
         }
         monster.skills = monster_stat_scaling(monster, player.combat_stats.hitpoints);
     }
-    let spec_count_max;
 
     let inventory_items: Vec<SelectedItem> = player
         .inventory
@@ -263,33 +285,39 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
 
     let mut emberlight_accuracy: Vec<f64> = Vec::new();
     let best_style: StyleResult;
-    let attack_speed;
-    let max_hit;
+    let attack_speed: i32;
+    let max_hit: i32;
     let mut accuracy = 0.0;
+    let spec_count_max: i32;
+
     if emberlight {
         spec_count_max = spec_count_dict
             .as_ref()
             .and_then(|vec| vec.iter().find(|sa| sa.name == "Emberlight").map(|sa| sa.count))
             .unwrap_or(2);
-        let avernic_defender = inventory_items.iter().find(|item| item.name == "Avernic defender").cloned();
+        let avernic_defender = inventory_items
+            .iter()
+            .find(|item| item.name == "Avernic defender")
+            .cloned();
         ensure_weapon_swap(&mut player, "Emberlight", avernic_defender);
+
         let mut emberlight_ice_demon = monsters[0].clone();
         let base_def = emberlight_ice_demon.skills.def;
+
         best_style = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
 
         let style1 = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
         max_hit = style1.max_hit;
         emberlight_accuracy.push(style1.accuracy);
 
-        emberlight_ice_demon.skills.def = ((base_def as f64 * 0.85).floor() - 1.0)  as i32;
-
+        emberlight_ice_demon.skills.def = ((base_def as f64 * 0.85).floor() - 1.0) as i32;
         let style2 = find_best_combat_style(&player, &emberlight_ice_demon, vec!["melee".to_string()]);
         emberlight_accuracy.push(style2.accuracy);
 
-        emberlight_ice_demon.skills.def = ((base_def as f64 * 0.7).floor() - 2.0)  as i32;
-
+        emberlight_ice_demon.skills.def = ((base_def as f64 * 0.7).floor() - 2.0) as i32;
         let style3 = find_best_combat_style(&player, &emberlight_ice_demon, vec!["melee".to_string()]);
         emberlight_accuracy.push(style3.accuracy);
+
         attack_speed = style3.attack_speed;
     } else if burning_claws {
         spec_count_max = spec_count_dict
@@ -305,19 +333,25 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
         return "{\"error\": \"No Emberlight or Burning claws found in inventory\"}".to_string();
     }
 
-    let trials = 100_000;
+    let trials = 100_000usize;
     let post_chop_delay = 10;
     let death_animation = 4;
+
+    // 🔧 small, fast RNG (WASM-friendly)
+    let mut rng = SmallRng::from_entropy();
+
+    // per-trial outputs
     let mut tick_counts: Vec<i32> = vec![0; trials];
     let mut ice_demon_pop_time: Vec<i32> = vec![0; trials];
-    let mut rng = rand::thread_rng();
 
     for i in 0..trials {
         let mut total_ticks = 0;
         let ice_demon_hp = monsters[0].skills.hp;
+
         total_ticks = chop_simulation(&mut rng, total_ticks, ice_demon_hp as f64);
         ice_demon_pop_time[i] = total_ticks;
-        let overkill = if rng.gen_range(1..=4) == 1 {1} else {0};
+
+        let overkill = if rng.gen_range(1..=4) == 1 { 1 } else { 0 };
 
         if emberlight {
             total_ticks = ember_light_kill(
@@ -345,54 +379,57 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
 
         total_ticks += post_chop_delay;
         total_ticks += 1 + death_animation - overkill;
+
         tick_counts[i] = total_ticks;
     }
-    // Defensive: Check tick_counts
+
+    // Defensive
     if tick_counts.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
 
-    let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
-    let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
-    for &ticks in &tick_counts {
-        for idx in ticks..=max_ticks {
-            kill_prob[idx as usize] += 1.0;
-        }
-    }
-    for prob in &mut kill_prob {
-        *prob /= trials as f64;
-    }
+    // mean TTK
     let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
 
-    // Collect results for each monster (if you have more than one)
-    
+    // ⚡ Build CDF via histogram (faster than nested loops)
+    let &max_ticks = tick_counts.iter().max().unwrap();
+    let mut freq = vec![0usize; (max_ticks + 1) as usize];
+    for &t in &tick_counts {
+        freq[t as usize] += 1;
+    }
+    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
+    let mut running = 0usize;
+    for c in freq {
+        running += c;
+        kill_prob.push(running as f64 / trials as f64);
+    }
+
+    // expected
+    let expected_ttk = mean_ttk;
+    let expected_seconds = mean_ttk * 0.6;
+
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
-    let encounter_kill_times = kill_prob.clone();
-    let kill_times = kill_prob.clone();
-
-    let expected_ttk = mean_ttk;
-    let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
-
     total_expected_ticks += expected_ttk;
     total_expected_seconds += expected_seconds;
-    let mut results = Vec::new();
 
+    // per-monster results
+    let mut results = Vec::new();
     for monster in &monsters {
-        let result = serde_json::json!({
+        results.push(serde_json::json!({
             "monster_id": monster.id,
             "monster_name": monster.name,
             "expected_ticks": 0.0,
             "expected_seconds": 0.0,
             "combat_type": best_style.attack_type,
             "attack_style": best_style.combat_style,
-            "kill_times": kill_times,
-        });
-        results.push(result);
+        }));
     }
-    
-    // Convert encounter_kill_times to JSON object array
-    let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()
+
+    // encounter_kill_times as {tick, probability}[]
+    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob
+        .iter()
+        .enumerate()
         .map(|(idx, &prob)| {
             serde_json::json!({
                 "tick": idx,
@@ -406,7 +443,6 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
         "total_expected_ticks": total_expected_ticks,
         "total_expected_seconds": total_expected_seconds,
         "encounter_kill_times": encounter_kill_times_obj,
-        "phase_time_results": ice_demon_pop_time,
-        "phase_results": [],
+        "phase_results": ice_demon_pop_time,
     }).to_string()
 }

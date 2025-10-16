@@ -1,5 +1,8 @@
 use rand::prelude::*;
 use wasm_bindgen::prelude::*;
+use rand::rngs::SmallRng;
+use rand::distributions::{Distribution, Uniform};
+use rand::SeedableRng;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
 
@@ -73,7 +76,7 @@ fn ensure_item_equipped(
     }
 }
 
-fn generate_barrier_delay(rng: &mut ThreadRng) -> i32 {
+fn generate_barrier_delay(rng: &mut SmallRng) -> i32 {
     // Tiles until barrier distribution with frequencies
     let barrier_tiles = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     let frequencies = [4, 4, 6, 2, 6, 10, 6, 14, 6, 7, 2, 1];
@@ -146,8 +149,11 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     // let walk_delay = 24;
     let trials = 100000;
     let death_animation = 4;
-    let mut tick_counts: Vec<i32> = vec![0; trials];
-    let mut rng = rand::thread_rng();
+    // let mut tick_counts: Vec<i32> = vec![0; trials];
+    let mut rng = SmallRng::from_entropy();
+    let thrall_dmg = Uniform::new_inclusive(0, 3);
+    let mut freq: Vec<usize> = Vec::new();
+    let mut sum_ticks: i64 = 0;
 
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string(), "ranged".to_string()]);
     let max_hit = best_style.max_hit;
@@ -175,7 +181,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     let best_style_spec = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
     let pot_pickup_delay = 4;
 
-    for i in 0..trials {
+    for _ in 0..trials {
         let mut tick = 0;
         let mut spec_count = spec_count_max;
         let range_max = if attack_speed > 4 { 4 * attack_speed } else { 4 };
@@ -187,7 +193,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
                 tick += 1;
                 ticks_this_monster += 1;
                 if (tick - 1) % 4 == 0 {
-                    let hit = rng.gen_range(0..=3);
+                    let hit = thrall_dmg.sample(&mut rng);
                     hp -= hit;
                 }
                 if hp <= 0 {
@@ -220,30 +226,36 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
         tick -= attack_speed - 1;
         tick += walk_delay + hit_delay + 1 + death_animation - overkill + pot_pickup_delay;
         tick += rng.gen_range(0..=4);
-        tick_counts[i] = tick;
+        // tick_counts[i] = tick;
+        sum_ticks += i64::from(tick);
+        let idx = tick as usize;
+        if idx >= freq.len() {
+            freq.resize(idx + 1, 0);
+        }
+        freq[idx] += 1;
     }
     // Defensive: Check tick_counts
-    if tick_counts.is_empty() {
+    if freq.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
 
-    let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
-    let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
-    for &ticks in &tick_counts {
-        for idx in ticks..=max_ticks {
-            kill_prob[idx as usize] += 1.0; 
-        }
+    // Compute statistics
+    let mean_ttk = sum_ticks as f64 / trials as f64;
+
+    // Build cumulative kill probability using the histogram (same semantics as before)
+    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
+    let mut running = 0usize;
+    for count in &freq {
+        running += *count;
+        kill_prob.push(running as f64 / trials as f64);
     }
-    for prob in &mut kill_prob {
-        *prob /= trials as f64;
-    }
-    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
+
+    // let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
 
     // Collect results for each monster (if you have more than one)
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
-    let encounter_kill_times = kill_prob.clone();
-    let kill_times = kill_prob.clone();
+    // let encounter_kill_times = kill_prob.clone();
 
     let expected_ttk = mean_ttk;
     let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
@@ -260,19 +272,14 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
             "expected_seconds": 0.0,
             "combat_type": best_style.attack_type,
             "attack_style": best_style.combat_style,
-            "kill_times": kill_times,
         });
         results.push(result);
     }
-    
-    // Convert encounter_kill_times to JSON object array
-    let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()
-        .map(|(idx, &prob)| {
-            serde_json::json!({
-                "tick": idx,
-                "probability": prob
-            })
-        })
+
+    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob
+        .iter()
+        .enumerate()
+        .map(|(idx, &prob)| serde_json::json!({ "tick": idx, "probability": prob }))
         .collect();
 
     serde_json::json!({

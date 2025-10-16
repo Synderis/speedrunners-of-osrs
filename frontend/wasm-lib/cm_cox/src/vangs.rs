@@ -1,8 +1,11 @@
 use rand::prelude::*;
+use rand::rngs::SmallRng;
+use rand::SeedableRng;
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
 use std::collections::HashMap;
+use rand::distributions::{Uniform, Distribution};
 
 fn can_attack_vang(
     vang_hps: &HashMap<String, i32>,
@@ -50,8 +53,13 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
     let _room_methods = payload.room.methods;
     let spec_count_dict = payload.room.special_attacks;
     let mut spec_count_max = 0;
-    let trials = 100000; // Reduce for debug
-    let mut rng = rand::thread_rng();
+    let trials = 100000;
+
+    // 🔧 Faster, WASM-friendly RNG with entropy
+    let mut rng = SmallRng::from_entropy();
+
+// before loop
+    let thrall_dmg = Uniform::new_inclusive(0, 3);
 
     // Defensive: Check monsters
     if monsters.len() < 3 {
@@ -115,6 +123,12 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
     accuracies.insert("ranged".to_string(), best_style_ranged.accuracy);
     accuracies.insert("spec".to_string(), best_style_spec.accuracy);
 
+    // 🔧 Precompute integer thresholds for accuracy rolls (fast + precise)
+    let to_threshold = |p: f64| -> u32 {
+        (p.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32
+    };
+    let spec_threshold = to_threshold(accuracies["spec"]);
+
     let mut attack_speeds = HashMap::new();
     attack_speeds.insert("mage".to_string(), best_style_mage.attack_speed);
     attack_speeds.insert("melee".to_string(), best_style_melee.attack_speed);
@@ -122,7 +136,22 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
     attack_speeds.insert("spec".to_string(), best_style_spec.attack_speed);
 
     let mut hit_delay_map = HashMap::new();
-    hit_delay_map.insert("mage".to_string(), if player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 2 } else { 1 });
+    hit_delay_map.insert(
+        "mage".to_string(),
+        if player
+            .gear_sets
+            .mage
+            .selected_weapon
+            .as_ref()
+            .unwrap()
+            .name
+            == "Tumeken's shadow"
+        {
+            2
+        } else {
+            1
+        },
+    );
     hit_delay_map.insert("melee".to_string(), 0);
     hit_delay_map.insert("ranged".to_string(), 1);
 
@@ -138,8 +167,9 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
         let mut initial_burn_tick = 0;
         let mut current_attack_phase_tick = 0;
         let mut last_vang_attacked = String::new();
-        let spawn_delay = rng.gen_range(1..=4) + 6;
 
+        // uses SmallRng instance
+        let spawn_delay = rng.gen_range(1..=4) + 6;
 
         loop {
             // Exit immediately if all vangs are dead
@@ -165,7 +195,8 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 
             let mut attack_combat_type: Option<String> = None;
             if tick >= cooldown {
-                let ready_types: Vec<String> = vang_hps_trial.iter()
+                let ready_types: Vec<String> = vang_hps_trial
+                    .iter()
                     .filter_map(|(combat_type, &hp)| if hp > 0 { Some(combat_type.clone()) } else { None })
                     .collect();
 
@@ -173,7 +204,14 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
                 sorted_types.sort_by_key(|combat_type| -vang_hps_trial[combat_type]);
 
                 for combat_type in &sorted_types {
-                    if can_attack_vang(&vang_hps_trial, combat_type, max_hits[combat_type], 0.4, hp_reset_threshold, max_hp) {
+                    if can_attack_vang(
+                        &vang_hps_trial,
+                        combat_type,
+                        max_hits[combat_type],
+                        0.4,
+                        hp_reset_threshold,
+                        max_hp,
+                    ) {
                         attack_combat_type = Some(combat_type.clone());
                         break;
                     }
@@ -188,10 +226,11 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
                         cooldown = tick + attack_speeds["spec"];
                         spec_count -= 1;
                         if voidwaker {
-                            // Voidwaker special: guaranteed hit with 50%-150% damage range
+                            // Voidwaker special: uses shared function
                             dmg_modifier_check(&mut rng, max_hits["spec"], accuracies["spec"], "Voidwaker")
                         } else if burning_claws {
-                            let (hits, new_burns) = burning_barrage_special(&mut rng, max_hits["spec"], accuracies["spec"]);
+                            let (hits, new_burns) =
+                                burning_barrage_special(&mut rng, max_hits["spec"], accuracies["spec"]);
                             if initial_burn_tick == 0 && !new_burns.is_empty() && burns.is_empty() {
                                 initial_burn_tick = 1;
                             }
@@ -203,8 +242,8 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
                             }
                             hits.iter().sum()
                         } else {
-                            // Other special attacks - use normal accuracy roll
-                            if rng.gen::<f64>() < accuracies["spec"] {
+                            // 🔧 Integer threshold accuracy roll (fastest)
+                            if rng.next_u32() <= spec_threshold {
                                 rng.gen_range(0..=max_hits["spec"]).max(1)
                             } else {
                                 0
@@ -213,7 +252,12 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
                     } else {
                         cooldown = tick + attack_speeds[combat_type];
                         if *combat_type == "melee" {
-                            dmg_modifier_check(&mut rng, max_hits[combat_type], accuracies[combat_type], &weapon_name)
+                            dmg_modifier_check(
+                                &mut rng,
+                                max_hits[combat_type],
+                                accuracies[combat_type],
+                                &weapon_name,
+                            )
                         } else {
                             dmg_modifier_check(&mut rng, max_hits[combat_type], accuracies[combat_type], "Other")
                         }
@@ -235,7 +279,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
             }
             if immune_ticks_left == 0 {
                 if (current_attack_phase_tick - 1) % 4 == 0 {
-                    let thrall_hit = rng.gen_range(0..=3);
+                    let thrall_hit = thrall_dmg.sample(&mut rng);
                     let thrall_dmg_hp = vang_hps_trial[last_vang_attacked.as_str()];
                     vang_hps_trial.insert(last_vang_attacked.clone(), (thrall_dmg_hp - thrall_hit).max(0));
                 }
@@ -246,7 +290,11 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
         let overkill = if &last_vang_attacked == "melee" {
             1
         } else {
-            let range_max = if attack_speeds[&last_vang_attacked] > 4 { 4 * attack_speeds[&last_vang_attacked] } else { 4 };
+            let range_max = if attack_speeds[&last_vang_attacked] > 4 {
+                4 * attack_speeds[&last_vang_attacked]
+            } else {
+                4
+            };
             if rng.gen_range(1..=range_max) == 1 { 1 } else { 0 }
         };
         let hit_delay = hit_delay_map[&last_vang_attacked];
@@ -298,7 +346,6 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
         "expected_seconds": 0.0,
         "combat_type": best_style_mage.attack_type,
         "attack_style": best_style_mage.combat_style,
-        "kill_times": kill_prob.clone(),
     });
     results.push(result_mage);
 
@@ -310,7 +357,6 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
         "expected_seconds": 0.0,
         "combat_type": best_style_melee.attack_type,
         "attack_style": best_style_melee.combat_style,
-        "kill_times": kill_prob.clone(),
     });
     results.push(result_melee);
 
@@ -322,12 +368,13 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
         "expected_seconds": 0.0,
         "combat_type": best_style_ranged.attack_type,
         "attack_style": best_style_ranged.combat_style,
-        "kill_times": kill_prob.clone(),
     });
     results.push(result_ranged);
 
     // Convert encounter_kill_times to JSON object array
-    let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()
+    let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times
+        .iter()
+        .enumerate()
         .map(|(idx, &prob)| {
             serde_json::json!({
                 "tick": idx,
@@ -345,4 +392,3 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
         "phase_results": phase_list,
     }).to_string()
 }
-

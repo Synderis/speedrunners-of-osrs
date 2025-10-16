@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct CombatStats {
     pub attack: i32,
     pub strength: i32,
@@ -42,7 +42,7 @@ pub struct GearDefensive {
     pub ranged: i32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct GearStats {
     pub bonuses: GearBonuses,
     pub offensive: GearOffensive,
@@ -85,7 +85,7 @@ pub struct SelectedItem {
     pub defensive: Option<GearDefensive>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct GearSetData {
     #[serde(rename = "gearStats")]
     pub gear_stats: GearStats,
@@ -97,7 +97,7 @@ pub struct GearSetData {
     pub gear_items: Vec<Option<SelectedItem>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct AllGearSets {
     pub melee: GearSetData,
     pub mage: GearSetData,
@@ -110,7 +110,7 @@ pub struct InventoryItem {
     pub equipment: Option<SelectedItem>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Player {
     #[serde(rename = "combatStats")]
     pub combat_stats: CombatStats,
