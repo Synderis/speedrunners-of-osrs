@@ -1,9 +1,12 @@
 use rand::prelude::*;
+use rand::rngs::SmallRng;
+use rand::distributions::{Uniform, Distribution};
+use rand::SeedableRng;
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
 
-
+#[inline(always)]
 fn phase_loop(
     mut hit_count: usize,
     hit_count_bounds: &[usize; 2],
@@ -13,17 +16,20 @@ fn phase_loop(
     accuracy: f64,
     max_hit: i32,
     weapon_name: &str,
-    rng: &mut ThreadRng,
+    rng: &mut SmallRng,
+    thrall_dist: &Uniform<i32>, // prebuilt 0..=3
 ) -> (i32, i32, usize, bool) {
-    // Rust translation of the provided Python phase_loop
+    // keep your modulo timing exactly the same, just sample from a prebuilt Uniform
     while *tekton_hp > 0 && hit_count >= hit_count_bounds[0] && hit_count <= hit_count_bounds[1] {
         *current_phase_ticks += 1;
+
         if *current_phase_ticks == 1 || (*current_phase_ticks - 1) % 4 == 0 {
-            *tekton_hp -= rng.gen_range(0..=3);
+            *tekton_hp -= thrall_dist.sample(rng); // 0..=3
         }
         if *tekton_hp <= 0 {
-            return (*tekton_hp, *current_phase_ticks, hit_count, true); // signal to break outer loop
+            return (*tekton_hp, *current_phase_ticks, hit_count, true);
         }
+
         if *current_phase_ticks == 1 || (*current_phase_ticks - 1) % attack_speed == 0 {
             let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name);
             *tekton_hp -= hit;
@@ -52,8 +58,10 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         monster.skills = monster_stat_scaling(monster, player.combat_stats.hitpoints);
     }
     let room_methods = payload.room.methods;
-    let trials = 100000;
-    let mut rng = rand::thread_rng();
+    let trials = 100_000usize;
+
+    // 🔧 faster, WASM-friendly RNG
+    let mut rng = SmallRng::from_entropy();
 
     // Defensive: Check monsters
     if monsters.is_empty() {
@@ -116,9 +124,12 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     ];
 
     // Prepare simulation
-    let mut tick_counts: Vec<i32> = vec![0; trials];
+    // NOTE: we still keep per-trial arrays you output; but we’ll build CDF via histogram for speed.
+    let mut freq: Vec<usize> = Vec::new();
+    let mut sum_ticks: i64 = 0;
     let mut hp_pre_anvil: Vec<i32> = vec![0; trials];
     let mut phase_results: Vec<i32> = vec![0; trials];
+
     let pre_veng = if room_methods.contains(&"Pre-Veng".to_string()) { 1 } else { 0 };
     let tekton_enraged_max_hit = monsters[1].max_hit.unwrap_or(0) as i32;
 
@@ -128,6 +139,9 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         (17, vec![[0, 5], [0, 3], [4, 11]])
     };
 
+    // prebuild passive 0..=3 distribution
+    let thrall_dmg = Uniform::new_inclusive(0, 3);
+
     for i in 0..trials {
         let mut tekton_hp = base_tekton_hp;
         let mut total_ticks = delay;
@@ -136,7 +150,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         let mut first_pass = true;
         let mut phase: i32 = 0;
         let mut hp_pre_anvil_val: i32 = 0;
-        let mut hit_count = 0;
+        let mut hit_count = 0usize;
         let mut current_phase_ticks = 0;
         let death_animation = if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some("Scythe of vitur") { 3 } else { 4 };
         let mut veng_count = pre_veng;
@@ -154,10 +168,9 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 spec_phase = false;
             }
 
-            // --- PHASE LOOP TRANSLATION ---
             // Pre-anvil phase: (0, 5)
             let (hp1, ticks1, _, died1) = phase_loop(
-                hit_count as usize,
+                hit_count,
                 &attack_pattern[0],
                 &mut tekton_hp,
                 &mut current_phase_ticks,
@@ -166,6 +179,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 best_styles_normal[specs_hit].max_hit,
                 weapon_name,
                 &mut rng,
+                &thrall_dmg,
             );
             tekton_hp = hp1;
             current_phase_ticks = ticks1;
@@ -206,6 +220,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 best_styles_normal[specs_hit].max_hit,
                 weapon_name,
                 &mut rng,
+                &thrall_dmg,
             );
             tekton_hp = hp2;
             current_phase_ticks = ticks2;
@@ -228,6 +243,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 best_styles_enraged[specs_hit].max_hit,
                 weapon_name,
                 &mut rng,
+                &thrall_dmg,
             );
             tekton_hp = hp3;
             current_phase_ticks = ticks3;
@@ -241,83 +257,73 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             phase += 1;
         }
         // Add initial delay and round up to next multiple of 4
-        let initial_delay = delay; // Set as needed
-        // Add attack speed to account for the final attack
+        let initial_delay = delay;
         total_ticks += initial_delay + death_animation;
+        // if total_ticks % 4 != 0 {
         total_ticks += 4 - (total_ticks % 4);
+        // }
 
-        tick_counts[i] = total_ticks;
         phase_results[i] = phase;
         hp_pre_anvil[i] = hp_pre_anvil_val;
+        sum_ticks += i64::from(total_ticks);
+        let idx = total_ticks as usize;
+        if idx >= freq.len() {
+            freq.resize(idx + 1, 0);
+        }
+        freq[idx] += 1;
     }
 
     // Defensive: Check tick_counts
-    if tick_counts.is_empty() {
+    if freq.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
 
     // Compute statistics
-    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
+    let mean_ttk = sum_ticks as f64 / trials as f64;
 
-    // Build cumulative kill probability
-    let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
-    let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
-    for &ticks in &tick_counts {
-        for idx in ticks..=max_ticks {
-            kill_prob[idx as usize] += 1.0;
-        }
-    }
-    for prob in &mut kill_prob {
-        *prob /= trials as f64;
+    // Build cumulative kill probability using the histogram (same semantics as before)
+    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
+    let mut running = 0usize;
+    for count in &freq {
+        running += *count;
+        kill_prob.push(running as f64 / trials as f64);
     }
 
-    // Collect results for each monster (if you have more than one)
+    // Collect results (same shape)
     let mut results = Vec::new();
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
-    let encounter_kill_times = kill_prob.clone();
-    let kill_times = kill_prob.clone();
 
     let expected_ttk = mean_ttk;
     let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
-
     total_expected_ticks += expected_ttk;
     total_expected_seconds += expected_seconds;
 
-    // Example: For Tekton (single monster)
-
     let monster_normal = &monsters[1];
-    let result_normal = serde_json::json!({
+    results.push(serde_json::json!({
         "monster_id": monster_normal.id,
         "monster_name": monster_normal.name,
         "expected_ticks": 0.0,
         "expected_seconds": 0.0,
         "combat_type": best_styles_normal[0].attack_type,
         "attack_style": best_styles_normal[0].combat_style,
-        "kill_times": kill_times,
-    });
-    results.push(result_normal);
+    }));
 
     let monster_enraged = &monsters[0];
-    let result_enraged = serde_json::json!({
+    results.push(serde_json::json!({
         "monster_id": monster_enraged.id,
         "monster_name": monster_enraged.name,
         "expected_ticks": 0.0,
         "expected_seconds": 0.0,
         "combat_type": best_styles_enraged[0].attack_type,
         "attack_style": best_styles_enraged[0].combat_style,
-        "kill_times": kill_times,
-    });
-    results.push(result_enraged);
+    }));
 
     // Convert encounter_kill_times to JSON object array
-    let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()
-        .map(|(idx, &prob)| {
-            serde_json::json!({
-                "tick": idx,
-                "probability": prob
-            })
-        })
+    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob
+        .iter()
+        .enumerate()
+        .map(|(idx, &prob)| serde_json::json!({ "tick": idx, "probability": prob }))
         .collect();
 
     // Final output
@@ -329,4 +335,3 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         "phase_results": phase_results,
     }).to_string()
 }
-

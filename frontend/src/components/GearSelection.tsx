@@ -1,6 +1,6 @@
 import GearModelCard from './GearModelCard';
 import Select from 'react-select';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { gearSetPresets, type GearSetType, type GearSetPreset } from '../data/gearTemplates';
 import type { Equipment, InventoryItem } from '../types/player';
@@ -57,22 +57,37 @@ const GearSelection: React.FC<GearSelectionProps> = ({
     localStorage.setItem('customGearSetPresets', JSON.stringify(custom));
     setAllPresets([...gearSetPresets, ...custom]);
   };
-  // Save current gearSets as a new custom preset
-  const handleSavePreset = () => {
-    const name = prompt('Enter a name for your preset:');
-    if (!name) return;
-    const description = prompt('Enter a description (optional):') || '';
+  // Modal-driven save current gearSets as a new custom preset
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [newPresetName, setNewPresetName] = useState('');
+  const [newPresetDescription, setNewPresetDescription] = useState('');
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
-    // Build the rooms array with methods
+  useEffect(() => {
+    if (showSaveModal) {
+      // slight timeout to ensure modal is in DOM
+      requestAnimationFrame(() => {
+        nameInputRef.current?.focus();
+      });
+    }
+  }, [showSaveModal]);
+
+  const handleSavePreset = () => {
+    setNewPresetName('');
+    setNewPresetDescription('');
+    setShowSaveModal(true);
+  };
+
+  const handleConfirmSave = () => {
+    const name = newPresetName.trim();
+    if (!name) return; // require a name
+    const description = newPresetDescription.trim();
+
+    // Build the rooms array with methods and specs
     const rooms = selectedRooms.map(room => ({
       id: room.id,
-      // Always save the current selectedMethods state, even if empty
       methods: selectedMethods[room.id] || [],
-      // Add spec assignment if it exists for this room
-      specs: roomSpecs[room.id] ? Object.entries(roomSpecs[room.id]).map(([weapon, count]) => ({
-        weapon,
-        count
-      })) : undefined
+      specs: roomSpecs[room.id] ? Object.entries(roomSpecs[room.id]).map(([weapon, count]) => ({ weapon, count })) : undefined
     }));
 
     const newPreset: GearSetPreset = {
@@ -80,44 +95,45 @@ const GearSelection: React.FC<GearSelectionProps> = ({
       name,
       description,
       gearSets: {
-        melee: Object.fromEntries(
-          gearSets.melee.map(slot => [
-            slot.slot.toLowerCase().replace('-', ''),
-            slot.selected?.id?.toString() || ''
-          ])
-        ) as Record<string, string>,
-        mage: Object.fromEntries(
-          gearSets.mage.map(slot => [
-            slot.slot.toLowerCase().replace('-', ''),
-            slot.selected?.id?.toString() || ''
-          ])
-        ) as Record<string, string>,
-        ranged: Object.fromEntries(
-          gearSets.ranged.map(slot => [
-            slot.slot.toLowerCase().replace('-', ''),
-            slot.selected?.id?.toString() || ''
-          ])
-        ) as Record<string, string>,
+        melee: Object.fromEntries(gearSets.melee.map(slot => [slot.slot.toLowerCase().replace('-', ''), slot.selected?.id?.toString() || ''])) as Record<string, string>,
+        mage: Object.fromEntries(gearSets.mage.map(slot => [slot.slot.toLowerCase().replace('-', ''), slot.selected?.id?.toString() || ''])) as Record<string, string>,
+        ranged: Object.fromEntries(gearSets.ranged.map(slot => [slot.slot.toLowerCase().replace('-', ''), slot.selected?.id?.toString() || ''])) as Record<string, string>,
       },
       inventoryItems: selectedInventoryItems.map(item => item.equipment?.id?.toString() || ''),
       combatStats: { ...combatStats },
-      rooms, // Save rooms with methods and specs
-      roomSpecs // Add the entire roomSpecs object
+      rooms,
+      roomSpecs
     };
-    console.log('Saving preset:', newPreset);
+    console.log('Saving new preset:', newPreset);
     const custom = allPresets.filter(p => p.id.startsWith('custom_')).concat(newPreset);
     saveCustomPresets(custom);
-    setSelectedPreset(newPreset.id);
+    // Apply the newly created preset immediately so rooms/methods/specs are set
+    restorePreset(newPreset);
+    setShowSaveModal(false);
   };
 
-  // Delete a custom preset
-  const handleDeletePreset = () => {
+  const handleCancelSave = () => setShowSaveModal(false);
+
+  // Delete a custom preset (modal-driven)
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const openDeleteModal = () => {
     if (!selectedPreset || !selectedPreset.startsWith('custom_')) return;
-    if (!window.confirm('Delete this custom preset?')) return;
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!selectedPreset) {
+      setShowDeleteModal(false);
+      return;
+    }
     const custom = allPresets.filter(p => p.id.startsWith('custom_') && p.id !== selectedPreset);
     saveCustomPresets(custom);
     setSelectedPreset('');
+    setShowDeleteModal(false);
   };
+
+  const handleCancelDelete = () => setShowDeleteModal(false);
 
   // Replace loading logic: set gearData from equipment prop
   useEffect(() => {
@@ -198,15 +214,24 @@ const GearSelection: React.FC<GearSelectionProps> = ({
   const [presetMenuOpen, setPresetMenuOpen] = useState(false);
 
   const handlePresetSelect = (presetId: string) => {
-    setSelectedPreset(presetId);
-    setPresetMenuOpen(false);
-    if (!presetId) return;
+    if (!presetId) {
+      setSelectedPreset('');
+      setPresetMenuOpen(false);
+      return;
+    }
     const preset = allPresets.find(p => p.id === presetId);
     if (!preset) return;
+    restorePreset(preset);
+  };
+
+  // Helper to apply a preset object (used both when selecting and after saving)
+  const restorePreset = (preset: GearSetPreset) => {
+    setSelectedPreset(preset.id);
+    setPresetMenuOpen(false);
     requestAnimationFrame(() => {
       setGearSets(prev => {
         const updated = { ...prev };
-        // ...existing code...
+        // restore inventory
         setSelectedInventoryItems(
           (preset.inventoryItems || [])
             .map(id => {
@@ -215,9 +240,9 @@ const GearSelection: React.FC<GearSelectionProps> = ({
             })
             .filter(Boolean) as InventoryItem[]
         );
-        // ...existing code...
+
+        // restore rooms and methods
         if (preset.rooms) {
-          // ...existing code...
           const presetRooms = preset.rooms
             .map(r => {
               const roomObj = rooms.find(room => room.id === r.id);
@@ -258,13 +283,16 @@ const GearSelection: React.FC<GearSelectionProps> = ({
             setRoomSpecs(restoredRoomSpecs);
           }
         }
-        // ...existing code...
+
+        // restore combat stats
         if (preset.combatStats) {
           setCombatStats(prev => ({
             ...prev,
             ...preset.combatStats
           }));
         }
+
+        // restore gear selections for each gear type
         (['melee', 'mage', 'ranged'] as GearSetType[]).forEach(type => {
           updated[type] = prev[type].map(slot => {
             const slotKey = slot.slot.toLowerCase().replace('-', '');
@@ -277,6 +305,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
             }
           });
         });
+
         return updated;
       });
     });
@@ -346,7 +375,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                 </button>
                 <button
                   className="btn delete-preset-btn"
-                  onClick={handleDeletePreset}
+                  onClick={openDeleteModal}
                   style={{ marginLeft: 8 }}
                   disabled={!selectedPreset || !selectedPreset.startsWith('custom_')}
                 >
@@ -357,17 +386,66 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                 {(['melee', 'mage', 'ranged'] as GearSetType[]).map(gearType => (
                   <button
                     key={gearType}
-                    className={`btn clear-type-btn ${gearType}`}
+                    className={`btn type-btn ${gearType}`}
                     onClick={() => clearGearType(gearType)}
                   >
                     Clear {gearType.charAt(0).toUpperCase() + gearType.slice(1)}
                   </button>
                 ))}
-                <button className="btn clear-type-btn all" onClick={clearAllGear}>
+                <button className="btn type-btn all" onClick={clearAllGear}>
                   Clear All
                 </button>
               </div>
             </motion.div>
+
+            {showSaveModal && (
+              <div className="modal-overlay">
+                <div className="modal">
+                  <div className="modal__header">
+                    <h4>Save Preset</h4>
+                  </div>
+                  <div className="modal__body">
+                    <label className="modal__label">Name</label>
+                    <input
+                      ref={nameInputRef}
+                      className="modal__input"
+                      value={newPresetName}
+                      onChange={e => setNewPresetName(e.target.value)}
+                      placeholder="Preset name"
+                    />
+                    <label className="modal__label">Description (optional)</label>
+                    <textarea
+                      className="modal__textarea"
+                      value={newPresetDescription}
+                      onChange={e => setNewPresetDescription(e.target.value)}
+                      placeholder="Short description"
+                    />
+                  </div>
+                  <div className="modal__footer">
+                    <button className="btn type-btn save" onClick={handleConfirmSave}>Save</button>
+                    <button className="btn type-btn cancel" onClick={handleCancelSave}>Cancel</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showDeleteModal && (
+              <div className="modal-overlay">
+                <div className="modal">
+                  <div className="modal__header">
+                    <h4>Delete Preset</h4>
+                  </div>
+                  <div className="modal__body">
+                    <p>Are you sure you want to delete this preset?</p>
+                    <p style={{ fontWeight: 600, marginTop: 8 }}>{allPresets.find(p => p.id === selectedPreset)?.name || ''}</p>
+                  </div>
+                  <div className="modal__footer">
+                    <button className="btn type-btn delete" onClick={handleConfirmDelete}>Delete</button>
+                    <button className="btn type-btn default" onClick={handleCancelDelete}>Cancel</button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <motion.div
               className="stats-bar card"

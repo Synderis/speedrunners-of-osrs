@@ -35,10 +35,13 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
     // ensure_pickaxe_equipped(&mut player.gear_sets.melee, &inventory_items);
     ensure_weapon_swap(&mut player, "Dragon pickaxe", avernic_defender);
     
-    let trials = 100000;
-    let mut rng = rand::thread_rng();
+    let trials = 100_000usize;
+
+    // Faster RNG with variability
+    let mut rng = SmallRng::from_entropy();
     let walk_delay = 28;
-    let mut tick_counts: Vec<i32> = vec![0; trials];
+    let mut freq: Vec<usize> = Vec::new();
+    let mut sum_ticks: i64 = 0;
 
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
     let max_hit = best_style.max_hit;
@@ -47,7 +50,7 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
     let base_hp = monsters[0].skills.hp;
     let mut single_monster_ticks : Vec<f64> = Vec::new();
 
-    for i in 0..trials {
+    for _ in 0..trials {
         let mut tick = 0;
         for _ in &monsters {
             let mut hp = base_hp;
@@ -72,31 +75,35 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
             single_monster_ticks.push(ticks_this_monster as f64);
         }
         tick += rng.gen_range(0..=4);
-        tick_counts[i] = tick + walk_delay;
+        tick += walk_delay;
+        sum_ticks += i64::from(tick);
+        let idx = tick as usize;
+        if idx >= freq.len() {
+            freq.resize(idx + 1, 0);
+        }
+        freq[idx] += 1;
     }
-    // Defensive: Check tick_counts
-    if tick_counts.is_empty() {
+
+    if freq.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
-    // let single_monster_ticks_mean = single_monster_ticks.iter().sum::<f64>() / single_monster_ticks.len() as f64;
-    let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
-    let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
-    for &ticks in &tick_counts {
-        for idx in ticks..=max_ticks {
-            kill_prob[idx as usize] += 1.0;
-        }
+
+    // Compute statistics
+    let mean_ttk = sum_ticks as f64 / trials as f64;
+
+    // Build cumulative kill probability using the histogram (same semantics as before)
+    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
+    let mut running = 0usize;
+    for count in &freq {
+        running += *count;
+        kill_prob.push(running as f64 / trials as f64);
     }
-    for prob in &mut kill_prob {
-        *prob /= trials as f64;
-    }
-    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
 
     // Collect results for each monster (if you have more than one)
     
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
     let encounter_kill_times = kill_prob.clone();
-    let kill_times = kill_prob.clone();
 
     let expected_ttk = mean_ttk;
     let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
@@ -113,7 +120,6 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
             "expected_seconds": 0.0,
             "combat_type": best_style.attack_type,
             "attack_style": best_style.combat_style,
-            "kill_times": kill_times,
         });
         results.push(result);
     }

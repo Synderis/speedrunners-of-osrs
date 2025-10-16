@@ -9,9 +9,7 @@
     grid-template-columns: 1fr auto;
     align-items: center;
     margin-bottom: 1.6rem;
-    /* 2rem * 0.8 */
     padding: 0 0.8rem;
-    /* 1rem * 0.8 */
     position: relative;
 }
 
@@ -26,7 +24,6 @@
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    /* 1rem * 0.8 */
     justify-self: end;
     z-index: 1;
 }
@@ -41,16 +38,9 @@
     background: linear-gradient(135deg, #6b7280, #4b5563);
     white-space: nowrap;
     padding: 9.6px 19.2px;
-    /* 12px 24px * 0.8 */
     font-size: 0.8rem;
-    /* 1rem * 0.8 */
     transition: all 0.3s ease;
 }
-
-/* .clear-room-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #4b5563, #374151);
-    box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
-} */
 
 .clear-room-btn:disabled {
     opacity: 0.5;
@@ -59,16 +49,12 @@
 
 .selected-rooms-display {
     margin-bottom: 1.6rem;
-    /* 2rem * 0.8 */
     padding: 1.2rem;
-    /* 1.5rem * 0.8 */
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 9.6px;
-    /* 12px * 0.8 */
     box-shadow: var(--shadow);
     min-height: 96px;
-    /* 120px * 0.8 */
 }
 
 .selected-rooms-list {
@@ -324,26 +310,18 @@
 .selected-room-methods {
     display: flex;
     flex-direction: row;
-    /* gap: 8px; */
-    /* align-items: center; */
 }
 
 .room-method-buttons {
     display: flex;
     gap: 0.6rem;
     flex-direction: row;
-    /* gap: 8px; */
-    /* 0.75rem * 0.8 */
-    /* flex-wrap: wrap; */
-    /* justify-content: center; */
     margin-top: 1rem;
 }
 
 .spec-dropdown {
     margin-top: 8px;
     padding: 16px;
-    /* background: #2223; */
-    /* background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); */
     background: var(--bg-card);
     border-radius: 6px;
     display: flex;

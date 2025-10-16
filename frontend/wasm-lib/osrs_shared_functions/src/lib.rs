@@ -542,8 +542,62 @@ pub fn monster_hp_scaling(monster: &Monster, combat_stats: &CombatStats) -> i32 
     ((base_hp as f64 * (combat_level as f64 / 126.0)).floor() * cm_scale).floor() as i32
 }
 
+// pub fn burning_barrage_special<R: Rng>(rng: &mut R, max_hit: i32, accuracy: f64) -> (Vec<i32>, Vec<i32>) {
+//     let (hits, burn_chance) = if rng.gen::<f64>() < accuracy {
+//         let max_hit_low = (max_hit as f64 * 0.75).floor() as i32;
+//         let max_hit_high = (max_hit as f64 * 1.75).floor() as i32;
+//         let dmg = rng.gen_range(max_hit_low..=max_hit_high);
+//         let hit1 = (0.25 * dmg as f64).floor() as i32;
+//         let hit2 = (0.25 * dmg as f64).floor() as i32;
+//         let hit3 = (0.5 * dmg as f64).floor() as i32;
+//         (vec![hit1, hit2, hit3], vec![0.15, 0.15, 0.15])
+//     } else if rng.gen::<f64>() < accuracy {
+//         let max_hit_low = (max_hit as f64 * 0.5).floor() as i32;
+//         let max_hit_high = (max_hit as f64 * 1.5).floor() as i32;
+//         let dmg = rng.gen_range(max_hit_low..=max_hit_high);
+//         let hit1 = (0.5 * dmg as f64).floor() as i32 - 1;
+//         let hit2 = (0.5 * dmg as f64).floor() as i32 - 1;
+//         let hit3 = dmg - (hit1 + hit2);
+//         (vec![hit1, hit2, hit3], vec![0.30, 0.30, 0.30])
+//     } else if rng.gen::<f64>() < accuracy {
+//         let max_hit_low = (max_hit as f64 * 0.25).floor() as i32;
+//         let max_hit_high = (max_hit as f64 * 0.75).floor() as i32;
+//         let dmg = rng.gen_range(max_hit_low..=max_hit_high);
+//         let hit3 = dmg - 2;
+//         let hit1 = if dmg >= 2 { 1 } else { 0 };
+//         let hit2 = if dmg >= 2 { 1 } else { 0 };
+//         (vec![hit1, hit2, hit3], vec![0.45, 0.45, 0.45])
+//     } else {
+//         let roll = rng.gen::<f64>();
+//         if roll < 0.2 {
+//             (vec![0], vec![0.0])
+//         } else if roll < 0.6 {
+//             (vec![1], vec![0.0])
+//         } else {
+//             (vec![2], vec![0.0])
+//         }
+//     };
+
+//     let mut burns = Vec::new();
+//     for (i, &chance) in burn_chance.iter().enumerate() {
+//         if chance > 0.0 && rng.gen::<f64>() < chance {
+//             if i == 2 {
+//                 burns.push(9);
+//             } else {
+//                 burns.push(10);
+//             }
+//         }
+//     }
+//     (hits, burns)
+// }
+
 pub fn burning_barrage_special<R: Rng>(rng: &mut R, max_hit: i32, accuracy: f64) -> (Vec<i32>, Vec<i32>) {
-    let (hits, burn_chance) = if rng.gen::<f64>() < accuracy {
+    // 🔧 Precompute integer threshold once per function call
+    let acc_threshold: u32 = (accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
+
+    // --- Main special hit logic ---
+    let (hits, burn_chance): (Vec<i32>, Vec<f64>) = if rng.next_u32() <= acc_threshold {
+        // Strongest variant
         let max_hit_low = (max_hit as f64 * 0.75).floor() as i32;
         let max_hit_high = (max_hit as f64 * 1.75).floor() as i32;
         let dmg = rng.gen_range(max_hit_low..=max_hit_high);
@@ -551,7 +605,8 @@ pub fn burning_barrage_special<R: Rng>(rng: &mut R, max_hit: i32, accuracy: f64)
         let hit2 = (0.25 * dmg as f64).floor() as i32;
         let hit3 = (0.5 * dmg as f64).floor() as i32;
         (vec![hit1, hit2, hit3], vec![0.15, 0.15, 0.15])
-    } else if rng.gen::<f64>() < accuracy {
+    } else if rng.next_u32() <= acc_threshold {
+        // Medium variant
         let max_hit_low = (max_hit as f64 * 0.5).floor() as i32;
         let max_hit_high = (max_hit as f64 * 1.5).floor() as i32;
         let dmg = rng.gen_range(max_hit_low..=max_hit_high);
@@ -559,7 +614,8 @@ pub fn burning_barrage_special<R: Rng>(rng: &mut R, max_hit: i32, accuracy: f64)
         let hit2 = (0.5 * dmg as f64).floor() as i32 - 1;
         let hit3 = dmg - (hit1 + hit2);
         (vec![hit1, hit2, hit3], vec![0.30, 0.30, 0.30])
-    } else if rng.gen::<f64>() < accuracy {
+    } else if rng.next_u32() <= acc_threshold {
+        // Weak variant
         let max_hit_low = (max_hit as f64 * 0.25).floor() as i32;
         let max_hit_high = (max_hit as f64 * 0.75).floor() as i32;
         let dmg = rng.gen_range(max_hit_low..=max_hit_high);
@@ -568,6 +624,7 @@ pub fn burning_barrage_special<R: Rng>(rng: &mut R, max_hit: i32, accuracy: f64)
         let hit2 = if dmg >= 2 { 1 } else { 0 };
         (vec![hit1, hit2, hit3], vec![0.45, 0.45, 0.45])
     } else {
+        // Miss or very small chip damage
         let roll = rng.gen::<f64>();
         if roll < 0.2 {
             (vec![0], vec![0.0])
@@ -578,18 +635,21 @@ pub fn burning_barrage_special<R: Rng>(rng: &mut R, max_hit: i32, accuracy: f64)
         }
     };
 
+    // --- Burn application ---
     let mut burns = Vec::new();
     for (i, &chance) in burn_chance.iter().enumerate() {
-        if chance > 0.0 && rng.gen::<f64>() < chance {
-            if i == 2 {
-                burns.push(9);
-            } else {
-                burns.push(10);
+        if chance > 0.0 {
+            // Convert chance to integer threshold
+            let burn_threshold: u32 = (chance.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
+            if rng.next_u32() <= burn_threshold {
+                burns.push(if i == 2 { 9 } else { 10 });
             }
         }
     }
+
     (hits, burns)
 }
+
 
 pub fn apply_burns(hp: i32, burn_list: &mut Vec<i32>) -> i32 {
     let mut new_hp = hp;
@@ -602,22 +662,65 @@ pub fn apply_burns(hp: i32, burn_list: &mut Vec<i32>) -> i32 {
     });
     new_hp
 }
-pub fn dmg_modifier_check(rng: &mut impl Rng, max_hit: i32, accuracy: f64, weapon: &str) -> i32 {
-    let hit = if weapon == "Scythe of vitur" {
-        let hit_1 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=max_hit).max(1) } else { 0 };
-        let hit_2 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=((max_hit as f64 * 0.5).floor() as i32)) } else { 0 };
-        let hit_3 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=((max_hit as f64 * 0.25).floor() as i32)) } else { 0 };
+// pub fn dmg_modifier_check(rng: &mut impl Rng, max_hit: i32, accuracy: f64, weapon: &str) -> i32 {
+//     let hit = if weapon == "Scythe of vitur" {
+//         let hit_1 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=max_hit).max(1) } else { 0 };
+//         let hit_2 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=((max_hit as f64 * 0.5).floor() as i32)) } else { 0 };
+//         let hit_3 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=((max_hit as f64 * 0.25).floor() as i32)) } else { 0 };
+//         hit_1 + hit_2 + hit_3
+//     } else if weapon == "Voidwaker" {
+//         let lower_bound = (max_hit as f64 * 0.50).floor() as i32;
+//         let upper_bound = (max_hit as f64 * 1.50).floor() as i32;
+//         rng.gen_range(lower_bound..=upper_bound)
+//     } else {
+//         if rng.gen::<f64>() < accuracy {
+//             rng.gen_range(0..=max_hit).max(1)
+//         } else {
+//             0
+//         }
+//     };
+//     hit
+// }
+
+pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64, weapon: &str) -> i32 {
+    // Convert accuracy in [0,1] to an inclusive u32 threshold.
+    // Using <= preserves exact probability (no off-by-one bias).
+    let acc_threshold: u32 = (accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
+
+    if weapon == "Scythe of vitur" {
+        // Three independent accuracy rolls, same probability each swing.
+        let hit_1 = if rng.next_u32() <= acc_threshold {
+            rng.gen_range(0..=max_hit).max(1)
+        } else {
+            0
+        };
+
+        let half_max = (max_hit as f64 * 0.5).floor() as i32;
+        let hit_2 = if rng.next_u32() <= acc_threshold {
+            rng.gen_range(0..=half_max)
+        } else {
+            0
+        };
+
+        let quarter_max = (max_hit as f64 * 0.25).floor() as i32;
+        let hit_3 = if rng.next_u32() <= acc_threshold {
+            rng.gen_range(0..=quarter_max)
+        } else {
+            0
+        };
+
         hit_1 + hit_2 + hit_3
     } else if weapon == "Voidwaker" {
+        // Voidwaker special: no accuracy roll here (as in your original code)
         let lower_bound = (max_hit as f64 * 0.50).floor() as i32;
         let upper_bound = (max_hit as f64 * 1.50).floor() as i32;
         rng.gen_range(lower_bound..=upper_bound)
     } else {
-        if rng.gen::<f64>() < accuracy {
+        // Single-roll weapons
+        if rng.next_u32() <= acc_threshold {
             rng.gen_range(0..=max_hit).max(1)
         } else {
             0
         }
-    };
-    hit
+    }
 }

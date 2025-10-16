@@ -1,5 +1,8 @@
 use rand::prelude::*;
 use wasm_bindgen::prelude::*;
+use rand::rngs::SmallRng;
+use rand::distributions::{Distribution, Uniform};
+use rand::SeedableRng;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
 
@@ -10,7 +13,8 @@ fn phase_loop(
     attack_limit: &i32,
     mut total_ticks: i32,
     zaryte_crossbow: bool,
-    rng: &mut ThreadRng,
+    rng: &mut SmallRng,
+    thrall_dist: &Uniform<i32>,
 ) -> (i32, i32, i32) {
     while vasa_attack_tick <= *attack_limit {
         vasa_attack_tick += 1;
@@ -31,7 +35,7 @@ fn phase_loop(
             break;
         }
         if (vasa_attack_tick - 1) % 4 == 0 {
-            vasa_hp -= rng.gen_range(0..=3);
+            vasa_hp -= thrall_dist.sample(rng);
         }
         if vasa_hp <= 0 {
             total_ticks += vasa_attack_tick - 1;
@@ -62,8 +66,10 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
     let room_methods = &payload.room.methods;
     let spec_count_dict = payload.room.special_attacks;
     let mut spec_count_max = 0;
-    let trials = 100000;
-    let mut rng = rand::thread_rng();
+    let trials = 100_000usize;
+
+    // Faster RNG with variability
+    let mut rng = SmallRng::from_entropy();
 
     if monsters.len() < 2 {
         return "{\"error\": \"Room must have at least two monsters (Vasa and Crystal)\"}".to_string();
@@ -77,7 +83,11 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
     let crystal_base_hp = crystal.skills.hp;
 
     let mut phase_results: Vec<i32> = vec![0; trials];
-    let mut tick_counts: Vec<i32> = vec![0; trials];
+    let thrall_dmg = Uniform::new_inclusive(0, 3);
+
+    // Build histogram + running sum instead of storing all tick counts
+    let mut freq: Vec<usize> = Vec::new();
+    let mut sum_ticks: i64 = 0;
     let base_max_attacks_crystal = 70;
     let inventory_items: Vec<SelectedItem> = player
         .inventory
@@ -145,7 +155,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
             crystal_hp = crystal_base_hp;
             if pre_crystal_phase == true {
                 let (new_vasa_hp, new_vasa_attack_tick, new_total_ticks) = phase_loop(
-                    vasa_hp, vasa_attack_tick, &best_style_vasa, &attack_pattern[0], total_ticks, zaryte_crossbow, &mut rng
+                    vasa_hp, vasa_attack_tick, &best_style_vasa, &attack_pattern[0], total_ticks, zaryte_crossbow, &mut rng, &thrall_dmg
                 );
                 let mut spec_dmg = 0;
                 let mut spec_ticks = 0;
@@ -175,7 +185,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                     hit_crystal = dmg_modifier_check(&mut rng, best_style_crystal.max_hit, best_style_crystal.accuracy, &weapon_name);
                 }
                 if (crystal_attack_tick - 1) % 4 == 0 {
-                    hit_crystal += rng.gen_range(0..=3);
+                    hit_crystal += thrall_dmg.sample(&mut rng);
                 }
                 crystal_hp -= hit_crystal;
                 if crystal_attack_tick_total >= max_attacks_crystal {
@@ -185,7 +195,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                     vasa_hp = std::cmp::min(vasa_hp, vasa_base_hp);
                     // Pre teleport dmg phase
                     let (new_vasa_hp, new_vasa_attack_tick, new_total_ticks) = phase_loop(
-                        vasa_hp, vasa_attack_tick, &best_style_vasa, &attack_pattern[1], total_ticks, false, &mut rng
+                        vasa_hp, vasa_attack_tick, &best_style_vasa, &attack_pattern[1], total_ticks, false, &mut rng, &thrall_dmg
                     );
                     vasa_hp = new_vasa_hp;
                     vasa_attack_tick = new_vasa_attack_tick;
@@ -211,7 +221,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
             }
             vasa_attack_tick = 0;
             let (new_vasa_hp, new_vasa_attack_tick, new_total_ticks) = phase_loop(
-                vasa_hp, vasa_attack_tick, &best_style_vasa, &attack_pattern[2], total_ticks, false, &mut rng
+                vasa_hp, vasa_attack_tick, &best_style_vasa, &attack_pattern[2], total_ticks, false, &mut rng, &thrall_dmg
             );
             vasa_hp = new_vasa_hp;
             vasa_attack_tick = new_vasa_attack_tick;
@@ -222,29 +232,28 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         }
         total_ticks += initial_delay + hit_delay + 2 + death_animation - overkill;
         phase_results[i] = crystal_count;
-        tick_counts[i] = total_ticks;
-    }
-    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
-    // let std_ttk = ... (unused)
-    let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
-    let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
-    for &ticks in &tick_counts {
-        for idx in ticks..=max_ticks {
-            kill_prob[idx as usize] += 1.0;
+        sum_ticks += i64::from(total_ticks);
+        let idx = total_ticks as usize;
+        if idx >= freq.len() {
+            freq.resize(idx + 1, 0);
         }
-    }
-    for prob in &mut kill_prob {
-        *prob /= trials as f64;
+        freq[idx] += 1;
     }
 
-    // For encounter_kill_times_obj
-    let kill_prob_by_tick = kill_prob.clone();
-    let tick_list: Vec<i32> = (0..=max_ticks).collect();
+    if freq.is_empty() {
+        return "{\"error\": \"No tick counts generated\"}".to_string();
+    }
 
+    // Compute statistics
+    let mean_ttk = sum_ticks as f64 / trials as f64;
 
-    // Collect results for each monster (if you have more than one)
-    // let encounter_attack_speed = vasa_attack_speed; // or whatever is appropriate
-    let kill_times = kill_prob.clone();
+    // Build cumulative kill probability using the histogram (same semantics as before)
+    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
+    let mut running = 0usize;
+    for count in &freq {
+        running += *count;
+        kill_prob.push(running as f64 / trials as f64);
+    }
 
     // let expected_hits = mean_ttk / encounter_attack_speed as f64; // or however you calculate it
     let expected_ttk = mean_ttk;
@@ -257,7 +266,6 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         "expected_seconds": 0.0,
         "combat_type": best_style_vasa.attack_type,
         "attack_style": best_style_vasa.combat_style,
-        "kill_times": kill_times,
     });
 
     // Results for Crystal (example, you may want to use actual values for crystal)
@@ -268,19 +276,15 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         "expected_seconds": 0.0, // Replace with actual expected seconds for crystal if available
         "combat_type": best_style_crystal.attack_type,
         "attack_style": best_style_crystal.combat_style,
-        "kill_times": Vec::<f64>::new(), // Replace with actual kill times for crystal if available
     });
 
     let results = vec![vasa_result, crystal_result];
 
     // Encounter kill times (for plotting, etc.)
-    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob_by_tick.iter().enumerate()
-        .map(|(idx, &prob)| {
-            serde_json::json!({
-                "tick": tick_list[idx],
-                "probability": prob
-            })
-        })
+    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob
+        .iter()
+        .enumerate()
+        .map(|(idx, &prob)| serde_json::json!({ "tick": idx, "probability": prob }))
         .collect();
 
     serde_json::json!({

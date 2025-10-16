@@ -1,5 +1,7 @@
 use rand::prelude::*;
 use wasm_bindgen::prelude::*;
+use rand::rngs::SmallRng;
+use rand::SeedableRng;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
 
@@ -21,9 +23,12 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
         monster.skills = monster_stat_scaling(monster, player.combat_stats.hitpoints);
     }
 
-    let trials = 100000;
-    let mut tick_counts: Vec<i32> = vec![0; trials];
-    let mut rng = rand::thread_rng();
+    let trials = 100_000usize;
+
+    // Faster RNG with variability
+    let mut rng = SmallRng::from_entropy();
+    let mut freq: Vec<usize> = Vec::new();
+    let mut sum_ticks: i64 = 0;
     let walk_delay = 21;
     let death_animation = 4;
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string(), "ranged".to_string()]);
@@ -40,7 +45,7 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
         .collect();
     let zaryte_crossbow = inventory_items.iter().any(|item| item.name == "Zaryte crossbow");
 
-    for i in 0..trials {
+    for _ in 0..trials {
         let mut tick = 0;
         for _monster in &monsters {
             let mut hp = base_hp;
@@ -70,31 +75,34 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
         }
         tick += walk_delay + hit_delay + death_animation;
         tick += rng.gen_range(0..=4);
-        tick_counts[i] = tick;
+        sum_ticks += i64::from(tick);
+        let idx = tick as usize;
+        if idx >= freq.len() {
+            freq.resize(idx + 1, 0);
+        }
+        freq[idx] += 1;
     }
     // Defensive: Check tick_counts
-    if tick_counts.is_empty() {
+    if freq.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
 
-    let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
-    let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
-    for &ticks in &tick_counts {
-        for idx in ticks..=max_ticks {
-            kill_prob[idx as usize] += 1.0;
-        }
+    // Compute statistics
+    let mean_ttk = sum_ticks as f64 / trials as f64;
+
+    // Build cumulative kill probability using the histogram (same semantics as before)
+    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
+    let mut running = 0usize;
+    for count in &freq {
+        running += *count;
+        kill_prob.push(running as f64 / trials as f64);
     }
-    for prob in &mut kill_prob {
-        *prob /= trials as f64;
-    }
-    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
 
     // Collect results for each monster (if you have more than one)
     
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
     let encounter_kill_times = kill_prob.clone();
-    let kill_times = kill_prob.clone();
 
     let expected_ttk = mean_ttk;
     let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
@@ -111,7 +119,6 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
             "expected_seconds": 0.0,
             "combat_type": best_style.attack_type,
             "attack_style": best_style.combat_style,
-            "kill_times": kill_times,
         });
         results.push(result);
     }

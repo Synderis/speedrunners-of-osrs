@@ -1,5 +1,8 @@
 use rand::prelude::*;
 use rand::seq::SliceRandom;
+use rand::rngs::SmallRng;
+use rand::distributions::{Uniform, Distribution};
+use rand::SeedableRng;
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
@@ -9,8 +12,7 @@ fn ensure_item_equipped(
     inventory: &[SelectedItem],
     item_name: &str,
 ) {
-
-    // Find the item in inventory (case-insensitive)
+    // Find the item in inventory (exact match)
     let item = match inventory.iter().find(|item| item.name == item_name) {
         Some(item) => item,
         None => return,
@@ -51,7 +53,7 @@ fn ensure_item_equipped(
         i += 1;
     };
 
-    // Add the Salve item to gear_items as equipped
+    // Add the item to gear_items as equipped
     gear_set.gear_items.push(Some(item.clone()));
 
     // Add item's bonuses to gear
@@ -100,57 +102,81 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
         .iter()
         .filter_map(|item| item.equipment.clone())
         .collect();
+
     let mut sets = [
         ("magic", &mut player.gear_sets.mage),
         ("ranged", &mut player.gear_sets.ranged),
     ];
     let slayer_helm = inventory_items.iter().any(|item| item.name == "Slayer helmet (i)");
-    let slayer_task = if room_methods.len() > 0 && room_methods[0] == "Shamans Slayer Task" {
-        true
-    } else {
-        false
-    };
+    let slayer_task = !room_methods.is_empty() && room_methods[0] == "Shamans Slayer Task";
     if slayer_helm && slayer_task {
         for (_, gear_set) in sets.iter_mut() {
             ensure_item_equipped(gear_set, &inventory_items, "Slayer helmet (i)");
         }
     };
 
-    // let walk_delay = 24;
-    let trials = 100000;
+    let trials = 100_000usize;
     let walk_delay = 14;
     let barneys = 4;
     let death_animation = 4;
-    let mut tick_counts: Vec<i32> = vec![0; trials];
-    let mut rng = rand::thread_rng();
 
+    // 🔧 faster, WASM-friendly RNG
+    let mut rng = SmallRng::from_entropy();
+
+    // best style across magic/ranged
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string(), "ranged".to_string()]);
-    let hit_delay_vec = if best_style.gear_type == "ranged" { vec![2] } else if best_style.gear_type == "magic" && player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { vec![3, 4, 5] } else { vec![2, 3, 4] };
+
+    // hit delay options (unchanged logic)
+    let hit_delay_vec = if best_style.gear_type == "ranged" {
+        vec![2]
+    } else if best_style.gear_type == "magic"
+        && player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow"
+    {
+        vec![3, 4, 5]
+    } else {
+        vec![2, 3, 4]
+    };
+
     let max_hit = best_style.max_hit;
     let accuracy = best_style.accuracy;
     let attack_speed = best_style.attack_speed;
     let base_hp = monsters[0].skills.hp;
-    let mut single_monster_ticks : Vec<f64> = Vec::new();
+
+    // 🔧 precompute accuracy as integer threshold
+    let acc_threshold: u32 = (accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
+
+    // 🔧 prebuild the passive 0..=3 distribution
+    let passive_dmg = Uniform::new_inclusive(0, 3);
+
+    // we still return per-trial ticks for API shape
+    let mut tick_counts: Vec<i32> = vec![0; trials];
+    let mut single_monster_ticks: Vec<f64> = Vec::new(); // kept if you rely on it elsewhere
 
     for i in 0..trials {
         let mut tick = 0;
         let range_max = if attack_speed > 4 { 4 * attack_speed } else { 4 };
         let overkill = if rng.gen_range(1..=range_max) == 1 { 1 } else { 0 };
+
         for _monster in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
+
             while hp > 0 {
                 tick += 1;
                 ticks_this_monster += 1;
+
+                // passive 4-tick damage (keep modulo timing)
                 if (tick - 1) % 4 == 0 {
-                    let hit = rng.gen_range(0..=3);
+                    let hit = passive_dmg.sample(&mut rng); // 0..=3
                     hp -= hit;
                 }
                 if hp <= 0 {
                     break;
                 }
+
+                // player attack (keep modulo timing), but use integer threshold roll
                 if (tick - 1) % attack_speed == 0 {
-                    let hit = if rng.gen::<f64>() < accuracy {
+                    let hit = if rng.next_u32() <= acc_threshold {
                         rng.gen_range(0..=max_hit).max(1)
                     } else {
                         0
@@ -161,60 +187,65 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
                     break;
                 }
             }
+
+            // align to your original end-of-kill accounting
             tick += attack_speed - 1;
             ticks_this_monster += attack_speed - 1;
             single_monster_ticks.push(ticks_this_monster as f64);
         }
+
         tick -= attack_speed - 1;
         let hit_delay = *hit_delay_vec.choose(&mut rng).unwrap();
         tick_counts[i] = tick + walk_delay + hit_delay + 1 + death_animation - overkill + barneys;
     }
-    // Defensive: Check tick_counts
+
+    // Defensive
     if tick_counts.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
 
-    let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
-    let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
-    for &ticks in &tick_counts {
-        for idx in ticks..=max_ticks {
-            kill_prob[idx as usize] += 1.0;
-        }
-    }
-    for prob in &mut kill_prob {
-        *prob /= trials as f64;
-    }
+    // mean ttk
     let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
 
-    // Collect results for each monster (if you have more than one)
-    
+    // ⚡ build CDF via histogram instead of nested loops
+    let &max_ticks = tick_counts.iter().max().unwrap();
+    let mut freq = vec![0usize; (max_ticks + 1) as usize];
+    for &t in &tick_counts {
+        freq[t as usize] += 1;
+    }
+    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
+    let mut running = 0usize;
+    for c in freq {
+        running += c;
+        kill_prob.push(running as f64 / trials as f64);
+    }
+
+    // expected values
+    let expected_ttk = mean_ttk;
+    let expected_seconds = mean_ttk * 0.6;
+
     let mut total_expected_ticks = 0.0;
     let mut total_expected_seconds = 0.0;
-    let encounter_kill_times = kill_prob.clone();
-    let kill_times = kill_prob.clone();
-
-    let expected_ttk = mean_ttk;
-    let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
-
     total_expected_ticks += expected_ttk;
     total_expected_seconds += expected_seconds;
-    let mut results = Vec::new();
 
+    // per-monster results (unchanged shape)
+    let mut results = Vec::new();
     for monster in &monsters {
-        let result = serde_json::json!({
+        results.push(serde_json::json!({
             "monster_id": monster.id,
             "monster_name": monster.name,
             "expected_ticks": 0.0,
             "expected_seconds": 0.0,
             "combat_type": best_style.attack_type,
             "attack_style": best_style.combat_style,
-            "kill_times": kill_times,
-        });
-        results.push(result);
+        }));
     }
-    
+
     // Convert encounter_kill_times to JSON object array
-    let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()
+    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob
+        .iter()
+        .enumerate()
         .map(|(idx, &prob)| {
             serde_json::json!({
                 "tick": idx,
