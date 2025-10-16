@@ -244,54 +244,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
 
-    // Compute statistics
-    let mean_ttk = sum_ticks as f64 / trials as f64;
-
-    // Build cumulative kill probability using the histogram (same semantics as before)
-    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
-    let mut running = 0usize;
-    for count in &freq {
-        running += *count;
-        kill_prob.push(running as f64 / trials as f64);
-    }
-
-    // let expected_hits = mean_ttk / encounter_attack_speed as f64; // or however you calculate it
-    let expected_ttk = mean_ttk;
-    let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
-
-    let vasa_result = serde_json::json!({
-        "monster_id": vasa.id,
-        "monster_name": vasa.name,
-        "expected_ticks": 0.0,
-        "expected_seconds": 0.0,
-        "combat_type": best_style_vasa.attack_type,
-        "attack_style": best_style_vasa.combat_style,
-    });
-
-    // Results for Crystal (example, you may want to use actual values for crystal)
-    let crystal_result = serde_json::json!({
-        "monster_id": crystal.id,
-        "monster_name": crystal.name,
-        "expected_ticks": 0.0, // Replace with actual expected ticks for crystal if available
-        "expected_seconds": 0.0, // Replace with actual expected seconds for crystal if available
-        "combat_type": best_style_crystal.attack_type,
-        "attack_style": best_style_crystal.combat_style,
-    });
-
-    let results = vec![vasa_result, crystal_result];
-
-    // Encounter kill times (for plotting, etc.)
-    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob
-        .iter()
-        .enumerate()
-        .map(|(idx, &prob)| serde_json::json!({ "tick": idx, "probability": prob }))
-        .collect();
-
-    serde_json::json!({
-        "results": results,
-        "total_expected_ticks": expected_ttk,
-        "total_expected_seconds": expected_seconds,
-        "encounter_kill_times": encounter_kill_times_obj,
-        "phase_results": phase_results,
-    }).to_string()
+    let style_list = vec![best_style_vasa, best_style_crystal];
+    let end_results = results_formatter(&monsters, &style_list, sum_ticks, freq, trials, Vec::new(), phase_results);
+    end_results
 }

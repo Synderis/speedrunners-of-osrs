@@ -340,16 +340,21 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
     // 🔧 small, fast RNG (WASM-friendly)
     let mut rng = SmallRng::from_entropy();
 
-    // per-trial outputs
-    let mut tick_counts: Vec<i32> = vec![0; trials];
+    // per-trial phase outputs and histogram
     let mut ice_demon_pop_time: Vec<i32> = vec![0; trials];
+    let mut freq: Vec<usize> = Vec::new();
+    let mut sum_ticks: i64 = 0;
 
     for i in 0..trials {
         let mut total_ticks = 0;
         let ice_demon_hp = monsters[0].skills.hp;
 
         total_ticks = chop_simulation(&mut rng, total_ticks, ice_demon_hp as f64);
-        ice_demon_pop_time[i] = total_ticks;
+        ice_demon_pop_time[i] = total_ticks;    
+        // record phase result
+        // note: in previous implementation this was stored per trial index; keep same behaviour
+        // but we don't need to keep per-trial full tick_counts
+        // push later by index; here we just accumulate histogram and sum
 
         let overkill = if rng.gen_range(1..=4) == 1 { 1 } else { 0 };
 
@@ -377,72 +382,22 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
             return "{\"error\": \"No valid weapon found for killing the Ice Demon.\"}".to_string();
         }
 
-        total_ticks += post_chop_delay;
-        total_ticks += 1 + death_animation - overkill;
+    total_ticks += post_chop_delay;
+    total_ticks += 1 + death_animation - overkill;
 
-        tick_counts[i] = total_ticks;
+    // record histogram and running sum
+    sum_ticks += i64::from(total_ticks);
+        let idx = total_ticks as usize;
+        if idx >= freq.len() {
+            freq.resize(idx + 1, 0);
+        }
+        freq[idx] += 1;
     }
 
-    // Defensive
-    if tick_counts.is_empty() {
+    if freq.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
-
-    // mean TTK
-    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
-
-    // ⚡ Build CDF via histogram (faster than nested loops)
-    let &max_ticks = tick_counts.iter().max().unwrap();
-    let mut freq = vec![0usize; (max_ticks + 1) as usize];
-    for &t in &tick_counts {
-        freq[t as usize] += 1;
-    }
-    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
-    let mut running = 0usize;
-    for c in freq {
-        running += c;
-        kill_prob.push(running as f64 / trials as f64);
-    }
-
-    // expected
-    let expected_ttk = mean_ttk;
-    let expected_seconds = mean_ttk * 0.6;
-
-    let mut total_expected_ticks = 0.0;
-    let mut total_expected_seconds = 0.0;
-    total_expected_ticks += expected_ttk;
-    total_expected_seconds += expected_seconds;
-
-    // per-monster results
-    let mut results = Vec::new();
-    for monster in &monsters {
-        results.push(serde_json::json!({
-            "monster_id": monster.id,
-            "monster_name": monster.name,
-            "expected_ticks": 0.0,
-            "expected_seconds": 0.0,
-            "combat_type": best_style.attack_type,
-            "attack_style": best_style.combat_style,
-        }));
-    }
-
-    // encounter_kill_times as {tick, probability}[]
-    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob
-        .iter()
-        .enumerate()
-        .map(|(idx, &prob)| {
-            serde_json::json!({
-                "tick": idx,
-                "probability": prob
-            })
-        })
-        .collect();
-
-    serde_json::json!({
-        "results": results,
-        "total_expected_ticks": total_expected_ticks,
-        "total_expected_seconds": total_expected_seconds,
-        "encounter_kill_times": encounter_kill_times_obj,
-        "phase_results": ice_demon_pop_time,
-    }).to_string()
+    let style_list = vec![best_style.clone()];
+    let end_results = results_formatter(&monsters, &style_list, sum_ticks, freq, trials, ice_demon_pop_time, Vec::new());
+    end_results
 }

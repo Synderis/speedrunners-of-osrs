@@ -1,14 +1,18 @@
 use rand::prelude::*;
 use rand::rngs::SmallRng;
+use rand::distributions::{Uniform, Distribution};
 use rand::SeedableRng;
 use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
 
-/// fast + precise probability → threshold
 #[inline]
-fn to_threshold(p: f64) -> u32 {
-    (p.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32
+fn sample_hit_if<R: Rng>(rng: &mut R, threshold: u32, max_hit: i32) -> i32 {
+    if rng.next_u32() <= threshold {
+        rng.gen_range(0..=max_hit).max(1)
+    } else {
+        0
+    }
 }
 
 fn sim_freeze_mutta(
@@ -21,16 +25,27 @@ fn sim_freeze_mutta(
     // precomputed thresholds
     best_thr_mutta: u32,
     zgs_thr: u32,
+    thrall_dmg: &Uniform<i32>,
 ) -> i32 {
     // DPS down to 40%
+    let mut current_ticks = 0;
     while hp_mutta > (mutta.skills.hp as f64 * 0.4) as i32 {
-        let hit = if rng.next_u32() <= best_thr_mutta {
-            rng.gen_range(0..=best_style_mutta.max_hit).max(1)
+        current_ticks += 1;
+        let tick_index = current_ticks - 1;
+        let can_attack_tick = tick_index % best_style_mutta.attack_speed == 0;
+        let hit = if can_attack_tick {
+            sample_hit_if(rng, best_thr_mutta, best_style_mutta.max_hit)
         } else {
             0
         };
-        total_ticks += best_style_mutta.attack_speed;
-        hp_mutta -= hit;
+
+        let thrall_hit = if tick_index % 4 == 0 {
+            thrall_dmg.sample(rng) // 0..=3
+        } else {
+            0
+        };
+
+        hp_mutta -= hit + thrall_hit;
     }
 
     // ZGS freeze: on miss, heal; on hit, apply hit
@@ -40,18 +55,27 @@ fn sim_freeze_mutta(
         let hit = rng.gen_range(0..=zgs_best_style.max_hit).max(1);
         hp_mutta -= hit;
     }
-    total_ticks += 6;
+    current_ticks += 6;
 
     // Finish
     while hp_mutta > 0 {
-        let hit = if rng.next_u32() <= best_thr_mutta {
-            rng.gen_range(0..=best_style_mutta.max_hit).max(1)
+        current_ticks += 1;
+        let tick_index = current_ticks - 1;
+        let can_attack_tick = tick_index % best_style_mutta.attack_speed == 0;
+        let hit = if can_attack_tick {
+            sample_hit_if(rng, best_thr_mutta, best_style_mutta.max_hit)
         } else {
             0
         };
-        total_ticks += best_style_mutta.attack_speed;
-        hp_mutta -= hit;
+
+        let thrall_hit = if tick_index % 4 == 0 {
+            thrall_dmg.sample(rng) // 0..=3
+        } else {
+            0
+        };
+        hp_mutta -= hit + thrall_hit;
     }
+    total_ticks += current_ticks;
     total_ticks
 }
 
@@ -67,46 +91,62 @@ fn sim_chop_tree(
     rng: &mut SmallRng,
     // precomputed thresholds
     small_mutta_thr: u32,
+    thrall_dmg: &Uniform<i32>,
 ) -> (i32, i32) {
     // Chop the tree, possibly hitting small mutta as you go
+    let mut current_ticks = 0;
     while tree_hp > 0 {
         // tree roll
-        let mut tree_hit = 0;
-        if rng.next_u32() <= tree_thr {
-            tree_hit = rng.gen_range(0..=player.combat_stats.woodcutting);
-        }
+        current_ticks += 1;
+        let tree_hit = if (current_ticks - 1) % 5 == 0 {
+            sample_hit_if(rng, tree_thr, player.combat_stats.woodcutting)
+        } else {
+            0
+        };
+        
 
         // Small mutta can be hit if it's above half HP
-        if base_small_mutta_hp / 2 < best_style_small_mutta.max_hit + hp_small_mutta {
-            let hit = if rng.next_u32() <= small_mutta_thr {
-                rng.gen_range(0..=best_style_small_mutta.max_hit).max(1)
-            } else {
-                0
-            };
-            hp_small_mutta -= hit;
-        }
+        let tick_index = current_ticks - 1;
+        let can_attack_tick = tick_index % best_style_small_mutta.attack_speed == 0;
+        let small_above_threshold = base_small_mutta_hp / 2 < best_style_small_mutta.max_hit + hp_small_mutta;
 
+        let hit = if can_attack_tick && small_above_threshold {
+            sample_hit_if(rng, small_mutta_thr, best_style_small_mutta.max_hit)
+        } else {
+            0
+        };
+
+        let thrall_hit = if tick_index % 4 == 0 && small_above_threshold {
+            thrall_dmg.sample(rng)
+        } else {
+            0
+        };
+
+        hp_small_mutta -= hit + thrall_hit;
         tree_hp -= tree_hit;
         if tree_hp < 0 {
             break;
         }
-        total_ticks += best_style_small_mutta.attack_speed;
     }
-
     let phase_ticks = total_ticks;
     total_ticks += best_style_small_mutta.attack_speed;
-
-    // Finish off small mutta
+    
     while hp_small_mutta > 0 {
-        let hit = if rng.next_u32() <= small_mutta_thr {
-            rng.gen_range(0..=best_style_small_mutta.max_hit).max(1)
-        } else {
-            0
-        };
-        total_ticks += best_style_small_mutta.attack_speed;
-        hp_small_mutta -= hit;
-    }
+        current_ticks += 1;
+        let tick_index = current_ticks - 1;
+        let can_attack_tick = tick_index % best_style_small_mutta.attack_speed == 0;
 
+        let hit = if can_attack_tick {
+            sample_hit_if(rng, small_mutta_thr, best_style_small_mutta.max_hit)
+        } else { 0 };
+
+        let thrall_hit = if tick_index % 4 == 0 {
+            thrall_dmg.sample(rng)
+        } else { 0 };
+
+        hp_small_mutta -= hit + thrall_hit;
+    }
+    total_ticks += current_ticks;
     (total_ticks, (phase_ticks + 1))
 }
 
@@ -166,13 +206,6 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
     let best_style_small_mutta =
         find_best_combat_style(&player, &monsters[0], vec!["magic".to_string()]);
     let base_small_mutta_hp = monsters[0].skills.hp;
-    let attack_speed_small_mutta = player
-        .gear_sets
-        .mage
-        .selected_weapon
-        .as_ref()
-        .map(|w| w.speed)
-        .unwrap_or(4);
 
     // Large Mutta (ranged)
     let best_style_large_mutta =
@@ -214,18 +247,19 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
     };
 
     // ===== Precompute thresholds =====
-    let small_mutta_thr = to_threshold(best_style_small_mutta.accuracy);
-    let large_mutta_thr = to_threshold(best_style_large_mutta.accuracy);
-    let tree_thr = to_threshold(tree_accuracy);
+    let small_mutta_thr = (best_style_small_mutta.accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
+    let large_mutta_thr = (best_style_large_mutta.accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
+    let tree_thr = (tree_accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
     let zgs_thr = zgs_best_style
         .as_ref()
-        .map(|s| to_threshold(s.accuracy))
+        .map(|s| (s.accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32)
         .unwrap_or(0);
 
     // Build histogram + running sum instead of storing all tick counts
     let mut freq: Vec<usize> = Vec::new();
     let mut sum_ticks: i64 = 0;
     let mut phase_results: Vec<i32> = vec![0; trials];
+    let thrall_dmg = Uniform::new_inclusive(0, 3);
 
     for i in 0..trials {
         let mut hp_large_mutta = base_large_mutta_hp;
@@ -251,8 +285,8 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
                 &mut rng,
                 small_mutta_thr,
                 zgs_thr,
+                &thrall_dmg,
             );
-            total_ticks -= attack_speed_small_mutta;
             total_ticks += 1 + hit_delay_small_mutta;
             total_ticks += tick_cycle_offset;
 
@@ -268,6 +302,7 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
                 &mut rng,
                 large_mutta_thr,
                 zgs_thr,
+                &thrall_dmg,
             );
             phase_results[i] = 0;
         } else {
@@ -281,29 +316,34 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
                 &best_style_small_mutta,
                 &mut rng,
                 small_mutta_thr,
+                &thrall_dmg,
             );
             phase_results[i] = phase_ticks;
             total_ticks = new_total_ticks;
 
-            total_ticks -= attack_speed_small_mutta;
             total_ticks += 1 + hit_delay_small_mutta;
             total_ticks += tick_cycle_offset;
 
             // Large mutta leaving the lake
             total_ticks += 5;
-
+            let mut current_ticks = 0;
             while hp_large_mutta > 0 {
-                let hit = if rng.next_u32() <= large_mutta_thr {
-                    rng.gen_range(0..=best_style_large_mutta.max_hit).max(1)
+                current_ticks += 1;
+                let tick_index = current_ticks - 1;
+                let hit = if tick_index % attack_speed_large_mutta == 0 {
+                    sample_hit_if(&mut rng, large_mutta_thr, best_style_large_mutta.max_hit)
                 } else {
                     0
                 };
-                total_ticks += attack_speed_large_mutta;
-                hp_large_mutta -= hit;
+                let thrall_hit = if tick_index % 4 == 0 {
+                    thrall_dmg.sample(&mut rng)
+                } else {
+                    0
+                };
+                hp_large_mutta -= hit + thrall_hit;
             }
+            total_ticks += current_ticks;
         }
-
-        total_ticks -= attack_speed_large_mutta;
         total_ticks += 1 + hit_delay + death_animation - overkill_large_mutta + post_room_delay;
 
         // Align to next 4-tick cycle starting at the tick_cycle_offset
@@ -320,69 +360,7 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
     if freq.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
-
-    // Mean TTK
-    let mean_ttk = sum_ticks as f64 / trials as f64;
-
-    // CDF via histogram
-    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
-    let mut running = 0usize;
-    for count in &freq {
-        running += *count;
-        kill_prob.push(running as f64 / trials as f64);
-    }
-
-    // Results
-    let mut results = Vec::new();
-    let mut total_expected_ticks = 0.0;
-    let mut total_expected_seconds = 0.0;
-
-    let expected_ttk = mean_ttk;
-    let expected_seconds = mean_ttk * 0.6;
-
-    total_expected_ticks += expected_ttk;
-    total_expected_seconds += expected_seconds;
-
-    let monster_enraged = &monsters[1];
-    let result_enraged = serde_json::json!({
-        "monster_id": monster_enraged.id,
-        "monster_name": monster_enraged.name,
-        "expected_ticks": expected_ttk,
-        "expected_seconds": expected_seconds,
-        "combat_type": best_style_large_mutta.attack_type,
-        "attack_style": best_style_large_mutta.combat_style,
-    });
-    results.push(result_enraged);
-
-    let monster_normal = &monsters[0];
-    let result_normal = serde_json::json!({
-        "monster_id": monster_normal.id,
-        "monster_name": monster_normal.name,
-        "expected_ticks": expected_ttk,
-        "expected_seconds": expected_seconds,
-        "combat_type": best_style_small_mutta.attack_type,
-        "attack_style": best_style_small_mutta.combat_style,
-    });
-    results.push(result_normal);
-
-    // encounter_kill_times as {tick, probability}[]
-    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob
-        .iter()
-        .enumerate()
-        .map(|(idx, &prob)| {
-            serde_json::json!({
-                "tick": idx,
-                "probability": prob
-            })
-        })
-        .collect();
-
-    // Final output
-    serde_json::json!({
-        "results": results,
-        "total_expected_ticks": total_expected_ticks,
-        "total_expected_seconds": total_expected_seconds,
-        "encounter_kill_times": encounter_kill_times_obj,
-        "phase_results": phase_results,
-    }).to_string()
+    let style_list = vec![best_style_small_mutta, best_style_large_mutta];
+    let end_results = results_formatter(&monsters, &style_list, sum_ticks, freq, trials, phase_results, Vec::new());
+    end_results
 }

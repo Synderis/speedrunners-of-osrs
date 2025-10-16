@@ -64,6 +64,7 @@ export function createStatCards(
                 const phaseTimeResults = activeStats.phase_time_results || [];
                 if (!phaseTimeResults.length) return null;
                 const avg = phaseTimeResults.reduce((sum: number, val: number) => sum + val, 0) / phaseTimeResults.length;
+                if (!avg || avg <= 0) return null;
                 if (showSeconds) {
                     return formatSeconds(avg * 0.6);
                 } else {

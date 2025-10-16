@@ -724,3 +724,50 @@ pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64,
         }
     }
 }
+
+pub fn results_formatter(monsters: &[Monster], style_list: &[StyleResult], ticks: i64, tick_freq: Vec<usize>, trials: usize, phase_time_results: Vec<i32>, phase_results: Vec<i32>) -> String {
+    let mean_ttk = ticks as f64 / trials as f64;
+    let seconds_ttk = mean_ttk * 0.6; // 0.6 seconds per tick
+    // Build cumulative kill probability using the histogram (same semantics as before)
+    let mut kill_prob: Vec<f64> = Vec::with_capacity(tick_freq.len());
+    let mut running = 0usize;
+    for count in &tick_freq {
+        running += *count;
+        kill_prob.push(running as f64 / trials as f64);
+    }
+
+    // Collect results for each monster (if you have more than one)
+    let mut results = Vec::new();
+    for (i, monster) in monsters.iter().enumerate() {
+        let result = serde_json::json!({
+            "monster_id": monster.id,
+            "monster_name": &monster.name,
+            "expected_ticks": 0.0,
+            "expected_seconds": 0.0,
+            "combat_type": style_list[i].attack_type,
+            "attack_style": style_list[i].combat_style,
+        });
+        results.push(result);
+    }
+
+    // Convert encounter_kill_times to JSON object array
+    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob
+        .iter()
+        .enumerate()
+        .map(|(idx, &prob)| {
+            serde_json::json!({
+                "tick": idx,
+                "probability": prob
+            })
+        })
+        .collect();
+
+    serde_json::json!({
+        "results": results,
+        "total_expected_ticks": mean_ttk,
+        "total_expected_seconds": seconds_ttk,
+        "encounter_kill_times": encounter_kill_times_obj,
+        "phase_time_results": phase_time_results,
+        "phase_results": phase_results,
+    }).to_string()
+}
