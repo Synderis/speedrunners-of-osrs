@@ -195,76 +195,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     if freq.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
-
-    // Compute statistics
-    let mean_ttk = sum_ticks as f64 / trials as f64;
-
-    // Build cumulative kill probability using the histogram (same semantics as before)
-    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
-    let mut running = 0usize;
-    for count in &freq {
-        running += *count;
-        kill_prob.push(running as f64 / trials as f64);
-    }
-
-    // Collect results for each monster (unchanged shape)
-    let mut results = Vec::new();
-    let mut total_expected_ticks = 0.0;
-    let mut total_expected_seconds = 0.0;
-    let expected_ttk = mean_ttk;
-    let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
-
-    total_expected_ticks += expected_ttk;
-    total_expected_seconds += expected_seconds;
-
-    // per-monster kill_times mirrors previous behavior
-    let mage_hand = &monsters[0];
-    let result_mage = serde_json::json!({
-        "monster_id": mage_hand.id,
-        "monster_name": mage_hand.name,
-        "expected_ticks": expected_ttk,
-        "expected_seconds": expected_seconds,
-        "combat_type": best_style_mage.attack_type,
-        "attack_style": best_style_mage.combat_style,
-    });
-    results.push(result_mage);
-
-    let melee_hand = &monsters[1];
-    let result_melee = serde_json::json!({
-        "monster_id": melee_hand.id,
-        "monster_name": melee_hand.name,
-        "expected_ticks": expected_ttk,
-        "expected_seconds": expected_seconds,
-        "combat_type": best_style_melee.attack_type,
-        "attack_style": best_style_melee.combat_style,
-    });
-    results.push(result_melee);
-
-    let ranged_hand = &monsters[2];
-    let result_ranged = serde_json::json!({
-        "monster_id": ranged_hand.id,
-        "monster_name": ranged_hand.name,
-        "expected_ticks": expected_ttk,
-        "expected_seconds": expected_seconds,
-        "combat_type": best_style_ranged.attack_type,
-        "attack_style": best_style_ranged.combat_style,
-    });
-    results.push(result_ranged);
-
-    // Convert encounter_kill_times to JSON object array
-    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob
-        .iter()
-        .enumerate()
-        .map(|(idx, &prob)| serde_json::json!({ "tick": idx, "probability": prob }))
-        .collect();
-
-    // Final output (same fields)
-    serde_json::json!({
-        "results": results,
-        "total_expected_ticks": total_expected_ticks,
-        "total_expected_seconds": total_expected_seconds,
-        "encounter_kill_times": encounter_kill_times_obj,
-        "phase_time_results": phase_results,
-        "phase_results": [],
-    }).to_string()
+    let style_list = vec![best_style_mage.clone(), best_style_melee.clone(), best_style_ranged.clone()];
+    let end_results = results_formatter(&monsters, &style_list, sum_ticks, freq, trials, phase_results, Vec::new());
+    end_results
 }

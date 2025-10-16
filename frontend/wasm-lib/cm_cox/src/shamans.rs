@@ -148,11 +148,12 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
     // 🔧 prebuild the passive 0..=3 distribution
     let passive_dmg = Uniform::new_inclusive(0, 3);
 
-    // we still return per-trial ticks for API shape
-    let mut tick_counts: Vec<i32> = vec![0; trials];
+    // histogram mode: accumulate freq + sum_ticks like other modules
+    let mut freq: Vec<usize> = Vec::new();
+    let mut sum_ticks: i64 = 0;
     let mut single_monster_ticks: Vec<f64> = Vec::new(); // kept if you rely on it elsewhere
 
-    for i in 0..trials {
+    for _ in 0..trials {
         let mut tick = 0;
         let range_max = if attack_speed > 4 { 4 * attack_speed } else { 4 };
         let overkill = if rng.gen_range(1..=range_max) == 1 { 1 } else { 0 };
@@ -196,69 +197,22 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
 
         tick -= attack_speed - 1;
         let hit_delay = *hit_delay_vec.choose(&mut rng).unwrap();
-        tick_counts[i] = tick + walk_delay + hit_delay + 1 + death_animation - overkill + barneys;
+        let total_tick = tick + walk_delay + hit_delay + 1 + death_animation - overkill + barneys;
+
+        sum_ticks += i64::from(total_tick);
+        let idx = total_tick as usize;
+        if idx >= freq.len() {
+            freq.resize(idx + 1, 0);
+        }
+        freq[idx] += 1;
     }
 
-    // Defensive
-    if tick_counts.is_empty() {
+    if freq.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
 
-    // mean ttk
-    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
-
-    // ⚡ build CDF via histogram instead of nested loops
-    let &max_ticks = tick_counts.iter().max().unwrap();
-    let mut freq = vec![0usize; (max_ticks + 1) as usize];
-    for &t in &tick_counts {
-        freq[t as usize] += 1;
-    }
-    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
-    let mut running = 0usize;
-    for c in freq {
-        running += c;
-        kill_prob.push(running as f64 / trials as f64);
-    }
-
-    // expected values
-    let expected_ttk = mean_ttk;
-    let expected_seconds = mean_ttk * 0.6;
-
-    let mut total_expected_ticks = 0.0;
-    let mut total_expected_seconds = 0.0;
-    total_expected_ticks += expected_ttk;
-    total_expected_seconds += expected_seconds;
-
-    // per-monster results (unchanged shape)
-    let mut results = Vec::new();
-    for monster in &monsters {
-        results.push(serde_json::json!({
-            "monster_id": monster.id,
-            "monster_name": monster.name,
-            "expected_ticks": 0.0,
-            "expected_seconds": 0.0,
-            "combat_type": best_style.attack_type,
-            "attack_style": best_style.combat_style,
-        }));
-    }
-
-    // Convert encounter_kill_times to JSON object array
-    let encounter_kill_times_obj: Vec<serde_json::Value> = kill_prob
-        .iter()
-        .enumerate()
-        .map(|(idx, &prob)| {
-            serde_json::json!({
-                "tick": idx,
-                "probability": prob
-            })
-        })
-        .collect();
-
-    serde_json::json!({
-        "results": results,
-        "total_expected_ticks": total_expected_ticks,
-        "total_expected_seconds": total_expected_seconds,
-        "encounter_kill_times": encounter_kill_times_obj,
-        "phase_results": [],
-    }).to_string()
+    // use results_formatter for consistent output
+    let style_list = vec![best_style.clone(), best_style.clone(), best_style.clone()];
+    let end_results = results_formatter(&monsters, &style_list, sum_ticks, freq, trials, Vec::new(), Vec::new());
+    end_results
 }

@@ -100,8 +100,9 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
     let walk_delay = 18;
     let death_animation = 4;
     let post_room_delay = 4;
-    let mut tick_counts: Vec<i32> = vec![0; trials];
-    let mut phase_list = Vec::with_capacity(trials);
+    let mut phase_list: Vec<i32> = Vec::with_capacity(trials);
+    let mut freq: Vec<usize> = Vec::new();
+    let mut sum_ticks: i64 = 0;
 
     let max_hp = monsters[0].skills.hp;
     let hp_reset_threshold = (max_hp as f64 * 0.4) as i32;
@@ -155,7 +156,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
     hit_delay_map.insert("melee".to_string(), 0);
     hit_delay_map.insert("ranged".to_string(), 1);
 
-    for i in 0..trials {
+    for _ in 0..trials {
         let mut vang_hps_trial = vang_hps.clone();
         let mut tick = 0;
         let mut cooldown = 0;
@@ -303,92 +304,22 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
             tick += 4 - (tick % 4);
         }
         tick += post_room_delay;
-        tick_counts[i] = tick;
+        // record histogram and sum
+        sum_ticks += i64::from(tick);
+        let idx = tick as usize;
+        if idx >= freq.len() {
+            freq.resize(idx + 1, 0);
+        }
+        freq[idx] += 1;
         phase_list.push(teleport);
     }
-
-    // Defensive: Check tick_counts
-    if tick_counts.is_empty() {
+    // Defensive: Check freq
+    if freq.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
 
-    // Compute statistics
-    let mean_ttk = tick_counts.iter().sum::<i32>() as f64 / trials as f64;
-
-    // Build cumulative kill probability
-    let max_ticks = *tick_counts.iter().max().unwrap_or(&0);
-    let mut kill_prob = vec![0.0f64; (max_ticks + 1) as usize];
-    for &ticks in &tick_counts {
-        for idx in ticks..=max_ticks {
-            kill_prob[idx as usize] += 1.0;
-        }
-    }
-    for prob in &mut kill_prob {
-        *prob /= trials as f64;
-    }
-
-    // Collect results for each monster (if you have more than one)
-    let mut results = Vec::new();
-    let mut total_expected_ticks = 0.0;
-    let mut total_expected_seconds = 0.0;
-    let encounter_kill_times = kill_prob.clone();
-    let expected_ttk = mean_ttk;
-    let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
-
-    total_expected_ticks += expected_ttk;
-    total_expected_seconds += expected_seconds;
-
-    let mage_vang = &monsters[0];
-    let result_mage = serde_json::json!({
-        "monster_id": mage_vang.id,
-        "monster_name": mage_vang.name,
-        "expected_ticks": 0.0,
-        "expected_seconds": 0.0,
-        "combat_type": best_style_mage.attack_type,
-        "attack_style": best_style_mage.combat_style,
-    });
-    results.push(result_mage);
-
-    let melee_vang = &monsters[1];
-    let result_melee = serde_json::json!({
-        "monster_id": melee_vang.id,
-        "monster_name": melee_vang.name,
-        "expected_ticks": 0.0,
-        "expected_seconds": 0.0,
-        "combat_type": best_style_melee.attack_type,
-        "attack_style": best_style_melee.combat_style,
-    });
-    results.push(result_melee);
-
-    let ranged_vang = &monsters[2];
-    let result_ranged = serde_json::json!({
-        "monster_id": ranged_vang.id,
-        "monster_name": ranged_vang.name,
-        "expected_ticks": 0.0,
-        "expected_seconds": 0.0,
-        "combat_type": best_style_ranged.attack_type,
-        "attack_style": best_style_ranged.combat_style,
-    });
-    results.push(result_ranged);
-
-    // Convert encounter_kill_times to JSON object array
-    let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times
-        .iter()
-        .enumerate()
-        .map(|(idx, &prob)| {
-            serde_json::json!({
-                "tick": idx,
-                "probability": prob
-            })
-        })
-        .collect();
-
-    // Final output
-    serde_json::json!({
-        "results": results,
-        "total_expected_ticks": total_expected_ticks,
-        "total_expected_seconds": total_expected_seconds,
-        "encounter_kill_times": encounter_kill_times_obj,
-        "phase_results": phase_list,
-    }).to_string()
+    // Use results_formatter for consistent output
+    let style_list = vec![best_style_mage.clone(), best_style_melee.clone(), best_style_ranged.clone()];
+    let end_results = results_formatter(&monsters, &style_list, sum_ticks, freq, trials, Vec::new(), phase_list);
+    end_results
 }

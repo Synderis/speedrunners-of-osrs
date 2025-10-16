@@ -87,58 +87,7 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
     if freq.is_empty() {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
-
-    // Compute statistics
-    let mean_ttk = sum_ticks as f64 / trials as f64;
-
-    // Build cumulative kill probability using the histogram (same semantics as before)
-    let mut kill_prob: Vec<f64> = Vec::with_capacity(freq.len());
-    let mut running = 0usize;
-    for count in &freq {
-        running += *count;
-        kill_prob.push(running as f64 / trials as f64);
-    }
-
-    // Collect results for each monster (if you have more than one)
-    
-    let mut total_expected_ticks = 0.0;
-    let mut total_expected_seconds = 0.0;
-    let encounter_kill_times = kill_prob.clone();
-
-    let expected_ttk = mean_ttk;
-    let expected_seconds = mean_ttk * 0.6; // 1 tick = 0.6 seconds
-
-    total_expected_ticks += expected_ttk;
-    total_expected_seconds += expected_seconds;
-    let mut results = Vec::new();
-
-    for monster in &monsters {
-        let result = serde_json::json!({
-            "monster_id": monster.id,
-            "monster_name": monster.name,
-            "expected_ticks": 0.0,
-            "expected_seconds": 0.0,
-            "combat_type": best_style.attack_type,
-            "attack_style": best_style.combat_style,
-        });
-        results.push(result);
-    }
-    
-    // Convert encounter_kill_times to JSON object array
-    let encounter_kill_times_obj: Vec<serde_json::Value> = encounter_kill_times.iter().enumerate()
-        .map(|(idx, &prob)| {
-            serde_json::json!({
-                "tick": idx,
-                "probability": prob
-            })
-        })
-        .collect();
-
-    serde_json::json!({
-        "results": results,
-        "total_expected_ticks": total_expected_ticks,
-        "total_expected_seconds": total_expected_seconds,
-        "encounter_kill_times": encounter_kill_times_obj,
-        "phase_results": [],
-    }).to_string()
+    let style_list = vec![best_style.clone(), best_style.clone(), best_style.clone()];
+    let end_results = results_formatter(&monsters, &style_list, sum_ticks, freq, trials, Vec::new(), Vec::new());
+    end_results
 }
