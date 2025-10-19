@@ -136,7 +136,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     let (delay, attack_pattern): (i32, Vec<[usize; 2]>) = if room_methods.contains(&"Tekton Short Lure".to_string()) {
         (12, vec![[0, 4], [0, 3], [4, 10]])
     } else {
-        (17, vec![[0, 5], [0, 3], [4, 11]])
+        (16, vec![[0, 5], [0, 3], [4, 11]])
     };
 
     // prebuild passive 0..=3 distribution
@@ -259,9 +259,10 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         // Add initial delay and round up to next multiple of 4
         let initial_delay = delay;
         total_ticks += initial_delay + death_animation;
-        // if total_ticks % 4 != 0 {
-        total_ticks += 4 - (total_ticks % 4);
-        // }
+        if total_ticks % 4 != 0 {
+            total_ticks += 4 - (total_ticks % 4);
+        }
+        total_ticks += 4; // end crystal animation
 
         phase_results[i] = phase;
         hp_pre_anvil[i] = hp_pre_anvil_val;

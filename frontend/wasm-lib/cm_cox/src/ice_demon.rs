@@ -335,7 +335,7 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
 
     let trials = 100_000usize;
     let post_chop_delay = 10;
-    let death_animation = 4;
+    let death_animation = 6;
 
     // 🔧 small, fast RNG (WASM-friendly)
     let mut rng = SmallRng::from_entropy();

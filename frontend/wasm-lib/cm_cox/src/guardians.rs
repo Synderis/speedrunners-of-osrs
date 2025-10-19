@@ -74,7 +74,7 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
             ticks_this_monster += attack_speed - 1;
             single_monster_ticks.push(ticks_this_monster as f64);
         }
-        tick += rng.gen_range(0..=4);
+        tick += rng.gen_range(0..4);
         tick += walk_delay;
         sum_ticks += i64::from(tick);
         let idx = tick as usize;

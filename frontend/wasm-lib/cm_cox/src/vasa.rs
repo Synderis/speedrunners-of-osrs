@@ -124,7 +124,8 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         29
     };
 
-    let death_animation = 6;
+    let death_animation = 3;
+    let crystal_death_animation = 4;
 
     for i in 0..trials {
         let mut vasa_hp = vasa_base_hp;
@@ -230,7 +231,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                 break;
             }
         }
-        total_ticks += initial_delay + hit_delay + 2 + death_animation - overkill;
+        total_ticks += initial_delay + hit_delay + 2 + death_animation - overkill + crystal_death_animation;
         phase_results[i] = crystal_count;
         sum_ticks += i64::from(total_ticks);
         let idx = total_ticks as usize;
