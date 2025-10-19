@@ -101,7 +101,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     // Build histogram + running sum instead of storing all tick counts
     let mut freq: Vec<usize> = Vec::new();
     let mut sum_ticks: i64 = 0;
-    let mut phase_results: Vec<i32> = Vec::new();
+    let mut phase_results: Vec<i32> = Vec::with_capacity(trials * 3);
 
     let delay_list = [22, 38, 39];
 

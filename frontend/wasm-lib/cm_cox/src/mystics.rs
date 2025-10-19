@@ -148,7 +148,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
 
     // let walk_delay = 24;
     let trials = 100000;
-    let death_animation = 4;
+    let death_animation = 5;
     // let mut tick_counts: Vec<i32> = vec![0; trials];
     let mut rng = SmallRng::from_entropy();
     let thrall_dmg = Uniform::new_inclusive(0, 3);
@@ -179,7 +179,6 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
         ensure_weapon_swap(&mut player, "Voidwaker", avernic_defender);
     }
     let best_style_spec = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
-    let pot_pickup_delay = 4;
 
     for _ in 0..trials {
         let mut tick = 0;
@@ -218,13 +217,10 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
                     break;
                 }
             }
-            tick += attack_speed - 1;
-            ticks_this_monster += attack_speed - 1;
             single_monster_ticks.push(ticks_this_monster as f64);
         }
         let walk_delay = generate_barrier_delay(&mut rng) + 27;
-        tick -= attack_speed - 1;
-        tick += walk_delay + hit_delay + 1 + death_animation - overkill + pot_pickup_delay;
+        tick += walk_delay + hit_delay + death_animation - overkill;
         tick += rng.gen_range(0..4); // random animation offset
 
         sum_ticks += i64::from(tick);

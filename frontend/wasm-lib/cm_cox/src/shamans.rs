@@ -116,7 +116,7 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
     };
 
     let trials = 100_000usize;
-    let walk_delay = 14;
+    let walk_delay = 13;
     let barneys = 4;
     let death_animation = 4;
 
@@ -189,13 +189,9 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
                 }
             }
 
-            // align to your original end-of-kill accounting
-            tick += attack_speed - 1;
-            ticks_this_monster += attack_speed - 1;
             single_monster_ticks.push(ticks_this_monster as f64);
         }
 
-        tick -= attack_speed - 1;
         let hit_delay = *hit_delay_vec.choose(&mut rng).unwrap();
         let total_tick = tick + walk_delay + hit_delay + 1 + death_animation - overkill + barneys;
 

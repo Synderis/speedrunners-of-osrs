@@ -23,7 +23,7 @@ fn get_drain_and_heal(kindling: usize) -> (f64, f64) {
 }
 
 fn chop_simulation<R: Rng>(rng: &mut R, total_ticks: i32, base_hp: f64) -> i32 {
-    let initial_delay = 34;
+    let initial_delay = 33;
     let mut chop_hp = base_hp;
     let mut kindling_count = 0;
     let mut time_before_dump = 0;
@@ -115,7 +115,7 @@ fn chop_simulation<R: Rng>(rng: &mut R, total_ticks: i32, base_hp: f64) -> i32 {
         }
     }
 
-    chop_ticks + time_after_dump + initial_delay - 1
+    chop_ticks + time_after_dump + initial_delay
 }
 
 #[inline]
@@ -166,7 +166,7 @@ fn ember_light_kill<R: Rng>(
         }
     }
 
-    total_ticks += attack_tick + attack_speed - 1;
+    total_ticks += attack_tick;
 
     // then: regulars until death
     attack_tick = 0;
@@ -183,7 +183,7 @@ fn ember_light_kill<R: Rng>(
             hp = thrall_hit(rng, hp);
         }
         if hp <= 0 {
-            total_ticks += attack_tick - 1;
+            total_ticks += attack_tick;
             break;
         }
     }
@@ -224,11 +224,11 @@ fn burning_claws_kill<R: Rng>(
     }
 
     if hp <= 0 {
-        total_ticks += attack_tick - 1;
+        total_ticks += attack_tick;
         return total_ticks;
     }
 
-    total_ticks += attack_tick + attack_speed - 1;
+    total_ticks += attack_tick;
     attack_tick = 0;
 
     // Second phase: regulars
@@ -246,7 +246,7 @@ fn burning_claws_kill<R: Rng>(
             hp = thrall_hit(rng, hp);
         }
         if hp <= 0 {
-            total_ticks += attack_tick - 1;
+            total_ticks += attack_tick;
             break;
         }
     }

@@ -1,0 +1,1719 @@
+{
+    "player": {
+        "combatStats": {
+            "attack": 99,
+            "strength": 99,
+            "defence": 99,
+            "ranged": 99,
+            "magic": 99,
+            "hitpoints": 99,
+            "prayer": 99,
+            "woodcutting": 99,
+            "mining": 99,
+            "thieving": 99
+        },
+        "gearSets": {
+            "melee": {
+                "gearStats": {
+                    "bonuses": {
+                        "str": 139,
+                        "ranged_str": 63,
+                        "magic_str": 2,
+                        "prayer": 4
+                    },
+                    "offensive": {
+                        "stab": 120,
+                        "slash": 213,
+                        "crush": 80,
+                        "magic": -46,
+                        "ranged": -47
+                    },
+                    "defensive": {
+                        "stab": 261,
+                        "slash": 345,
+                        "crush": 265,
+                        "magic": 14,
+                        "ranged": 265
+                    }
+                },
+                "selectedWeapon": {
+                    "name": "Scythe of vitur",
+                    "id": 22325,
+                    "version": "Charged",
+                    "slot": "weapon",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAbCAMAAABcI88jAAAAflBMVEUAAAAAAAEsKip3b255cXBMRkZ7cnI8Nzc5NDSWjIuHfn19dHRUTU1gLixOSUiYjo1jXFtIIiBdV1djMCw/OjqQhoaViomTiIhgHRhzJB1YUlJnYGBza2tuZmYgHR1lXl01MDBWUFBXKih1bWwoJiZFQEBIQ0MkIiJsZGQyLi73gFoJAAAAAXRSTlMAQObYZgAAAJ5JREFUeNqlklkOAiEQRClgmNV930eFUe5/QQ2JmkGsH+uv8/LS1UmLdxAikgGglNJSIgmVNsbUtb8hQZVZrJZlWY7aIxJUVxVC5hZf9KpflTDLJRDRPT7DoLD99TigV7KLykeTgyDBWYLQDh7Mlps1071tqe6cpxzThrcfc3yHoHzL9R24nnH99J+unxj0OEwYz4vsgt+4GeZsf/jPBx8/BgScV1YIAAAAAElFTkSuQmCC",
+                    "speed": 5,
+                    "category": "Scythe",
+                    "bonuses": {
+                        "str": 75,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 70,
+                        "slash": 125,
+                        "crush": 30,
+                        "magic": -6,
+                        "ranged": 0
+                    },
+                    "defensive": {
+                        "stab": -2,
+                        "slash": 8,
+                        "crush": 10,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "two_handed": true,
+                    "weapon_styles": [
+                        {
+                            "name": "Reap",
+                            "attack_type": "Slash",
+                            "combat_style": "Accurate",
+                            "att": 3,
+                            "str": 0,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Chop",
+                            "attack_type": "Slash",
+                            "combat_style": "Aggressive",
+                            "att": 0,
+                            "str": 3,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Jab",
+                            "attack_type": "Crush",
+                            "combat_style": "Aggressive",
+                            "att": 0,
+                            "str": 3,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Block",
+                            "attack_type": "Slash",
+                            "combat_style": "Defensive",
+                            "att": 0,
+                            "str": 0,
+                            "def": 3,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        }
+                    ]
+                },
+                "gearType": "melee",
+                "gearItems": [
+                    {
+                        "name": "Scythe of vitur",
+                        "id": 22325,
+                        "version": "Charged",
+                        "slot": "weapon",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAbCAMAAABcI88jAAAAflBMVEUAAAAAAAEsKip3b255cXBMRkZ7cnI8Nzc5NDSWjIuHfn19dHRUTU1gLixOSUiYjo1jXFtIIiBdV1djMCw/OjqQhoaViomTiIhgHRhzJB1YUlJnYGBza2tuZmYgHR1lXl01MDBWUFBXKih1bWwoJiZFQEBIQ0MkIiJsZGQyLi73gFoJAAAAAXRSTlMAQObYZgAAAJ5JREFUeNqlklkOAiEQRClgmNV930eFUe5/QQ2JmkGsH+uv8/LS1UmLdxAikgGglNJSIgmVNsbUtb8hQZVZrJZlWY7aIxJUVxVC5hZf9KpflTDLJRDRPT7DoLD99TigV7KLykeTgyDBWYLQDh7Mlps1071tqe6cpxzThrcfc3yHoHzL9R24nnH99J+unxj0OEwYz4vsgt+4GeZsf/jPBx8/BgScV1YIAAAAAElFTkSuQmCC",
+                        "speed": 5,
+                        "category": "Scythe",
+                        "bonuses": {
+                            "str": 75,
+                            "ranged_str": 0,
+                            "magic_str": 0,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 70,
+                            "slash": 125,
+                            "crush": 30,
+                            "magic": -6,
+                            "ranged": 0
+                        },
+                        "defensive": {
+                            "stab": -2,
+                            "slash": 8,
+                            "crush": 10,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "two_handed": true
+                    },
+                    {
+                        "name": "Oathplate helm",
+                        "id": 30750,
+                        "version": "",
+                        "slot": "head",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAMAAAB2bwf0AAAArlBMVEUAAAAAAAEVERE5JiY8KCgqHRpALCpSOTdYPTxcPz1eQkA5LCxWOjpANDI8MDBDNTVrSUhONzVuTEpiQ0IwJiZwTUxzUE1lRkN4VFF1UVB9V1VGOTlnSEZNPT0mICA1KiosIiJ7VVKAWFaXaWZaSEYkGBiMYV6PY2CTZWOaa2eJYF1cSklRQEBUQ0JWRUWHXVuDWliFXFpKPDodFRUYDQ1IMjBMNDJDLi4uICA0JCIUKv7yAAAAAXRSTlMAQObYZgAAAS5JREFUeNpl0teSgzAMBVCubAOmhwTSttdsKmxC+/8fW0MyxLB6PHMteUYyRoW2jP/Kmlo0wIg5a5SfLxV0ham8HjtqwVsXApcCdzaZeXVgEK+EasM4lA26l50P6JbnnOuOX3R/VA4YQwfCRvTp3rFaR84ULUPzPH9MI8drHT56/9ruV8qZYEDYj0CWHQ/Jg2M2rGrCwHdx81N2XLT+8hxI25wBV94pX8Zzx5250uZ85vro/EN5Gs39wJVywp/6/PsuPyRRGLiFM+HiPvaH8n2y9oOqlCVT2vsmdqTteZFnF7Xm2833KVst4unEqy6a5wrTZC6psNhZc3p7XSY0tcm0PoXeiBZpTNIiZhYlb3D3ZRKTTYTSc6xKfxATWQQDNoaLiYhIAeT4zrrc4A7+ALxNGhyPt0U9AAAAAElFTkSuQmCC",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 6,
+                            "ranged_str": 0,
+                            "magic_str": 0,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 10,
+                            "crush": 0,
+                            "magic": -2,
+                            "ranged": -7
+                        },
+                        "defensive": {
+                            "stab": 50,
+                            "slash": 72,
+                            "crush": 45,
+                            "magic": 0,
+                            "ranged": 50
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Amulet of rancour",
+                        "id": 29801,
+                        "version": "",
+                        "slot": "neck",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABkAAAAaCAMAAAB1owf/AAAAgVBMVEUAAAAtuXIjjVcjj1ojk1okl10klFwkkVoycVYta1MtuHEtuXMtvHQvvXUuu3QwvXUkj1gijFYiiFU2eF0vOzokPjQmICYiGiIsIiwwJjAGGhAsRDwvRz8vbVUGGxEGGxA1KjQ5LDkyaVQvZVItY08rODYKKhoGGQ8GGA8SABIAAAHCjJrwAAAAAXRSTlMAQObYZgAAAMFJREFUeNqN0UkWgjAQBFCcAEfEge4GRBzRuv8BzYNHmsQNtSL8FIsi6AObwA2+NvBBA3iALn1NBe4tH/TLGIgS7LF70owShdESAP/gl/Skt2B3VQDAzFk/jQWgYZFamIjZgVxM+HZ/PF/M7MyEvCjKeLkK45Oh4UoVc3lZrtZhdGRqSUWkWm+2YRSXxA5dRTDZLMIoKs/Zp2mgJSO77Xw2hRDB+de5kSQ9ABlR1YKWkOxToLYNLRkB3mRfKwWAv/gPLU8rWQTHN2AAAAAASUVORK5CYII=",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 12,
+                            "ranged_str": 0,
+                            "magic_str": 0,
+                            "prayer": 2
+                        },
+                        "offensive": {
+                            "stab": 25,
+                            "slash": 25,
+                            "crush": 25,
+                            "magic": -6,
+                            "ranged": -8
+                        },
+                        "defensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Infernal cape",
+                        "id": 21295,
+                        "version": "Normal",
+                        "slot": "cape",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABwAAAAdCAIAAAA2M5tmAAAABnRSTlMAAAAAAABupgeRAAACfElEQVR42q2W70vbQBjHFyhH5quZS0ZyOZtcdEXaTUQU19Kyrq2uVWZpZ0fRvVDodC1i9ws2WZtjg/0pg8H+yX3p1Vp8YxP78BAu5PJ5vvd9Lkce3C+0cc4vtJ1iMbu5+TSdxnjO0PkrnSbe3wptNZV6kctNUTRm2xtra7G52hvPA3TCVQkrYruhOaM49X0g8tvbB7VqtVyGFciYxM/cHb4mzDAc2/aXlpDglgqF+MRhPsEc553nXR2SHnNQALHB+e+vCzGJ4Svyo06ejDQiwwZxryMGUUOGJ3qJc1j53vcHu8Q3jE4Q/KwRlzE8jYzLGEbb88IzHQtX2XDd8JCEy8GvC112dMyJgJNN0nfZReYRG0XeMBT0iLHLZQsaERGI3DQVSLaIzBrrlGLcF6JhminDuEzydlQiZkPjGFpIKFzTsmSV5F33RAj5aUEeE0HpjFBNsY6FgFlAyzpRqs+FODDpjfw2mYWoIa8CAYqsELlPoGV1hOgKUaUUugBi13E3VLUYU8Nnj7corXvet0BA6Q2iYsiXCYBkT5dVlJyBqLyDQKwRVwUarCyjwGS9KUqVakWczUfH+YAXsO9OdWXiTjIJXRAINKBiUmDdmQn6r2vhXChzfsZYFawmgRs918UmxW0fxb4swGvFnbXjK0GgDt290Ws+5OQSEx8yuD3XoRfFIn2RWsd6CPSgRNKLi/jAi5zL1lSvs47yNxoUywcUZ0/f93FchuhbR983zQql2J7oO5aviJGhtm1vMfb9LXnO+Uchwq7esix0HP4qYhzon471d8/CGP5iP9SSyeHR2ISY0FvJbBt6h7tkWCYoEPNgv5UQjpzPj81c/gz+A0nKl9VnXbRRAAAAAElFTkSuQmCC",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 8,
+                            "ranged_str": 0,
+                            "magic_str": 0,
+                            "prayer": 2
+                        },
+                        "offensive": {
+                            "stab": 4,
+                            "slash": 4,
+                            "crush": 4,
+                            "magic": 1,
+                            "ranged": 1
+                        },
+                        "defensive": {
+                            "stab": 12,
+                            "slash": 12,
+                            "crush": 12,
+                            "magic": 12,
+                            "ranged": 12
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Oathplate chest",
+                        "id": 30753,
+                        "version": "",
+                        "slot": "body",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAYCAMAAADat72NAAAAulBMVEUAAABIMjAuICBONzVYPTxlRkNcPz1iQ0JeQkAqHRodFRVDNTUwJiYkGBhrSUiAWFZzUE1uTEpwTUx9V1V1UVCHXVuaa2d4VFGJYF1nSEaDWlh7VVKFXFqMYV6PY2CbbGqQZGKebmtgJiJXIiCkcm9RQEBcSkkmICBANDIiGhpQIBosIiJWRUVUIh1NPT1UQ0I1KipGOTk8MDA5LCxSOTdWOjpMNDJDLi5ALCo8KCg5JiY0JCIVEREAAAFXfkAEAAAAAXRSTlMAQObYZgAAAWxJREFUeNp90oduszAUBeBgAyGbJG3//t17Z0HwPPf9X6sXmw5VVS0hju4nHyPkXq9Hvb8W+V+d6C+nxFKX+o5i+FhtNp+7p40N03ronbP28ZGz/aqkXDuTAMqOjTGv1gCpDBr5ThmtgP6u0npb14ajfibq9Prq2Kk9MH/aKVVXYy6SUiWgjs/PlvsG+K+fUlkJIYF93shnCnp5cTj7t8i5kU9eCSG4aJrljQKxHh0dn5yW0z7Wa2vNLXMFHJTzrBi3XJbzadbP0829Zb7xQgxqxBGFn3FQLhZZurEWgONnMNkezpbL2cengxcZ5rjEYIIwiqrb/Nqyc5GH3/mBfUQ6socXE1pvgLpjqZF4Snh7y94PJkQK8B2PdhgNA7M7z91EO2BIQWcVd4+ZozMTvfFsm1DLRZa8yBGRDh5586ZfGqWDZ3K1N8zsHfNMrdIkthcNUk7RmUXLDQoZOQeKjsPhgYEs/bpjP+9a934HblZdl5an8JoAAAAASUVORK5CYII=",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 4,
+                            "ranged_str": 0,
+                            "magic_str": 0,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 16,
+                            "crush": 0,
+                            "magic": -16,
+                            "ranged": -18
+                        },
+                        "defensive": {
+                            "stab": 105,
+                            "slash": 128,
+                            "crush": 100,
+                            "magic": -5,
+                            "ranged": 112
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Oathplate legs",
+                        "id": 30756,
+                        "version": "",
+                        "slot": "legs",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAA0AAAAdCAMAAABG4xbVAAAAhFBMVEUAAACTZWOFXFqDWliAWFZ9V1V7VVJ4VFF1UVBwTUxuTEprSUhnSEZcSkllRkNaSEZiQ0JeQkBWRUVUQ0JcPz1YPTxWOjpNPT1SOTdKPDpONzVMNDJIMjBDLi5ALCo8KCg5JiYwJiY0JCJGGhguICA8GBUqHRo3FREkGBgwEREVEREAAAF+vNSCAAAAAXRSTlMAQObYZgAAAN5JREFUeNpN0d1ugzAMBWC2Mf5HGSwskARnabau9vu/X+0AUo8UK58Un5tkHNqTpdDtdpfQLgDvr9ffROL7N04Q/k4tiBAiMTYWIo7+1MKafBC95kVSnneUkdtAhADAssW4RERXNy3LFJdFx01NbSOLRWUhwFw1vaj8WH3086VuRdVowr/XU1eLDNhIQXv7IxqUNvSpZr0Sl5RNP1DVdH3Pennnti4v675NeivqQUYne7xgrBx3ahPBIQsiv8s4mlkM1mpZ+pDil09S2qSqQ2qlmZn05XAjhzzOb9hH9gCPBCWldBWa8gAAAABJRU5ErkJggg==",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 2,
+                            "ranged_str": 0,
+                            "magic_str": 0,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 12,
+                            "crush": 0,
+                            "magic": -12,
+                            "ranged": -14
+                        },
+                        "defensive": {
+                            "stab": 75,
+                            "slash": 100,
+                            "crush": 73,
+                            "magic": -3,
+                            "ranged": 81
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Ferocious gloves",
+                        "id": 22981,
+                        "version": "",
+                        "slot": "hands",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABwAAAAaCAMAAACTisy7AAABBVBMVEUAAAAVERFOSUhIQ0NMRkYRFRUVHR0aIiIgJiYqNDUiLCwmMDAsOTmBiGyDim6Hj3GJkHOLk3RWWkYwPDyNlXaPjnGFjXBhZFBRVEIyP0A1Q0NpbFaIh2yEhGmts4+jqIVsbFZ9gmZUVEJkZFBcXElnZlJvbld/f2Vydl1/hGl7emJ7f2V2e2KKj3GFim6PlXaan36do4GUmXkVFRFVWkYdHRVDRjluc1xJTT12fWN/hWtqalRkalQuMCZMUUB4f2V7gmZyeGBwdl1mbFZpb1drcVpGSjpOVEJXXEliZ1IaGBggHR0kIiIoJiYsKioyLi41MDA5NDQ8Nzc/OjpCPT1FQEAAAAEOPwSXAAAAAXRSTlMAQObYZgAAAYJJREFUeNp10tdW4zAUBdCEENuJSQLTGKb33gtTgVQI6lY5//8pXMmGkMXiPPl6Lx3dB7VSgNa1garWFWtoHCjngg1cMmWsE0IiDiQIa6gr62REIn8JAcYY50LW6IMO0I2iTWHUqZQEqMVL4x0hkqLNjA+h09ncGMALr2xFWFeTaet85FtDGFcZUzkP6xPyU0PrOB/u7IwgtdZxROUSnixJafbD7R1wqQhptDUeRyUcD0cAIzWkyVY6GQ9uI27AFWG0Rg+Xp4vJ0QBokRZFb+smKDXyg8PlfHo0TF3I+2Wv3y/LXqNi/8dsOh5pk7B4//Hb17JE08t/7s8mf7cVIt64/+HT5y+PH12g/L78NbYeHbRwd/fN23evHz44RybU7/kfE9LJbk4L7a2QC6X/G1jEIes/ffmq2Nq7hxqVg+cm6JDu3H324vmToigaFA4GMogq1XazLF/8K9oNMgfpmOUqYbub5fPFNFpSA2ahITejAlk+W0RrNP4SqwcYv9Zz5WWfAWVif6a7e43QAAAAAElFTkSuQmCC",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 14,
+                            "ranged_str": 0,
+                            "magic_str": 0,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 16,
+                            "slash": 16,
+                            "crush": 16,
+                            "magic": -16,
+                            "ranged": -16
+                        },
+                        "defensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Avernic treads (max)",
+                        "id": 31097,
+                        "version": "",
+                        "slot": "feet",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB8AAAAZCAIAAABGlWJzAAAABnRSTlMAAAAAAABupgeRAAADBElEQVR42rWW70sacRzHdw/3YA98IIRwIMc4QiQkjEPxUDyU25GhoTVysdZco7IhRA8a24PRaoOoNg0yawZlg/bDBg22P2+v8YFDlH6uyZv64t339Xl/3p/vqXcufCl/9X9eSig05PF4WXTqdtDRaFxV/ULXtKDfr4v+vYCCBgYGw+GIC70tutLY2jLNJGgs90rvlwLdugZ9a/W9rocE12mcrOgpEAiizkvhSPiKBZT65kYmn3HNVmbnYcHVtPuJRKqrJ9A+n2bEjKvS2Z8dy+IdnbZaOSeDX86PYcRIrDcr6F6vysZrHJip51PQD7a3sazr/RTYWFnj/d64QHu8nmsNQLEsOxAYwjLovj4ff9ffrDIP0G9fvsYvLXIVUViGIbq0gGLbI9DLSwvTc9PsxD5yE1uuLAIVFotOyc0XF1DS6WHoMy9myFpAPFbEUigWWrt15pzPZHmTem5trrJFGqJXIJfQmaGgJRz2s5Z3hChmucqJgsuJomkW3HD37r3eAgr6uLdzcnb25exnaa7MfewHxdwoJg0Rl3QjdKnNWuw7Tq5QKBYLhS66UlmuVBv15slJdb/5rlp9tbbGY8LDKXRpCLT0jkAjqcSCGLEvFpcWyp10ZX5xvrZfP/ze3j1q8TSlh9OMzbaspGnGDIORnf76fdhugyAT1a/Ch0hDkkP3iexE0y8HfL32YfThqJNzLNviCOAaim2lqNFq/6g1m/WjI3KQbhB0iY7czxujIidv4smEi47Go0LHIJlUGzuN1nHt08HK5ubjmZJcQm7o6Fw6rscnxznLyB6xE6kEnxtEijs2zlZmD79+2zv+TGEzaRKXGKct/pG4fA2cS8+OlYRO1ggEw9T0oF/TQUttmQSu4SbNOFkxCSx7+1S9P3TJ45NyxhKpXMRMDxqJYCgiG0CTWPFpkcToibhoSOYZj8b4dMMydBd9UYEulcqlyWeT0hPGGQZxEQtooMK98Tetki/OQXcTEzpZ+VQN3YTbO48HI4+Sdj4ad9zEmMet/TIQ3fhHxx8wFRqnrX+0hAAAAABJRU5ErkJggg==",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 6,
+                            "ranged_str": 3,
+                            "magic_str": 20,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 5,
+                            "slash": 5,
+                            "crush": 5,
+                            "magic": 11,
+                            "ranged": 15
+                        },
+                        "defensive": {
+                            "stab": 21,
+                            "slash": 25,
+                            "crush": 25,
+                            "magic": 10,
+                            "ranged": 10
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Ultor ring",
+                        "id": 28307,
+                        "version": "",
+                        "slot": "ring",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABYAAAAfCAIAAABs2aqkAAAABnRSTlMAAAAAAABupgeRAAADWElEQVR42p2T7UtaYRjGd/6AfejDYAyEiIgQiRBDFEVREosKC83QzjBf8aWT+ZZpZ2Z2TBPTmTZTtprIaCy2T2OM7cv+s13xwDl47P1wczgK1++57uu+nxePfiiUw7WxaLXefD/9odL5fCSRdAUCdpp+BoUq1utZjoumd/0MQ3t9NqfzyYhK6yx/XEnlcjDyPAqVKRxytRqMJFiWpzwGQfHFpHbKzRaM8BRvJPIgheIM2s0ZuXVyQvXmDTTX7WSpcQoKHD2GQp0vmCqz+pRa6ZqSmcdGs5GVbjlU/dBGroQiTmTY/Nn8bHPOuK9ThxTTdulkOrR8euC5asVghIwmGI2SAROEIGa1KnIy9BAAEVfN+OVT7JaNhJorlbEgtyKolbU1tU4XWDdxSQeqoNegEYJAI+QAiEUILKuACMfiiAeG97dXIT4xGUpGHUBOmVQnkajVOqlUNjLyii0eYTswIAId6IJsHmJ7bzaiC4LAUNBUMBh1u0N2Ow0QKER5x/5oVFAiSFBghAwVlc9XCoUqw+w4nR6BMqxH2zgWYlCIBYhv/iyd1mqdVuszobhcAaPRTCjiLYIGBQ0JErOMKhWYTqVy1mh8rFbbhBKLZb3eiM3mFFEoaKBEI5ChPNMyHkE6JxQ44rgaKDTtm5qSDyBwPvRwTsR4iwLnKe12P5M59PsZtDOAgAWcifBxIywT40NpCRS0g2gQCnoZQCTmDBtapUUu002K9GJKdo9DOmgHiZhMC8Je7VlMYaNmYVqqGR+7HwExyx5hU7AmWq1BQJy7V4kR5ZjkfkQ6nY9sJoFwODYUCpWAuPQ7m2+tMGKUTtwVBKlodBcIdAEXWHkB0Q/SXY+95lwOL5tfj7zkBXwhP8wylcrhje9wOG6xrEokowLia8TVC6z32a1OMhC3LzLW+cCSybdoROGDiNECKpFg8RNezOYlXi9Qrg+TvSzT2vZl6ZWkwwIW3pBhETAIpIgPFHDIQq+fFSO+b7n/nLz7Vdn7lA7XGXfBs4aCLJcrk2uGWaDAQiO4uLfftH+Ng7+1/d9V9mc50+v9uLj41u1eYR2xTliq8nELLGIBV/bO+84j+n0B0WxeYCOLxTqxMLD4t1J4xOXldafzBRbq9S42EhYeFAuU4bpf/B+4kb5VYOZLGQAAAABJRU5ErkJggg==",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 12,
+                            "ranged_str": 0,
+                            "magic_str": 0,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "defensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Dragon arrow",
+                        "id": 11212,
+                        "version": "Unpoisoned",
+                        "slot": "ammo",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAYCAYAAADzoH0MAAAAAXNSR0IArs4c6QAAAJBJREFUeNpjIB8w/qdI89SpZf9BNFmaZ8+uJl/zunVd/zMygv7r6amSbghIQ5yM2H8nC13yNCcBNZuKCJCnOV1O8r+DpBhcMxlOR2iml9MRBoRKigyg063ERIaW0xEGBIw6nXTNVZK8/+MEOMjLaWVivP/TRTj+h5BrQB7QAC9eDvJd0Ckj8N+Nl4Oi0CdbMwBnTGgeSafHIwAAAABJRU5ErkJggg==",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 60,
+                            "magic_str": 0,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "defensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    }
+                ]
+            },
+            "mage": {
+                "gearStats": {
+                    "bonuses": {
+                        "str": 6,
+                        "ranged_str": 63,
+                        "magic_str": 27,
+                        "prayer": 5
+                    },
+                    "offensive": {
+                        "stab": 5,
+                        "slash": 5,
+                        "crush": 5,
+                        "magic": 177,
+                        "ranged": -6
+                    },
+                    "defensive": {
+                        "stab": 120,
+                        "slash": 112,
+                        "crush": 129,
+                        "magic": 103,
+                        "ranged": 15
+                    }
+                },
+                "selectedWeapon": {
+                    "name": "Tumeken's shadow",
+                    "id": 27275,
+                    "version": "Charged",
+                    "slot": "weapon",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAcCAIAAAD5mpj+AAAABnRSTlMAAAAAAABupgeRAAABYklEQVR42mOgBmAEIlQ2I3UMlWVgWNcnCmHzsjLMCRII0eGk0HRGUUFBCNoyD2R0d6FgignHmRyJQmclqhl9eqnEjBrB/f0S7zbLIgKEcqMPTZK4ukAKyPh9yAliKKVOLkjijXbmBDry7CwJoLlIjmXcO0uCbNMZ1WQZtrSLAg29tUTqwhxkgxhXd4uSb26YG2dDOu8usBFoaGql4JYACoxe3SAKRLmivIG2nB6mnBVRvPPLBRukeLtlBacqCFIS0IxSEhJAU9apgFyXIMjZbSu4yANk6FIl0e1qFDhZVBBoCkqkISOKzG2R4sWjn0xzEzw4/1xsoL65oNTahzO1UhRvGmpqNubm1DWaUUFWVkdLC8igsrnbO0WN9PSoHw7tqbyHJtEgfIGJd68G1FwqGw2JNCobSitzowU54UUM9dMZ9c1NEeXslh0q7oUUDr8P2tAknS2tEX26RgpiNPVNp4W5AGHtUCrZh3iAAAAAAElFTkSuQmCC",
+                    "speed": 5,
+                    "category": "Powered Staff",
+                    "bonuses": {
+                        "str": 0,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 1
+                    },
+                    "offensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 35,
+                        "ranged": 0
+                    },
+                    "defensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 20,
+                        "ranged": 0
+                    },
+                    "two_handed": true,
+                    "weapon_styles": [
+                        {
+                            "name": "Accurate",
+                            "attack_type": "Magic",
+                            "combat_style": "Accurate",
+                            "att": 0,
+                            "str": 0,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 3,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Accurate",
+                            "attack_type": "Magic",
+                            "combat_style": "Accurate",
+                            "att": 0,
+                            "str": 0,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 3,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Longrange",
+                            "attack_type": "Magic",
+                            "combat_style": "Longrange",
+                            "att": 0,
+                            "str": 0,
+                            "def": 3,
+                            "ranged": 0,
+                            "magic": 1,
+                            "att_spd_reduction": 0
+                        }
+                    ]
+                },
+                "gearType": "mage",
+                "gearItems": [
+                    {
+                        "name": "Tumeken's shadow",
+                        "id": 27275,
+                        "version": "Charged",
+                        "slot": "weapon",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAcCAIAAAD5mpj+AAAABnRSTlMAAAAAAABupgeRAAABYklEQVR42mOgBmAEIlQ2I3UMlWVgWNcnCmHzsjLMCRII0eGk0HRGUUFBCNoyD2R0d6FgignHmRyJQmclqhl9eqnEjBrB/f0S7zbLIgKEcqMPTZK4ukAKyPh9yAliKKVOLkjijXbmBDry7CwJoLlIjmXcO0uCbNMZ1WQZtrSLAg29tUTqwhxkgxhXd4uSb26YG2dDOu8usBFoaGql4JYACoxe3SAKRLmivIG2nB6mnBVRvPPLBRukeLtlBacqCFIS0IxSEhJAU9apgFyXIMjZbSu4yANk6FIl0e1qFDhZVBBoCkqkISOKzG2R4sWjn0xzEzw4/1xsoL65oNTahzO1UhRvGmpqNubm1DWaUUFWVkdLC8igsrnbO0WN9PSoHw7tqbyHJtEgfIGJd68G1FwqGw2JNCobSitzowU54UUM9dMZ9c1NEeXslh0q7oUUDr8P2tAknS2tEX26RgpiNPVNp4W5AGHtUCrZh3iAAAAAAElFTkSuQmCC",
+                        "speed": 5,
+                        "category": "Powered Staff",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 0,
+                            "magic_str": 0,
+                            "prayer": 1
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 35,
+                            "ranged": 0
+                        },
+                        "defensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 20,
+                            "ranged": 0
+                        },
+                        "two_handed": true
+                    },
+                    {
+                        "name": "Ancestral hat",
+                        "id": 21018,
+                        "version": "",
+                        "slot": "head",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB0AAAAcCAMAAACqEUSYAAABL1BMVEUAAAAAAAE5NCxKRTpRSkBWUEVcVUlnXlJvZldsZFZkXFBiWk12bV1za1zDtqK7rJXFuabGu6i7rpa9r5i1qJCIfmxxaVp4b2B/dWVNTnNRUnhVVX1WV4BYWINaW4VbXIddXYliYpBgYY9eYIxSVHtQUHVKSm5GRmdCQmI9P1w6OlZeV0xaUkZUTUJNSD1GQjlDPTUwLCY8NzA1NU4yNEwwMEguLkMmJCAsKCI1MCpAOjJ7cWKKgG6Cd2Z9c2OEeWmNgnCPhHGQhXOFfGuWi3iTh3SViXaZjXmbj3udkH2glYCfk36jloGmmoWsn4mqnYeom4VUTEJWTkWhfCjUpDXLnDS2jC6ngSqYdSbcqTeqgyquoIqvooyzpY+5q5PRyLrTyrvLwa/IvqzNw7PEuKRbMsc+AAAAAXRSTlMAQObYZgAAAQdJREFUeNp9jr1KA0EURr8zu4lKIhZiekGslKiFCELUkCBRV9MbV8wL+hbiTyEWtiIIvoCN4O5eAwuyLM6cZhgO5/KpCgrAWV272idg74LWFIClTULte6i96ccE2vk40F6nKw38l6ennR18lyMe7EU+mC4PN7ytbo03ea3ltOWDNB319vDIydV42HP8L8eTy6Tf26rYuCIla7c+i2pQkYii+VHYo9U2g4REbIJdUAU4TpLxxXlyMjrc78w1G9vw19I/UuRsBpY5YP2nW25D4iCOBLKMzMyey2eG5MSgKQGycoNZ3gDogmAAgLOiyMmL6NXsi1WA1r3Bmn07B+RWsgiwAOLJJLxIv9YUVx0vcaasAAAAAElFTkSuQmCC",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 0,
+                            "magic_str": 30,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 8,
+                            "ranged": -2
+                        },
+                        "defensive": {
+                            "stab": 12,
+                            "slash": 11,
+                            "crush": 13,
+                            "magic": 5,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Occult necklace",
+                        "id": 12002,
+                        "version": "",
+                        "slot": "neck",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABMAAAAdCAMAAAB/hKeOAAAAeFBMVEUAAABCDQAOAA9MDQlIDQkNAA4kBCY+B0EoACsmBCgPAhALAAwpAywZABopBCtOB1E2BzocAB4fACEsBCYhBCQoBSsKAApHCCVFCigWABcSABMsBS5ACDo+CBE2Bg8zATMRAhFREQkdAAA1CQAuCQA8CQAmAAAAAAGSpR92AAAAAXRSTlMAQObYZgAAAL9JREFUeNpt0tcOwyAMBVDIakbTjO7dhnH//w+LkUhMW7+ADtcySAgq+BK8YIyUmeUKZSiWKqbQ8MtbalJuAkgNKTdSSUoTiGZV8CO4SYuoVcxNsFgos/DLn5jkphGOltgU3S5cgY1ADgEZzn0cFZmZWA7Fxllo9RusqzIBjA4mgaRYOTN6CpZaR2QqkMMHUVkr/sb7luypGSWnruv6/gbB7Eg0XiMbyHYQ3FpHw/7LLud2fEWWN4cmr8kY/vyWD08LHf4eZQr0AAAAAElFTkSuQmCC",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 0,
+                            "magic_str": 50,
+                            "prayer": 2
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 12,
+                            "ranged": 0
+                        },
+                        "defensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Imbued saradomin cape",
+                        "id": 21791,
+                        "version": "Normal",
+                        "slot": "cape",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABsAAAAbCAMAAAC6CgRnAAAAkFBMVEUAAAANJHwRKpG8srKmm5rBuLe6u8O7sbHCubm6r696eoSFhY+JipV7fIWamqaSkp2vr7qVlaFCRlSLi5ZAQ1Gqqrabm6ikpK+lpbE9QE3KytBJTVxWW2yYmKRla39pboSonJu2q6qpnp2voqK0qairn5+xpaWsoKARKIsRKo4JIGkNIG0NKIcNJoQNJoAAAAFx8vCMAAAAAXRSTlMAQObYZgAAANhJREFUeNp10NeywjAMRVFMuA24vXd6bNlH+v+/Q84wGItkj9/WHD9oNJCMBkUuZUhm06lIr4wxv53f30mPJPw9zN7eX8XS2APh//H54+tXzCgkRvDp6eXz+0fqUYCDT2DnGDWFkBwnAI4tee/BGvQZStoVuMmSWE5EYu76pslSkQoRAWguMqEitRgBhhKYpRBRnnEWBUPUUVSiQsWYMjGdkxYj9FFF7WrRmZJGUh+47eiQuf7uSKQzY8eVkrFtG8vM4mSyWm8ibaVQQa1d74oY3iyVBur5bw8B8DV+rRiHcQAAAABJRU5ErkJggg==",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 0,
+                            "magic_str": 20,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 15,
+                            "ranged": 0
+                        },
+                        "defensive": {
+                            "stab": 3,
+                            "slash": 3,
+                            "crush": 3,
+                            "magic": 15,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Ancestral robe top",
+                        "id": 21021,
+                        "version": "",
+                        "slot": "body",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAXCAIAAACTXWg9AAAABnRSTlMAAAAAAABupgeRAAADdklEQVR42p2VbUtaYRjHOy/3ohe9OCBBEBESESFRRFJMjKREo6QnyiLKitbz7HFmaWZm5bS5pK1FrbXRVmsU29oIFmzsI+z77AcXnJozKOPipJf3/bv+18N9n4x0/xT5l/7+26yloYZn+tAmu7nMUDjsannU0zTQ5XA5G5zNdUDbHRZrjVELcz8urOmRTlgQVTVLn59LjOqqMnttFVyeFnMFTkORPjNTd3e6sjjVtzw3uLowHFkadw85x/pbiUSYnnY7qkGTTaPVZDKWVJQWEYDYd6ErW+HpF5E5oLGgO7o8wYc136gEoDJSFp4UxGCoLSiovCNdAbq/5fuwG/pyFCNGPDR5MwDmdfdODLajvbKyraTUVlhoojiEoT5FBXm30RWIcA+3A6f7axfvN3dj3sT6rKCFLmgkm809VQ+dZWX1CO9qtUke0CvLDSnpysle+Ggn+O5l8NPBxvfjOJEIsxdfIICGRnJt3VB1TZ/J1GU0tkCnDTglFXogk5OM7uwMCx305WmCmiD/TcKvyYdur3fbbOMWywDCqUl5ucMz0bM00z871g2dJFJwe13xtrZAe0cQNHqvzl9dnmydH0ZIgirtRD3MIs1saJiCbrWOIpyaIJxBwiSP4uLqFOgOZ8jR5Glu9ra0+rBfXw9+nO0gXMpCiVGHNTpmoYtwqYmre4CvUiUamwINDjmaKDyLT5bnJr3u0RlmnJShE1vQGCyRKXuFTh46XX4SXfn5THcWVCUviogn4A15Z/3UNzg/BJr95CR0wrMSybm5xazE/uxnX0V1xz7VZX1wE638fq77HFLfzqubI1m+7kz5GfN7gnSPUkLUSkFOVAMuktGocSEcLaiTrZn6nAyNrkhPaLccMLSoag7+Ff86Bwe9GloS19CyTIJJujj1+oprNAmygXnSzlheXil+GWqpgKYXHaxEB8vkbtIaK345SkJXBEHudIwh42hxB+FnopH8PxqB7EedoLVjRVeYIgb8n3JjGysxijs1PjfoGhYP40zrktBIA01yZCZobHM9sRqI0HYmKsX8MRLXXJnI+proaL7dUnURVi2mCowrm7uUu4LLKCdb1S48UTbz2NPd0ZsCzW8MMkdAW91kM29P6UEzmtZqo6CFzpshLzc7Ce2ZXhwZHE99Q4nd9LyeL/gYLPz2VOY3pSVvv99LMr037F+qRcUxtfGw+gAAAABJRU5ErkJggg==",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 0,
+                            "magic_str": 30,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 35,
+                            "ranged": -8
+                        },
+                        "defensive": {
+                            "stab": 42,
+                            "slash": 31,
+                            "crush": 51,
+                            "magic": 28,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Ancestral robe bottom",
+                        "id": 21024,
+                        "version": "",
+                        "slot": "legs",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAA8AAAAeCAIAAAB8PtMjAAAABnRSTlMAAAAAAABupgeRAAAB3ElEQVR42q3UXS8rURTG8dMv41pOjsiRCKkQBEEooZUSL5HSqlFtNaOtGm1VTamRaiNeIiKuXPl8/rKSHZvNlcmTye7Mb6+9ZqYzf/TNZ45p8wVmchOTqfHxxOiYNTwcHRyKdPcEOzrGvk7w3Xq52dnCQvgkFCrPB4uMp6dtv3+pqyvQ1vYfoOnrmq303LzDOpn4EouwQnv74Gd9VU2D0BRWemBgjRj0ZSUlDcheNIX7+ld+0tIJA/TuZogLFa21obRqXTQX+vffiKahRBBauhdN39wWTXvl3U+acSoWFt3bu6DpenGHCerehRddgiZomtF0zbGYoFoXTWGlOzsnYZqm9u9o+bdoWp6iUU+N+jXNVSpNnGxZdHx9bmM5oLSverClait9lK+giRUJxlZnhJr1cS5aKlSFUpto2j2Mo6ESDtKJaEUNmgE/OZjesTX6VQulDXk5oIwPkquG2ooS3E3jwXObx46bTaxomtM4obS7uf7eSfPi5rRUz+4dGjQp7W9Qzy17CA7eNh/PKpf5jBOLWJrGkZfnV8TJUS2xlVaamQbN/r71xNLJ7QxjUq82CnbRiiYNHxPS8u4oLKcJhQ1ae5FrLTuVF636/lY3zq954B+1ieotycj4vXwD7eZvmi+WHxQAAAAASUVORK5CYII=",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 0,
+                            "magic_str": 30,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 26,
+                            "ranged": -7
+                        },
+                        "defensive": {
+                            "stab": 27,
+                            "slash": 24,
+                            "crush": 30,
+                            "magic": 20,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Confliction gauntlets",
+                        "id": 31106,
+                        "version": "",
+                        "slot": "hands",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB8AAAAXCAIAAAB8nwMDAAAABnRSTlMAAAAAAABupgeRAAACpklEQVR42rWVz2vaYBjHfY8e3kMOQggEJIQQgkiQiBgSIhElSDusTB1aR8esxVE6KYIttmsPE+lW2NgoCDtsg8H2HwwGu++y0y477zbYZf/BvuzFkKUm9bLw4EGf5/P9Pj+CiYiHLCP+IeFYp6BQsLLZXIpLxRaQUqlimg6SdT2vaRlFUfFlHLda3UDNGnTSbvc2N2973q1y2bNtl2n4JWFus9mt11vI9ulcLL3Tuddo3KnVtny6YRQ9LRkqIYPBwXA4Qnw6Sy22uXmDjqt0x0zGe+9278MQ7Pv08zbtW9fos+ns4uzi5xvx6yX/YQAB7sSlrcwN9H5/H8NBuxgm6FjA4w49atAwfXo4nRxMfj0Xv50LHx+mFnXuyKFbWlLgBZqkEQLkeHQM+xgOGybo82160qTj+j8l5HR8ygR+PBG+POCvXG6Uo66YgPd4+8w4Gz3oT+9yo0oAHRL4/VL8fih87vNzi+K8eF5g9Cj7GHpwpdhWlBWyt7OHwKLgBZ0ieynAIVaVkV67x2aCW0SyJMlx977b2/UvjNFFMQ14FL1Vb+WyeHLgIg1W4l9XwtD+64cyIdI+eWbKsiSlRVHgeZaDjzj7ru06phMUkJmATw+gX1iyqii+wM30SqnCBKyCxQRURV0lQC6L0pUtYzLrCxCv7AUFikYxl9UzfztIi2nULyvJK0dZ2MpGtZbXkaAFBSLprm37Aoye1/OgowMUB72/LqkQQKDHGIEwHXYg4NsHHfZBR3GQ/tZVIYAAd30BjL4Uss+GM9SE0GLfV7R3ZRUyjmn6AlhDsMvVAmgiaB9l+5nr50wQ+AnJjM6WHIkOjog5YvYnujhi9IhkZBYNA/S1/v/QMjaGm8Ndz/LSIyMNgehKAiugx6DDBasiEUNnCf/lWYn+A5TQ4PqniWfzAAAAAElFTkSuQmCC",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 0,
+                            "magic_str": 70,
+                            "prayer": 2
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 20,
+                            "ranged": -4
+                        },
+                        "defensive": {
+                            "stab": 15,
+                            "slash": 18,
+                            "crush": 7,
+                            "magic": 5,
+                            "ranged": 5
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Avernic treads (max)",
+                        "id": 31097,
+                        "version": "",
+                        "slot": "feet",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB8AAAAZCAIAAABGlWJzAAAABnRSTlMAAAAAAABupgeRAAADBElEQVR42rWW70sacRzHdw/3YA98IIRwIMc4QiQkjEPxUDyU25GhoTVysdZco7IhRA8a24PRaoOoNg0yawZlg/bDBg22P2+v8YFDlH6uyZv64t339Xl/3p/vqXcufCl/9X9eSig05PF4WXTqdtDRaFxV/ULXtKDfr4v+vYCCBgYGw+GIC70tutLY2jLNJGgs90rvlwLdugZ9a/W9rocE12mcrOgpEAiizkvhSPiKBZT65kYmn3HNVmbnYcHVtPuJRKqrJ9A+n2bEjKvS2Z8dy+IdnbZaOSeDX86PYcRIrDcr6F6vysZrHJip51PQD7a3sazr/RTYWFnj/d64QHu8nmsNQLEsOxAYwjLovj4ff9ffrDIP0G9fvsYvLXIVUViGIbq0gGLbI9DLSwvTc9PsxD5yE1uuLAIVFotOyc0XF1DS6WHoMy9myFpAPFbEUigWWrt15pzPZHmTem5trrJFGqJXIJfQmaGgJRz2s5Z3hChmucqJgsuJomkW3HD37r3eAgr6uLdzcnb25exnaa7MfewHxdwoJg0Rl3QjdKnNWuw7Tq5QKBYLhS66UlmuVBv15slJdb/5rlp9tbbGY8LDKXRpCLT0jkAjqcSCGLEvFpcWyp10ZX5xvrZfP/ze3j1q8TSlh9OMzbaspGnGDIORnf76fdhugyAT1a/Ch0hDkkP3iexE0y8HfL32YfThqJNzLNviCOAaim2lqNFq/6g1m/WjI3KQbhB0iY7czxujIidv4smEi47Go0LHIJlUGzuN1nHt08HK5ubjmZJcQm7o6Fw6rscnxznLyB6xE6kEnxtEijs2zlZmD79+2zv+TGEzaRKXGKct/pG4fA2cS8+OlYRO1ggEw9T0oF/TQUttmQSu4SbNOFkxCSx7+1S9P3TJ45NyxhKpXMRMDxqJYCgiG0CTWPFpkcToibhoSOYZj8b4dMMydBd9UYEulcqlyWeT0hPGGQZxEQtooMK98Tetki/OQXcTEzpZ+VQN3YTbO48HI4+Sdj4ad9zEmMet/TIQ3fhHxx8wFRqnrX+0hAAAAABJRU5ErkJggg==",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 6,
+                            "ranged_str": 3,
+                            "magic_str": 20,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 5,
+                            "slash": 5,
+                            "crush": 5,
+                            "magic": 11,
+                            "ranged": 15
+                        },
+                        "defensive": {
+                            "stab": 21,
+                            "slash": 25,
+                            "crush": 25,
+                            "magic": 10,
+                            "ranged": 10
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Magus ring",
+                        "id": 28313,
+                        "version": "",
+                        "slot": "ring",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABsAAAAdCAIAAADU74AfAAAABnRSTlMAAAAAAABupgeRAAADsElEQVR42qWW7UuTaxzHz/2yl744EEJwOEiESEgUoSgOxbFuvMc21hbNyXTmSMe0Te9jOXVH3VHn6va0s+woR3aybGRlSVkWFUWP9BxFBBERQc//Q5+4Yi90W9Pkh+i1e5/r+/1ev+u3/fITP9LS+ilcq3aYaolMNoXHXEHNoQ7a2kKsr1yUP5b0/DVONfSMOjuH9Q6P0hhYFlHa9ffRP6cv90xd7P5/IZg4t2fyLAJRV9PQprPULde15Nt3CFGB+MzAsWt9yavqv7Os4NfgbCmVbctjUUIguI4Dx2EhkD8gYnlTtVHgcqKI+EUJXJ0a3d4Wprb5+lmEmBOOzQmI37wHp4JFOduHAVk8XeYdnZTJ3UH9kCh59wyxM0RvNJEiUneOGa4d1l9KVJ2fqDwZq5jo3xzeVVwmb8tKJKyQtsPf6w7FiByuUEqCiQF5Klzz7Ixy9/iW69P6K4eqT8Ur9ndt1JetzkKU1HB8pzrgbFbdbd20mOBi0+EfnB5UqGREeX3Z/HxeuX9Svpk0/BcuaXGszUSUukYmfMGIy9tpq/fWegINvi4y2trcDZH4YM1EjdSJfaZ3NxxvrpgRm9TK+n3r0xKl0Ggi0DeKX7u7VbE3WOuaTdsb5VqfgEL8I34a1qxmpub2W95dtz+Zq5kf12m7N8oV+Uuh0tBQrL292+XyAKpWbJWydYulVm/3KPUBmzdEx3zLJDYbHD935h/rfHwr3BfnjaTJ+XjsBWmIw5G4IBoMxvLyytJKGeiSiSKlCi6ShfGQd33+6lWLoNLIyAFB1OmqCwuLijaUZO0JaWHMhnGh0WX+PQ1x796DqtoriHl5v+ZwDSRcz43pouoGU1V+GqKmjV+YrIr3bPLXr8veYin7WD4SLetwF8oV6Yg0BC02M1oOtNFaULwuLzNUohPxy8MHQ5tRULBmVZqT+fyoj9blObblOat+DYtpiyuI2cRgCQkOtxe3OtdmID4Z+vSwlxbjDWwOF7EEVKv8RnNwmvzLscLipalIKUQ6MbizKNOdkb481T4/Dn96EBSOyJTuZRxwc3c3FaKFC8dFZjO4EFlnTBAiu2YkIhPvQB+dkkkdtJg0gpvaAyJ0VhCePXEpRfx41//hTsv7W+63Vy0vF4xsIIQTiJApEsylK6TvxHsdgkgPA+XEGGIMR/SSI5aFQCLOaXovIjJjhExmIsZTAhcfSHboN9e3m+hQBL66aGIaEiuZpgRyxCv8mMcvV42WwnJKINcuDS539Mq+2XwFvHgoztvLPC8AAAAASUVORK5CYII=",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 0,
+                            "magic_str": 20,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 15,
+                            "ranged": 0
+                        },
+                        "defensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Dragon arrow",
+                        "id": 11212,
+                        "version": "Unpoisoned",
+                        "slot": "ammo",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAYCAYAAADzoH0MAAAAAXNSR0IArs4c6QAAAJBJREFUeNpjIB8w/qdI89SpZf9BNFmaZ8+uJl/zunVd/zMygv7r6amSbghIQ5yM2H8nC13yNCcBNZuKCJCnOV1O8r+DpBhcMxlOR2iml9MRBoRKigyg063ERIaW0xEGBIw6nXTNVZK8/+MEOMjLaWVivP/TRTj+h5BrQB7QAC9eDvJd0Ckj8N+Nl4Oi0CdbMwBnTGgeSafHIwAAAABJRU5ErkJggg==",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 60,
+                            "magic_str": 0,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "defensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    }
+                ]
+            },
+            "ranged": {
+                "gearStats": {
+                    "bonuses": {
+                        "str": 6,
+                        "ranged_str": 103,
+                        "magic_str": 2,
+                        "prayer": 6
+                    },
+                    "offensive": {
+                        "stab": -3,
+                        "slash": -3,
+                        "crush": -3,
+                        "magic": 4,
+                        "ranged": 228
+                    },
+                    "defensive": {
+                        "stab": 131,
+                        "slash": 125,
+                        "crush": 148,
+                        "magic": 147,
+                        "ranged": 124
+                    }
+                },
+                "selectedWeapon": {
+                    "name": "Twisted bow",
+                    "id": 20997,
+                    "version": "",
+                    "slot": "weapon",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB0AAAAeCAMAAADn2eWTAAAAsVBMVEUAAAAAAAGmuhVNVglWUFA/OjpnYGBYUlJRSkqImBEsKippdA2Li4FlXl1jXFtVYAlaZAlbVVVdaQmOnxFJUQlUTU1RWwlFQEBwaWlza2t5eXBdV1dOTkhISENCQj2Pj4WjopbGxr6pqZ1YWFJdXVfIyMFvfA1seA1sZGRkcA1hbQ1CPT2vr6RWVlA1MDDLy8M5NDTHx78oJiZMRkZOSUgyLi48NzcgHR0aGBgkIiIVERGvWQ0RAAAAAXRSTlMAQObYZgAAAMxJREFUeNp9zkeCwjAQRNH+Rg4YmMzknBPRSdL9DwZeu5u/fYsqsQOboGmxLLaOgI4Xo2VBjKgoxDWCjp9QzKzNr4Tb+Q06ThJ4ymfXaPiTwNvzND9Cwd8E4fWFQlHO9igC4UrBkx4RSHMGeNwj/5QuG+LlHmG63jqGOOqxC3VV/RkYfRdAR8FnPekodIiFCDkGwoo2jtHx/YO63paouNjQfGt3xwAb7wttdAKPD/dlk6qXzn2o5nd15TSMMc0AQBQ9BcQKh9iR+oN8AHfTEQ7JMYW7JwAAAABJRU5ErkJggg==",
+                    "speed": 6,
+                    "category": "Bow",
+                    "bonuses": {
+                        "str": 0,
+                        "ranged_str": 20,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 70
+                    },
+                    "defensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "two_handed": true,
+                    "weapon_styles": [
+                        {
+                            "name": "Aim",
+                            "attack_type": "Ranged",
+                            "combat_style": "Accurate",
+                            "att": 3,
+                            "str": 0,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Shoot",
+                            "attack_type": "Ranged",
+                            "combat_style": "Aggressive",
+                            "att": 0,
+                            "str": 3,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 1
+                        },
+                        {
+                            "name": "Block",
+                            "attack_type": "None",
+                            "combat_style": "Defensive",
+                            "att": 0,
+                            "str": 0,
+                            "def": 3,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        }
+                    ]
+                },
+                "gearType": "ranged",
+                "gearItems": [
+                    {
+                        "name": "Twisted bow",
+                        "id": 20997,
+                        "version": "",
+                        "slot": "weapon",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB0AAAAeCAMAAADn2eWTAAAAsVBMVEUAAAAAAAGmuhVNVglWUFA/OjpnYGBYUlJRSkqImBEsKippdA2Li4FlXl1jXFtVYAlaZAlbVVVdaQmOnxFJUQlUTU1RWwlFQEBwaWlza2t5eXBdV1dOTkhISENCQj2Pj4WjopbGxr6pqZ1YWFJdXVfIyMFvfA1seA1sZGRkcA1hbQ1CPT2vr6RWVlA1MDDLy8M5NDTHx78oJiZMRkZOSUgyLi48NzcgHR0aGBgkIiIVERGvWQ0RAAAAAXRSTlMAQObYZgAAAMxJREFUeNp9zkeCwjAQRNH+Rg4YmMzknBPRSdL9DwZeu5u/fYsqsQOboGmxLLaOgI4Xo2VBjKgoxDWCjp9QzKzNr4Tb+Q06ThJ4ymfXaPiTwNvzND9Cwd8E4fWFQlHO9igC4UrBkx4RSHMGeNwj/5QuG+LlHmG63jqGOOqxC3VV/RkYfRdAR8FnPekodIiFCDkGwoo2jtHx/YO63paouNjQfGt3xwAb7wttdAKPD/dlk6qXzn2o5nd15TSMMc0AQBQ9BcQKh9iR+oN8AHfTEQ7JMYW7JwAAAABJRU5ErkJggg==",
+                        "speed": 6,
+                        "category": "Bow",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 20,
+                            "magic_str": 0,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 70
+                        },
+                        "defensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "two_handed": true
+                    },
+                    {
+                        "name": "Masori mask (f)",
+                        "id": 27235,
+                        "version": "",
+                        "slot": "head",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABMAAAAbCAIAAAARYSP2AAAABnRSTlMAAAAAAABupgeRAAAC70lEQVR42o2Rz0vbYBzGl2MPOfRQCIVCKSWUEEKQhJKS0NDQ0EpaYqmt2Faqqxbnz6lzG53z9xziFH/iVnQON3fZxthp7CLIdhq77LbLrvs39pSU2tgqhi8v7/t938/7PE/eOzd+REvnVqeJhUEO4y2vIzplN0bUuxV5Z0aYyNL2o0RGdbTChBl2RwQKk2972vlh9HQxtFzmioav2chkmrxCEtmoVw9SXzbV71X993vjz4fkzzdxKNtliUe9ZEy8lCUOp5zpiAdSfz+bUVWNKEqjICvzLpxpaMpsIy1uGitCClhM05pJzJG2KRtRypmcr04SJ9sL51vUv69ZYM1kOBTC8mRegk6XUoOfV0Y7tZDL5ayTb/eXQZ4drDaTwDDuP5t9MT+5NkiOdZEup3N6OC/yzKXV093Fix0K/Kej9WZyd3Vm5eFwZWJgf9K5UCSHk458Og5BG/ljj8KIgrJFvlx/DGx2pDBRyl680kFmklGP2+Vx1UPWcxq6/nrr6dHmXHWjAqn1ufGlB0PwVi6kEAxPhajw6XY5rj4mSEnSkWpr8T6k8KshldAVZPP5WLwq+GLMgWV78hdDWZimiDhU9aJqZICm/T6f1+O5lsQGyrxbwtgokBbmpqj2JM/LmZHR1FA50T8Qz+X1nl4lkeBl0SItrA1Z6U7JgUB+ahqk0dcHTNJ1UdN4WbbcWlYpkmxDqiwDEVi1SMx9LOtjafQ1jpMQlaLak7VtJwmyoUnzjCF0pKRgrIOHIwZJ7SSxl02f9OVGwnKMCYSdJDDV7OoIq4zIlUIS+oWgaHJs2O9n3ZSN3EiZ1Xx2RosYLCOQDkYQUTTPe2m6rIRQ/VIwK/C4N+j12Mg10zjo6X4S19M853c4ACChVeOqAiwnCtgyEDhA28ilRHw7kzou9OKEx1HrNApGoAmrEKw37R9xnIx/zJiwZJGNPjRnQ8G0TcpOHnRGz1KJVhKCY2KHSfuvJTf1CGRbSYS8J/A3kLZsrf222H/03QhleADVdwAAAABJRU5ErkJggg==",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 2,
+                            "magic_str": 0,
+                            "prayer": 1
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": -1,
+                            "ranged": 12
+                        },
+                        "defensive": {
+                            "stab": 8,
+                            "slash": 10,
+                            "crush": 12,
+                            "magic": 12,
+                            "ranged": 9
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Necklace of anguish",
+                        "id": 19547,
+                        "version": "",
+                        "slot": "neck",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABgAAAAbCAIAAADpgdgBAAAAAXNSR0IArs4c6QAAAAZ0Uk5TAAAAAAAAbqYHkQAAAT1JREFUeNpjwAEYsSCSAESPra0TJkIzlxwjcJmL3RQ0RXgQXA0+Uwg6G9kgkuQI2EqeQQj1tDQIU5RkswbeIEyNw8+gDDtNdIOAQl4KHKSYxRihzrUlXsRdmQ9hULQGV3eEXasrn4sckWYxdvjr3yqWOJcrviNBJEVfCKKLcVGK8/Mqqc1xIkAUrwsSJVjOiAoKQhAib8JEEQhvicMYqsrV7yFQ48DjowrzFGZ5aGVln++o2e3BB0Tu8lBvohrKeL1QEoIC1QVwFkkNnjrnciUWhQrF6IA8aKCgAAlUJ1k2IAPuqUJTkRxjYSDCZxBQGmgKxI8QU7YliAA9EqwnoaSkAnQyBOHyO3pgwTW0+epdKZBYGCIERNHaQgSMwAwsZI8UmApDTIHGA+kA4UY0UygyC24QRWZBTaEcEGMKAJ7Ub5LqjPquAAAAAElFTkSuQmCC",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 5,
+                            "magic_str": 0,
+                            "prayer": 2
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 15
+                        },
+                        "defensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Blessed dizana's quiver",
+                        "id": 28955,
+                        "version": "Normal",
+                        "slot": "cape",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB0AAAAcCAIAAAASrSP9AAAABnRSTlMAAAAAAABupgeRAAACcklEQVR42q3VT2iSYRwH8HncwcN7EER4QUReRF7kRZSXV5RXfHllGypTXI6c4tI2mhOqiW3lwrCxDWOxEKl2qEaUtOiwRhH9YYfoEtEtKNixa5egS5e+8YuX0U7vP748qIfP++X3PA+OnHhsf2P1Y3t7S+iWo5bRVPPrUBw0VHKtrEkuVnw1S1NNCtEUa1yqSTTNhFzLaA21ZspkgSbxOE26qXdoBMSdzStPBusU/KIInDX111p1iKx9BB8QuDzrNE/bSMSKjIV8opd1OxhyTaHL9UpK9IOejPBKgMtzgZTHb4a2gUNAl5QwJRXyV/hwwSdMenljtG02IVJK8XAxFipEBcqCEAHdkSNjbo5zOYzQN+ez/cV8TZWgd6PjnUjysqTsT+eqvLgak+DKrMftNNQa2VayW4lML57ekFPQVyV1byrz/anr013nhiJLLjcNxIjeyioDNY8XfFs8+3mu8usV+/Mle/TIdSeV7KlxhfWCNjjulZyKgF6LTfx+44b74zk7zKe1bQx6XTRuRB99v1lE8b6S+3Bm5rAy/a5cwKyxjUTj8MHl3U6suund1gxoVP5YK7+fLb4unTo4nQeNnSz6g9hJkWNxG2sTo7ppqvxloUp72BITS+G4RmPWQY/rXGa0kbXrpjHoo6UGjgeKE30+JDeC0bmAhJlg1riTul2i21NJHD46eTjUqEy0VrxZsCNG6IfLJdCojPtClclFa6RTsbdL+l1tIKBpGlrlB23fVp3pzTPXq4Zcoi+k5fp49LAv7G/yj6/5X9wI3LvE3L7IbDcY6OQapA/WHc+6/7LXcQyvOnZXmJ2mCVSjj+e/f/E/TLr4JPHI1TwAAAAASUVORK5CYII=",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 3,
+                            "magic_str": 0,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 18
+                        },
+                        "defensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Masori body (f)",
+                        "id": 27238,
+                        "version": "",
+                        "slot": "body",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAXCAIAAACTXWg9AAAABnRSTlMAAAAAAABupgeRAAADlUlEQVR42p2V30vbUBTH62Me8pCHQCkUQiihhBJCaZFIpCViqKWKla4ddR3F6WSK026dc8yh+yFDlImKwyETQQaDwV4H29MGY/uz9umuhC6GyVa+lNvLySfnfM+5t7G+z8CF/u1z9eMD7ZJUL0oVR2L9H8qnY5aOeqgw+kHLXLxmTI9I1WGplJc8O+ZmYkk1piaTCV3nGymqKsSaPAggjGASqnlJfzCeSkgR6Ofz1qO2udwwZidSAZ0sBFqItRDrpao8W5buTEgk1K7ooMtuIhoNdGvBXp/J3JtOz0+lboxpk4VEKh7XDANQSGxamrY5Z1GryKYx2osfNJUI9Pnh0xe35LWmTDr4TuJwk6oKKOsUhey8m8k6AXrKGSR+pSaTO49gSAT3cKt7svuYZKF3G1TaQ8MNoQUdLsqldNCbbVnQSUigw1x0tr+5u5w9XhukTIGOy7JA65lMP12gHcMQ6PWWTJMwBLvD6M7t5v07N9aW2iy2l2zoOE5nMAQ66MviZZVctpS1yYb+E0xvFqfcuCKH6V65hsxcfnymQTOPVvPkjj+CzkiEeggUHXRzoAmjjettv1MvRHgNFJGLVyt/2Vug768WFUzEGUHXjZ4pppVHNBDuyzlZiOFDGzOl1emRaLRh245fQENlz29OCjo+0n0zmcB0w7QRa7h0GygmoK9Hd9Hpo2b3uheBxo3h0XHXTufSumGb7Niuy/vePnFwn0kXdCoYsay9Tg7H8AGjEMHfj1dOHjYwJNrrIa/sZAwrpSXjKjtBKWcbDoaK00ER5Lszr3BMgGqGLiJ/vOmAvlsbBu3aaj99QBgtjrKiXqCfjY91vAJp4sD50yEmhyFj4IoZkyJoACJMEKiDUaGf4ayLpapT8AU3QJ+2mp+21Y/P1Xfr6vsttzc5KwoWk7s4sZqiBGheTADTzRqF0RhtaonAkG8HcRTQMQTToWMIdNBcpCJyYji/utiab03VJ0b9opNJ62xGoPErQP98HcdofHByOZS1rLxtYzSDweQEl3t9ZOjZg9ucuJnr47WKF5G18DqoseL7NE3MH22Ei8kkzjXNZctVrv0OFuO00K5t3J9bnm3crFei0RgdoE+61H5hLhcQXF7AguuFq9xI9ughNInPTk+yEz4ynGDWweaHTRVn95d6YuQZTcRCXF4kDr0fjRvNql8dK/6BhsvwhdCfd1Rc/ougE9Y/vggUP6/8Px64UkHo5c1fd8hVlqWBMdQAAAAASUVORK5CYII=",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 4,
+                            "magic_str": 0,
+                            "prayer": 1
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": -4,
+                            "ranged": 43
+                        },
+                        "defensive": {
+                            "stab": 59,
+                            "slash": 52,
+                            "crush": 64,
+                            "magic": 74,
+                            "ranged": 60
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Masori chaps (f)",
+                        "id": 27241,
+                        "version": "",
+                        "slot": "legs",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAA0AAAAaCAIAAADjWkEIAAAABnRSTlMAAAAAAABupgeRAAAB4ElEQVR42m3SbUvCUBQH8O3lXuzFXghjcEGGDJExhjhiMmk4NlQ0MMLCHhDDhB7IHil6UAypsCyIoJLqk0TQJ+sPF5beNg5y4P48995zLjfx8VHBfjyJcUwoMeE/5QebJo3bHbM9n1j046YmRbi5nLW/nNxd1OKEAJUcJZ+RGcc/DQ7PdpsnO41GQai5giyJMUlCsO7x6gDIzmSuW2JnQcSOCVUNKev0VGq0JZ3URZRUNT2paRHueGsVCzhfryEGM7KWMhWiTjr+8+Fyu1lrr87DjQ+lYVvCKUOnCAKl/PvoAvWAJh1KwiUn3fjuDJcFskwTgSMCWZ4Dh5uEW/Nfz95pIxU6RK7iZ0t5OCLH/s73/eKfN3W4tGHgyojWXh31EkSecj9vQa9lhA7JXreFenBsX+gy/UWHOY1k8yXs6+jclAuLAWG+cPZsAMcRecphGYg6DCvnV9K2S+875VAj3NTO6Jgh2l7ysmpcYZ8CWlgtum427eUszLA25weurSdV1t13O/VqsFDOowx9Fmu1Mv7GunG3gDLNpQrcR7/YP9qgW7Pu9SK46cyuV3Vvhgz3XZrbhhLx9DHZZU8o2wJy+hoMlYtwtB0rxTjN0WqKWOcWqqblIEEAWY4XOpYionLuFyWLklQhTW0uAAAAAElFTkSuQmCC",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 2,
+                            "magic_str": 0,
+                            "prayer": 1
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": -2,
+                            "ranged": 27
+                        },
+                        "defensive": {
+                            "stab": 35,
+                            "slash": 30,
+                            "crush": 39,
+                            "magic": 46,
+                            "ranged": 37
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Zaryte vambraces",
+                        "id": 26235,
+                        "version": "",
+                        "slot": "hands",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAWCAMAAADgvdz9AAAAllBMVEUAAAAAAAE/Oj9CPUJFQEVMRkpIQ0hOSE45NDlRSlE1MDUsKiwgHSAyLjAoJih3LHx+LoN6LoAkIiSBMIUVERUaGBqkPaunP66sQLK2Q710KnlrJm9YIFxgJGR5cHl7cnupP7BUTVRWUFZYUlhbVVt3bnd1bHRza3JwaXBuZm5sZGxqYmpnYGdlXWVdV11jW2NhWmA8Nzw+Iot0AAAAAXRSTlMAQObYZgAAARdJREFUeNp90uduwjAUhmE+rwwaCNA9SYBMGzv3f3P9ghqhiqbv30c6HjqLawAW82F5dw/Mappm6eoOmOGBxUO6BPAXB++llPnr28c7fgEb2dneWrvLN2sBXDVebh/AnO3atn15zjfDIDGpECJbbXkp7/q2rppeCjYNgFIqTrMsheP0rqnqjileAyBDM8EDB2fJXVufmvaSUSBHUZIkj7t8LW3f8/SmrqqGKW0EFkiKoiz3+6fdWoPcjHyqa/HzIFGUh0Mh2bkE0F748wvTb5GPR15QKhc4DfSTFBPHgnw+G6OM6fpx3qXrZytyoButowg3vy1HDoGodGRuXZG9D5EEIiNvXZOd95hZGZBtoud3Jfh/V23GvgGETR4RXLzc2wAAAABJRU5ErkJggg==",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 2,
+                            "magic_str": 0,
+                            "prayer": 1
+                        },
+                        "offensive": {
+                            "stab": -8,
+                            "slash": -8,
+                            "crush": -8,
+                            "magic": 0,
+                            "ranged": 18
+                        },
+                        "defensive": {
+                            "stab": 8,
+                            "slash": 8,
+                            "crush": 8,
+                            "magic": 5,
+                            "ranged": 8
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Avernic treads (max)",
+                        "id": 31097,
+                        "version": "",
+                        "slot": "feet",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAAB8AAAAZCAIAAABGlWJzAAAABnRSTlMAAAAAAABupgeRAAADBElEQVR42rWW70sacRzHdw/3YA98IIRwIMc4QiQkjEPxUDyU25GhoTVysdZco7IhRA8a24PRaoOoNg0yawZlg/bDBg22P2+v8YFDlH6uyZv64t339Xl/3p/vqXcufCl/9X9eSig05PF4WXTqdtDRaFxV/ULXtKDfr4v+vYCCBgYGw+GIC70tutLY2jLNJGgs90rvlwLdugZ9a/W9rocE12mcrOgpEAiizkvhSPiKBZT65kYmn3HNVmbnYcHVtPuJRKqrJ9A+n2bEjKvS2Z8dy+IdnbZaOSeDX86PYcRIrDcr6F6vysZrHJip51PQD7a3sazr/RTYWFnj/d64QHu8nmsNQLEsOxAYwjLovj4ff9ffrDIP0G9fvsYvLXIVUViGIbq0gGLbI9DLSwvTc9PsxD5yE1uuLAIVFotOyc0XF1DS6WHoMy9myFpAPFbEUigWWrt15pzPZHmTem5trrJFGqJXIJfQmaGgJRz2s5Z3hChmucqJgsuJomkW3HD37r3eAgr6uLdzcnb25exnaa7MfewHxdwoJg0Rl3QjdKnNWuw7Tq5QKBYLhS66UlmuVBv15slJdb/5rlp9tbbGY8LDKXRpCLT0jkAjqcSCGLEvFpcWyp10ZX5xvrZfP/ze3j1q8TSlh9OMzbaspGnGDIORnf76fdhugyAT1a/Ch0hDkkP3iexE0y8HfL32YfThqJNzLNviCOAaim2lqNFq/6g1m/WjI3KQbhB0iY7czxujIidv4smEi47Go0LHIJlUGzuN1nHt08HK5ubjmZJcQm7o6Fw6rscnxznLyB6xE6kEnxtEijs2zlZmD79+2zv+TGEzaRKXGKct/pG4fA2cS8+OlYRO1ggEw9T0oF/TQUttmQSu4SbNOFkxCSx7+1S9P3TJ45NyxhKpXMRMDxqJYCgiG0CTWPFpkcToibhoSOYZj8b4dMMydBd9UYEulcqlyWeT0hPGGQZxEQtooMK98Tetki/OQXcTEzpZ+VQN3YTbO48HI4+Sdj4ad9zEmMet/TIQ3fhHxx8wFRqnrX+0hAAAAABJRU5ErkJggg==",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 6,
+                            "ranged_str": 3,
+                            "magic_str": 20,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 5,
+                            "slash": 5,
+                            "crush": 5,
+                            "magic": 11,
+                            "ranged": 15
+                        },
+                        "defensive": {
+                            "stab": 21,
+                            "slash": 25,
+                            "crush": 25,
+                            "magic": 10,
+                            "ranged": 10
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Venator ring",
+                        "id": 28310,
+                        "version": "",
+                        "slot": "ring",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAeCAIAAAC9uZmPAAAABnRSTlMAAAAAAABupgeRAAADM0lEQVR42q2U3WtScRjHO5dddLmbYBBdjJAxZDhEUSYedlBRUXEqOcdenGMm5pwz20vJNtmWNVtrYzVWo1FE0AsRoxciiAgigggigv6YPuMHB4lzjl4kXw6Hg+dzvt/n9zzPCZ2fdOL//SSX1dQ2UVKl+w/Z3uOwnOPG+H0U9HpQSu7zK4oeUfI4zToGpVgohKKBgNCkz8417PMZuQvKfVpECY0q1rTXBqUUdafi8UQkAs64MlJEsfpdvWpkoaTbAgtQPuSERbp2cQm/o5not5ri/WbBUqXiWrBiXjtS8woWxUYQkeoXnMoyKpxqDVbI3g2OpAKXCfac7jgpKEblF1KctphvYGwwcHEkLpu7mnGwFkds6xPm2ZipRcDG/HSzZtJDk4lIOh6CFXX0wNopDdwpKxt5917R2shajIlSZWrkydYq2rpaWilOlTMp3IHjOhx21XMuQJsF+X1dflbtPyjbjIlSYcR/7VL+oF4VuMXcOAZzqRipJxPK7aIs3H3aVN6uyy+W+h/OOfSI0kRMRpymwMFdKmTms2MQs8koX9qreO7NeREsDL5ccR1W7LdylssJHdxQ0MlpgttZrlC7tXIOIhWYHjtPEdWD+thQsCZw2/m+hWS3Bo7qYA0cCJLiC4rOqpBEWMoHrjrco4FjBgQOiTlFBm1A4cARtjZu1g4LiO6lddtYcxK+BGt5VMsdZ0ftxFRZus8aW7s+2QsOFjeELUb/XYtSPuXDIJFxx8CLGdLDgRAsxkP7KGgFDI5F3ctpx0yij6mULZ081xQUWCKs9lHMpkOHV46bi76vZZzlpDUbNicVEzZNZ045ujuizs4LwS680LoIlrhqhpAqmfDz1fCjagAiAwBxLmUTleb79CoF4p6SMbC7hWOJydXGzU9FXtWjQrQ+87SW7d8v2RCvIQGiP+herujxgsNoBbxpxISObgw+rYUYT1of0bGqjmouepiHbAG+1GJHvbsZa9bvg+Cv+4Efe/7vd33fdn2ftzwfNgZer7rVgW29h5uhfx4c437uB8B93fGySxh+cCKmBsvYJjgMgsPal20Pwy+WnS7I2CY4EVYkBadrqn2oUPugv2JzotgA1rNwAAAAAElFTkSuQmCC",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 2,
+                            "magic_str": 0,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 10
+                        },
+                        "defensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    },
+                    {
+                        "name": "Dragon arrow",
+                        "id": 11212,
+                        "version": "Unpoisoned",
+                        "slot": "ammo",
+                        "image": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAYCAYAAADzoH0MAAAAAXNSR0IArs4c6QAAAJBJREFUeNpjIB8w/qdI89SpZf9BNFmaZ8+uJl/zunVd/zMygv7r6amSbghIQ5yM2H8nC13yNCcBNZuKCJCnOV1O8r+DpBhcMxlOR2iml9MRBoRKigyg063ERIaW0xEGBIw6nXTNVZK8/+MEOMjLaWVivP/TRTj+h5BrQB7QAC9eDvJd0Ckj8N+Nl4Oi0CdbMwBnTGgeSafHIwAAAABJRU5ErkJggg==",
+                        "speed": 0,
+                        "category": "",
+                        "bonuses": {
+                            "str": 0,
+                            "ranged_str": 60,
+                            "magic_str": 0,
+                            "prayer": 0
+                        },
+                        "offensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "defensive": {
+                            "stab": 0,
+                            "slash": 0,
+                            "crush": 0,
+                            "magic": 0,
+                            "ranged": 0
+                        },
+                        "two_handed": false
+                    }
+                ]
+            }
+        },
+        "inventory": [
+            {
+                "name": "Lightbearer",
+                "equipment": {
+                    "name": "Lightbearer",
+                    "id": 25975,
+                    "version": "",
+                    "slot": "ring",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAABYAAAAbCAMAAABP9I/XAAABUFBMVEUAAACVgxGrlRWumBW0nhW9pRi6oxW3oBWxmxWhciilkBWbiBFtXg3IrxjLshjNtBiEcw3VuxrFoBjNqBjQthh8bQ1WTAnCnhgdd1qndipIf2qbbiafcCiMYyKIYSJ3VR0utoi4gy54ag3dwRrixhpRSAm9mhhbSgmqeCo87rJwThp7Vx1zUR2YbCaxkBW6lxWihBGujhV+WiCPZSSSZySCXCCLcRGlhhWOdBF0Xg1wWw2fgRFkRhhgQxhSOhVcQBVWRgmVaiQ66q8dGABCNQDCqhg/LA1wYg3gxBrNkTRbUAkwvY432aM546rU2tgqp31wxaSC1LWFj41DdmPTrBp0Zg3iuRrswR3xxB2Hdg3QqRjYsBrgthrVrhrnvB3ashrYvRrpvh2OfBGRfxGijhHFrBjavxrTuRqfixGLeRG/qBiokxWAcA2YhRFkVwkAAAHrJTtOAAAAAXRSTlMAQObYZgAAAUtJREFUeNptkldzglAQRpVqwK6JXdN7r6b3bkFMs3dREff/v+UCg6DDedo5O7Oz+91rmQAsJgCMwMS2+2YWa70CTM0CgHbhJZuVG2AHzXZIQuI4Lp/PAwzHVnCRWOqT43mkrXNj3fW4yFQ6zSPYWV0vL3n8D+lMjufDRv3WFQIbmUwuF0Z6Zazf6wJhwzFsPhgMDj9AW46iSIpGDabXcn+rt8JA5nkgNzCRYZtPoFwnIiLroRmZaGTn/lHRkrXVjEVCNIFj4vFRLL6mWNI93EzEowtel9NBnhxuJUBNyH59tQ0AX5VS118ALS0ne3ML6j7VSk+/m9ZihkZHGml1zcEsglr+inp4jTrR64MyhpZ0/VcTBqLUBAQuGd7lp1R02BjWijDqRrnk81I2HL9MIqv7arniC+wdnCXPYfJ/FL2ru/unF3dIGwEV3f4DJWJf/Jw03w4AAAAASUVORK5CYII=",
+                    "speed": 0,
+                    "category": "",
+                    "bonuses": {
+                        "str": 0,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "defensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "two_handed": false,
+                    "weapon_styles": []
+                }
+            },
+            {
+                "name": "Slayer helmet (i)",
+                "equipment": {
+                    "name": "Slayer helmet (i)",
+                    "id": 11865,
+                    "version": "",
+                    "slot": "head",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAABUAAAAeCAIAAABMssICAAAABnRSTlMAAAAAAABupgeRAAADYElEQVR42qWVfUtaURzH5wvYn4P9s3cxGIuNoiiaVFTMjMyomUklIj2sp0mYWZaZztRME600rW676UynNWMNel37wInbalbE5MvheDyf7+/hHO999thH9ew/PqrwuofxUTvVHSnrGy6XssIYDwQY78IRrzfq88X8/p1g0DZtR39buBfstTU1TKrzSpzQmptsnfMrDtsyUmJ6HA74xro65sSowiv7vE7n2pJv1el1OTxIxGRR8M0NDc4vc2x7qAsbnvBXd8i7Elx3bSBWEpH9+vfvgRdnZ6mFlQcb7o+hkC8a9EaYYLEbzcATFlhpJ6rOx8PJWGgPgSFhkUlIkL6lJXGcNe9qUfVGpuJHydjBYVKWM3kplcUiEohvB3c4I2ApkfhkHNEPGKvD1tFxtp4cFgrZs7PCxalcxiWdkGhBgrz8/uRWmEZU5VVoYc4ZDcRTsQM5nStmz06PSydkkZST0UzAE2Zs+9Dc0tTUbzDd4VX5g0xwdWXF4dnyx9h3nMrmyEIul3LnP4u/cBEW6fjRx9ZW4mOkWKj2NkMURoeW7e5NX3Q3ss8+wpLFd6mImPCVdSx0Gg08VWAkLFTv3rx5+/r1YL+pQ61GlEC1BKTtYIzMWWEddyzgqQJd88Y+vZxMUkLp23FXezvGiEbCICZgXAdIIYJxI2/yN/Tq4IuSVMnnryoVXZ+BDg2azMNmK0FevXqh6OXL56ind0Cj1bV3dl3HH+jpof7C0eF5Lvf7rMzPZMg5D41YsECjlnHEBFOsCaDt0Xdqum9SyGxHc5l0WZYvS6Xuzk4lBcXCbJ1kFJeHX4mBxQ3PP1/e3aX+i0IBnvpFCliI+PCWsSnsBJnLpS8vSzc858HdyqZStIAWTlmmEMe5aFvmUjHxLPl0nJxWiymZVyp5AV/zeq2eVnF4bJqxzsyNzSHbhM3r2oD0u0OQtIksSL5ckrk/t/iu9i6DzmAdtgps/vM8sk/b0eKsgwNCIv9iUbq6qpDvLb5D3aHT6Ez9JiwmzRNIlEAuSPAEJ/nSj2O6Iw6vyiPYqDeaB81CliELwlHhdxJBSUpQZrO67b5HCNehn1qEsEMUL/hw2IMFxdfVNyr8468DEoYXDKLT9z1/7nWk+U3NLYIXz/Inv8vUrR2CV/48T7b49y34B+BaC9VgL6xwAAAAAElFTkSuQmCC",
+                    "speed": 0,
+                    "category": "",
+                    "bonuses": {
+                        "str": 0,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 3,
+                        "ranged": 3
+                    },
+                    "defensive": {
+                        "stab": 30,
+                        "slash": 32,
+                        "crush": 27,
+                        "magic": 10,
+                        "ranged": 30
+                    },
+                    "two_handed": false,
+                    "weapon_styles": []
+                }
+            },
+            {
+                "name": "Zamorak godsword",
+                "equipment": {
+                    "name": "Zamorak godsword",
+                    "id": 11808,
+                    "version": "",
+                    "slot": "weapon",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAfCAMAAADHso01AAAAqFBMVEUAAAA5NDRgYGdCPT1dXWU8NzePj5qNjZg1CQBpaXBbW2N/f4kgHR1gEQlMDQkuCQBIDQlSUlhWUFAsKipkZGzGx86Wl6MyLi60tL5VVVsuLjJDQ0h2dn+FhY+vr7qqqraYmKSbm6idnal9fYd7fIWioq9wcHmVlaGLi5afn6t4eIGIiJODg42QkJuUlJ+GhpCamqaJipWSkp1MRkZRSkqnp7JmZm4AAAGnPxfSAAAAAXRSTlMAQObYZgAAAOBJREFUeNp90NeOwjAQheFJwgLb2N57JZTExEv8v/+bLVaEhGIdzt3o07E9Nh1gn86mJVrfp2WFOpNV5covUm3bFuPDuwVYGniDz9otEbe+MqvdMSb4/qZ235gKQzdHInXlG4+sul8gBSBytSQ1I2wCt6PFMDLs6gACAfzLM3S/Q68Nhh/RzVF3PQTgp2E7Jy+bh1VNQC18etFgoHQyHgRUnfMz8uu4nFKDnL7GGSZj4pDqH3CYP9FNR719MyiK/OERsa8ZB9kdJhJ5XaD1BLhE6RVmrBGa0b1ftW1b1hH6D9wbLNul2ntdAAAAAElFTkSuQmCC",
+                    "speed": 6,
+                    "category": "2h Sword",
+                    "bonuses": {
+                        "str": 132,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 8
+                    },
+                    "offensive": {
+                        "stab": 0,
+                        "slash": 132,
+                        "crush": 80,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "defensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "two_handed": true,
+                    "weapon_styles": [
+                        {
+                            "name": "Chop",
+                            "attack_type": "Slash",
+                            "combat_style": "Accurate",
+                            "att": 3,
+                            "str": 0,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Slash",
+                            "attack_type": "Slash",
+                            "combat_style": "Aggressive",
+                            "att": 0,
+                            "str": 3,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Smash",
+                            "attack_type": "Crush",
+                            "combat_style": "Aggressive",
+                            "att": 0,
+                            "str": 3,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Block",
+                            "attack_type": "Slash",
+                            "combat_style": "Defensive",
+                            "att": 0,
+                            "str": 0,
+                            "def": 3,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "Dragon pickaxe",
+                "equipment": {
+                    "name": "Dragon pickaxe",
+                    "id": 11920,
+                    "version": "",
+                    "slot": "weapon",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB0AAAAeCAMAAADn2eWTAAAAeFBMVEUAAABtFQ1UTU1YUlJWUFBbVVVOSUhRSkpdV1dhWlpjXFtlXl1nYGB8Gg14GA10GA1wGA2AGg2LHRGYIBGVIBGJgH+iIhGuJBWEGg1qYmJsZGQ8Nzc/OjqoIhWfIhFFQEBbEQlIQ0NMRkZWEQlgEQlkFQlpFQkAAAH+zbXQAAAAAXRSTlMAQObYZgAAANtJREFUeNp9z9mSgyAUBFDZFFTUGGffogL9/3841NRQoom3n8RTXTTFIYi5/5fSvY5POFBIYf1lnL6RWVj9lsjT16ZsXYP37j+VfrfdCGzdiEiR9ZvtenvNHemrVG1ru4EN4/OD6bxuG9sPLDA7veCAi2iaBgALzofpir1WJuLfXe7mbsMFOc6ibmqkLcxhVy11xO3YeeQqTW2QnbGrqgyPAddG4wwXYYhqpYzCGc5S6/NqKbQiNikCF6kEsUkQOHMliU2SqP5UghObuERBPJYT+klggY8KBcEn+Av/eRzTCRQk5gAAAABJRU5ErkJggg==",
+                    "speed": 5,
+                    "category": "Pickaxe",
+                    "bonuses": {
+                        "str": 42,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 38,
+                        "slash": -2,
+                        "crush": 32,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "defensive": {
+                        "stab": 0,
+                        "slash": 1,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "two_handed": false,
+                    "weapon_styles": [
+                        {
+                            "name": "Spike",
+                            "attack_type": "Stab",
+                            "combat_style": "Accurate",
+                            "att": 3,
+                            "str": 0,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Impale",
+                            "attack_type": "Stab",
+                            "combat_style": "Aggressive",
+                            "att": 0,
+                            "str": 3,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Smash",
+                            "attack_type": "Crush",
+                            "combat_style": "Aggressive",
+                            "att": 0,
+                            "str": 3,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Block",
+                            "attack_type": "Stab",
+                            "combat_style": "Defensive",
+                            "att": 0,
+                            "str": 0,
+                            "def": 3,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "Elder maul",
+                "equipment": {
+                    "name": "Elder maul",
+                    "id": 21003,
+                    "version": "",
+                    "slot": "weapon",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAMAAAAM7l6QAAAAgVBMVEUAAAAAAAEVEREsKiooJiYyLi41MDAkIiKrixWuahVCPT1dV1dOSUiATQ2RdhGxkBWfgREuJgClZBV8TA2YXBGbXhFwRQ2Eaw1CJgBpVQl0Xg2LVBHFeBiVWxEdGABbNwk8NzdWUFAgHR1kPAk/OjpYUlJbVVXIehhIQ0NUTU05NDT2ud6FAAAAAXRSTlMAQObYZgAAALFJREFUeNq108kWgjAMhWFykxZRcUBxHkAEoe//gFbOcVWbnf/2O23aRZIgokSJZpY0hhEiiunAxtiqok+hziUFUNfOOcsUMGOs7bqhN6BgMlZLy0DXikPIAjgjE0CsBOydCGPCCNm7Y7DCBiAfm58q6fhfSjl29vuIUKep11jUi6ZZcVN0n68VLY8HRV+ns9cob4sNxfVS7rSrr42iT3fXBgP/UlE1e2i6yBt1a7SdewO4lAdfwt3n7AAAAABJRU5ErkJggg==",
+                    "speed": 6,
+                    "category": "Blunt",
+                    "bonuses": {
+                        "str": 147,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 135,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "defensive": {
+                        "stab": 0,
+                        "slash": 0,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "two_handed": true,
+                    "weapon_styles": [
+                        {
+                            "name": "Pound",
+                            "attack_type": "Crush",
+                            "combat_style": "Accurate",
+                            "att": 3,
+                            "str": 0,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Pummel",
+                            "attack_type": "Crush",
+                            "combat_style": "Aggressive",
+                            "att": 0,
+                            "str": 3,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Block",
+                            "attack_type": "Crush",
+                            "combat_style": "Defensive",
+                            "att": 0,
+                            "str": 0,
+                            "def": 3,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "Burning claws",
+                "equipment": {
+                    "name": "Burning claws",
+                    "id": 29577,
+                    "version": "",
+                    "slot": "weapon",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB0AAAAZCAMAAAD63NUrAAABYlBMVEUAAACEd2l/c2WVhnaIe2yFeWt7b2J9cWOThXSCdWaQg3OKfW6fj35YUlKgkYA/OjrETkZzaVy2SUClQjyoQzyySECwRj+FNTCuRj+/TUUaCQnGUEiVcyTFmDJdV1djXFtnXVKDNC6YPTeVPDWdPzmjQjqMOTKgQDl2a11cVEmZinmrRT2WiHh8MixkKCTQVEqPgXFWUFB4bWBRSkpsYla4SkK6SkNnKCSANC6bjHtwaWmsm4lNRj1rKiayoI2omIXRojXImjKIaSJ+YSCMbCJOPBFXQxVJORFFQEA1MDBRSUAyLi4kIiJyLihCGhhpUBoaGBhGGhiCZCCSOjTNUkp7Xh3JUUiyiSxxZlq2jC69kjCzoo+9TEPLnDTNnjTZqDdcJCBnYGBzWB2bPTd5MCqJNzB3XB2beCafeiithSqkfyiPbiTAlDC7jy64ji6vhyyqgyodFQCqmoeScCSngSoAAAGxEhzbAAAAAXRSTlMAQObYZgAAAXRJREFUeNp90mV/glAUBnC9CCYLwDmns3Vz7bq7u9OFPTuf7z/A3nS84HJ//3sOh8NRdLgAeelMUBF0w+MTra6bImRX68ca2nwTpHXCbqM1+naFUgXMiUfAqFj7ip5Sok2JdjbA9gI0YQKrPQadGi1Ka2mGZXtHdTqKzPtLWwZ+Ck3VaNTExtLaaxj0/X5srnGeIdSRolW0MqQhjnOUKOJYB/oGTahjhFEzVA9NTs/wFuR9GzeYNgu1YAiR2DOZUTL9UtWPnMf5BVg4L2QcEFyx6LjX5XRIezGp++IS98FkUd4aeZfTOMi7l5eqp/sEkxi8k3uQWmQ2jvjADQh30XodFmv4CNuZb1mT7kksGPkYGh84fHsIvBeKEB9TJmCRi0Sb+pm5EuGlLN4yiTiQLcRae/eRPQCSUuZcGXjNJeJtjc/sAylJ87tiaD7965fmAbmqwh6Qk861cxlWWSFmD+PPlFTHoQI8pTsOUk0r/4yoQtEVfwBKhmrEGqOjkwAAAABJRU5ErkJggg==",
+                    "speed": 4,
+                    "category": "Claw",
+                    "bonuses": {
+                        "str": 32,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 43,
+                        "slash": 54,
+                        "crush": 0,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "defensive": {
+                        "stab": 3,
+                        "slash": 6,
+                        "crush": 1,
+                        "magic": 0,
+                        "ranged": 0
+                    },
+                    "two_handed": true,
+                    "weapon_styles": [
+                        {
+                            "name": "Chop",
+                            "attack_type": "Slash",
+                            "combat_style": "Accurate",
+                            "att": 3,
+                            "str": 0,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Slash",
+                            "attack_type": "Slash",
+                            "combat_style": "Aggressive",
+                            "att": 0,
+                            "str": 3,
+                            "def": 0,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Lunge",
+                            "attack_type": "Stab",
+                            "combat_style": "Controlled",
+                            "att": 1,
+                            "str": 1,
+                            "def": 1,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        },
+                        {
+                            "name": "Block",
+                            "attack_type": "Slash",
+                            "combat_style": "Defensive",
+                            "att": 0,
+                            "str": 0,
+                            "def": 3,
+                            "ranged": 0,
+                            "magic": 0,
+                            "att_spd_reduction": 0
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "Avernic defender",
+                "equipment": {
+                    "name": "Avernic defender",
+                    "id": 22322,
+                    "version": "Normal",
+                    "slot": "shield",
+                    "image": "iVBORw0KGgoAAAANSUhEUgAAAB0AAAAdCAMAAABhTZc9AAAAkFBMVEUAAAAAAAEgHR1IQ0MyLi4sKip4c2A5NDR1dGx2cV0sLCooKCZ7e3IyMC5OTkhzcmt3d25xbVpqamJsbGSCfGZsZGR9eGN5eXBRSkpqYmJMSkZwcGlFQEBhWlpwaWllXl08OjCFgWt/f3aBgXhnZ2A1MDB7dmJ9fXRRUUo5OTQ1NTAoJiYkIiIaGBgVERFMRkZdU32hAAAAAXRSTlMAQObYZgAAALtJREFUeNqd0scOgzAMBmD+kBRoKdC992Bkvf/bNVHVU8ahv+SLv4NtyUkwACJGCEHIGPEqbDHmV9gWqNEQWqY+/PawTb0ohEICvaPSoKtcAOcLVR5UhHPKVidtEe7UV0s5ORoEUjgLN3fKpYIxByVQP4RUKksdNIw8F7IftLboaPPsekCbeLCcd4NFwIPtojKYecjqoZr+znSx3hsMBPlsHMZNEcFyPYn82DKGt2sE34jgCMmfWCCJJIYfSqQLwV3NUkoAAAAASUVORK5CYII=",
+                    "speed": 0,
+                    "category": "",
+                    "bonuses": {
+                        "str": 8,
+                        "ranged_str": 0,
+                        "magic_str": 0,
+                        "prayer": 0
+                    },
+                    "offensive": {
+                        "stab": 30,
+                        "slash": 29,
+                        "crush": 28,
+                        "magic": -5,
+                        "ranged": -4
+                    },
+                    "defensive": {
+                        "stab": 30,
+                        "slash": 29,
+                        "crush": 28,
+                        "magic": -5,
+                        "ranged": -4
+                    },
+                    "two_handed": false,
+                    "weapon_styles": []
+                }
+            }
+        ]
+    },
+    "room": {
+        "id": "guardians",
+        "name": "Guardians",
+        "image": "/rooms/guardians.png",
+        "monsters": [
+            {
+                "id": 7570,
+                "name": "Guardian (Chambers of Xeric)",
+                "version": "Challenge Mode",
+                "image": "Guardian (Chambers of Xeric, female).png",
+                "level": 0,
+                "speed": 4,
+                "style": [
+                    "Slash"
+                ],
+                "size": 0,
+                "max_hit": 33,
+                "skills": {
+                    "atk": 210,
+                    "def": 150,
+                    "hp": 375,
+                    "magic": 1,
+                    "ranged": 1,
+                    "str": 210
+                },
+                "offensive": {
+                    "atk": 0,
+                    "magic": 0,
+                    "magic_str": 0,
+                    "ranged": 0,
+                    "ranged_str": 0,
+                    "str": 20
+                },
+                "defensive": {
+                    "flat_armour": 0,
+                    "crush": -10,
+                    "magic": 0,
+                    "heavy": 0,
+                    "standard": 0,
+                    "light": 0,
+                    "slash": 180,
+                    "stab": 80
+                },
+                "attributes": [
+                    "xerician"
+                ],
+                "immunities": {
+                    "burn": null
+                },
+                "weakness": null
+            },
+            {
+                "id": 7570,
+                "name": "Guardian (Chambers of Xeric)",
+                "version": "Challenge Mode",
+                "image": "Guardian (Chambers of Xeric, female).png",
+                "level": 0,
+                "speed": 4,
+                "style": [
+                    "Slash"
+                ],
+                "size": 0,
+                "max_hit": 33,
+                "skills": {
+                    "atk": 210,
+                    "def": 150,
+                    "hp": 375,
+                    "magic": 1,
+                    "ranged": 1,
+                    "str": 210
+                },
+                "offensive": {
+                    "atk": 0,
+                    "magic": 0,
+                    "magic_str": 0,
+                    "ranged": 0,
+                    "ranged_str": 0,
+                    "str": 20
+                },
+                "defensive": {
+                    "flat_armour": 0,
+                    "crush": -10,
+                    "magic": 0,
+                    "heavy": 0,
+                    "standard": 0,
+                    "light": 0,
+                    "slash": 180,
+                    "stab": 80
+                },
+                "attributes": [
+                    "xerician"
+                ],
+                "immunities": {
+                    "burn": null
+                },
+                "weakness": null
+            }
+        ],
+        "units": "Guardians",
+        "methods": [],
+        "specialAttacks": []
+    },
+    "config": {
+        "cap": 0.9999
+    }
+}
