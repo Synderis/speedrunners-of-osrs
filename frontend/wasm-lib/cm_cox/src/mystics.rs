@@ -225,8 +225,8 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
         let walk_delay = generate_barrier_delay(&mut rng) + 27;
         tick -= attack_speed - 1;
         tick += walk_delay + hit_delay + 1 + death_animation - overkill + pot_pickup_delay;
-        tick += rng.gen_range(0..=4);
-        // tick_counts[i] = tick;
+        tick += rng.gen_range(0..4); // random animation offset
+
         sum_ticks += i64::from(tick);
         let idx = tick as usize;
         if idx >= freq.len() {

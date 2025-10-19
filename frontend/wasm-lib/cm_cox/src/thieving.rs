@@ -307,7 +307,7 @@ impl ScavengerSimulation {
         }
 
         // Align-ish to a cycle with a small random jitter like your original
-        self.tick += rng.gen_range(0..=4);
+        self.tick += rng.gen_range(0..4);
 
         (self.tick, self.chest_attempts)
     }
