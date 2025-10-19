@@ -157,6 +157,7 @@ const PlotSection: React.FC = () => {
   const loadData = async () => {
     const startTime = performance.now();
     setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 0)); // Yield to browser
     try {
       if (!selectedRooms.length) {
         setIsLoading(false);
@@ -417,7 +418,12 @@ const PlotSection: React.FC = () => {
 
   // --- Debug & Controls ---
   const handleRecalculate = () => {
-    loadData();
+    setCombinedRoomAnalysis({});
+    setPlotDataDict({});
+    setIsLoading(true);
+    setTimeout(() => {
+      loadData();
+    }, 0);
   };
 
   const formatSeconds = (seconds: number) => {

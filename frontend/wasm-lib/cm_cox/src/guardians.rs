@@ -39,7 +39,7 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
 
     // Faster RNG with variability
     let mut rng = SmallRng::from_entropy();
-    let walk_delay = 28;
+    let walk_delay = 27;
     let mut freq: Vec<usize> = Vec::new();
     let mut sum_ticks: i64 = 0;
 
@@ -49,6 +49,7 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
     let attack_speed = best_style.attack_speed;
     let base_hp = monsters[0].skills.hp;
     let mut single_monster_ticks : Vec<f64> = Vec::new();
+    let death_animation = 5;
 
     for _ in 0..trials {
         let mut tick = 0;
@@ -70,12 +71,12 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
                     break;
                 }
             }
-            tick += attack_speed - 1;
-            ticks_this_monster += attack_speed - 1;
             single_monster_ticks.push(ticks_this_monster as f64);
         }
-        tick += rng.gen_range(0..4);
         tick += walk_delay;
+        tick += death_animation;
+        tick += rng.gen_range(0..4);
+        
         sum_ticks += i64::from(tick);
         let idx = tick as usize;
         if idx >= freq.len() {

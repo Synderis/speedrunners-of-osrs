@@ -134,9 +134,9 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     let tekton_enraged_max_hit = monsters[1].max_hit.unwrap_or(0) as i32;
 
     let (delay, attack_pattern): (i32, Vec<[usize; 2]>) = if room_methods.contains(&"Tekton Short Lure".to_string()) {
-        (12, vec![[0, 4], [0, 3], [4, 10]])
+        (11, vec![[0, 4], [0, 3], [4, 10]])
     } else {
-        (16, vec![[0, 5], [0, 3], [4, 11]])
+        (15, vec![[0, 5], [0, 3], [4, 11]])
     };
 
     // prebuild passive 0..=3 distribution
@@ -191,7 +191,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 phase += 1;
             }
             if died1 || tekton_hp <= 0 {
-                total_ticks += current_phase_ticks - 1;
+                total_ticks += current_phase_ticks;
                 break;
             }
 
@@ -199,7 +199,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             tekton_hp += (anvil_cycle * 5) as i32;
             total_ticks += ((anvil_cycle * 3) - best_styles_normal[0].attack_speed) as i32;
             if current_phase_ticks > 0 {
-                total_ticks += current_phase_ticks - 1;
+                total_ticks += current_phase_ticks;
             }
             current_phase_ticks = 0;
 
@@ -226,11 +226,11 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             current_phase_ticks = ticks2;
             hit_count = hit_count2;
             if died2 || tekton_hp <= 0 {
-                total_ticks += current_phase_ticks - 1;
+                total_ticks += current_phase_ticks;
                 break;
             }
             // Add attack speed to account for the final attack
-            current_phase_ticks += best_styles_normal[specs_hit].attack_speed - 1;
+            // current_phase_ticks += best_styles_normal[specs_hit].attack_speed;
 
             // Enraged phase: (4, 11)
             let (hp3, ticks3, _, died3) = phase_loop(
@@ -248,10 +248,10 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             tekton_hp = hp3;
             current_phase_ticks = ticks3;
             if died3 || tekton_hp <= 0 {
-                total_ticks += current_phase_ticks - 1;
+                total_ticks += current_phase_ticks;
                 break;
             }
-            total_ticks += current_phase_ticks - 1;
+            total_ticks += current_phase_ticks;
             current_phase_ticks = 0;
             hit_count = 0;
             phase += 1;
