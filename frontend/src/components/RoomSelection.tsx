@@ -328,14 +328,7 @@ const RoomSelection: React.FC = () => {
                                                     />
                                                     <div className="selected-room-info">
                                                         <span className="selected-room-item-name">{room.name}</span>
-                                                        {room.id && (
-                                                            <div className="monster-stats-preview">
-                                                                <span className="monster-level">CB: {room.id}</span>
-                                                                <span className="monster-hp">HP: {room.id}</span>
-                                                            </div>
-                                                        )}
                                                     </div>
-                                                    {/* Remove the button entirely */}
                                                 </motion.div>
                                             ))}
                                         </AnimatePresence>

@@ -350,7 +350,7 @@ const GearSelection: React.FC<GearSelectionProps> = ({
                   onMenuClose={() => setPresetMenuOpen(false)}
                   menuIsOpen={presetMenuOpen}
                   placeholder="Choose a preset..."
-                  isSearchable={true}
+                  isSearchable={false}
                   styles={{
                     menu: base => ({ ...base, zIndex: 9999 }),
                     control: base => ({ ...base, minHeight: 38 }),

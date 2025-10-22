@@ -5,13 +5,6 @@ export interface Raid {
     rooms: Room[];
 }
 
-export interface Room {
-    id: string;
-    name: string;
-    image: string;
-    monsters: string[];
-}
-
 export interface Monster {
     id: number;
     name: string;
@@ -56,4 +49,36 @@ export interface Monster {
         element: string;
         severity: number;
     } | null;
+}
+
+export interface FloorRoom {
+    roomId: string;
+    name: string;
+    isDelay?: boolean;
+    delayTicks?: number;
+}
+
+export interface Floor {
+    id: string;
+    name: string;
+    rooms: FloorRoom[];
+}
+
+export interface Room {
+    id: string;
+    name: string;
+    image: string;
+    monsters?: string[];
+    units: string;
+    methods: string[];
+    specialAttacks?: {
+        name: string;
+        count: number;
+    }[];
+    methodCategories?: {
+        [categoryName: string]: {
+            methods: string[];
+            allowMultiple: boolean; // if true, checkboxes; if false, radio buttons
+        };
+    };
 }
