@@ -748,6 +748,9 @@ const PlotSection: React.FC = () => {
                     style={{ willChange: "transform, opacity" }}
                   >
                     <CombinedStatsCard
+                      gearSets={gearSets}
+                      combatStats={combatStats}
+                      inventoryItems={selectedInventoryItems}
                       showSeconds={showSeconds}
                       formatSeconds={formatSeconds}
                       activeFloor={activeFloor}

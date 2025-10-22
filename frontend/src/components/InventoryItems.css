@@ -8,7 +8,6 @@
 .inventory-items-row {
   display: grid;
   grid-template-columns: auto auto auto;
-  /* align-items: flex-start; */
   gap: 1rem;
   margin-top: 2rem;
 }
@@ -18,8 +17,8 @@
   font-size: 1.5rem;
   min-width: 120px;
   margin-left: 2rem;
-  line-height: 38.4px; /* match image height */
-  padding-top: 0.2rem;  /* optional fine-tune */
+  line-height: 38.4px;
+  padding-top: 0.2rem;
 }
 
 .inventory-btn {

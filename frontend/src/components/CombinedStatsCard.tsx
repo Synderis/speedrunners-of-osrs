@@ -25,6 +25,9 @@ type Stats = {
 };
 
 interface CombinedStatsCardProps {
+    gearSets: Record<string, any>;
+    combatStats: Record<string, any>;
+    inventoryItems: Record<string, any>;
     showSeconds: boolean;
     formatSeconds: (seconds: number) => string;
     activeFloor: string;
@@ -39,12 +42,181 @@ interface CombinedStatsCardProps {
 }
 
 const CombinedStatsCard: React.FC<CombinedStatsCardProps> = ({
+    gearSets,
+    combatStats,
+    inventoryItems,
     showSeconds,
     formatSeconds,
     activeFloor,
     combinedRoomAnalysis,
     selectedMethods
 }) => {
+
+    // CSV Export logic
+    const handleExportCSV = () => {
+        if (!combinedRoomAnalysis[activeFloor]?.roomStats) return;
+        const floor = RAID_FLOORS.find(f => f.id === activeFloor);
+        if (!floor) return;
+
+        let tightropeDelayAdjustment = 0;
+        if (selectedMethods && selectedMethods['vespula'] && selectedMethods['vespula'].includes('Vespula Pots Skip')) {
+            tightropeDelayAdjustment = 11;
+        }
+
+        let runningTotal = 0;
+        let roomStatsIndex = 0;
+        const csvRows: string[] = [];
+
+        // Define the slot order for the raid (adjust as needed)
+        const slotOrder = [
+            'Weapon', 'Head', 'Neck', 'Cape', 'Shield', 'Body', 'Legs', 'Hands', 'Feet', 'Ring', 'Ammo'
+        ];
+
+        // Prepare inventory item names as array
+        let inventoryItemNamesArr: string[] = [];
+        if (Array.isArray(inventoryItems)) {
+            inventoryItemNamesArr = inventoryItems.map((item: any) => item.name);
+        } else if (inventoryItems && typeof inventoryItems === 'object') {
+            inventoryItemNamesArr = Object.values(inventoryItems).map((item: any) => item.name);
+        }
+
+        // Prepare combat stats as array of [name, value] pairs
+        let combatStatsArr: Array<{ name: string; value: any }> = [];
+        if (combatStats && typeof combatStats === 'object') {
+            combatStatsArr = Object.entries(combatStats).map(([name, value]) => ({ name, value }));
+        }
+
+        // CSV header
+        csvRows.push([
+            'Room',
+            'Time',
+            'Total',
+            '',
+            'Slots',
+            'Melee',
+            'Ranged',
+            'Mage',
+            '',
+            'Inventory Items',
+            '',
+            'Combat Stat Name',
+            'Combat Stat Value'
+        ].join(','));
+
+        // Precompute all gear for slotOrder
+        const meleeGearBySlot: Record<string, string> = {};
+        const rangedGearBySlot: Record<string, string> = {};
+        const mageGearBySlot: Record<string, string> = {};
+        if (gearSets && gearSets.melee) {
+            slotOrder.forEach(slot => {
+                const slotObj = gearSets.melee.find((s: any) => s.slot.toLowerCase() === slot.toLowerCase());
+                if (slotObj && slotObj.selected && slotObj.selected.name) {
+                    meleeGearBySlot[slot] = slotObj.selected.name;
+                }
+            });
+        }
+        if (gearSets && gearSets.ranged) {
+            slotOrder.forEach(slot => {
+                const slotObj = gearSets.ranged.find((s: any) => s.slot.toLowerCase() === slot.toLowerCase());
+                if (slotObj && slotObj.selected && slotObj.selected.name) {
+                    rangedGearBySlot[slot] = slotObj.selected.name;
+                }
+            });
+        }
+        if (gearSets && gearSets.mage) {
+            slotOrder.forEach(slot => {
+                const slotObj = gearSets.mage.find((s: any) => s.slot.toLowerCase() === slot.toLowerCase());
+                if (slotObj && slotObj.selected && slotObj.selected.name) {
+                    mageGearBySlot[slot] = slotObj.selected.name;
+                }
+            });
+        }
+
+        // Determine the max number of rows needed for the main table
+        const maxRows = Math.max(floor.rooms.length, inventoryItemNamesArr.length, combatStatsArr.length);
+
+        for (let i = 0; i < maxRows; i++) {
+            const floorRoom = floor.rooms[i];
+            let slot = '';
+            let meleeItem = '';
+            let rangedItem = '';
+            let mageItem = '';
+            let inventoryItem = '';
+            let roomName = '';
+            let timeVal = '';
+            let totalVal = '';
+            // Always fill slot and gear columns for the row that matches a slot in slotOrder, regardless of delay or not
+            if (slotOrder[i]) {
+                slot = slotOrder[i];
+                meleeItem = meleeGearBySlot[slot] || '';
+                rangedItem = rangedGearBySlot[slot] || '';
+                mageItem = mageGearBySlot[slot] || '';
+            }
+            // Fill inventory item for this row if available
+            if (inventoryItemNamesArr[i]) {
+                inventoryItem = inventoryItemNamesArr[i];
+            }
+            // Fill combat stat name and value for this row if available
+            let combatStatName = '';
+            let combatStatValue = '';
+            if (combatStatsArr[i]) {
+                combatStatName = combatStatsArr[i].name;
+                combatStatValue = combatStatsArr[i].value;
+            }
+
+            // Fill room/time/total columns if this row corresponds to a floor room
+            if (i < floor.rooms.length) {
+                if (floorRoom.isDelay) {
+                    let delayTicks = floorRoom.delayTicks || 0;
+                    if (floorRoom.roomId === 'tightrope' && tightropeDelayAdjustment > 0) {
+                        delayTicks = Math.max(0, delayTicks - tightropeDelayAdjustment);
+                    }
+                    runningTotal += delayTicks;
+                    roomName = `${floorRoom.name || 'Delay'}`;
+                    timeVal = showSeconds ? formatSeconds(delayTicks * 0.6) : delayTicks.toFixed(1);
+                    totalVal = showSeconds ? formatSeconds(runningTotal * 0.6) : runningTotal.toFixed(1);
+                } else {
+                    const roomStat = combinedRoomAnalysis[activeFloor]!.roomStats![roomStatsIndex];
+                    if (roomStat) {
+                        runningTotal += roomStat.stats.total_expected_ticks;
+                        roomName = roomStat.name;
+                        timeVal = showSeconds ? formatSeconds(roomStat.stats.total_expected_seconds) : roomStat.stats.total_expected_ticks.toFixed(1);
+                        totalVal = showSeconds ? formatSeconds(runningTotal * 0.6) : runningTotal.toFixed(1);
+                        roomStatsIndex++;
+                    }
+                }
+            }
+
+            csvRows.push([
+                roomName,
+                timeVal,
+                totalVal,
+                '',
+                slot,
+                meleeItem,
+                rangedItem,
+                mageItem,
+                '',
+                inventoryItem,
+                '',
+                combatStatName,
+                combatStatValue
+            ].join(','));
+        }
+
+        // If there are more inventory items or combat stats than rows, add them at the end (already handled by maxRows loop)
+
+        const csvContent = csvRows.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${combinedRoomAnalysis[activeFloor]?.floorName || activeFloor}_stats.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
     const { theme } = useTheme();
     const chartColors = {
         primary: '#3b82f6',
@@ -62,15 +234,49 @@ const CombinedStatsCard: React.FC<CombinedStatsCardProps> = ({
                 }}
             >
                 <h3>Total Expected {combinedRoomAnalysis[activeFloor]?.floorName || 'Floor'} Time</h3>
-                <p
-                    className="stat-value"
-                    style={{ fontSize: '2rem', color: chartColors.primary, opacity: 1 }}
-                >
-                    {combinedRoomAnalysis[activeFloor] ? (showSeconds
-                        ? formatSeconds(combinedRoomAnalysis[activeFloor]!.expectedTime * 0.6)
-                        : combinedRoomAnalysis[activeFloor]!.expectedTime.toFixed(1)
-                    ) : '--'}
-                </p>
+                <div style={{ position: 'relative', margin: '0.5rem 0 0rem 0'}}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <p
+                            className="stat-value"
+                            style={{ fontSize: '2rem', color: chartColors.primary, opacity: 1, margin: 0 }}
+                        >
+                            {combinedRoomAnalysis[activeFloor] ? (showSeconds
+                                ? formatSeconds(combinedRoomAnalysis[activeFloor]!.expectedTime * 0.6)
+                                : combinedRoomAnalysis[activeFloor]!.expectedTime.toFixed(1)
+                            ) : '--'}
+                        </p>
+                    </div>
+                    <button
+                        onClick={handleExportCSV}
+                        title="Download CSV"
+                        className="btn export"
+                        style={{
+                            position: 'absolute',
+                            top: 5,
+                            left: 0,
+                            padding: 0,
+                            background: chartColors.primary,
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            fontSize: '1rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            minWidth: '2.5rem',
+                            minHeight: '2.5rem',
+                        }}
+                    >
+                        <svg width="25" height="25" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                            <g>
+                                <path d="M3,12.3v7a2,2,0,0,0,2,2H19a2,2,0,0,0,2-2v-7" fill="none" stroke="#fff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
+                                <polyline fill="none" points="7.9 12.3 12 16.3 16.1 12.3" stroke="#fff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
+                                <line fill="none" stroke="#fff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" x1="12" x2="12" y1="2.7" y2="14.2"/>
+                            </g>
+                        </svg>
+                    </button>
+                </div>
                 <span className="stat-unit">
                     {showSeconds ? 'min:sec' : 'ticks'} (including delays)
                 </span>
