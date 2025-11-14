@@ -6,6 +6,10 @@ use wasm_bindgen::prelude::*;
 use osrs_shared_types::*;
 use osrs_shared_functions::*;
 
+// =========================
+// Helpers
+// =========================
+
 #[inline]
 fn sample_hit_if<R: Rng>(rng: &mut R, threshold: u32, max_hit: i32) -> i32 {
     if rng.next_u32() <= threshold {
@@ -14,6 +18,103 @@ fn sample_hit_if<R: Rng>(rng: &mut R, threshold: u32, max_hit: i32) -> i32 {
         0
     }
 }
+
+#[inline]
+fn process_attack_tick<R: Rng>(
+    rng: &mut R,
+    hp: &mut i32,
+    atk_cd: &mut i32,
+    thrall_cd: &mut i32,
+    atk_threshold: u32,
+    max_hit: i32,
+    attack_speed: i32,
+    thrall_dmg: &Uniform<i32>,
+    thrall_interval: i32,
+) {
+    let mut total_hit = 0;
+
+    // main attack (only if weapon is ready)
+    if *atk_cd == 0 {
+        total_hit += sample_hit_if(rng, atk_threshold, max_hit);
+        *atk_cd = attack_speed;
+    }
+
+    // thrall hit
+    if *thrall_cd == 0 {
+        total_hit += thrall_dmg.sample(rng);
+        *thrall_cd = thrall_interval;
+    }
+
+    *hp -= total_hit;
+
+    // tick cooldowns
+    if *atk_cd > 0 {
+        *atk_cd -= 1;
+    }
+    if *thrall_cd > 0 {
+        *thrall_cd -= 1;
+    }
+}
+
+#[inline]
+fn tick_until_hp<R: Rng>(
+    rng: &mut R,
+    hp: &mut i32,
+    stop_hp: i32,
+    atk_speed: i32,
+    atk_thr: u32,
+    max_hit: i32,
+    thrall_interval: i32,
+    thrall_dmg: &Uniform<i32>,
+) -> i32 {
+    let mut current_ticks = 0;
+    let mut atk_cd = 0;
+    let mut thrall_cd = 0;
+
+    while *hp > stop_hp {
+        current_ticks += 1;
+
+        process_attack_tick(
+            rng,
+            hp,
+            &mut atk_cd,
+            &mut thrall_cd,
+            atk_thr,
+            max_hit,
+            atk_speed,
+            thrall_dmg,
+            thrall_interval,
+        );
+    }
+
+    current_ticks - 1
+}
+
+#[inline]
+fn tick_until_dead<R: Rng>(
+    rng: &mut R,
+    hp: &mut i32,
+    atk_speed: i32,
+    atk_thr: u32,
+    max_hit: i32,
+    thrall_interval: i32,
+    thrall_dmg: &Uniform<i32>,
+) -> i32 {
+    tick_until_hp(
+        rng,
+        hp,
+        0,
+        atk_speed,
+        atk_thr,
+        max_hit,
+        thrall_interval,
+        thrall_dmg,
+    )
+}
+
+// =========================
+// Phase sims
+// =========================
 
 fn sim_freeze_mutta(
     mut total_ticks: i32,
@@ -27,57 +128,108 @@ fn sim_freeze_mutta(
     zgs_thr: u32,
     thrall_dmg: &Uniform<i32>,
 ) -> i32 {
-    // DPS down to 40%
     let mut current_ticks = 0;
-    while hp_mutta > (mutta.skills.hp as f64 * 0.4) as i32 {
+
+    let threshold_hp = (mutta.skills.hp as f64 * 0.5) as i32;
+
+    // Cooldowns: 0 means "ready this tick"
+    let mut atk_cd = 0;      // normal attack cooldown
+    let mut thrall_cd = 0;   // thrall cooldown (4-tick cycle)
+
+    // =========================
+    // Phase 1: DPS down to threshold
+    // =========================
+    while hp_mutta > threshold_hp {
         current_ticks += 1;
-        let tick_index = current_ticks - 1;
-        let can_attack_tick = tick_index % best_style_mutta.attack_speed == 0;
-        let hit = if can_attack_tick {
-            sample_hit_if(rng, best_thr_mutta, best_style_mutta.max_hit)
-        } else {
-            0
-        };
 
-        let thrall_hit = if tick_index % 4 == 0 {
-            thrall_dmg.sample(rng) // 0..=3
-        } else {
-            0
-        };
-
-        hp_mutta -= hit + thrall_hit;
+        process_attack_tick(
+            rng,
+            &mut hp_mutta,
+            &mut atk_cd,
+            &mut thrall_cd,
+            best_thr_mutta,
+            best_style_mutta.max_hit,
+            best_style_mutta.attack_speed,
+            thrall_dmg,
+            4, // thrall interval is always 4 for mutta
+        );
     }
 
-    // ZGS freeze: on miss, heal; on hit, apply hit
-    if rng.next_u32() > zgs_thr {
-        hp_mutta += (mutta.skills.hp / 2).min(mutta.skills.hp - hp_mutta);
-    } else {
-        let hit = rng.gen_range(0..=zgs_best_style.max_hit).max(1);
-        hp_mutta -= hit;
-    }
-    current_ticks += 6;
+    // =========================
+    // Phase 2: wait until weapon is off CD, then ZGS spec
+    // =========================
 
-    // Finish
+    // We keep ticking time with thralls only until atk_cd == 0,
+    // then on that tick we spend the attack on ZGS spec.
+    loop {
+        current_ticks += 1;
+        let mut total_hit = 0;
+
+        // Thrall can hit every tick (if off cooldown)
+        if thrall_cd == 0 {
+            total_hit += thrall_dmg.sample(rng);
+            thrall_cd = 4;
+        }
+
+        if atk_cd == 0 {
+            // This tick is the ZGS spec tick
+            // ZGS freeze: on miss, heal; on hit, damage
+            if rng.next_u32() > zgs_thr {
+                // miss => heal up to 50% HP, but not above max
+                hp_mutta += (mutta.skills.hp / 2)
+                    .min(mutta.skills.hp - hp_mutta);
+            } else {
+                // hit with ZGS spec
+                let spec_hit = rng
+                    .gen_range(0..=zgs_best_style.max_hit)
+                    .max(1);
+                total_hit += spec_hit;
+            }
+
+            // ZGS spec imposes a 6-tick cooldown
+            atk_cd = 6;
+        }
+        // else: Weapon still on cooldown, only thrall can hit (handled above)
+
+        hp_mutta -= total_hit;
+
+        // tick cooldowns for end of this tick
+        if atk_cd > 0 {
+            atk_cd -= 1;
+        }
+        if thrall_cd > 0 {
+            thrall_cd -= 1;
+        }
+
+        // If we just used ZGS spec (atk_cd was 0 at start of this tick), break
+        if atk_cd == 5 { // 6 - 1 from the decrement above
+            break; // spec is done; move to finish phase
+        }
+    }
+
+    // =========================
+    // Phase 3: finish it off (CDs persist from spec)
+    // =========================
     while hp_mutta > 0 {
         current_ticks += 1;
-        let tick_index = current_ticks - 1;
-        let can_attack_tick = tick_index % best_style_mutta.attack_speed == 0;
-        let hit = if can_attack_tick {
-            sample_hit_if(rng, best_thr_mutta, best_style_mutta.max_hit)
-        } else {
-            0
-        };
 
-        let thrall_hit = if tick_index % 4 == 0 {
-            thrall_dmg.sample(rng) // 0..=3
-        } else {
-            0
-        };
-        hp_mutta -= hit + thrall_hit;
+        process_attack_tick(
+            rng,
+            &mut hp_mutta,
+            &mut atk_cd,
+            &mut thrall_cd,
+            best_thr_mutta,
+            best_style_mutta.max_hit,
+            best_style_mutta.attack_speed,
+            thrall_dmg,
+            4, // thrall interval is always 4 for mutta
+        );
     }
-    total_ticks += current_ticks;
+
+    total_ticks += current_ticks - 3;
     total_ticks
 }
+
 
 fn sim_chop_tree(
     player: &Player,
@@ -103,12 +255,12 @@ fn sim_chop_tree(
         } else {
             0
         };
-        
 
         // Small mutta can be hit if it's above half HP
         let tick_index = current_ticks - 1;
         let can_attack_tick = tick_index % best_style_small_mutta.attack_speed == 0;
-        let small_above_threshold = base_small_mutta_hp / 2 < best_style_small_mutta.max_hit + hp_small_mutta;
+        let small_above_threshold =
+            base_small_mutta_hp / 2 < best_style_small_mutta.max_hit + hp_small_mutta;
 
         let hit = if can_attack_tick && small_above_threshold {
             sample_hit_if(rng, small_mutta_thr, best_style_small_mutta.max_hit)
@@ -130,7 +282,7 @@ fn sim_chop_tree(
     }
     let phase_ticks = total_ticks;
     total_ticks += best_style_small_mutta.attack_speed;
-    
+
     while hp_small_mutta > 0 {
         current_ticks += 1;
         let tick_index = current_ticks - 1;
@@ -138,17 +290,25 @@ fn sim_chop_tree(
 
         let hit = if can_attack_tick {
             sample_hit_if(rng, small_mutta_thr, best_style_small_mutta.max_hit)
-        } else { 0 };
+        } else {
+            0
+        };
 
         let thrall_hit = if tick_index % 4 == 0 {
             thrall_dmg.sample(rng)
-        } else { 0 };
+        } else {
+            0
+        };
 
         hp_small_mutta -= hit + thrall_hit;
     }
     total_ticks += current_ticks;
     (total_ticks, (phase_ticks + 1))
 }
+
+// =========================
+// WASM entrypoint
+// =========================
 
 #[wasm_bindgen]
 pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
@@ -175,7 +335,8 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
 
     // Defensive: Check monsters
     if monsters.len() < 2 {
-        return "{\"error\": \"Muttadile simulation requires two monsters (small and large)}\"".to_string();
+        return "{\"error\": \"Muttadile simulation requires two monsters (small and large)}\""
+            .to_string();
     }
 
     // ZGS setup (optional)
@@ -231,24 +392,28 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
 
     let death_animation = 4;
     let post_room_delay = 4;
+    let walk_delay = 10;
     let hit_delay = 1;
-    let hit_delay_small_mutta = if player
-        .gear_sets
-        .mage
-        .selected_weapon
-        .as_ref()
-        .unwrap()
-        .name
-        == "Tumeken's shadow"
-    {
-        2
-    } else {
-        1
-    };
+    let hit_delay_small_mutta =
+        if player
+            .gear_sets
+            .mage
+            .selected_weapon
+            .as_ref()
+            .unwrap()
+            .name
+            == "Tumeken's shadow"
+        {
+            2
+        } else {
+            1
+        };
 
     // ===== Precompute thresholds =====
-    let small_mutta_thr = (best_style_small_mutta.accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
-    let large_mutta_thr = (best_style_large_mutta.accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
+    let small_mutta_thr =
+        (best_style_small_mutta.accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
+    let large_mutta_thr =
+        (best_style_large_mutta.accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
     let tree_thr = (tree_accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
     let zgs_thr = zgs_best_style
         .as_ref()
@@ -287,7 +452,7 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
                 zgs_thr,
                 &thrall_dmg,
             );
-            total_ticks += 1 + hit_delay_small_mutta;
+            total_ticks += 1 + hit_delay_small_mutta + death_animation - overkill_large_mutta;
             total_ticks += tick_cycle_offset;
 
             // Large mutta leaving the lake
@@ -321,33 +486,30 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
             phase_results[i] = phase_ticks;
             total_ticks = new_total_ticks;
 
-            total_ticks += 1 + hit_delay_small_mutta;
+            total_ticks += 1 + hit_delay_small_mutta + death_animation - overkill_large_mutta;
             total_ticks += tick_cycle_offset;
 
             // Large mutta leaving the lake
             total_ticks += 5;
-            let mut current_ticks = 0;
-            while hp_large_mutta > 0 {
-                current_ticks += 1;
-                let tick_index = current_ticks - 1;
-                let hit = if tick_index % attack_speed_large_mutta == 0 {
-                    sample_hit_if(&mut rng, large_mutta_thr, best_style_large_mutta.max_hit)
-                } else {
-                    0
-                };
-                let thrall_hit = if tick_index % 4 == 0 {
-                    thrall_dmg.sample(&mut rng)
-                } else {
-                    0
-                };
-                hp_large_mutta -= hit + thrall_hit;
-            }
-            total_ticks += current_ticks;
+
+            // Large Mutta finish phase using cooldown helper
+            let phase_ticks = tick_until_dead(
+                &mut rng,
+                &mut hp_large_mutta,
+                attack_speed_large_mutta,
+                large_mutta_thr,
+                best_style_large_mutta.max_hit,
+                4,
+                &thrall_dmg,
+            );
+            total_ticks += phase_ticks;
         }
-        total_ticks += 1 + hit_delay + death_animation - overkill_large_mutta + post_room_delay;
+        total_ticks += 1 + walk_delay + hit_delay + death_animation - overkill_large_mutta;
 
         // Align to next 4-tick cycle starting at the tick_cycle_offset
         total_ticks += (tick_cycle_offset + 4 - (total_ticks % 4)) % 4;
+
+        total_ticks += post_room_delay;
 
         sum_ticks += i64::from(total_ticks);
         let idx = total_ticks as usize;
@@ -361,6 +523,14 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
         return "{\"error\": \"No tick counts generated\"}".to_string();
     }
     let style_list = vec![best_style_small_mutta, best_style_large_mutta];
-    let end_results = results_formatter(&monsters, &style_list, sum_ticks, freq, trials, phase_results, Vec::new());
+    let end_results = results_formatter(
+        &monsters,
+        &style_list,
+        sum_ticks,
+        freq,
+        trials,
+        phase_results,
+        Vec::new(),
+    );
     end_results
 }
