@@ -1,0 +1,170 @@
+{
+    "mutta": {
+        "room": {
+            "id": "muttadile",
+            "name": "Muttadile",
+            "image": "/rooms/250px-Muttadile.webp",
+            "monsters": [
+                {
+                    "id": 7562,
+                    "name": "Small Muttadile",
+                    "version": "Small (Challenge Mode)",
+                    "image": "Muttadile.png",
+                    "level": 0,
+                    "speed": 4,
+                    "style": [
+                        "Melee",
+                        "Ranged"
+                    ],
+                    "size": 3,
+                    "max_hit": 41,
+                    "skills": {
+                        "atk": 225,
+                        "def": 207,
+                        "hp": 375,
+                        "magic": 1,
+                        "ranged": 225,
+                        "str": 225
+                    },
+                    "offensive": {
+                        "atk": 71,
+                        "magic": 0,
+                        "magic_str": -8,
+                        "ranged": 83,
+                        "ranged_str": 56,
+                        "str": 48
+                    },
+                    "defensive": {
+                        "flat_armour": 0,
+                        "crush": 50,
+                        "magic": 60,
+                        "heavy": 0,
+                        "standard": 0,
+                        "light": 0,
+                        "slash": 72,
+                        "stab": -5
+                    },
+                    "attributes": [
+                        "xerician"
+                    ],
+                    "immunities": {
+                        "burn": null
+                    },
+                    "weakness": null
+                },
+                {
+                    "id": 7561,
+                    "name": "Large Muttadile",
+                    "version": "Large (Challenge Mode)",
+                    "image": "Muttadile.png",
+                    "level": 0,
+                    "speed": 4,
+                    "style": [
+                        "Melee",
+                        "Magic",
+                        "Ranged"
+                    ],
+                    "size": 5,
+                    "max_hit": 71,
+                    "skills": {
+                        "atk": 375,
+                        "def": 330,
+                        "hp": 375,
+                        "magic": 375,
+                        "ranged": 375,
+                        "str": 375
+                    },
+                    "offensive": {
+                        "atk": 88,
+                        "magic": 0,
+                        "magic_str": -8,
+                        "ranged": 82,
+                        "ranged_str": 47,
+                        "str": 55
+                    },
+                    "defensive": {
+                        "flat_armour": 0,
+                        "crush": 60,
+                        "magic": 75,
+                        "heavy": 0,
+                        "standard": 0,
+                        "light": 0,
+                        "slash": 82,
+                        "stab": -5
+                    },
+                    "attributes": [
+                        "xerician"
+                    ],
+                    "immunities": {
+                        "burn": null
+                    },
+                    "weakness": null
+                }
+            ],
+            "units": "Muttadiles",
+            "methods": [],
+            "specialAttacks": []
+        }
+    },
+    "vespula": {
+        "room": {
+            "id": "vespula",
+            "name": "Vespula",
+            "image": "/rooms/280px-Vespula.webp",
+            "monsters": [
+                {
+                    "id": 7533,
+                    "name": "Abyssal portal",
+                    "version": "Challenge Mode",
+                    "image": "Abyssal portal.png",
+                    "level": 0,
+                    "speed": 2,
+                    "style": [
+                        "None"
+                    ],
+                    "size": 4,
+                    "max_hit": 0,
+                    "skills": {
+                        "atk": 1,
+                        "def": 264,
+                        "hp": 375,
+                        "magic": 264,
+                        "ranged": 1,
+                        "str": 1
+                    },
+                    "offensive": {
+                        "atk": 0,
+                        "magic": 0,
+                        "magic_str": 0,
+                        "ranged": 0,
+                        "ranged_str": 0,
+                        "str": 0
+                    },
+                    "defensive": {
+                        "flat_armour": 0,
+                        "crush": 0,
+                        "magic": 60,
+                        "heavy": 110,
+                        "standard": 140,
+                        "light": 140,
+                        "slash": 0,
+                        "stab": 0
+                    },
+                    "attributes": [
+                        "xerician"
+                    ],
+                    "immunities": {
+                        "burn": null
+                    },
+                    "weakness": {
+                        "element": "fire",
+                        "severity": 50
+                    }
+                }
+            ],
+            "units": "Portals",
+            "methods": [],
+            "specialAttacks": []
+        }
+    }
+}

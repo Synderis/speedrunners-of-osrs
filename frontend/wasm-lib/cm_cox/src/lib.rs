@@ -1,3 +1,4 @@
+pub mod vespula;
 mod guardians;
 mod ice_demon;
 mod mutta;
@@ -8,7 +9,7 @@ mod tekton;
 mod thieving;
 mod vangs;
 mod vasa;
-mod vespula;
+// mod vespula;
 
 // Re-export WASM functions
 pub use guardians::*;

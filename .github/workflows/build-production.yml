@@ -3,10 +3,29 @@ name: Build and Deploy to Vercel
 
 on:
   push:
-    branches: [master]
+    branches: [dev, master]
 
 jobs:
-  build-and-deploy:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build WASM
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          override: true
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+      - name: Run Vespula unit test
+        run: cargo test --test vespula_unit
+        working-directory: ./frontend/wasm-lib/cm_cox
+
+  deploy:
+    if: github.ref == 'refs/heads/master'
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +68,10 @@ jobs:
           VITE_SUPABASE_REGION: ${{ secrets.VITE_SUPABASE_REGION }}
           VITE_SUPABASE_ACCESS_KEY_ID: ${{ secrets.VITE_SUPABASE_ACCESS_KEY_ID }}
           VITE_SUPABASE_SECRET_ACCESS_KEY: ${{ secrets.VITE_SUPABASE_SECRET_ACCESS_KEY }}
+
+      - name: Run Vespula unit test
+        run: cargo test --test vespula_unit
+        working-directory: ./frontend/wasm-lib/cm_cox
       - name: List directory
         run: ls -al
 
@@ -63,4 +86,3 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          prod: true
