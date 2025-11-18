@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 # cdylib is required for wasm-bindgen output; you can also keep rlib if you want to unit-test natively.
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 # Keep a broad 0.2 constraint; works with current ecosystem
