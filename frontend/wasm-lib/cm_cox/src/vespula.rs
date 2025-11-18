@@ -29,7 +29,7 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
     let mut rng = SmallRng::from_entropy();
     let mut freq: Vec<usize> = Vec::new();
     let mut sum_ticks: i64 = 0;
-    let walk_delay = 21;
+    let walk_delay = 32;
     let death_animation = 4;
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string(), "ranged".to_string()]);
     let max_hit = best_style.max_hit;
@@ -73,7 +73,7 @@ pub fn calculate_dps_with_objects_vespula(payload_json: &str) -> String {
             ticks_this_monster += hit_delay;
             single_monster_ticks.push(ticks_this_monster as f64);
         }
-        tick += walk_delay + hit_delay + death_animation;
+        tick += walk_delay + hit_delay + 1 + death_animation;
         tick += rng.gen_range(0..4);
         sum_ticks += i64::from(tick);
         let idx = tick as usize;
