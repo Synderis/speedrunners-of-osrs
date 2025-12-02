@@ -117,7 +117,7 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
 
     let trials = 100_000usize;
     let walk_delay = 13;
-    let barneys = 4;
+    let post_room_delay = 6;
     let death_animation = 4;
 
     // 🔧 faster, WASM-friendly RNG
@@ -193,7 +193,7 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
         }
 
         let hit_delay = *hit_delay_vec.choose(&mut rng).unwrap();
-        let total_tick = tick + walk_delay + hit_delay + 1 + death_animation - overkill + barneys;
+        let total_tick = tick + walk_delay + hit_delay + 1 + death_animation - overkill + post_room_delay;
 
         sum_ticks += i64::from(total_tick);
         let idx = total_tick as usize;

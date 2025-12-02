@@ -25,7 +25,7 @@ pub fn simulate_vespula<R: rand::RngCore, F: FnMut(i32) -> i32>(
     let mut freq: Vec<usize> = Vec::new();
     let mut sum_ticks: i64 = 0;
     let walk_delay = 32;
-    let death_animation = 4;
+    let death_animation = 3;
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string(), "ranged".to_string()]);
     let max_hit = best_style.max_hit;
     let accuracy = best_style.accuracy;

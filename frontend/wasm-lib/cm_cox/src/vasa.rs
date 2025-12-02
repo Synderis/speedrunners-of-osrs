@@ -125,7 +125,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
     };
 
     let death_animation = 3;
-    let crystal_death_animation = 4;
+    let crystal_death_animation = 5;
 
     for i in 0..trials {
         let mut vasa_hp = vasa_base_hp;

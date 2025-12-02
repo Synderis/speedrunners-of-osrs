@@ -49,7 +49,7 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
     let attack_speed = best_style.attack_speed;
     let base_hp = monsters[0].skills.hp;
     let mut single_monster_ticks : Vec<f64> = Vec::new();
-    let death_animation = 5;
+    let death_animation = 2;
 
     for _ in 0..trials {
         let mut tick = 0;
