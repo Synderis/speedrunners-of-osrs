@@ -259,9 +259,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         // Add initial delay and round up to next multiple of 4
         let initial_delay = delay;
         total_ticks += initial_delay + death_animation;
-        if total_ticks % 4 != 0 {
-            total_ticks += 4 - (total_ticks % 4);
-        }
+        let tick_cycle = (4 - (total_ticks % 4)) % 4;
+        total_ticks += tick_cycle;
         total_ticks += 4; // end crystal animation
 
         phase_results[i] = phase;
