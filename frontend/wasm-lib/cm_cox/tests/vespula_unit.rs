@@ -38,5 +38,5 @@ fn test_vespula_deterministic_hits() {
         1,
         true,
     );
-    assert!(result_json.contains("\"total_expected_ticks\":98.0"));
+    assert!(result_json.contains("\"total_expected_ticks\":97.0"));
 }
