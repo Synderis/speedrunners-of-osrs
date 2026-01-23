@@ -59,6 +59,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     }
     let room_methods = payload.room.methods;
     let trials = 100_000usize;
+    player.combat_stats.attack += 2; // account for zamorak brew
 
     // 🔧 faster, WASM-friendly RNG
     let mut rng = SmallRng::from_entropy();
