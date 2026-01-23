@@ -73,27 +73,42 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     if monsters[0].id != 7545 || monsters[1].id != 7544 {
         return "{\"error\": \"First two monsters must be Tekton (normal and enraged)\"}".to_string();
     }
-    // Find 'Elder maul' or 'Dragon warhammer' in inventory by name, set variable to the found name or empty string
-    let spec_weapon = player.inventory.iter()
-        .find_map(|item| {
-            if item.name == "Elder maul" {
-                Some("Elder maul")
-            } else if item.name == "Dragon warhammer" {
-                Some("Dragon warhammer")
-            } else {
-                None
-            }
-        })
-        .unwrap_or("");
 
-    let swap_result = ensure_weapon_swap(&mut player, spec_weapon, None);
-    let (swapped_weapon, swapped_offhand) = match swap_result {
-        Some((w, o)) => (w, o),
-        None => {
-            return format!("{{\"error\": \"{} not found in inventory\"}}", spec_weapon);
+    // Collect inventory items early for defender check
+    let inventory_items: Vec<SelectedItem> = player
+        .inventory
+        .iter()
+        .filter_map(|item| item.equipment.clone())
+        .collect();
+
+    // Find and validate spec weapon
+    let spec_weapon = match player.inventory.iter().find_map(|item| {
+        match item.name.as_str() {
+            "Elder maul" | "Dragon warhammer" => Some(item.name.clone()),
+            _ => None,
         }
+    }) {
+        Some(weapon) => weapon,
+        None => return "{\"error\": \"Please select Elder maul or DWH\"}".to_string(),
     };
+
     let def_reduction_mult = if spec_weapon == "Elder maul" { 0.65 } else { 0.7 };
+    // For DWH, find defender and swap with it; for Elder maul, swap without offhand
+    let defender = if spec_weapon == "Dragon warhammer" {
+        match find_defender(&inventory_items) {
+            Some(def) => Some(def),
+            None => return "{\"error\": \"Please add a defender to the inventory items\"}".to_string(),
+        }
+    } else {
+        None
+    };
+
+    // Swap to spec weapon and store original weapon
+    let (swapped_weapon, swapped_offhand) = match ensure_weapon_swap(&mut player, &spec_weapon, defender) {
+        Some((w, o)) => (w, o),
+        None => return format!("{{\"error\": \"{} not found in inventory\"}}", spec_weapon),
+    };
+
     // Extract Tekton stats
     let base_tekton_hp = monsters[0].skills.hp;
 
@@ -106,7 +121,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     let best_style_spec = find_best_combat_style(&player, &tekton_initial, vec!["melee".to_string()]);
     let max_hit_spec = best_style_spec.max_hit;
 
-    if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some(spec_weapon) {
+    // If spec weapon is already equipped in melee gear, swap back to original weapon
+    if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some(spec_weapon.as_str()) {
         ensure_weapon_swap(&mut player, &swapped_weapon, swapped_offhand.clone());
     }
     let weapon_name = &player.gear_sets.melee.selected_weapon.as_ref().unwrap().name;
@@ -169,8 +185,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         while tekton_hp > 0 {
             if spec_phase {
                 total_ticks += 6;
-                tekton_hp -= dmg_modifier_check(&mut rng, max_hit_spec, 1.0, spec_weapon);
-                let hit = dmg_modifier_check(&mut rng, max_hit_spec, best_style_spec.accuracy, spec_weapon);
+                tekton_hp -= dmg_modifier_check(&mut rng, max_hit_spec, 1.0, &spec_weapon);
+                let hit = dmg_modifier_check(&mut rng, max_hit_spec, best_style_spec.accuracy, &spec_weapon);
                 tekton_hp -= hit;
                 if hit > 0 {
                     specs_hit += 1;

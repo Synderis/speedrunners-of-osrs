@@ -28,11 +28,24 @@ type Stats = {
   total_expected_ticks: number;
   result?: any;
   phase_time_results?: any[];
-  phase_results: any[]
+  phase_results: any[];
+  error?: string;
 };
 
 // --- Main Component ---
 const PlotSection: React.FC = () => {
+  // WASM error overlay state
+  const [wasmError, setWasmError] = useState<string | null>(null);
+  
+  // Auto-dismiss error after 5 seconds
+  useEffect(() => {
+    if (wasmError) {
+      const timer = setTimeout(() => {
+        setWasmError(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [wasmError]);
   // Get all state from context
   const {
     gearSets,
@@ -275,11 +288,21 @@ const PlotSection: React.FC = () => {
             result: result.perMonster,
             phase_time_results: result.summary.phaseTimeResults || [],
             phase_results: result.summary.phaseResults || [],
+            error: result.error || result.summary.error || undefined,
           }
         };
       });
 
       const results = await Promise.all(roomPromises);
+
+      // Check for WASM errors and set overlay if any
+      const errorResult = results.find(res => res && res.stats && res.stats.error);
+      if (errorResult && errorResult.stats.error) {
+        console.log('Setting WASM error overlay:', errorResult.stats.error);
+        setWasmError(errorResult.stats.error);
+      } else {
+        setWasmError(null);
+      }
 
       const plotDataUpdates: Record<string, PlotDataPoint[]> = {};
       const statsUpdates: Record<string, Stats> = {};
@@ -492,6 +515,36 @@ const PlotSection: React.FC = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.3 }}
     >
+      {/* WASM Error Overlay */}
+      <AnimatePresence>
+        {wasmError && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: -20, x: '-50%' }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            style={{
+              position: 'fixed',
+              top: '7rem',
+              left: '50%',
+              width: '85vw',
+              maxWidth: '800px',
+              zIndex: 9999,
+              background: 'rgba(129, 18, 18, 0.60)',
+              border: '2px solid rgba(189, 27, 27, 0.98)',
+              color: '#fff',
+              padding: '1.2rem 2rem',
+              borderRadius: '8px',
+              fontSize: '1.2rem',
+              fontWeight: 600,
+              textAlign: 'center',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            }}
+          >
+            <span>WASM Error: {wasmError}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="container">
         <motion.h2
           ref={titleRef}
@@ -502,7 +555,7 @@ const PlotSection: React.FC = () => {
         >
           Statistics & Analysis
         </motion.h2>
-
+        
         <div className="plot-content">
           {/* Gear Configuration */}
           <motion.div

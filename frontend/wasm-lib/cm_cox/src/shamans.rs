@@ -113,7 +113,9 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
         for (_, gear_set) in sets.iter_mut() {
             ensure_item_equipped(gear_set, &inventory_items, "Slayer helmet (i)");
         }
-    };
+    } else if slayer_task && !slayer_helm {
+        return "{\"error\": \"Please add a Slayer helmet (i) to the inventory items\"}".to_string();
+    }
 
     let trials = 100_000usize;
     let walk_delay = 13;

@@ -31,9 +31,23 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
         .filter_map(|item| item.equipment.clone())
         .collect();
     // Find Avernic defender in inventory items
-    let avernic_defender = inventory_items.iter().find(|item| item.name == "Avernic defender").cloned();
+    let defender = match find_defender(&inventory_items) {
+        Some(def) => def,
+        None => return "{\"error\": \"Please add a defender to the inventory items\"}".to_string(),
+    };
+    let pickaxe = inventory_items.iter()
+        .find_map(|item| {
+            if item.name == "Dragon pickaxe" || item.name == "Rune pickaxe" {
+                Some(item.name.as_str())
+            } else {
+                None
+            }
+        });
+    if pickaxe.is_none() {
+        return "{\"error\": \"Please add a pickaxe to the inventory items\"}".to_string();
+    }
     // ensure_pickaxe_equipped(&mut player.gear_sets.melee, &inventory_items);
-    ensure_weapon_swap(&mut player, "Dragon pickaxe", avernic_defender);
+    ensure_weapon_swap(&mut player, pickaxe.unwrap(), Some(defender));
     
     let trials = 100_000usize;
 

@@ -67,8 +67,11 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 			.as_ref()
 			.and_then(|vec| vec.iter().find(|sa| sa.name == "Voidwaker").map(|sa| sa.count))
 			.unwrap_or(2);
-		let avernic_defender = inventory_items.iter().find(|item| item.name == "Avernic defender").cloned();
-		ensure_weapon_swap(&mut player, "Voidwaker", avernic_defender);
+		let defender = match find_defender(&inventory_items) {
+			Some(def) => def,
+			None => return "{\"error\": \"Please add a defender to the inventory items\"}".to_string(),
+		};
+		ensure_weapon_swap(&mut player, "Voidwaker", Some(defender));
 	}
 
 	// Precompute per-vang arrays for hot loop

@@ -3,7 +3,19 @@ import type { Equipment, InventoryItem } from '../types/player';
 import './InventoryItems.css';
 
 const INVENTORY_IDS = [
-    11808, 29577, 29589, 12018, 11865, 27690, 11920, 22322, 26374, 21003, 13576
+    11808, // Zamorak godsword
+    29577, // Burning claws
+    29589, // Emberlight
+    12018, // Salve amulet (ei)
+    11865, // Slayer helmet (i)
+    27690, // Voidwaker
+    11920, // Dragon pickaxe
+    1275, // Rune pickaxe
+    22322, // Avernic defender
+    12954, // Dragon defender
+    26374, // Zaryte crossbow
+    21003, // Elder maul
+    13576 // Dragon warhammer
 ];
 //25975 Lightbearer removing for now
 //make sure to add lockpick somehow as its not technically an item so we will exclude it for now
@@ -30,13 +42,21 @@ const InventoryItems: React.FC<InventoryItemsProps> = ({
     const handleToggle = (idx: number) => {
         const eq = inventoryEquipment[idx];
         if (!eq) return;
+        // Define mutually exclusive pairs
+        const exclusivePairs: [number, number][] = [
+            [21003, 13576],
+            [12954, 22322],
+            [1275, 11920],
+        ];
         setSelectedItems(prev => {
-            // Deselect 13576 if 21003 is selected, and vice versa
             let newSelected = prev;
-            if (eq.id === 21003) {
-                newSelected = prev.filter(item => item.equipment?.id !== 13576);
-            } else if (eq.id === 13576) {
-                newSelected = prev.filter(item => item.equipment?.id !== 21003);
+            // Remove the paired item if this one is in a pair
+            for (const [a, b] of exclusivePairs) {
+                if (eq.id === a) {
+                    newSelected = newSelected.filter(item => item.equipment?.id !== b);
+                } else if (eq.id === b) {
+                    newSelected = newSelected.filter(item => item.equipment?.id !== a);
+                }
             }
             if (isSelected(eq.id)) {
                 // Remove if already selected

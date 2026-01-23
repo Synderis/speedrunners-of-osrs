@@ -144,6 +144,8 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
         for (_, gear_set) in sets.iter_mut() {
             ensure_item_equipped(gear_set, &inventory_items, "Salve amulet(ei)");
         }
+    } else if slayer_task && !slayer_helm {
+        return "{\"error\": \"Please add Slayer helmet (i) to the inventory items\"}".to_string();
     };
 
     // let walk_delay = 24;
@@ -175,8 +177,11 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
             .as_ref()
             .and_then(|vec| vec.iter().find(|sa| sa.name == "Voidwaker").map(|sa| sa.count))
             .unwrap_or(1);
-        let avernic_defender = inventory_items.iter().find(|item| item.name == "Avernic defender").cloned();
-        ensure_weapon_swap(&mut player, "Voidwaker", avernic_defender);
+        let defender = match find_defender(&inventory_items) {
+            Some(def) => def,
+            None => return "{\"error\": \"Please add a defender to the inventory items\"}".to_string(),
+        };
+        ensure_weapon_swap(&mut player, "Voidwaker", Some(defender));
     }
     let best_style_spec = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
 

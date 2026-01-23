@@ -113,8 +113,11 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                 spec_count_max = 0;
             }
         }
-        let avernic_defender = inventory_items.iter().find(|item| item.name == "Avernic defender").cloned();
-        ensure_weapon_swap(&mut player, "Voidwaker", avernic_defender);
+		let defender = match find_defender(&inventory_items) {
+			Some(def) => def,
+			None => return "{\"error\": \"Please add a defender to the inventory items\"}".to_string(),
+		};
+        ensure_weapon_swap(&mut player, "Voidwaker", Some(defender));
     }
     let best_style_spec = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
 

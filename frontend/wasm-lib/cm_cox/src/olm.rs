@@ -67,29 +67,47 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     let best_style_mage = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string()]);
     let best_style_melee = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
     let best_style_ranged = find_best_combat_style(&player, &monsters[2], vec!["ranged".to_string()]);
-    let spec_weapon = player.inventory.iter()
-        .find_map(|item| {
-            if item.name == "Elder maul" {
-                Some("Elder maul")
-            } else if item.name == "Dragon warhammer" {
-                Some("Dragon warhammer")
-            } else {
-                None
-            }
-        })
-        .unwrap_or("");
-    let def_reduction_mult = if spec_weapon == "Elder maul" { 0.65 } else { 0.7 };
 
-    let swap_result = ensure_weapon_swap(&mut player, spec_weapon, None);
-    let (swapped_weapon, swapped_offhand) = match swap_result {
-        Some((w, o)) => (w, o),
-        None => {
-            return format!("{{\"error\": \"{} not found in inventory\"}}", spec_weapon);
+    // Collect inventory items early for defender check
+    let inventory_items: Vec<SelectedItem> = player
+        .inventory
+        .iter()
+        .filter_map(|item| item.equipment.clone())
+        .collect();
+
+    // Find and validate spec weapon (convert to String to avoid borrow conflict)
+    let spec_weapon = match player.inventory.iter().find_map(|item| {
+        match item.name.as_str() {
+            "Elder maul" | "Dragon warhammer" => Some(item.name.clone()),
+            _ => None,
         }
+    }) {
+        Some(weapon) => weapon,
+        None => return "{\"error\": \"Please select Elder maul or DWH\"}".to_string(),
     };
+
+    let def_reduction_mult = if spec_weapon == "Elder maul" { 0.65 } else { 0.7 };
+    
+    // For DWH, find defender and swap with it; for Elder maul, swap without offhand
+    let defender = if spec_weapon == "Dragon warhammer" {
+        match find_defender(&inventory_items) {
+            Some(def) => Some(def),
+            None => return "{\"error\": \"Please add a defender to the inventory items\"}".to_string(),
+        }
+    } else {
+        None
+    };
+
+    // Swap to spec weapon and store original weapon
+    let (swapped_weapon, swapped_offhand) = match ensure_weapon_swap(&mut player, &spec_weapon, defender) {
+        Some((w, o)) => (w, o),
+        None => return format!("{{\"error\": \"{} not found in inventory\"}}", spec_weapon),
+    };
+
     let best_style_spec = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
 
-    if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some(spec_weapon) {
+    // If spec weapon is already equipped in melee gear, swap back to original weapon
+    if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some(spec_weapon.as_str()) {
         ensure_weapon_swap(&mut player, &swapped_weapon, swapped_offhand.clone());
     }
     let weapon_name = &player.gear_sets.melee.selected_weapon.as_ref().unwrap().name;
@@ -97,11 +115,6 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     let mut olm_melee_hand_specced = monsters[1].clone();
     olm_melee_hand_specced.skills.def = (olm_melee_hand_specced.skills.def as f64 * def_reduction_mult).ceil() as i32;
     let best_style_specced = find_best_combat_style(&player, &olm_melee_hand_specced, vec!["melee".to_string()]);
-    let inventory_items: Vec<SelectedItem> = player
-        .inventory
-        .iter()
-        .filter_map(|item| item.equipment.clone())
-        .collect();
     let zaryte_crossbow = inventory_items.iter().any(|item| item.name == "Zaryte crossbow");
     // let burning_claws = inventory_items.iter().any(|item| item.name == "Burning claws");
 

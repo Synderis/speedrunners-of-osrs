@@ -754,6 +754,16 @@ pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64,
     }
 }
 
+pub fn find_defender(inventory_items: &[SelectedItem]) -> Option<SelectedItem> {
+    inventory_items.iter()
+        .find_map(|item| {
+            match item.name.as_str() {
+                "Avernic defender" | "Dragon defender" => Some(item.clone()),
+                _ => None,
+            }
+        })
+}
+
 pub fn results_formatter(monsters: &[Monster], style_list: &[StyleResult], ticks: i64, tick_freq: Vec<usize>, trials: usize, phase_time_results: Vec<i32>, phase_results: Vec<i32>) -> String {
     let mean_ttk = ticks as f64 / trials as f64;
     let seconds_ttk = mean_ttk * 0.6; // 0.6 seconds per tick

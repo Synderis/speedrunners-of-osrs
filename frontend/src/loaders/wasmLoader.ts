@@ -46,16 +46,18 @@ export const createWasmDpsLoader = (
                 probability: pt.probability
             }));
 
-            const summary: CalculationSummary = {
+            const summary: CalculationSummary & { error?: string } = {
                 ticksTimeToKill: parsedResult.total_expected_ticks,
                 secondsTimeToKill: parsedResult.total_expected_seconds,
                 phaseTimeResults: parsedResult.phase_time_results || [],
                 phaseResults: parsedResult.phase_results || [],
+                error: parsedResult.error || undefined,
             };
 
             return { tickData, summary, perMonster: parsedResult.results };
         } catch (error) {
             console.error('WASM calculation error:', error);
+            const errorMsg = error instanceof Error ? error.message : String(error);
             return {
                 tickData: [],
                 summary: {
@@ -63,7 +65,9 @@ export const createWasmDpsLoader = (
                     secondsTimeToKill: 0,
                     phaseTimeResults: [],
                     phaseResults: [],
-                }
+                    error: errorMsg,
+                },
+                error: errorMsg
             };
         }
     };
