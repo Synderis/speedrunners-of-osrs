@@ -1,5 +1,9 @@
 use osrs_shared_types::*;
 use rand::Rng;
+// #[macro_export]
+// macro_rules! console_log {
+//     ($($t:tt)*) => (web_sys::console::log_1(&format!($($t)*).into()))
+// }
 
 fn tbow_scaling(magic: u32, mode: &str) -> f64 {
     let (factor, base, clamp) = if mode == "accuracy" {
@@ -25,6 +29,7 @@ fn tbow_scaling(magic: u32, mode: &str) -> f64 {
 pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: Vec<String>) -> StyleResult {
     let mut best_style: Option<StyleResult> = None;
     let mut best_dps = 0.0;
+    let mut best_accuracy = 0.0;
 
     for combat_type in combat_types {
         let (selected_weapon, gear_stats) = match combat_type.as_str() {
@@ -83,9 +88,16 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                         attack_speed: weapon.speed - style.att_spd_reduction,
                         att_spd_reduction: style.att_spd_reduction,
                     };
-                    if effective_dps > best_dps {
-                        best_dps = effective_dps;
-                        best_style = Some(style_result);
+                    if weapon.name == "Elder maul" || weapon.name == "Dragon warhammer" {
+                        if accuracy > best_accuracy {
+                            best_accuracy = accuracy;
+                            best_style = Some(style_result);
+                        }
+                    } else {
+                        if effective_dps > best_dps {
+                            best_dps = effective_dps;
+                            best_style = Some(style_result);
+                        }
                     }
                 }
             }
@@ -215,6 +227,12 @@ pub fn calculate_max_hit_for_style(
             );
             max_hit_multiplier = tbow_scaling(magic, "damage");
         };
+        let crystal_count = gear_set.gear_items.iter().filter(|item_opt| {
+            item_opt.as_ref().map_or(false, |item| item.name.starts_with("Crystal"))
+        }).count();
+        if crystal_count > 0 && weapon.name == "Bow of faerdhinen" {
+            max_hit_multiplier += crystal_count as f64 * 0.05;
+        };
         let effective_ranged = ((level + potion_bonus) * prayer_bonus + style_bonus + 8.0).floor();
         max_hit = (0.5 + (effective_ranged * (bonus + 64.0)) / 640.0).floor() as i32;
         max_hit = (max_hit as f64 * max_hit_multiplier * salve_bonus * slayer_bonus).floor() as i32;
@@ -236,6 +254,9 @@ pub fn calculate_max_hit_for_style(
         };
         if weapon.name == "Zamorak godsword" && (style.combat_style == "Slash" || style.combat_style == "Crush") {
             max_hit = (max_hit as f64 * 1.10).floor() as i32;
+        };
+        if weapon.name == "Dragon warhammer" {
+            max_hit = (max_hit as f64 * 1.50).floor() as i32;
         };
     };
     // console_log!("Gear items: {:?}", gear_set.gear_items);
@@ -298,6 +319,7 @@ pub fn calculate_max_rolls_for_style(
     let mut slayer_bonus = 1.0;
     let mut salve_bonus = 1.0;
     let mut tbow_mult = 1.0;
+    let mut crystal_mult = 1.0;
 
     let mut max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
 
@@ -324,6 +346,12 @@ pub fn calculate_max_rolls_for_style(
         );
         tbow_mult = tbow_scaling(magic, "accuracy");
     }
+    let crystal_count = gear_set.gear_items.iter().filter(|item_opt| {
+        item_opt.as_ref().map_or(false, |item| item.name.starts_with("Crystal"))
+    }).count();
+    if crystal_count > 0 && weapon.name == "Bow of faerdhinen" && combat_type == "ranged" {
+        crystal_mult += crystal_count as f64 * 0.10;
+    };
     if gear_set.gear_items.iter().any(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name == "Salve amulet(ei)")
     }) {
@@ -352,7 +380,8 @@ pub fn calculate_max_rolls_for_style(
     } else {
         1.0
     };
-    max_attack_roll = (max_attack_roll as f64 * slayer_bonus * salve_bonus * tbow_mult * inquisitor_bonus).floor() as u64;
+    let elder_maul_bonus = if weapon.name == "Elder maul" { 1.25 } else { 1.0 };
+    max_attack_roll = (max_attack_roll as f64 * slayer_bonus * salve_bonus * tbow_mult * inquisitor_bonus * crystal_mult * elder_maul_bonus).floor() as u64;
     // console_log!("Monster def: {}, monster def bonus: {}", monster.skills.def, defence_bonus);
     let max_defence_roll;
     if combat_type == "magic" {

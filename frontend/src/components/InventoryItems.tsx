@@ -3,7 +3,7 @@ import type { Equipment, InventoryItem } from '../types/player';
 import './InventoryItems.css';
 
 const INVENTORY_IDS = [
-    11808, 29577, 29589, 12018, 11865, 27690, 21003, 11920, 22322, 26374
+    11808, 29577, 29589, 12018, 11865, 27690, 11920, 22322, 26374, 21003, 13576
 ];
 //25975 Lightbearer removing for now
 //make sure to add lockpick somehow as its not technically an item so we will exclude it for now
@@ -31,12 +31,19 @@ const InventoryItems: React.FC<InventoryItemsProps> = ({
         const eq = inventoryEquipment[idx];
         if (!eq) return;
         setSelectedItems(prev => {
+            // Deselect 13576 if 21003 is selected, and vice versa
+            let newSelected = prev;
+            if (eq.id === 21003) {
+                newSelected = prev.filter(item => item.equipment?.id !== 13576);
+            } else if (eq.id === 13576) {
+                newSelected = prev.filter(item => item.equipment?.id !== 21003);
+            }
             if (isSelected(eq.id)) {
                 // Remove if already selected
-                return prev.filter(item => item.equipment?.id !== eq.id);
+                return newSelected.filter(item => item.equipment?.id !== eq.id);
             } else {
                 // Add new InventoryItem
-                return [...prev, { name: eq.name, equipment: eq }];
+                return [...newSelected, { name: eq.name, equipment: eq }];
             }
         });
     };

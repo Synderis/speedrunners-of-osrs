@@ -73,16 +73,27 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     if monsters[0].id != 7545 || monsters[1].id != 7544 {
         return "{\"error\": \"First two monsters must be Tekton (normal and enraged)\"}".to_string();
     }
+    // Find 'Elder maul' or 'Dragon warhammer' in inventory by name, set variable to the found name or empty string
+    let spec_weapon = player.inventory.iter()
+        .find_map(|item| {
+            if item.name == "Elder maul" {
+                Some("Elder maul")
+            } else if item.name == "Dragon warhammer" {
+                Some("Dragon warhammer")
+            } else {
+                None
+            }
+        })
+        .unwrap_or("");
 
-    // --- SWAP TO ELDER MAUL BEFORE SIMULATION ---
-    let swap_result = ensure_weapon_swap(&mut player, "Elder maul", None);
+    let swap_result = ensure_weapon_swap(&mut player, spec_weapon, None);
     let (swapped_weapon, swapped_offhand) = match swap_result {
         Some((w, o)) => (w, o),
         None => {
-            return "{\"error\": \"Elder maul not found in inventory\"}".to_string();
+            return format!("{{\"error\": \"{} not found in inventory\"}}", spec_weapon);
         }
     };
-
+    let def_reduction_mult = if spec_weapon == "Elder maul" { 0.65 } else { 0.7 };
     // Extract Tekton stats
     let base_tekton_hp = monsters[0].skills.hp;
 
@@ -90,23 +101,23 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     let mut tekton_initial = monsters[0].clone();
     let mut tekton_initial_enraged = monsters[1].clone();
 
-    let first_spec_def_normal = (tekton_initial.skills.def as f64 * 0.65).ceil() as i32;
-    tekton_initial.skills.def = (tekton_initial.skills.def as f64 * 0.65).ceil() as i32;
+    let first_spec_def_normal = (tekton_initial.skills.def as f64 * def_reduction_mult).ceil() as i32;
+    tekton_initial.skills.def = (tekton_initial.skills.def as f64 * def_reduction_mult).ceil() as i32;
     let best_style_spec = find_best_combat_style(&player, &tekton_initial, vec!["melee".to_string()]);
     let max_hit_spec = best_style_spec.max_hit;
 
-    if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some("Elder maul") {
+    if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some(spec_weapon) {
         ensure_weapon_swap(&mut player, &swapped_weapon, swapped_offhand.clone());
     }
     let weapon_name = &player.gear_sets.melee.selected_weapon.as_ref().unwrap().name;
 
-    let first_spec_def_enraged = (tekton_initial_enraged.skills.def as f64 * 0.65).ceil() as i32;
-    tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * 0.65).ceil() as i32;
+    let first_spec_def_enraged = (tekton_initial_enraged.skills.def as f64 * def_reduction_mult).ceil() as i32;
+    tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * def_reduction_mult).ceil() as i32;
 
     tekton_initial.skills.def = (tekton_initial.skills.def as f64 * 0.95).ceil() as i32;
     let normal_1_spec_best_style = find_best_combat_style(&player, &tekton_initial, vec!["melee".to_string()]);
     tekton_initial.skills.def = first_spec_def_normal;
-    tekton_initial.skills.def = (tekton_initial.skills.def as f64 * 0.65).ceil() as i32;
+    tekton_initial.skills.def = (tekton_initial.skills.def as f64 * def_reduction_mult).ceil() as i32;
     let normal_2_spec_best_style = find_best_combat_style(&player, &tekton_initial, vec!["melee".to_string()]);
     let best_styles_normal = vec![
         normal_1_spec_best_style.clone(),
@@ -116,7 +127,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * 0.95).ceil() as i32;
     let enraged_1_spec_best_style = find_best_combat_style(&player, &tekton_initial_enraged, vec!["melee".to_string()]);
     tekton_initial_enraged.skills.def = first_spec_def_enraged;
-    tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * 0.65).ceil() as i32;
+    tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * def_reduction_mult).ceil() as i32;
     let enraged_2_spec_best_style = find_best_combat_style(&player, &tekton_initial_enraged, vec!["melee".to_string()]);
     let best_styles_enraged = vec![
         enraged_1_spec_best_style.clone(),
@@ -158,8 +169,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         while tekton_hp > 0 {
             if spec_phase {
                 total_ticks += 6;
-                tekton_hp -= dmg_modifier_check(&mut rng, max_hit_spec, 1.0, "Elder maul");
-                let hit = dmg_modifier_check(&mut rng, max_hit_spec, best_style_spec.accuracy, "Elder maul");
+                tekton_hp -= dmg_modifier_check(&mut rng, max_hit_spec, 1.0, spec_weapon);
+                let hit = dmg_modifier_check(&mut rng, max_hit_spec, best_style_spec.accuracy, spec_weapon);
                 tekton_hp -= hit;
                 if hit > 0 {
                     specs_hit += 1;

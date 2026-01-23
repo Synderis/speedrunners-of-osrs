@@ -43,7 +43,7 @@ const Header: React.FC = () => {
         <div className="container">
           <div className="header-content">
             <div className="logo">
-              <h1>OSRS DPS</h1>
+              <h1>OSRS RAID SIM</h1>
             </div>
 
             <nav className={`nav ${isMobileMenuOpen ? 'nav-open' : ''}`}>
