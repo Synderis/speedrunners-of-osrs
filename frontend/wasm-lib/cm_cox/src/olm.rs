@@ -159,30 +159,19 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                 spec_hit = true;
                 melee_hp -= spec_hit_dmg.sample(&mut rng).max(1);
             };
-
-            if spec_hit {
-                melee_ticks = phase_loop(
-                    &mut melee_hp,
-                    &mut current_phase_ticks,
-                    best_style_specced.attack_speed,
-                    best_style_specced.accuracy,
-                    best_style_specced.max_hit,
-                    weapon_name,
-                    &mut rng,
-                    &passive_dmg,
-                );
-            } else {
-                melee_ticks = phase_loop(
-                    &mut melee_hp,
-                    &mut current_phase_ticks,
-                    best_style_melee.attack_speed,
-                    best_style_melee.accuracy,
-                    best_style_melee.max_hit,
-                    weapon_name,
-                    &mut rng,
-                    &passive_dmg,
-                );
-            };
+            let melee_accuracy = if spec_hit { best_style_specced.accuracy } else { best_style_melee.accuracy };
+            let melee_max_hit = if spec_hit { best_style_specced.max_hit } else { best_style_melee.max_hit };
+            let melee_attack_speed = if spec_hit { best_style_specced.attack_speed } else { best_style_melee.attack_speed };
+            melee_ticks = phase_loop(
+                &mut melee_hp,
+                &mut current_phase_ticks, 
+                melee_attack_speed, 
+                melee_accuracy, 
+                melee_max_hit, 
+                weapon_name, 
+                &mut rng, 
+                &passive_dmg
+            );
             melee_ticks += 6; // Add 6 ticks for spec delay
             total_ticks += mage_ticks + melee_ticks;
             total_ticks += delay_list[phase];

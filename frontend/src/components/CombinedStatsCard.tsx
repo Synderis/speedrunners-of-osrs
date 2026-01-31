@@ -92,6 +92,8 @@ const CombinedStatsCard: React.FC<CombinedStatsCardProps> = ({
             'Time',
             'Total',
             '',
+            'Methods',
+            '',
             'Slots',
             'Melee',
             'Ranged',
@@ -145,6 +147,7 @@ const CombinedStatsCard: React.FC<CombinedStatsCardProps> = ({
             let roomName = '';
             let timeVal = '';
             let totalVal = '';
+            let methodsVal = '';
             // Always fill slot and gear columns for the row that matches a slot in slotOrder, regardless of delay or not
             if (slotOrder[i]) {
                 slot = slotOrder[i];
@@ -175,6 +178,7 @@ const CombinedStatsCard: React.FC<CombinedStatsCardProps> = ({
                     roomName = `${floorRoom.name || 'Delay'}`;
                     timeVal = showSeconds ? formatSeconds(delayTicks * 0.6) : delayTicks.toFixed(1);
                     totalVal = showSeconds ? formatSeconds(runningTotal * 0.6) : runningTotal.toFixed(1);
+                    methodsVal = 'N/A';
                 } else {
                     const roomStat = combinedRoomAnalysis[activeFloor]!.roomStats![roomStatsIndex];
                     if (roomStat) {
@@ -182,6 +186,9 @@ const CombinedStatsCard: React.FC<CombinedStatsCardProps> = ({
                         roomName = roomStat.name;
                         timeVal = showSeconds ? formatSeconds(roomStat.stats.total_expected_seconds) : roomStat.stats.total_expected_ticks.toFixed(1);
                         totalVal = showSeconds ? formatSeconds(runningTotal * 0.6) : runningTotal.toFixed(1);
+                        // Get methods for this room
+                        const roomMethods = selectedMethods && selectedMethods[floorRoom.roomId] ? selectedMethods[floorRoom.roomId] : [];
+                        methodsVal = roomMethods.length > 0 ? roomMethods.join('; ') : 'N/A';
                         roomStatsIndex++;
                     }
                 }
@@ -191,6 +198,8 @@ const CombinedStatsCard: React.FC<CombinedStatsCardProps> = ({
                 roomName,
                 timeVal,
                 totalVal,
+                '',
+                `"${methodsVal}"`,
                 '',
                 slot,
                 meleeItem,
