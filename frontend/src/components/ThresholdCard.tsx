@@ -6,6 +6,7 @@ import { useTheme } from '../hooks/useTheme';
 import { 
     calculateResetThresholds
 } from '../loaders/miscWasm';
+import './ThresholdCard.css';
 
 interface ThresholdCardProps {
     showSeconds: boolean;
@@ -27,13 +28,12 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
     olmDistribution
 }) => {
     const { theme } = useTheme();
-    const chartColors = {
-        primary: '#3b82f6',
-        secondary: '#6366f1',
-        grid: theme === 'light' ? '#e9ecef' : '#333333',
-        text: theme === 'light' ? '#0a0a0a' : '#ffffff',
-        background: 'transparent'
-    };
+    
+    // Set theme attribute on document for CSS variables
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+    }, [theme]);
+    
     // --- Target Time state ---
     const [targetTimeTicks, setTargetTimeTicks] = useState<number>(0);
     const [targetTimeDisplay, setTargetTimeDisplay] = useState<string>('');
@@ -176,28 +176,10 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
     };
 
     return (
-        <div
-            className="stat-card card"
-            style={{
-                marginTop: '1rem',
-                background: `linear-gradient(135deg, ${chartColors.primary}15, ${chartColors.secondary}15)`,
-                border: `1px solid ${chartColors.secondary}40`
-            }}
-        >
+        <div className="stat-card card threshold-card">
             {/* Target Time Input */}
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem',
-                marginBottom: '1rem',
-                justifyContent: 'center',
-                flexWrap: 'wrap'
-            }}>
-                <label style={{
-                    color: chartColors.text,
-                    fontSize: '0.9rem',
-                    fontWeight: 'bold'
-                }}>
+            <div className="threshold-input-container">
+                <label className="threshold-input-label">
                     Target Complete Raid Time ({showSeconds ? 'mm:ss' : 'ticks'}):
                 </label>
                 <input
@@ -210,32 +192,14 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
                     placeholder={showSeconds ? "24:00" : "2400"}
                 />
                 <button
-                    className="btn"
+                    className={`btn calculate ${targetTimeTicks > 0 ? 'active' : 'inactive'}`}
                     onClick={handleButtonClick}
-                    style={{
-                        fontSize: '0.8rem',
-                        padding: '6px 12px',
-                        backgroundColor: targetTimeTicks > 0 ? chartColors.secondary : '#6c757d',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        whiteSpace: 'nowrap'
-                    }}
                 >
                     Calculate Reset Thresholds
                 </button>
             </div>
             {availableFloors.length > 0 && (
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        gap: '2rem',
-                        flexWrap: 'wrap',
-                        padding: '0.75rem',
-                        backgroundColor: `${chartColors.secondary}10`,
-                        borderRadius: '6px',
-                        border: `1px solid ${chartColors.secondary}30`
-                    }}>
+                    <div className="thresholds-container">
                         {availableFloors.slice(0, -1).map((floor, index) => {
                             // Get threshold value or fall back to expected time
                             const thresholdData = thresholdResults?.thresholds[floor.id];
@@ -244,40 +208,18 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
                                 : (0);
 
                             return (
-                                <div key={floor.id} style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    gap: '0.25rem',
-                                    minWidth: '100px',
-                                    position: 'relative'
-                                }}>
-                                    <span style={{
-                                        fontSize: '0.8rem',
-                                        fontWeight: 'bold',
-                                        color: chartColors.text
-                                    }}>
+                                <div key={floor.id} className="threshold-item">
+                                    <span className="threshold-item-label">
                                         {floor.name} Reset Threshold
                                     </span>
-                                    <span style={{
-                                        fontSize: '1rem',
-                                        fontWeight: 'bold',
-                                        color: chartColors.secondary
-                                    }}>
+                                    <span className="threshold-item-value">
                                         {showSeconds
                                             ? formatSeconds(displayValue * 0.6)
                                             : displayValue.toFixed(1)
                                         }
                                     </span>
                                     {index < availableFloors.length - 1 && (
-                                        <span style={{
-                                            position: 'absolute',
-                                            right: '-1rem',
-                                            top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            color: chartColors.text + '60',
-                                            fontSize: '1.2rem'
-                                        }}>
+                                        <span className="threshold-item-arrow">
                                             {/* → */}
                                         </span>
                                     )}
@@ -285,27 +227,11 @@ const ThresholdCard: React.FC<ThresholdCardProps> = ({
                             );
                         })}
                         {targetTimeTicks > 0 && (
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '0.25rem',
-                minWidth: '100px',
-                paddingLeft: '1rem',
-                borderLeft: `2px solid ${chartColors.text}30`
-            }}>
-                <span style={{
-                    fontSize: '0.8rem',
-                    fontWeight: 'bold',
-                    color: chartColors.text
-                }}>
+            <div className="target-time-display">
+                <span className="target-time-label">
                     Target Time
                 </span>
-                <span style={{
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    color: chartColors.primary
-                }}>
+                <span className="target-time-value">
                     {showSeconds 
                         ? formatSeconds(targetTimeTicks * 0.6) 
                         : targetTimeTicks.toFixed(1)

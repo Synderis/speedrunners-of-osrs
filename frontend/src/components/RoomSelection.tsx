@@ -116,12 +116,33 @@ const RoomSelection: React.FC = () => {
     // Handler for method selection with category support
     const handleMethodSelect = (room: Room, method: string) => {
         const originalRoom = rooms.find(orig => orig.id === room.id);
+        
+        // Slayer task mutual exclusion guardrail
+        const slayerTaskMethods = ['Shamans Slayer Task', 'Mystics Slayer Task'];
+        const isSlayerTask = slayerTaskMethods.includes(method);
+        
         if (!originalRoom?.methodCategories) {
             // Fallback to old single-method logic if no categories defined
-            setSelectedMethods(prev => ({
-                ...prev,
-                [room.id]: prev[room.id]?.includes(method) ? prev[room.id].filter(m => m !== method) : [method]
-            }));
+            setSelectedMethods(prev => {
+                const newMethods = { ...prev };
+                
+                // Handle slayer task mutual exclusion
+                if (isSlayerTask) {
+                    // Remove the other slayer task from all rooms
+                    Object.keys(newMethods).forEach(roomId => {
+                        newMethods[roomId] = newMethods[roomId].filter(m => 
+                            m !== 'Shamans Slayer Task' && m !== 'Mystics Slayer Task'
+                        );
+                    });
+                }
+                
+                // Toggle the current method
+                newMethods[room.id] = prev[room.id]?.includes(method) 
+                    ? prev[room.id].filter(m => m !== method) 
+                    : [...(prev[room.id] || []), method];
+                
+                return newMethods;
+            });
             return;
         }
 
@@ -138,17 +159,31 @@ const RoomSelection: React.FC = () => {
 
         setSelectedMethods(prev => {
             const currentMethods = prev[room.id] || [];
+            
+            // Slayer task mutual exclusion guardrail
+            const slayerTaskMethods = ['Shamans Slayer Task', 'Mystics Slayer Task'];
+            const isSlayerTask = slayerTaskMethods.includes(method);
+            let newMethods = { ...prev };
+            
+            // If selecting a slayer task, remove the other one from all rooms
+            if (isSlayerTask) {
+                Object.keys(newMethods).forEach(roomId => {
+                    newMethods[roomId] = newMethods[roomId].filter(m => 
+                        m !== 'Shamans Slayer Task' && m !== 'Mystics Slayer Task'
+                    );
+                });
+            }
 
             if (allowMultiple) {
                 // Checkbox behavior - toggle the method
                 if (currentMethods.includes(method)) {
                     return {
-                        ...prev,
+                        ...newMethods,
                         [room.id]: currentMethods.filter(m => m !== method)
                     };
                 } else {
                     return {
-                        ...prev,
+                        ...newMethods,
                         [room.id]: [...currentMethods, method]
                     };
                 }
@@ -160,13 +195,13 @@ const RoomSelection: React.FC = () => {
                 if (currentMethods.includes(method)) {
                     // Deselecting current method
                     return {
-                        ...prev,
+                        ...newMethods,
                         [room.id]: methodsFromOtherCategories
                     };
                 } else {
                     // Selecting new method (replace others in same category)
                     return {
-                        ...prev,
+                        ...newMethods,
                         [room.id]: [...methodsFromOtherCategories, method]
                     };
                 }

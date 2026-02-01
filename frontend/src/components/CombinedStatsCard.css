@@ -1,0 +1,274 @@
+/* Combined Stats Card Styles */
+
+.combined-stats-card .stat-card.card {
+    background: linear-gradient(135deg, var(--primary-color-20), var(--secondary-color-20));
+}
+
+.combined-stats-card .card-header {
+    position: relative;
+    margin: 0.5rem 0 0rem 0;
+}
+
+.combined-stats-card .card-value-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.combined-stats-card .stat-value {
+    font-size: 2rem;
+    color: var(--primary-color);
+    opacity: 1;
+    margin: 0;
+}
+
+.combined-stats-card .button-container {
+    position: absolute;
+    top: 5px;
+    left: 0;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.combined-stats-card .btn.export {
+    padding: 0;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+}
+
+.combined-stats-card .btn.export svg {
+    display: block;
+}
+
+.combined-stats-card .dropdown-wrapper {
+    position: relative;
+}
+
+.combined-stats-card .btn.cached-toggle {
+    padding: 0.7rem 0.21rem;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    height: 32px;
+    width: 32px;
+}
+
+.combined-stats-card .dropdown-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.5rem;
+    background: var(--dropdown-bg);
+    border: 1px solid var(--grid-color);
+    border-radius: 8px;
+    padding: 1rem;
+    min-width: 300px;
+    max-width: 400px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.combined-stats-card .dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--grid-color);
+}
+
+.combined-stats-card .dropdown-header h4 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.combined-stats-card .btn.clear-all {
+    padding: 0.25rem 0.5rem;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 0.75rem;
+}
+
+.combined-stats-card .btn.clear-all:hover {
+    background: linear-gradient(135deg, #b91c1c, #991b1b);
+    box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
+}
+
+.combined-stats-card .dropdown-description {
+    font-size: 0.85rem;
+    color: var(--text-color-cc);
+    margin-bottom: 0.5rem;
+}
+
+.combined-stats-card .dropdown-results {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.combined-stats-card .result-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    background: transparent;
+    border: 1px solid var(--grid-color);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.combined-stats-card .result-item.selected {
+    background: var(--primary-color-20);
+    border-color: var(--primary-color);
+}
+
+.combined-stats-card .result-item input[type="checkbox"] {
+    margin-right: 0.5rem;
+    margin-top: 0.2rem;
+}
+
+.combined-stats-card .result-item-content {
+    flex: 1;
+}
+
+.combined-stats-card .result-item-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.combined-stats-card .result-item-meta {
+    font-size: 0.75rem;
+    color: var(--text-color-99);
+}
+
+.combined-stats-card .selection-summary {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background: var(--primary-color-20);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.combined-stats-card .room-stats {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-color-80);
+}
+
+.combined-stats-card .stats-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--text-color-40);
+    font-weight: bold;
+}
+
+.combined-stats-card .stats-header-cell {
+    color: var(--primary-color);
+    text-align: center;
+}
+
+.combined-stats-card .stats-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+}
+
+.combined-stats-card .stats-row.delay {
+    font-style: italic;
+    color: var(--text-color-99);
+}
+
+.combined-stats-card .stats-row.delay.post-floor {
+    border-bottom: 1px solid var(--primary-color);
+}
+
+.combined-stats-card .stats-row.delay:not(.post-floor) {
+    border-bottom: 1px solid var(--text-color-20);
+}
+
+.combined-stats-card .stats-row.combat {
+    border-bottom: none;
+}
+
+.combined-stats-card .stats-row.combat.has-border {
+    border-bottom: 1px solid var(--text-color-20);
+}
+
+.combined-stats-card .stats-row.combat.post-floor {
+    border-bottom: 1px solid var(--primary-color);
+}
+
+.combined-stats-card .stats-row-separator {
+    border: none;
+    border-top: 1px solid var(--text-color-20);
+}
+
+.combined-stats-card .stats-row.summary {
+    background: var(--primary-color-10);
+    font-weight: bold;
+    border-bottom: 1px solid var(--primary-color);
+}
+
+.combined-stats-card .stats-cell {
+    text-align: left;
+}
+
+.combined-stats-card .stats-cell.center {
+    text-align: center;
+}
+
+.combined-stats-card .stats-cell.primary {
+    color: var(--primary-color);
+}
+
+/* Theme-specific variables */
+:root {
+    --primary-color: #3b82f6;
+    --secondary-color: #6366f1;
+    --primary-color-20: rgba(59, 130, 246, 0.125);
+    --secondary-color-20: rgba(99, 102, 241, 0.125);
+    --primary-color-15: rgba(59, 130, 246, 0.082);
+    --primary-color-10: rgba(59, 130, 246, 0.063);
+}
+
+[data-theme="light"] {
+    --grid-color: #e9ecef;
+    --text-color: #0a0a0a;
+    --text-color-40: rgba(10, 10, 10, 0.25);
+    --text-color-80: rgba(10, 10, 10, 0.502);
+    --text-color-99: rgba(10, 10, 10, 0.6);
+    --text-color-cc: rgba(10, 10, 10, 0.8);
+    --text-color-20: rgba(10, 10, 10, 0.125);
+    --dropdown-bg: #ffffff;
+}
+
+[data-theme="dark"] {
+    --grid-color: #333333;
+    --text-color: #ffffff;
+    --text-color-40: rgba(255, 255, 255, 0.25);
+    --text-color-80: rgba(255, 255, 255, 0.502);
+    --text-color-99: rgba(255, 255, 255, 0.6);
+    --text-color-cc: rgba(255, 255, 255, 0.8);
+    --text-color-20: rgba(255, 255, 255, 0.125);
+    --dropdown-bg: #2a2a2a;
+}
