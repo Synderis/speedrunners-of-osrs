@@ -140,20 +140,25 @@ pub fn test_vespula_thresholds(payload_json: &str) -> String {
         for _monster in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
+            let mut cooldown = AttackCooldown::new();
             while hp > 0 {
                 tick += 1;
                 ticks_this_monster += 1;
-                // ZCB spec logic: on second attack (tick - 1 == attack_speed)
-                if zaryte_crossbow && (tick - 1) == attack_speed {
+                // ZCB spec logic: on second attack (tick == attack_speed + 1)
+                if zaryte_crossbow && tick == attack_speed + 1 {
                     let spec_dmg = (base_hp as f64 * 0.22).floor() as i32;
                     hp -= spec_dmg;
+                    cooldown.reset(attack_speed);
                     println!("[DEBUG] ZCB spec applied: {} damage on tick {} (hp now {})", spec_dmg, tick, hp);
                 } else {
-                    // Regular attacks only happen on attack speed intervals
-                    if (tick - 1) % attack_speed == 0 {
+                    // Regular attacks using cooldown
+                    if cooldown.is_ready() {
                         let hit = hit_generator.get_vespula_hit(&mut rng, accuracy, max_hit);
                         hp -= hit;
+                        cooldown.reset(attack_speed);
                         println!("[DEBUG] Regular hit: {} on tick {} (hp now {})", hit, tick, hp);
+                    } else {
+                        cooldown.tick();
                     }
                 }
                 if hp <= 0 {

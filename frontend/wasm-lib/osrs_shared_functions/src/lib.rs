@@ -5,6 +5,51 @@ use rand::Rng;
 //     ($($t:tt)*) => (web_sys::console::log_1(&format!($($t)*).into()))
 // }
 
+/// Helper struct for managing attack cooldowns in combat simulations
+#[derive(Clone, Copy)]
+pub struct AttackCooldown {
+    ticks_until_ready: i32,
+}
+
+impl AttackCooldown {
+    /// Create a new cooldown that's ready to attack immediately
+    pub fn new() -> Self {
+        Self { ticks_until_ready: 0 }
+    }
+    
+    /// Check if the cooldown is ready (can attack this tick)
+    #[inline(always)]
+    pub fn is_ready(&self) -> bool {
+        self.ticks_until_ready == 0
+    }
+    
+    /// Advance the cooldown by one tick
+    #[inline(always)]
+    pub fn tick(&mut self) {
+        if self.ticks_until_ready > 0 {
+            self.ticks_until_ready -= 1;
+        }
+    }
+    
+    /// Reset the cooldown after attacking (attack_speed - 1 because current tick counts)
+    #[inline(always)]
+    pub fn reset(&mut self, attack_speed: i32) {
+        self.ticks_until_ready = attack_speed - 1;
+    }
+    
+    /// Get remaining ticks until ready
+    #[inline(always)]
+    pub fn remaining(&self) -> i32 {
+        self.ticks_until_ready
+    }
+    
+    /// Reduce the cooldown by a number of ticks (clamped to 0)
+    #[inline(always)]
+    pub fn reduce(&mut self, ticks: i32) {
+        self.ticks_until_ready = (self.ticks_until_ready - ticks).max(0);
+    }
+}
+
 fn tbow_scaling(magic: u32, mode: &str) -> f64 {
     let (factor, base, clamp) = if mode == "accuracy" {
         (10.0, 140.0, 1.4)
@@ -32,12 +77,15 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
     let mut best_accuracy = 0.0;
 
     for combat_type in combat_types {
-        let (selected_weapon, gear_stats) = match combat_type.as_str() {
-            "magic" => (&player.gear_sets.mage.selected_weapon, &player.gear_sets.mage.gear_stats),
-            "ranged" => (&player.gear_sets.ranged.selected_weapon, &player.gear_sets.ranged.gear_stats),
-            "melee" => (&player.gear_sets.melee.selected_weapon, &player.gear_sets.melee.gear_stats),
+        let (selected_weapon, gear_set) = match combat_type.as_str() {
+            "magic" => (&player.gear_sets.mage.selected_weapon, &player.gear_sets.mage),
+            "ranged" => (&player.gear_sets.ranged.selected_weapon, &player.gear_sets.ranged),
+            "melee" => (&player.gear_sets.melee.selected_weapon, &player.gear_sets.melee),
             _ => continue,
         };
+
+        // Calculate total gear stats (base + weapon + offhand)
+        let gear_stats = gear_set.total_gear_stats();
 
         if let Some(weapon) = selected_weapon {
             if let Some(styles) = &weapon.weapon_styles {
@@ -48,8 +96,8 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                 //     weapon.name
                 // );
                 for style in styles {
-                    let (max_hit, _effective_level) = calculate_max_hit_for_style(player, monster, &combat_type, style, gear_stats);
-                    let (accuracy, effective_level, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, &combat_type, style, gear_stats);
+                    let (max_hit, _effective_level) = calculate_max_hit_for_style(player, monster, &combat_type, style, &gear_stats);
+                    let (accuracy, effective_level, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, &combat_type, style, &gear_stats);
                     let effective_dps = if weapon.name == "Scythe of vitur" {
                         let modified_max_hit = max_hit + (max_hit / 2) + (max_hit / 4);
                         (modified_max_hit as f64 * accuracy) / (weapon.speed as f64 - style.att_spd_reduction as f64)
@@ -449,12 +497,14 @@ pub fn calculate_accuracy_for_style(player: &Player, monster: &Monster, combat_t
     (accuracy, 0, max_attack_roll, max_defence_roll)
 }
 
+/// Swap weapon and optionally offhand without modifying base gear_stats.
+/// The base gear_stats should NOT include weapon or offhand bonuses.
+/// Use GearSetData::total_gear_stats() to get combined stats when needed.
 pub fn ensure_weapon_swap(
     player: &mut Player,
     weapon_name: &str,
     equip_offhand: Option<SelectedItem>,
 ) -> Option<(String, Option<SelectedItem>)> {
-    let gear_stats = &mut player.gear_sets.melee.gear_stats;
     let gear_items = &mut player.gear_sets.melee.gear_items;
     let selected_weapon = player.gear_sets.melee.selected_weapon.as_mut()?;
 
@@ -463,7 +513,7 @@ pub fn ensure_weapon_swap(
     if let Some(idx) = inventory_weapon_idx {
         let inventory_weapon = player.inventory.remove(idx);
 
-        // Find current offhand
+        // Find current offhand in gear_items
         let current_offhand_idx = gear_items.iter().position(|item| {
             item.as_ref().map_or(false, |i| i.slot == "shield")
         });
@@ -471,62 +521,31 @@ pub fn ensure_weapon_swap(
             .and_then(|i| gear_items.remove(i))
             .and_then(|i| Some(i.clone()));
 
-        // Update bonuses
-        if let Some(bonuses) = &selected_weapon.bonuses {
-            if let Some(inv_bonuses) = inventory_weapon.equipment.as_ref().and_then(|eq| eq.bonuses.as_ref()) {
-                gear_stats.bonuses.sub_assign(bonuses);
-                gear_stats.bonuses.add_assign(inv_bonuses);
-
-                if let Some(ref offhand) = current_offhand {
-                    if let Some(off_bonuses) = offhand.bonuses.as_ref() {
-                        gear_stats.bonuses.sub_assign(off_bonuses);
-                    }
-                }
-                if let Some(ref offhand) = equip_offhand {
-                    if let Some(off_bonuses) = offhand.bonuses.as_ref() {
-                        gear_stats.bonuses.add_assign(off_bonuses);
-                    }
-                }
-            }
-        }
-        // Update offensive
-        if let Some(offensive) = &selected_weapon.offensive {
-            if let Some(inv_offensive) = inventory_weapon.equipment.as_ref().and_then(|eq| eq.offensive.as_ref()) {
-                gear_stats.offensive.sub_assign(offensive);
-                gear_stats.offensive.add_assign(inv_offensive);
-
-                if let Some(ref offhand) = current_offhand {
-                    if let Some(off_offensive) = offhand.offensive.as_ref() {
-                        gear_stats.offensive.sub_assign(off_offensive);
-                    }
-                }
-                if let Some(ref offhand) = equip_offhand {
-                    if let Some(off_offensive) = offhand.offensive.as_ref() {
-                        gear_stats.offensive.add_assign(off_offensive);
-                    }
-                }
-            }
-        }
-
-        // Swap weapon
+        // Swap weapon reference
         let prev_weapon = std::mem::replace(selected_weapon, inventory_weapon.equipment.clone()?);
 
+        // Add previous weapon back to inventory
         player.inventory.push(InventoryItem {
             name: prev_weapon.name.clone(),
             equipment: Some(prev_weapon.clone()),
         });
 
-        // Handle offhand swap
+        // Update selected_offhand reference
+        player.gear_sets.melee.selected_offhand = equip_offhand.clone();
+
+        // Handle offhand swapping
         if let Some(offhand) = current_offhand.clone() {
+            // Put old offhand back in inventory
             player.inventory.push(InventoryItem {
                 name: offhand.name.clone(),
                 equipment: Some(offhand.clone()),
             });
-            return Some((prev_weapon.name.clone(), Some(offhand)));
         }
         if let Some(offhand) = equip_offhand.clone() {
+            // Add new offhand to gear_items for tracking
             gear_items.push(Some(offhand.clone()));
         }
+        
         return Some((prev_weapon.name.clone(), current_offhand));
     }
     None

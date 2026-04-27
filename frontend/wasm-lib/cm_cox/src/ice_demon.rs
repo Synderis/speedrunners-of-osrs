@@ -134,6 +134,7 @@ fn ember_light_kill<R: Rng>(
     mut total_ticks: i32,
     spec_count_max: i32,
 ) -> i32 {
+    let mut cooldown = AttackCooldown::new();
     // precompute thresholds for p0, p1, p2
     let to_thr = |p: f64| -> u32 { (p.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32 };
     let p0 = to_thr(accuracy[0]);
@@ -148,7 +149,7 @@ fn ember_light_kill<R: Rng>(
     // first: specials
     while hit_count < spec_count_max {
         attack_tick += 1;
-        if (attack_tick - 1) % attack_speed == 0 {
+        if cooldown.is_ready() {
             // roll
             let thr = [p0, p1, p2][acc_idx];
             if rng.next_u32() <= thr {
@@ -163,6 +164,9 @@ fn ember_light_kill<R: Rng>(
             }
             hp = thrall_hit(rng, hp);
             hit_count += 1;
+            cooldown.reset(attack_speed);
+        } else {
+            cooldown.tick();
         }
     }
 
@@ -172,7 +176,7 @@ fn ember_light_kill<R: Rng>(
     attack_tick = 0;
     while hp > 0 {
         attack_tick += 1;
-        if (attack_tick - 1) % attack_speed == 0 {
+        if cooldown.is_ready() {
             let thr = [p0, p1, p2][acc_idx];
             let mut hit = 0;
             if rng.next_u32() <= thr {
@@ -181,6 +185,8 @@ fn ember_light_kill<R: Rng>(
             hp -= hit;
             hit_count += 1;
             hp = thrall_hit(rng, hp);
+        } else {
+            cooldown.tick();
         }
         if hp <= 0 {
             total_ticks += attack_tick;
@@ -200,8 +206,7 @@ fn burning_claws_kill<R: Rng>(
     mut total_ticks: i32,
     spec_count_max: i32,
 ) -> i32 {
-    let acc_thr: u32 = (accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
-
+    let acc_thr: u32 = (accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;    let mut cooldown = AttackCooldown::new();
     let mut attack_tick = 0;
     let mut hit_count = 0;
     let mut burn_list: Vec<i32> = Vec::new();
@@ -209,7 +214,7 @@ fn burning_claws_kill<R: Rng>(
     // First phase: specials
     while hit_count < spec_count_max && hp > 0 {
         attack_tick += 1;
-        if (attack_tick - 1) % attack_speed == 0 {
+        if cooldown.is_ready() {
             let (hits, burns) = burning_barrage_special(rng, max_hit, accuracy);
             hp -= hits.iter().sum::<i32>();
             for burn in burns {
@@ -220,6 +225,9 @@ fn burning_claws_kill<R: Rng>(
             hp = apply_burns(hp, &mut burn_list);
             hit_count += 1;
             hp = thrall_hit(rng, hp);
+            cooldown.reset(attack_speed);
+        } else {
+            cooldown.tick();
         }
     }
 
@@ -234,7 +242,7 @@ fn burning_claws_kill<R: Rng>(
     // Second phase: regulars
     while hp > 0 {
         attack_tick += 1;
-        if (attack_tick - 1) % attack_speed == 0 {
+        if cooldown.is_ready() {
             let hit = if rng.next_u32() <= acc_thr {
                 rng.gen_range(0..=max_hit).max(1)
             } else {
@@ -244,6 +252,9 @@ fn burning_claws_kill<R: Rng>(
             hp -= hit;
             hit_count += 1;
             hp = thrall_hit(rng, hp);
+            cooldown.reset(attack_speed);
+        } else {
+            cooldown.tick();
         }
         if hp <= 0 {
             total_ticks += attack_tick;

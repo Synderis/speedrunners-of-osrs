@@ -16,22 +16,22 @@
             "melee": {
                 "gearStats": {
                     "bonuses": {
-                        "str": 139,
+                        "str": 64,
                         "ranged_str": 63,
                         "magic_str": 2,
                         "prayer": 4
                     },
                     "offensive": {
-                        "stab": 120,
-                        "slash": 213,
-                        "crush": 80,
-                        "magic": -46,
+                        "stab": 50,
+                        "slash": 88,
+                        "crush": 50,
+                        "magic": -40,
                         "ranged": -47
                     },
                     "defensive": {
-                        "stab": 261,
-                        "slash": 345,
-                        "crush": 265,
+                        "stab": 263,
+                        "slash": 337,
+                        "crush": 255,
                         "magic": 14,
                         "ranged": 265
                     }
@@ -112,6 +112,7 @@
                         }
                     ]
                 },
+                "selectedOffhand": null,
                 "gearType": "melee",
                 "gearItems": [
                     {
@@ -422,20 +423,20 @@
                         "str": 6,
                         "ranged_str": 63,
                         "magic_str": 27,
-                        "prayer": 5
+                        "prayer": 4
                     },
                     "offensive": {
                         "stab": 5,
                         "slash": 5,
                         "crush": 5,
-                        "magic": 177,
+                        "magic": 142,
                         "ranged": -6
                     },
                     "defensive": {
                         "stab": 120,
                         "slash": 112,
                         "crush": 129,
-                        "magic": 103,
+                        "magic": 83,
                         "ranged": 15
                     }
                 },
@@ -504,6 +505,7 @@
                         }
                     ]
                 },
+                "selectedOffhand": null,
                 "gearType": "mage",
                 "gearItems": [
                     {
@@ -812,7 +814,7 @@
                 "gearStats": {
                     "bonuses": {
                         "str": 6,
-                        "ranged_str": 103,
+                        "ranged_str": 84,
                         "magic_str": 2,
                         "prayer": 6
                     },
@@ -821,7 +823,7 @@
                         "slash": -3,
                         "crush": -3,
                         "magic": 4,
-                        "ranged": 228
+                        "ranged": 168
                     },
                     "defensive": {
                         "stab": 131,
@@ -896,6 +898,7 @@
                         }
                     ]
                 },
+                "selectedOffhand": null,
                 "gearType": "ranged",
                 "gearItems": [
                     {
@@ -998,7 +1001,7 @@
                         "category": "",
                         "bonuses": {
                             "str": 0,
-                            "ranged_str": 3,
+                            "ranged_str": 4,
                             "magic_str": 0,
                             "prayer": 0
                         },
@@ -1007,7 +1010,7 @@
                             "slash": 0,
                             "crush": 0,
                             "magic": 0,
-                            "ranged": 18
+                            "ranged": 28
                         },
                         "defensive": {
                             "stab": 0,

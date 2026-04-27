@@ -88,13 +88,50 @@ pub struct SelectedItem {
 #[derive(Deserialize, Clone)]
 pub struct GearSetData {
     #[serde(rename = "gearStats")]
-    pub gear_stats: GearStats,
+    pub gear_stats: GearStats,  // Base gear stats (excluding weapon and offhand)
     #[serde(rename = "selectedWeapon")]
     pub selected_weapon: Option<SelectedItem>,
+    #[serde(rename = "selectedOffhand")]
+    pub selected_offhand: Option<SelectedItem>,  // null if weapon is two-handed
     #[serde(rename = "gearType")]
     pub gear_type: String,
     #[serde(rename = "gearItems")]
     pub gear_items: Vec<Option<SelectedItem>>,
+}
+
+impl GearSetData {
+    /// Calculate total gear stats by adding base stats + weapon + offhand
+    pub fn total_gear_stats(&self) -> GearStats {
+        let mut total = self.gear_stats.clone();
+        
+        // Add weapon bonuses
+        if let Some(weapon) = &self.selected_weapon {
+            if let Some(bonuses) = &weapon.bonuses {
+                total.bonuses.add_assign(bonuses);
+            }
+            if let Some(offensive) = &weapon.offensive {
+                total.offensive.add_assign(offensive);
+            }
+            if let Some(defensive) = &weapon.defensive {
+                total.defensive.add_assign(defensive);
+            }
+        }
+        
+        // Add offhand bonuses
+        if let Some(offhand) = &self.selected_offhand {
+            if let Some(bonuses) = &offhand.bonuses {
+                total.bonuses.add_assign(bonuses);
+            }
+            if let Some(offensive) = &offhand.offensive {
+                total.offensive.add_assign(offensive);
+            }
+            if let Some(defensive) = &offhand.defensive {
+                total.defensive.add_assign(defensive);
+            }
+        }
+        
+        total
+    }
 }
 
 #[derive(Deserialize, Clone)]
@@ -182,7 +219,7 @@ pub struct CalculationResult {
     pub max_defence_roll: u64,
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct StyleResult {
     pub gear_type: String,
     pub combat_style: String,
@@ -266,12 +303,6 @@ impl GearBonuses {
         self.magic_str += other.magic_str;
         self.prayer += other.prayer;
     }
-    pub fn sub_assign(&mut self, other: &Self) {
-        self.str -= other.str;
-        self.ranged_str -= other.ranged_str;
-        self.magic_str -= other.magic_str;
-        self.prayer -= other.prayer;
-    }
 }
 
 // Add methods to GearOffensive for concise stat updates
@@ -283,12 +314,43 @@ impl GearOffensive {
         self.magic += other.magic;
         self.ranged += other.ranged;
     }
-    pub fn sub_assign(&mut self, other: &Self) {
-        self.stab -= other.stab;
-        self.slash -= other.slash;
-        self.crush -= other.crush;
-        self.magic -= other.magic;
-        self.ranged -= other.ranged;
+}
+
+// Add methods to GearDefensive for concise stat updates
+impl GearDefensive {
+    pub fn add_assign(&mut self, other: &Self) {
+        self.stab += other.stab;
+        self.slash += other.slash;
+        self.crush += other.crush;
+        self.magic += other.magic;
+        self.ranged += other.ranged;
+    }
+}
+
+impl GearStats {
+    pub fn clone(&self) -> Self {
+        Self {
+            bonuses: GearBonuses {
+                ranged_str: self.bonuses.ranged_str,
+                magic_str: self.bonuses.magic_str,
+                str: self.bonuses.str,
+                prayer: self.bonuses.prayer,
+            },
+            offensive: GearOffensive {
+                stab: self.offensive.stab,
+                slash: self.offensive.slash,
+                crush: self.offensive.crush,
+                magic: self.offensive.magic,
+                ranged: self.offensive.ranged,
+            },
+            defensive: GearDefensive {
+                stab: self.defensive.stab,
+                slash: self.defensive.slash,
+                crush: self.defensive.crush,
+                magic: self.defensive.magic,
+                ranged: self.defensive.ranged,
+            },
+        }
     }
 }
 

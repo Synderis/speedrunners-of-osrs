@@ -18,8 +18,8 @@ fn phase_loop(
     weapon_name: &str,
     rng: &mut SmallRng,
     thrall_dist: &Uniform<i32>, // prebuilt 0..=3
+    cooldown: &mut AttackCooldown,
 ) -> (i32, i32, usize, bool) {
-    // keep your modulo timing exactly the same, just sample from a prebuilt Uniform
     while *tekton_hp > 0 && hit_count >= hit_count_bounds[0] && hit_count <= hit_count_bounds[1] {
         *current_phase_ticks += 1;
 
@@ -30,10 +30,13 @@ fn phase_loop(
             return (*tekton_hp, *current_phase_ticks, hit_count, true);
         }
 
-        if *current_phase_ticks == 1 || (*current_phase_ticks - 1) % attack_speed == 0 {
+        if cooldown.is_ready() {
             let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name);
             *tekton_hp -= hit;
             hit_count += 1;
+            cooldown.reset(attack_speed);
+        } else {
+            cooldown.tick();
         }
     }
     (*tekton_hp, *current_phase_ticks, hit_count, false)
@@ -184,6 +187,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         let mut veng_count = pre_veng;
 
         while tekton_hp > 0 {
+            let mut cooldown = AttackCooldown::new();
             if spec_phase {
                 total_ticks += 6;
                 tekton_hp -= dmg_modifier_check(&mut rng, max_hit_spec, 1.0, &spec_weapon);
@@ -208,6 +212,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 weapon_name,
                 &mut rng,
                 &thrall_dmg,
+                &mut cooldown,
             );
             tekton_hp = hp1;
             current_phase_ticks = ticks1;
@@ -229,6 +234,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             if current_phase_ticks > 0 {
                 total_ticks += current_phase_ticks;
             }
+            cooldown.reduce(anvil_cycle * 3);
             current_phase_ticks = 0;
 
             // Normal phase: (0, 3)
@@ -249,6 +255,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 weapon_name,
                 &mut rng,
                 &thrall_dmg,
+                &mut cooldown,
             );
             tekton_hp = hp2;
             current_phase_ticks = ticks2;
@@ -272,6 +279,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 weapon_name,
                 &mut rng,
                 &thrall_dmg,
+                &mut cooldown,
             );
             tekton_hp = hp3;
             current_phase_ticks = ticks3;

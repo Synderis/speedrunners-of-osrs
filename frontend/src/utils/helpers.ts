@@ -13,7 +13,8 @@ export const calculateGearStatsForSet = (
     const totalStats = JSON.parse(JSON.stringify(DEFAULT_GEAR_STATS));
     for (const slot of gearSets[gearType]) {
         const eq = slot.selected as Equipment | undefined;
-        if (eq) {
+        // Exclude weapon and shield slots - these are tracked separately
+        if (eq && slot.slot.toLowerCase() !== 'weapon' && slot.slot.toLowerCase() !== 'shield') {
             // Bonuses (keep special logic for magic_str)
             totalStats.bonuses.str += eq.bonuses.str ?? 0;
             totalStats.bonuses.ranged_str += eq.bonuses.ranged_str ?? 0;
@@ -31,6 +32,62 @@ export const calculateGearStatsForSet = (
             }
         }
     }
+    return totalStats;
+};
+
+// Helper to calculate total gear stats including weapon and offhand for display purposes
+export const calculateTotalGearStatsForDisplay = (
+    gearType: typeof GEAR_TYPES[number],
+    gearSets: GearSets
+) => {
+    // Start with base stats (excluding weapon and offhand)
+    const totalStats = calculateGearStatsForSet(gearType, gearSets);
+    
+    // Find weapon slot
+    const weaponSlot = gearSets[gearType]?.find(slot => slot.slot.toLowerCase() === 'weapon');
+    const weapon = weaponSlot?.selected as Equipment | undefined;
+    
+    // Add weapon bonuses
+    if (weapon) {
+        totalStats.bonuses.str += weapon.bonuses.str ?? 0;
+        totalStats.bonuses.ranged_str += weapon.bonuses.ranged_str ?? 0;
+        totalStats.bonuses.magic_str += (weapon.bonuses.magic_str ? weapon.bonuses.magic_str * 0.1 : 0);
+        totalStats.bonuses.prayer += weapon.bonuses.prayer ?? 0;
+        
+        for (const statName of Object.keys(totalStats.offensive)) {
+            totalStats.offensive[statName as keyof typeof totalStats.offensive] +=
+                weapon.offensive[statName as keyof typeof weapon.offensive] ?? 0;
+        }
+        
+        for (const statName of Object.keys(totalStats.defensive)) {
+            totalStats.defensive[statName as keyof typeof totalStats.defensive] +=
+                weapon.defensive[statName as keyof typeof weapon.defensive] ?? 0;
+        }
+    }
+    
+    // Find shield/offhand slot (only if weapon is not two-handed)
+    if (!weapon?.two_handed) {
+        const shieldSlot = gearSets[gearType]?.find(slot => slot.slot.toLowerCase() === 'shield');
+        const offhand = shieldSlot?.selected as Equipment | undefined;
+        
+        if (offhand) {
+            totalStats.bonuses.str += offhand.bonuses.str ?? 0;
+            totalStats.bonuses.ranged_str += offhand.bonuses.ranged_str ?? 0;
+            totalStats.bonuses.magic_str += (offhand.bonuses.magic_str ? offhand.bonuses.magic_str * 0.1 : 0);
+            totalStats.bonuses.prayer += offhand.bonuses.prayer ?? 0;
+            
+            for (const statName of Object.keys(totalStats.offensive)) {
+                totalStats.offensive[statName as keyof typeof totalStats.offensive] +=
+                    offhand.offensive[statName as keyof typeof offhand.offensive] ?? 0;
+            }
+            
+            for (const statName of Object.keys(totalStats.defensive)) {
+                totalStats.defensive[statName as keyof typeof totalStats.defensive] +=
+                    offhand.defensive[statName as keyof typeof offhand.defensive] ?? 0;
+            }
+        }
+    }
+    
     return totalStats;
 };
 

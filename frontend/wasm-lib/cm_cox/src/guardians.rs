@@ -67,19 +67,23 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
 
     for _ in 0..trials {
         let mut tick = 0;
+        let mut cooldown = AttackCooldown::new();
         for _ in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
             while hp > 0 {
                 tick += 1;
                 ticks_this_monster += 1;
-                if (tick - 1) % attack_speed == 0 {
+                if cooldown.is_ready() {
                     let hit = if rng.gen::<f64>() < accuracy {
                         rng.gen_range(0..=max_hit).max(1)
                     } else {
                         0
                     };
                     hp -= hit;
+                    cooldown.reset(attack_speed);
+                } else {
+                    cooldown.tick();
                 }
                 if hp <= 0 {
                     break;

@@ -13,6 +13,7 @@ import { GEAR_TYPES, DEFAULT_GEAR_STATS, wasmModelLoaders } from '../data/consta
 import { createStatCards } from '../utils/statCards';
 import {
   calculateGearStatsForSet,
+  calculateTotalGearStatsForDisplay,
   getMonstersByRoom,
   calculateCombinedDistribution,
   buildMonsterConfigFromStats,
@@ -155,7 +156,7 @@ const PlotSection: React.FC = () => {
     .map(type => ({
       key: type,
       title: `${type.charAt(0).toUpperCase() + type.slice(1)} Gear`,
-      data: buildPlayerConfigFromStats(allGearStats[type])
+      data: buildPlayerConfigFromStats(calculateTotalGearStatsForDisplay(type, gearSets))
     }));
   const monsterData = buildMonsterConfigFromStats(currentMonster, combatStats);
   const configSections = [
@@ -223,12 +224,21 @@ const PlotSection: React.FC = () => {
       });
 
       // Prepare player object for WASM (shared for all monsters)
-      const playerData = {
+      const player = {
         combatStats,
         gearSets: GEAR_TYPES.reduce((acc, type) => {
+          // Find the weapon slot
+          const weaponSlot = gearSets[type].find(slot => slot.slot.toLowerCase() === 'weapon');
+          const weapon = weaponSlot?.selected;
+          
+          // Find the shield/offhand slot (only if weapon is not two-handed)
+          const shieldSlot = gearSets[type].find(slot => slot.slot.toLowerCase() === 'shield');
+          const offhand = (!weapon?.two_handed && shieldSlot) ? shieldSlot.selected : null;
+          
           acc[type] = {
-            gearStats: calculatedGearStats[type],
+            gearStats: calculatedGearStats[type],  // Base stats (excludes weapon and offhand)
             selectedWeapon: allWeapons[type],
+            selectedOffhand: offhand || null,  // null if weapon is two-handed or no shield equipped
             gearType: type,
             gearItems: gearSets[type]
               .map(slot => slot.selected)
@@ -274,8 +284,8 @@ const PlotSection: React.FC = () => {
             }))
             : []
         };
-        console.log('Sending to WASM:', { playerData, rooms: roomPayload });
-        const result = await loader(playerData, roomPayload);
+        console.log('Sending to WASM:', { player, rooms: roomPayload });
+        const result = await loader(player, roomPayload);
         const key = String(room.id || 'default');
         console.log(`WASM result for room ${room.name} (${key}):`, result, result.perMonster);
         return {

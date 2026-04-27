@@ -159,17 +159,20 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
         let mut tick = 0;
         let range_max = if attack_speed > 4 { 4 * attack_speed } else { 4 };
         let overkill = if rng.gen_range(1..=range_max) == 1 { 1 } else { 0 };
+        let mut cooldown = AttackCooldown::new();
 
         for _monster in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
+            let mut passive_tick = 0;
 
             while hp > 0 {
                 tick += 1;
                 ticks_this_monster += 1;
+                passive_tick += 1;
 
-                // passive 4-tick damage (keep modulo timing)
-                if (tick - 1) % 4 == 0 {
+                // passive 4-tick damage
+                if passive_tick == 1 || (passive_tick - 1) % 4 == 0 {
                     let hit = passive_dmg.sample(&mut rng); // 0..=3
                     hp -= hit;
                 }
@@ -177,14 +180,17 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
                     break;
                 }
 
-                // player attack (keep modulo timing), but use integer threshold roll
-                if (tick - 1) % attack_speed == 0 {
+                // player attack using cooldown
+                if cooldown.is_ready() {
                     let hit = if rng.next_u32() <= acc_threshold {
                         rng.gen_range(0..=max_hit).max(1)
                     } else {
                         0
                     };
                     hp -= hit;
+                    cooldown.reset(attack_speed);
+                } else {
+                    cooldown.tick();
                 }
                 if hp <= 0 {
                     break;

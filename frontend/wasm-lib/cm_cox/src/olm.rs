@@ -15,16 +15,19 @@ fn phase_loop(
     weapon_name: &str,
     rng: &mut SmallRng,
     passive_dmg: &Uniform<i32>, // prebuilt 0..=3
+    cooldown: &mut AttackCooldown,
 ) -> i32 {
     let mut ticks_spent = 0;
-    // keep modulo logic exactly as prod
     while *hp > 0 {
         ticks_spent += 1;
         *current_phase_ticks += 1;
 
-        if (*current_phase_ticks - 1) % attack_speed == 0 {
+        if cooldown.is_ready() {
             let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name);
             *hp -= hit;
+            cooldown.reset(attack_speed);
+        } else {
+            cooldown.tick();
         }
         if *hp <= 0 {
             break;
@@ -142,6 +145,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             let mut melee_ticks;
             let mut spec_hit = false;
             current_phase_ticks = 0;
+            let mut mage_cooldown = AttackCooldown::new();
 
             mage_ticks = phase_loop(
                 &mut mage_hp,
@@ -152,6 +156,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                 "Mage",
                 &mut rng,
                 &passive_dmg,
+                &mut mage_cooldown,
             );
 
             // spec: Bernoulli via u32 threshold (faster than gen::<f64>())
@@ -162,6 +167,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             let melee_accuracy = if spec_hit { best_style_specced.accuracy } else { best_style_melee.accuracy };
             let melee_max_hit = if spec_hit { best_style_specced.max_hit } else { best_style_melee.max_hit };
             let melee_attack_speed = if spec_hit { best_style_specced.attack_speed } else { best_style_melee.attack_speed };
+            let mut melee_cooldown = AttackCooldown::new();
             melee_ticks = phase_loop(
                 &mut melee_hp,
                 &mut current_phase_ticks, 
@@ -170,7 +176,8 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                 melee_max_hit, 
                 weapon_name, 
                 &mut rng, 
-                &passive_dmg
+                &passive_dmg,
+                &mut melee_cooldown,
             );
             melee_ticks += 6; // Add 6 ticks for spec delay
             total_ticks += mage_ticks + melee_ticks;
@@ -183,6 +190,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             ranged_hp -= spec_dmg;
             current_phase_ticks += 5;
         }
+        let mut ranged_cooldown = AttackCooldown::new();
         let mut ranged_ticks = phase_loop(
             &mut ranged_hp,
             &mut current_phase_ticks,
@@ -192,6 +200,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             "Ranged",
             &mut rng,
             &passive_dmg,
+            &mut ranged_cooldown,
         );
         if zaryte_crossbow {
             ranged_ticks += 5;

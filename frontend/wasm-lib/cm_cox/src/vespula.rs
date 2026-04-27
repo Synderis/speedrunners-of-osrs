@@ -45,20 +45,25 @@ pub fn simulate_vespula<R: rand::RngCore, F: FnMut(i32) -> i32>(
         for _monster in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
+            let mut cooldown = AttackCooldown::new();
             while hp > 0 {
                 tick += 1;
                 ticks_this_monster += 1;
-                if zaryte_crossbow && (tick - 1) == attack_speed {
+                if zaryte_crossbow && tick == attack_speed + 1 {
                     let spec_dmg = (base_hp as f64 * 0.22).floor() as i32;
                     hp -= spec_dmg;
+                    cooldown.reset(attack_speed);
                 } else {
-                    if (tick - 1) % attack_speed == 0 {
+                    if cooldown.is_ready() {
                         let hit = if bypass_accuracy || rng.gen::<f64>() < accuracy {
                             hit_provider(max_hit)
                         } else {
                             0
                         };
                         hp -= hit;
+                        cooldown.reset(attack_speed);
+                    } else {
+                        cooldown.tick();
                     }
                 }
                 if hp <= 0 {

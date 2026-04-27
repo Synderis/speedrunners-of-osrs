@@ -16,27 +16,46 @@ fn phase_loop(
     rng: &mut SmallRng,
     thrall_dist: &Uniform<i32>,
 ) -> (i32, i32, i32) {
+    let mut cooldown = AttackCooldown::new();
+    // Restore cooldown state from previous phase
+    if vasa_attack_tick > 0 {
+        let ticks_since_last_attack = vasa_attack_tick % best_style.attack_speed;
+        if ticks_since_last_attack > 0 {
+            cooldown.reset(best_style.attack_speed);
+            for _ in 0..ticks_since_last_attack {
+                cooldown.tick();
+            }
+        }
+    }
+    
     while vasa_attack_tick <= *attack_limit {
         vasa_attack_tick += 1;
+        
         if zaryte_crossbow && (vasa_attack_tick - 1) == best_style.attack_speed {
             let spec_dmg = (vasa_hp as f64 * 0.22).floor() as i32;
             vasa_hp = vasa_hp - spec_dmg;
         } else {
-            if (vasa_attack_tick - 1) % best_style.attack_speed == 0 {
+            if cooldown.is_ready() {
                 let mut hit = 0;
                 if rng.gen::<f64>() < best_style.accuracy {
                     hit = rng.gen_range(0..=best_style.max_hit).max(1);
                 }
                 vasa_hp = vasa_hp - hit;
+                cooldown.reset(best_style.attack_speed);
+            } else {
+                cooldown.tick();
             }
         }
+        
         if vasa_hp <= 0 {
             total_ticks += vasa_attack_tick - 1;
             break;
         }
+        
         if (vasa_attack_tick - 1) % 4 == 0 {
             vasa_hp -= thrall_dist.sample(rng);
         }
+        
         if vasa_hp <= 0 {
             total_ticks += vasa_attack_tick - 1;
             break;

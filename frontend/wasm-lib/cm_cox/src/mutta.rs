@@ -23,8 +23,8 @@ fn sample_hit_if<R: Rng>(rng: &mut R, threshold: u32, max_hit: i32) -> i32 {
 fn process_attack_tick<R: Rng>(
     rng: &mut R,
     hp: &mut i32,
-    atk_cd: &mut i32,
-    thrall_cd: &mut i32,
+    atk_cd: &mut AttackCooldown,
+    thrall_cd: &mut AttackCooldown,
     atk_threshold: u32,
     max_hit: i32,
     attack_speed: i32,
@@ -34,26 +34,22 @@ fn process_attack_tick<R: Rng>(
     let mut total_hit = 0;
 
     // main attack (only if weapon is ready)
-    if *atk_cd == 0 {
+    if atk_cd.is_ready() {
         total_hit += sample_hit_if(rng, atk_threshold, max_hit);
-        *atk_cd = attack_speed;
+        atk_cd.reset(attack_speed);
+    } else {
+        atk_cd.tick();
     }
 
     // thrall hit
-    if *thrall_cd == 0 {
+    if thrall_cd.is_ready() {
         total_hit += thrall_dmg.sample(rng);
-        *thrall_cd = thrall_interval;
+        thrall_cd.reset(thrall_interval);
+    } else {
+        thrall_cd.tick();
     }
 
     *hp -= total_hit;
-
-    // tick cooldowns
-    if *atk_cd > 0 {
-        *atk_cd -= 1;
-    }
-    if *thrall_cd > 0 {
-        *thrall_cd -= 1;
-    }
 }
 
 #[inline]
@@ -68,8 +64,8 @@ fn tick_until_hp<R: Rng>(
     thrall_dmg: &Uniform<i32>,
 ) -> i32 {
     let mut current_ticks = 0;
-    let mut atk_cd = 0;
-    let mut thrall_cd = 0;
+    let mut atk_cd = AttackCooldown::new();
+    let mut thrall_cd = AttackCooldown::new();
 
     while *hp > stop_hp {
         current_ticks += 1;
@@ -132,9 +128,9 @@ fn sim_freeze_mutta(
 
     let threshold_hp = (mutta.skills.hp as f64 * 0.5) as i32;
 
-    // Cooldowns: 0 means "ready this tick"
-    let mut atk_cd = 0;      // normal attack cooldown
-    let mut thrall_cd = 0;   // thrall cooldown (4-tick cycle)
+    // Cooldowns
+    let mut atk_cd = AttackCooldown::new();
+    let mut thrall_cd = AttackCooldown::new();
 
     // =========================
     // Phase 1: DPS down to threshold
@@ -166,12 +162,14 @@ fn sim_freeze_mutta(
         let mut total_hit = 0;
 
         // Thrall can hit every tick (if off cooldown)
-        if thrall_cd == 0 {
+        if thrall_cd.is_ready() {
             total_hit += thrall_dmg.sample(rng);
-            thrall_cd = 4;
+            thrall_cd.reset(4);
+        } else {
+            thrall_cd.tick();
         }
 
-        if atk_cd == 0 {
+        if atk_cd.is_ready() {
             // This tick is the ZGS spec tick
             // ZGS freeze: on miss, heal; on hit, damage
             if rng.next_u32() > zgs_thr {
@@ -187,24 +185,14 @@ fn sim_freeze_mutta(
             }
 
             // ZGS spec imposes a 6-tick cooldown
-            atk_cd = 6;
+            atk_cd.reset(6);
+            hp_mutta -= total_hit;
+            break; // spec is done; move to finish phase
+        } else {
+            atk_cd.tick();
         }
-        // else: Weapon still on cooldown, only thrall can hit (handled above)
 
         hp_mutta -= total_hit;
-
-        // tick cooldowns for end of this tick
-        if atk_cd > 0 {
-            atk_cd -= 1;
-        }
-        if thrall_cd > 0 {
-            thrall_cd -= 1;
-        }
-
-        // If we just used ZGS spec (atk_cd was 0 at start of this tick), break
-        if atk_cd == 5 { // 6 - 1 from the decrement above
-            break; // spec is done; move to finish phase
-        }
     }
 
     // =========================
@@ -247,30 +235,47 @@ fn sim_chop_tree(
 ) -> (i32, i32) {
     // Chop the tree, possibly hitting small mutta as you go
     let mut current_ticks = 0;
+    let mut wc_cooldown = AttackCooldown::new();
+    let mut attack_cooldown = AttackCooldown::new();
+    let mut thrall_cooldown = AttackCooldown::new();
+    
     while tree_hp > 0 {
-        // tree roll
         current_ticks += 1;
-        let tree_hit = if (current_ticks - 1) % 5 == 0 {
+        
+        // tree roll (woodcutting every 5 ticks)
+        let tree_hit = if wc_cooldown.is_ready() {
+            wc_cooldown.reset(5);
             sample_hit_if(rng, tree_thr, player.combat_stats.woodcutting)
         } else {
+            wc_cooldown.tick();
             0
         };
 
         // Small mutta can be hit if it's above half HP
-        let tick_index = current_ticks - 1;
-        let can_attack_tick = tick_index % best_style_small_mutta.attack_speed == 0;
         let small_above_threshold =
             base_small_mutta_hp / 2 < best_style_small_mutta.max_hit + hp_small_mutta;
 
-        let hit = if can_attack_tick && small_above_threshold {
+        let hit = if attack_cooldown.is_ready() && small_above_threshold {
+            attack_cooldown.reset(best_style_small_mutta.attack_speed);
             sample_hit_if(rng, small_mutta_thr, best_style_small_mutta.max_hit)
         } else {
+            if !small_above_threshold {
+                attack_cooldown = AttackCooldown::new(); // Reset when can't attack
+            } else {
+                attack_cooldown.tick();
+            }
             0
         };
 
-        let thrall_hit = if tick_index % 4 == 0 && small_above_threshold {
+        let thrall_hit = if thrall_cooldown.is_ready() && small_above_threshold {
+            thrall_cooldown.reset(4);
             thrall_dmg.sample(rng)
         } else {
+            if !small_above_threshold {
+                thrall_cooldown = AttackCooldown::new(); // Reset when can't attack
+            } else {
+                thrall_cooldown.tick();
+            }
             0
         };
 
@@ -285,18 +290,20 @@ fn sim_chop_tree(
 
     while hp_small_mutta > 0 {
         current_ticks += 1;
-        let tick_index = current_ticks - 1;
-        let can_attack_tick = tick_index % best_style_small_mutta.attack_speed == 0;
 
-        let hit = if can_attack_tick {
+        let hit = if attack_cooldown.is_ready() {
+            attack_cooldown.reset(best_style_small_mutta.attack_speed);
             sample_hit_if(rng, small_mutta_thr, best_style_small_mutta.max_hit)
         } else {
+            attack_cooldown.tick();
             0
         };
 
-        let thrall_hit = if tick_index % 4 == 0 {
+        let thrall_hit = if thrall_cooldown.is_ready() {
+            thrall_cooldown.reset(4);
             thrall_dmg.sample(rng)
         } else {
+            thrall_cooldown.tick();
             0
         };
 

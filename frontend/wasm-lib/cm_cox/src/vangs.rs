@@ -109,7 +109,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 		// Use arrays for vang HPs and avoid HashMap
 		let mut vang_hps_trial = [max_hp; 3];
 		let mut tick = 0;
-		let mut cooldown = 0;
+		let mut cooldown = AttackCooldown::new();
 		let mut immune_ticks_left = 0;
 		let mut next_teleport = 20;
 		let mut teleport = 0;
@@ -131,6 +131,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 			if immune_ticks_left > 0 {
 				immune_ticks_left -= 1;
 				tick += 1;
+				cooldown.tick();
 				continue;
 			}
 
@@ -144,7 +145,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 			}
 
 			// Find attackable vang (sorted by highest HP)
-			if tick >= cooldown {
+			if cooldown.is_ready() {
 				let mut ready_idxs: Vec<usize> = (0..3).filter(|&i| vang_hps_trial[i] > 0).collect();
 				ready_idxs.sort_by_key(|&i| -vang_hps_trial[i]);
 				let mut attack_idx_opt = None;
@@ -169,7 +170,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 					}
 					last_vang_attacked_idx = attack_idx;
 					let hit = if attack_idx == 1 && spec_count > 0 {
-						cooldown = tick + attack_speeds[3];
+						cooldown.reset(attack_speeds[3]);
 						spec_count -= 1;
 						if voidwaker {
 							dmg_modifier_check(&mut rng, max_hits[3], accuracies[3], "Voidwaker")
@@ -193,7 +194,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 							}
 						}
 					} else {
-						cooldown = tick + attack_speeds[attack_idx];
+						cooldown.reset(attack_speeds[attack_idx]);
 						if attack_idx == 1 {
 							dmg_modifier_check(&mut rng, max_hits[attack_idx], accuracies[attack_idx], &weapon_name)
 						} else {
@@ -201,7 +202,11 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 						}
 					};
 					vang_hps_trial[attack_idx] = (vang_hps_trial[attack_idx] - hit).max(0);
+				} else {
+					cooldown.tick();
 				}
+			} else {
+				cooldown.tick();
 			}
 			if initial_burn_tick > 0 && !burns.is_empty() && (initial_burn_tick - 1) % 4 == 0 {
 				let melee_hp = vang_hps_trial[1];
