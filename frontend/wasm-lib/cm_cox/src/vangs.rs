@@ -54,6 +54,11 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 	let burning_claws = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Burning claws"));
 	let voidwaker = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Voidwaker"));
 	let weapon_name = player.gear_sets.melee.selected_weapon.as_ref().unwrap().name.clone();
+	let ammo = [
+		player.gear_sets.mage.ammo().map(|a| a.name.clone()),
+		player.gear_sets.melee.ammo().map(|a| a.name.clone()),
+		player.gear_sets.ranged.ammo().map(|a| a.name.clone()),
+	];
 
 	if burning_claws {
 		spec_count_max = spec_count_dict
@@ -173,7 +178,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 						cooldown.reset(attack_speeds[3]);
 						spec_count -= 1;
 						if voidwaker {
-							dmg_modifier_check(&mut rng, max_hits[3], accuracies[3], "Voidwaker")
+							dmg_modifier_check(&mut rng, max_hits[3], accuracies[3], "Voidwaker", ammo[1].as_deref(), &best_style_spec.gear_type)
 						} else if burning_claws {
 							let (hits, new_burns) = burning_barrage_special(&mut rng, max_hits[3], accuracies[3]);
 							if initial_burn_tick == 0 && !new_burns.is_empty() && burns.is_empty() {
@@ -196,9 +201,9 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 					} else {
 						cooldown.reset(attack_speeds[attack_idx]);
 						if attack_idx == 1 {
-							dmg_modifier_check(&mut rng, max_hits[attack_idx], accuracies[attack_idx], &weapon_name)
+							dmg_modifier_check(&mut rng, max_hits[attack_idx], accuracies[attack_idx], &weapon_name, ammo[attack_idx].as_deref(), &best_styles[attack_idx].gear_type)
 						} else {
-							dmg_modifier_check(&mut rng, max_hits[attack_idx], accuracies[attack_idx], "Other")
+							dmg_modifier_check(&mut rng, max_hits[attack_idx], accuracies[attack_idx], "Other", ammo[attack_idx].as_deref(), &best_styles[attack_idx].gear_type)
 						}
 					};
 					vang_hps_trial[attack_idx] = (vang_hps_trial[attack_idx] - hit).max(0);

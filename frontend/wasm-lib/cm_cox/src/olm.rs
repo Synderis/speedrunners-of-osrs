@@ -13,6 +13,8 @@ fn phase_loop(
     accuracy: f64,
     max_hit: i32,
     weapon_name: &str,
+    ammo: Option<&str>,
+    attack_style: &str,
     rng: &mut SmallRng,
     passive_dmg: &Uniform<i32>, // prebuilt 0..=3
     cooldown: &mut AttackCooldown,
@@ -23,7 +25,7 @@ fn phase_loop(
         *current_phase_ticks += 1;
 
         if cooldown.is_ready() {
-            let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name);
+            let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name, ammo, attack_style);
             *hp -= hit;
             cooldown.reset(attack_speed);
         } else {
@@ -114,6 +116,9 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
         ensure_weapon_swap(&mut player, &swapped_weapon, swapped_offhand.clone());
     }
     let weapon_name = &player.gear_sets.melee.selected_weapon.as_ref().unwrap().name;
+    let melee_ammo = player.gear_sets.melee.ammo().map(|a| a.name.clone());
+    let mage_ammo = player.gear_sets.mage.ammo().map(|a| a.name.clone());
+    let ranged_ammo = player.gear_sets.ranged.ammo().map(|a| a.name.clone());
 
     let mut olm_melee_hand_specced = monsters[1].clone();
     olm_melee_hand_specced.skills.def = (olm_melee_hand_specced.skills.def as f64 * def_reduction_mult).ceil() as i32;
@@ -154,6 +159,8 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                 best_style_mage.accuracy,
                 best_style_mage.max_hit,
                 "Mage",
+                mage_ammo.as_deref(),
+                &best_style_mage.gear_type,
                 &mut rng,
                 &passive_dmg,
                 &mut mage_cooldown,
@@ -175,6 +182,8 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                 melee_accuracy, 
                 melee_max_hit, 
                 weapon_name, 
+                melee_ammo.as_deref(),
+                &best_style_melee.gear_type,
                 &mut rng, 
                 &passive_dmg,
                 &mut melee_cooldown,
@@ -198,6 +207,8 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             best_style_ranged.accuracy,
             best_style_ranged.max_hit,
             "Ranged",
+            ranged_ammo.as_deref(),
+            &best_style_ranged.gear_type,
             &mut rng,
             &passive_dmg,
             &mut ranged_cooldown,

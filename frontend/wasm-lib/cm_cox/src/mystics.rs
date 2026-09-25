@@ -184,6 +184,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
         ensure_weapon_swap(&mut player, "Voidwaker", Some(defender));
     }
     let best_style_spec = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
+    let ammo = player.gear_sets.melee.ammo().map(|a| a.name.clone());
 
     for _ in 0..trials {
         let mut tick = 0;
@@ -207,7 +208,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
                     break;
                 }
                 if spec_count > 0 {
-                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker");
+                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker", ammo.as_ref().map(|a| a.as_str()), &best_style_spec.gear_type);
                     hp -= hit;
                     spec_count -= 1;
                     tick += 4;

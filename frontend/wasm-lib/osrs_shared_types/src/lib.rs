@@ -100,6 +100,11 @@ pub struct GearSetData {
 }
 
 impl GearSetData {
+    /// The item equipped in the ammo slot, if any
+    pub fn ammo(&self) -> Option<&SelectedItem> {
+        self.gear_items.iter().flatten().find(|item| item.slot.eq_ignore_ascii_case("ammo"))
+    }
+
     /// Calculate total gear stats by adding base stats + weapon + offhand
     pub fn total_gear_stats(&self) -> GearStats {
         let mut total = self.gear_stats.clone();

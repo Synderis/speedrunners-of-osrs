@@ -98,6 +98,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
     let best_style_vasa = find_best_combat_style(&player, vasa, vec!["ranged".to_string()]);
     let best_style_crystal = find_best_combat_style(&player, crystal, vec!["melee".to_string()]);
     let weapon_name = player.gear_sets.melee.selected_weapon.as_ref().unwrap().name.clone();
+    let ammo = player.gear_sets.melee.ammo().map(|a| a.name.clone());
     let vasa_base_hp = vasa.skills.hp;
     let crystal_base_hp = crystal.skills.hp;
 
@@ -186,7 +187,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                     if spec_count == 0 {
                         break;
                     }
-                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker");
+                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker", ammo.as_deref(), &best_style_spec.gear_type);
                     spec_dmg += hit;
                     spec_count -= 1;
                     spec_ticks += best_style_spec.attack_speed;
@@ -205,7 +206,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                 healing_ticks += 1;
                 let mut hit_crystal = 0;
                 if (crystal_attack_tick - 1) % best_style_crystal.attack_speed == 0 {
-                    hit_crystal = dmg_modifier_check(&mut rng, best_style_crystal.max_hit, best_style_crystal.accuracy, &weapon_name);
+                    hit_crystal = dmg_modifier_check(&mut rng, best_style_crystal.max_hit, best_style_crystal.accuracy, &weapon_name, ammo.as_deref(), &best_style_crystal.gear_type);
                 }
                 if (crystal_attack_tick - 1) % 4 == 0 {
                     hit_crystal += thrall_dmg.sample(&mut rng);

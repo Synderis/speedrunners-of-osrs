@@ -16,6 +16,8 @@ fn phase_loop(
     accuracy: f64,
     max_hit: i32,
     weapon_name: &str,
+    ammo: Option<&str>,
+    attack_style: &str,
     rng: &mut SmallRng,
     thrall_dist: &Uniform<i32>, // prebuilt 0..=3
     cooldown: &mut AttackCooldown,
@@ -31,7 +33,7 @@ fn phase_loop(
         }
 
         if cooldown.is_ready() {
-            let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name);
+            let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name, ammo, attack_style);
             *tekton_hp -= hit;
             hit_count += 1;
             cooldown.reset(attack_speed);
@@ -130,6 +132,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         ensure_weapon_swap(&mut player, &swapped_weapon, swapped_offhand.clone());
     }
     let weapon_name = &player.gear_sets.melee.selected_weapon.as_ref().unwrap().name;
+    let ammo = player.gear_sets.melee.ammo().map(|a| a.name.clone());
 
     let first_spec_def_enraged = (tekton_initial_enraged.skills.def as f64 * def_reduction_mult).ceil() as i32;
     tekton_initial_enraged.skills.def = (tekton_initial_enraged.skills.def as f64 * def_reduction_mult).ceil() as i32;
@@ -191,8 +194,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             let mut cooldown = AttackCooldown::new();
             if spec_phase {
                 total_ticks += 6;
-                tekton_hp -= dmg_modifier_check(&mut rng, max_hit_spec, 1.0, &spec_weapon);
-                let hit = dmg_modifier_check(&mut rng, max_hit_spec, best_style_spec.accuracy, &spec_weapon);
+                tekton_hp -= dmg_modifier_check(&mut rng, max_hit_spec, 1.0, &spec_weapon, ammo.as_ref().map(|a| a.as_str()), &best_style_spec.gear_type);
+                let hit = dmg_modifier_check(&mut rng, max_hit_spec, best_style_spec.accuracy, &spec_weapon, ammo.as_ref().map(|a| a.as_str()), &best_style_spec.gear_type);
                 tekton_hp -= hit;
                 if hit > 0 {
                     specs_hit += 1;
@@ -211,6 +214,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 best_styles_normal[specs_hit].accuracy,
                 best_styles_normal[specs_hit].max_hit,
                 weapon_name,
+                ammo.as_deref(),
+                &best_styles_normal[specs_hit].gear_type,
                 &mut rng,
                 &thrall_dmg,
                 &mut cooldown,
@@ -254,6 +259,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 best_styles_normal[specs_hit].accuracy,
                 best_styles_normal[specs_hit].max_hit,
                 weapon_name,
+                ammo.as_deref(),
+                &best_styles_normal[specs_hit].gear_type,
                 &mut rng,
                 &thrall_dmg,
                 &mut cooldown,
@@ -278,6 +285,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 best_styles_enraged[specs_hit].accuracy,
                 best_styles_enraged[specs_hit].max_hit,
                 weapon_name,
+                ammo.as_deref(),
+                &best_styles_enraged[specs_hit].gear_type,
                 &mut rng,
                 &thrall_dmg,
                 &mut cooldown,

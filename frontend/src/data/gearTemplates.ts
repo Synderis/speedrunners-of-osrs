@@ -55,7 +55,7 @@ export const gearSetPresets: GearSetPreset[] = [
                 hands: "22981",
                 feet: "31097",
                 ring: "28307",
-                ammo: "11212"
+                ammo: "33595"
             },
             mage: {
                 weapon: "27275",
@@ -68,12 +68,12 @@ export const gearSetPresets: GearSetPreset[] = [
                 hands: "31106",
                 feet: "31097",
                 ring: "28313",
-                ammo: "11212"
+                ammo: "33595"
             },
             ranged: {
                 weapon: "20997",
                 head: "27235",
-                neck: "19547",
+                neck: "33639",
                 cape: "28955",
                 shield: "",
                 body: "27238",
@@ -81,7 +81,7 @@ export const gearSetPresets: GearSetPreset[] = [
                 hands: "26235",
                 feet: "31097",
                 ring: "28310",
-                ammo: "11212"
+                ammo: "33595"
             }
         },
         inventoryItems: [
@@ -136,7 +136,7 @@ export const gearSetPresets: GearSetPreset[] = [
                 hands: "22981",
                 feet: "31097",
                 ring: "28307",
-                ammo: "11212"
+                ammo: "33595"
                 },
             mage: {
                 weapon: "27275",
@@ -149,12 +149,12 @@ export const gearSetPresets: GearSetPreset[] = [
                 hands: "31106",
                 feet: "31097",
                 ring: "28313",
-                ammo: "11212"
+                ammo: "33595"
             },
             ranged: {
                 weapon: "20997",
                 head: "27235",
-                neck: "19547",
+                neck: "33639",
                 cape: "28955",
                 shield: "",
                 body: "27238",
@@ -162,7 +162,7 @@ export const gearSetPresets: GearSetPreset[] = [
                 hands: "26235",
                 feet: "31097",
                 ring: "28310",
-                ammo: "11212"
+                ammo: "33595"
             }
         },
         inventoryItems: [

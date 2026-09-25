@@ -730,7 +730,7 @@ pub fn apply_burns(hp: i32, burn_list: &mut Vec<i32>) -> i32 {
 //     hit
 // }
 
-pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64, weapon: &str) -> i32 {
+pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64, weapon: &str, ammo: Option<&str>, attack_style: &str) -> i32 {
     // Convert accuracy in [0,1] to an inclusive u32 threshold.
     // Using <= preserves exact probability (no off-by-one bias).
     let acc_threshold: u32 = (accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
@@ -745,14 +745,14 @@ pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64,
 
         let half_max = (max_hit as f64 * 0.5).floor() as i32;
         let hit_2 = if rng.next_u32() <= acc_threshold {
-            rng.gen_range(0..=half_max)
+            rng.gen_range(0..=half_max).max(1)
         } else {
             0
         };
 
         let quarter_max = (max_hit as f64 * 0.25).floor() as i32;
         let hit_3 = if rng.next_u32() <= acc_threshold {
-            rng.gen_range(0..=quarter_max)
+            rng.gen_range(0..=quarter_max).max(1)
         } else {
             0
         };
@@ -765,8 +765,9 @@ pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64,
         rng.gen_range(lower_bound..=upper_bound)
     } else {
         // Single-roll weapons
+        let minimum_max = if attack_style.eq_ignore_ascii_case("ranged") && ammo.map_or(false, |a| a.to_lowercase().contains("seeking")) {3} else {1};
         if rng.next_u32() <= acc_threshold {
-            rng.gen_range(0..=max_hit).max(1)
+            rng.gen_range(0..=max_hit).max(minimum_max)
         } else {
             0
         }
