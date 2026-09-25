@@ -32,13 +32,13 @@ pub fn simulate_vespula<R: rand::RngCore, F: FnMut(i32) -> i32>(
     let attack_speed = best_style.attack_speed;
     let base_hp = monsters[0].skills.hp;
     let mut single_monster_ticks : Vec<f64> = Vec::new();
-    let hit_delay = if best_style.gear_type == "ranged" { 2 } else if best_style.gear_type == "magic" && player.gear_sets.mage.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some("Tumeken's shadow") { 5 } else { 4 };
+    let hit_delay = if best_style.gear_type.eq_ignore_ascii_case("ranged") { 2 } else if best_style.gear_type.eq_ignore_ascii_case("magic") && player.gear_sets.mage.selected_weapon.as_ref().is_some_and(|w| w.name.eq_ignore_ascii_case("Tumeken's shadow")) { 5 } else { 4 };
     let inventory_items: Vec<SelectedItem> = player
         .inventory
         .iter()
         .filter_map(|item| item.equipment.clone())
         .collect();
-    let zaryte_crossbow = inventory_items.iter().any(|item| item.name == "Zaryte crossbow");
+    let zaryte_crossbow = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Zaryte crossbow"));
 
     for _ in 0..trials {
         let mut tick = 0;

@@ -51,7 +51,7 @@ impl AttackCooldown {
 }
 
 fn tbow_scaling(magic: u32, mode: &str) -> f64 {
-    let (factor, base, clamp) = if mode == "accuracy" {
+    let (factor, base, clamp) = if mode.eq_ignore_ascii_case("accuracy") {
         (10.0, 140.0, 1.4)
     } else {
         (14.0, 250.0, 2.5)
@@ -77,7 +77,7 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
     let mut best_accuracy = 0.0;
 
     for combat_type in combat_types {
-        let (selected_weapon, gear_set) = match combat_type.as_str() {
+        let (selected_weapon, gear_set) = match combat_type.to_lowercase().as_str() {
             "magic" => (&player.gear_sets.mage.selected_weapon, &player.gear_sets.mage),
             "ranged" => (&player.gear_sets.ranged.selected_weapon, &player.gear_sets.ranged),
             "melee" => (&player.gear_sets.melee.selected_weapon, &player.gear_sets.melee),
@@ -98,7 +98,7 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                 for style in styles {
                     let (max_hit, _effective_level) = calculate_max_hit_for_style(player, monster, &combat_type, style, &gear_stats);
                     let (accuracy, effective_level, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, &combat_type, style, &gear_stats);
-                    let effective_dps = if weapon.name == "Scythe of vitur" {
+                    let effective_dps = if weapon.name.eq_ignore_ascii_case("Scythe of vitur") {
                         let modified_max_hit = max_hit + (max_hit / 2) + (max_hit / 4);
                         (modified_max_hit as f64 * accuracy) / (weapon.speed as f64 - style.att_spd_reduction as f64)
                     } else {
@@ -136,7 +136,7 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                         attack_speed: weapon.speed - style.att_spd_reduction,
                         att_spd_reduction: style.att_spd_reduction,
                     };
-                    if weapon.name == "Elder maul" || weapon.name == "Dragon warhammer" {
+                    if weapon.name.eq_ignore_ascii_case("Elder maul") || weapon.name.eq_ignore_ascii_case("Dragon warhammer") {
                         if accuracy > best_accuracy {
                             best_accuracy = accuracy;
                             best_style = Some(style_result);
@@ -198,7 +198,7 @@ pub fn calculate_max_hit_for_style(
         _ => (0.0, 0.0, &player.gear_sets.mage, 0.0, 0.0, None),
     };
 
-    let potion_bonus = if monster.name == "Tekton" {
+    let potion_bonus = if monster.name.eq_ignore_ascii_case("Tekton") {
         (level * 15.0 / 100.0).floor() as f64 + 5.0
     } else {
         (level * 16.0 / 100.0).floor() as f64 + 6.0
@@ -207,7 +207,7 @@ pub fn calculate_max_hit_for_style(
     let void_bonus = 0.0; // No void for now
 
     let mut effective_level = (level + potion_bonus).floor();
-    if combat_type == "melee" {
+    if combat_type.eq_ignore_ascii_case("melee") {
         effective_level = (((level + potion_bonus) * prayer_bonus).floor() + style_bonus + 8.0).floor();
     };
     let mut base_damage;
@@ -218,25 +218,25 @@ pub fn calculate_max_hit_for_style(
     // console_log!("Weapon category: {}", weapon.category);
     let mut salve_bonus = 1.0;
     if gear_set.gear_items.iter().any(|item_opt| {
-        item_opt.as_ref().map_or(false, |item| item.name == "Salve amulet(ei)")
+        item_opt.as_ref().map_or(false, |item| item.name.eq_ignore_ascii_case("Salve amulet(ei)"))
     }) {
         if let Some(attributes) = &monster.attributes {
-            if attributes.contains(&"undead".to_string()) {
+            if attributes.iter().any(|s| s.eq_ignore_ascii_case("undead")) {
                 salve_bonus = 1.2;
             }
         }
     };
     let mut slayer_bonus = 1.0;
     if gear_set.gear_items.iter().any(|item_opt| {
-        item_opt.as_ref().map_or(false, |item| item.name == "Slayer helmet (i)")
+        item_opt.as_ref().map_or(false, |item| item.name.eq_ignore_ascii_case("Slayer helmet (i)"))
     }) {
         slayer_bonus = 1.15;
     };
     let inquisitor_count = gear_set.gear_items.iter().filter(|item_opt| {
-        item_opt.as_ref().map_or(false, |item| item.name.starts_with("Inquisitor's") && item.name != "Inquisitor's mace")
+        item_opt.as_ref().map_or(false, |item| item.name.to_lowercase().starts_with("inquisitor's") && !item.name.eq_ignore_ascii_case("Inquisitor's mace"))
     }).count();
-    let inquisitor_bonus = if combat_type == "melee"  && inquisitor_count > 0 && style.combat_style == "Crush" {
-        if weapon.name == "Inquisitor's mace" {
+    let inquisitor_bonus = if combat_type.eq_ignore_ascii_case("melee")  && inquisitor_count > 0 && style.combat_style.eq_ignore_ascii_case("Crush") {
+        if weapon.name.eq_ignore_ascii_case("Inquisitor's mace") {
             let inq_bonus_amt = inquisitor_count as f64 * 0.025;
             1.0 + inq_bonus_amt
         } else if inquisitor_count >= 3 {
@@ -248,14 +248,14 @@ pub fn calculate_max_hit_for_style(
         1.0
     };
 
-    if combat_type == "magic" {
-        if weapon.category == "Powered Staff" {
+    if combat_type.eq_ignore_ascii_case("magic") {
+        if weapon.category.eq_ignore_ascii_case("Powered Staff") {
             effective_level = (level + potion_bonus).floor();
             base_damage = ((effective_level / 3.0) - 1.0).floor();
         } else {
             base_damage = 0.0;
         };
-        if weapon.name == "Tumeken's shadow" {
+        if weapon.name.eq_ignore_ascii_case("Tumeken's shadow") {
             multiplier = 3.0;
             effective_level = (level + potion_bonus).floor();
             base_damage = ((effective_level / 3.0) + 1.0).floor();
@@ -265,9 +265,9 @@ pub fn calculate_max_hit_for_style(
         slayer_bonus = (slayer_bonus - 1.0) * 100.0;
         let magic_strength = (bonus * multiplier).min(100.0) + salve_bonus + slayer_bonus + prayer_bonus + void_bonus;
         max_hit = (base_damage * (1.0 + (magic_strength / 100.0))).floor() as i32;
-    } else if combat_type == "ranged" {
+    } else if combat_type.eq_ignore_ascii_case("ranged") {
         let mut max_hit_multiplier = 1.0;
-        if weapon.name == "Twisted bow" {
+        if weapon.name.eq_ignore_ascii_case("Twisted bow") {
             // OSRS formula for Twisted Bow damage multiplier
             let magic = std::cmp::max(
                 monster.skills.magic.clamp(0, 350) as u32,
@@ -276,16 +276,16 @@ pub fn calculate_max_hit_for_style(
             max_hit_multiplier = tbow_scaling(magic, "damage");
         };
         let crystal_count = gear_set.gear_items.iter().filter(|item_opt| {
-            item_opt.as_ref().map_or(false, |item| item.name.starts_with("Crystal"))
+            item_opt.as_ref().map_or(false, |item| item.name.to_lowercase().starts_with("crystal"))
         }).count();
-        if crystal_count > 0 && weapon.name == "Bow of faerdhinen" {
+        if crystal_count > 0 && weapon.name.eq_ignore_ascii_case("Bow of faerdhinen") {
             max_hit_multiplier += crystal_count as f64 * 0.05;
         };
         let effective_ranged = ((level + potion_bonus) * prayer_bonus + style_bonus + 8.0).floor();
         max_hit = (0.5 + (effective_ranged * (bonus + 64.0)) / 640.0).floor() as i32;
         max_hit = (max_hit as f64 * max_hit_multiplier * salve_bonus * slayer_bonus).floor() as i32;
-    } else if combat_type == "melee" {
-        if weapon.category == "Pickaxe" {
+    } else if combat_type.eq_ignore_ascii_case("melee") {
+        if weapon.category.eq_ignore_ascii_case("Pickaxe") {
             let base_max_hit = (0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor();
             let level_requirement = 60.0;
             let mining_level = player.combat_stats.mining as f64;
@@ -294,16 +294,16 @@ pub fn calculate_max_hit_for_style(
         } else {
             max_hit = ((0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor() as i32) * inquisitor_bonus as i32;
         };
-        if weapon.name == "Emberlight" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
+        if weapon.name.eq_ignore_ascii_case("Emberlight") && monster.attributes.as_ref().map_or(false, |attrs| attrs.iter().any(|s| s.eq_ignore_ascii_case("demon"))) {
             max_hit = (max_hit as f64 * 1.70).floor() as i32;
         }
-        if weapon.name == "Burning claws" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
+        if weapon.name.eq_ignore_ascii_case("Burning claws") && monster.attributes.as_ref().map_or(false, |attrs| attrs.iter().any(|s| s.eq_ignore_ascii_case("demon"))) {
             max_hit = (max_hit as f64 * 1.05).floor() as i32;
         };
-        if weapon.name == "Zamorak godsword" && (style.combat_style == "Slash" || style.combat_style == "Crush") {
+        if weapon.name.eq_ignore_ascii_case("Zamorak godsword") && (style.combat_style.eq_ignore_ascii_case("Slash") || style.combat_style.eq_ignore_ascii_case("Crush")) {
             max_hit = (max_hit as f64 * 1.10).floor() as i32;
         };
-        if weapon.name == "Dragon warhammer" {
+        if weapon.name.eq_ignore_ascii_case("Dragon warhammer") {
             max_hit = (max_hit as f64 * 1.50).floor() as i32;
         };
     };
@@ -346,7 +346,7 @@ pub fn calculate_max_rolls_for_style(
         _ => (0.0, &player.gear_sets.mage, 0.0, 0.0, None),
     };
 
-    let potion_bonus = if monster.name.contains("Tekton") {
+    let potion_bonus = if monster.name.to_lowercase().contains("tekton") {
         19.0
     } else {
         21.0
@@ -372,21 +372,21 @@ pub fn calculate_max_rolls_for_style(
     let mut max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
 
     let weapon = selected_weapon.unwrap();
-    if weapon.name == "Emberlight" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
+    if weapon.name.eq_ignore_ascii_case("Emberlight") && monster.attributes.as_ref().map_or(false, |attrs| attrs.iter().any(|s| s.eq_ignore_ascii_case("demon"))) {
         max_attack_roll = (max_attack_roll as f64 * 1.70).floor() as u64;
     }
-    if weapon.name == "Burning claws" && monster.attributes.as_ref().map_or(false, |attrs| attrs.contains(&"demon".to_string())) {
+    if weapon.name.eq_ignore_ascii_case("Burning claws") && monster.attributes.as_ref().map_or(false, |attrs| attrs.iter().any(|s| s.eq_ignore_ascii_case("demon"))) {
         max_attack_roll = (max_attack_roll as f64 * 1.05).floor() as u64;
     }
-    if weapon.name == "Tumeken's shadow" {
+    if weapon.name.eq_ignore_ascii_case("Tumeken's shadow") {
         bonus *= 3;
         max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
     }
-    if weapon.name == "Zamorak godsword" && (style.combat_style == "Slash" || style.combat_style == "Crush") {
+    if weapon.name.eq_ignore_ascii_case("Zamorak godsword") && (style.combat_style.eq_ignore_ascii_case("Slash") || style.combat_style.eq_ignore_ascii_case("Crush")) {
         max_attack_roll = max_attack_roll * 2;
     }
 
-    if weapon.name == "Twisted bow" {
+    if weapon.name.eq_ignore_ascii_case("Twisted bow") {
         // OSRS Twisted Bow accuracy multiplier
         let magic = std::cmp::max(
             monster.skills.magic.clamp(0, 350) as u32,
@@ -395,30 +395,30 @@ pub fn calculate_max_rolls_for_style(
         tbow_mult = tbow_scaling(magic, "accuracy");
     }
     let crystal_count = gear_set.gear_items.iter().filter(|item_opt| {
-        item_opt.as_ref().map_or(false, |item| item.name.starts_with("Crystal"))
+        item_opt.as_ref().map_or(false, |item| item.name.to_lowercase().starts_with("crystal"))
     }).count();
-    if crystal_count > 0 && weapon.name == "Bow of faerdhinen" && combat_type == "ranged" {
+    if crystal_count > 0 && weapon.name.eq_ignore_ascii_case("Bow of faerdhinen") && combat_type.eq_ignore_ascii_case("ranged") {
         crystal_mult += crystal_count as f64 * 0.10;
     };
     if gear_set.gear_items.iter().any(|item_opt| {
-        item_opt.as_ref().map_or(false, |item| item.name == "Salve amulet(ei)")
+        item_opt.as_ref().map_or(false, |item| item.name.eq_ignore_ascii_case("Salve amulet(ei)"))
     }) {
         if let Some(attributes) = &monster.attributes {
-            if attributes.contains(&"undead".to_string()) {
+            if attributes.iter().any(|s| s.eq_ignore_ascii_case("undead")) {
                 salve_bonus = 1.2;
             }
         }
     }
     if gear_set.gear_items.iter().any(|item_opt| {
-        item_opt.as_ref().map_or(false, |item| item.name == "Slayer helmet (i)")
+        item_opt.as_ref().map_or(false, |item| item.name.eq_ignore_ascii_case("Slayer helmet (i)"))
     }) {
         slayer_bonus = 7.0 / 6.0;
     }
     let inquisitor_count = gear_set.gear_items.iter().filter(|item_opt| {
-        item_opt.as_ref().map_or(false, |item| item.name.starts_with("Inquisitor's") && item.name != "Inquisitor's mace")
+        item_opt.as_ref().map_or(false, |item| item.name.to_lowercase().starts_with("inquisitor's") && !item.name.eq_ignore_ascii_case("Inquisitor's mace"))
     }).count();
-    let inquisitor_bonus = if combat_type == "melee"  && inquisitor_count > 0 && style.combat_style == "Crush" {
-        if weapon.name == "Inquisitor's mace" {
+    let inquisitor_bonus = if combat_type.eq_ignore_ascii_case("melee")  && inquisitor_count > 0 && style.combat_style.eq_ignore_ascii_case("Crush") {
+        if weapon.name.eq_ignore_ascii_case("Inquisitor's mace") {
             1.0 + inquisitor_count as f64 * 0.025
         } else if inquisitor_count >= 3 {
             1.025
@@ -428,11 +428,11 @@ pub fn calculate_max_rolls_for_style(
     } else {
         1.0
     };
-    let elder_maul_bonus = if weapon.name == "Elder maul" { 1.25 } else { 1.0 };
+    let elder_maul_bonus = if weapon.name.eq_ignore_ascii_case("Elder maul") { 1.25 } else { 1.0 };
     max_attack_roll = (max_attack_roll as f64 * slayer_bonus * salve_bonus * tbow_mult * inquisitor_bonus * crystal_mult * elder_maul_bonus).floor() as u64;
     // console_log!("Monster def: {}, monster def bonus: {}", monster.skills.def, defence_bonus);
     let max_defence_roll;
-    if combat_type == "magic" {
+    if combat_type.eq_ignore_ascii_case("magic") {
         max_defence_roll = (monster.skills.magic + 9) as u64 * (defence_bonus + 64) as u64;
     } else {
         max_defence_roll = (monster.skills.def + 9) as u64 * (defence_bonus + 64) as u64;
@@ -462,7 +462,7 @@ pub fn calculate_accuracy_for_style(player: &Player, monster: &Monster, combat_t
     };
     let weapon = selected_weapon.unwrap();
     let is_two_handed = weapon.two_handed;
-    if weapon.name == "Osmumten's fang" {
+    if weapon.name.eq_ignore_ascii_case("Osmumten's fang") {
         if max_attack_roll > max_defence_roll {
             accuracy = 1.0 - (((max_defence_roll as f64 + 2.0) * (2.0 * max_defence_roll as f64 + 3.0)) / (6.0 * (max_attack_roll as f64 + 1.0).powf(2.0)));
         } else {
@@ -479,7 +479,7 @@ pub fn calculate_accuracy_for_style(player: &Player, monster: &Monster, combat_t
     // console_log!("Base accuracy: {:.2}%", accuracy * 100.0);
     // console_log!("player gear items: {:?}", gear_items);
     if gear_items.iter().any(|item_opt| {
-        item_opt.as_ref().map_or(false, |item| item.name == "Confliction gauntlets")
+        item_opt.as_ref().map_or(false, |item| item.name.eq_ignore_ascii_case("Confliction gauntlets"))
     }) && !is_two_handed {
         let pone = accuracy;
         let ptwo = if max_attack_roll >= max_defence_roll {
@@ -509,13 +509,13 @@ pub fn ensure_weapon_swap(
     let selected_weapon = player.gear_sets.melee.selected_weapon.as_mut()?;
 
     // Find weapon in inventory
-    let inventory_weapon_idx = player.inventory.iter().position(|item| item.name.contains(weapon_name));
+    let inventory_weapon_idx = player.inventory.iter().position(|item| item.name.to_lowercase().contains(&weapon_name.to_lowercase()));
     if let Some(idx) = inventory_weapon_idx {
         let inventory_weapon = player.inventory.remove(idx);
 
         // Find current offhand in gear_items
         let current_offhand_idx = gear_items.iter().position(|item| {
-            item.as_ref().map_or(false, |i| i.slot == "shield")
+            item.as_ref().map_or(false, |i| i.slot.eq_ignore_ascii_case("shield"))
         });
         let current_offhand = current_offhand_idx
             .and_then(|i| gear_items.remove(i))
@@ -552,7 +552,7 @@ pub fn ensure_weapon_swap(
 }
 
 pub fn monster_stat_scaling(monster: &Monster, player_hp: i32) -> MonsterSkills {
-    let cm_scale = if monster.name == "Tekton" || monster.name == "Tekton (enraged)" {
+    let cm_scale = if monster.name.eq_ignore_ascii_case("Tekton") || monster.name.eq_ignore_ascii_case("Tekton (enraged)") {
         1.2
     } else {
         1.5
@@ -580,7 +580,7 @@ pub fn monster_hp_scaling(monster: &Monster, combat_stats: &CombatStats) -> i32 
     let magic = (combat_stats.magic as f64 * 3.0/2.0) * 13.0 / 40.0;
     let cm_scale = 1.5;
 
-    let base_hp = if monster.name == "Guardian (Chambers of Xeric)" {
+    let base_hp = if monster.name.eq_ignore_ascii_case("Guardian (Chambers of Xeric)") {
         let reduced_hp = (monster.skills.hp as f64 / cm_scale).floor();
         (reduced_hp - 99.0 + combat_stats.mining as f64).floor()
     } else {
@@ -711,12 +711,12 @@ pub fn apply_burns(hp: i32, burn_list: &mut Vec<i32>) -> i32 {
     new_hp
 }
 // pub fn dmg_modifier_check(rng: &mut impl Rng, max_hit: i32, accuracy: f64, weapon: &str) -> i32 {
-//     let hit = if weapon == "Scythe of vitur" {
+//     let hit = if weapon.eq_ignore_ascii_case("Scythe of vitur") {
 //         let hit_1 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=max_hit).max(1) } else { 0 };
 //         let hit_2 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=((max_hit as f64 * 0.5).floor() as i32)) } else { 0 };
 //         let hit_3 = if rng.gen::<f64>() < accuracy { rng.gen_range(0..=((max_hit as f64 * 0.25).floor() as i32)) } else { 0 };
 //         hit_1 + hit_2 + hit_3
-//     } else if weapon == "Voidwaker" {
+//     } else if weapon.eq_ignore_ascii_case("Voidwaker") {
 //         let lower_bound = (max_hit as f64 * 0.50).floor() as i32;
 //         let upper_bound = (max_hit as f64 * 1.50).floor() as i32;
 //         rng.gen_range(lower_bound..=upper_bound)
@@ -735,7 +735,7 @@ pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64,
     // Using <= preserves exact probability (no off-by-one bias).
     let acc_threshold: u32 = (accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
 
-    if weapon == "Scythe of vitur" {
+    if weapon.eq_ignore_ascii_case("Scythe of vitur") {
         // Three independent accuracy rolls, same probability each swing.
         let hit_1 = if rng.next_u32() <= acc_threshold {
             rng.gen_range(0..=max_hit).max(1)
@@ -758,7 +758,7 @@ pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64,
         };
 
         hit_1 + hit_2 + hit_3
-    } else if weapon == "Voidwaker" {
+    } else if weapon.eq_ignore_ascii_case("Voidwaker") {
         // Voidwaker special: no accuracy roll here (as in your original code)
         let lower_bound = (max_hit as f64 * 0.50).floor() as i32;
         let upper_bound = (max_hit as f64 * 1.50).floor() as i32;
@@ -776,8 +776,8 @@ pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64,
 pub fn find_defender(inventory_items: &[SelectedItem]) -> Option<SelectedItem> {
     inventory_items.iter()
         .find_map(|item| {
-            match item.name.as_str() {
-                "Avernic defender" | "Dragon defender" => Some(item.clone()),
+            match item.name.to_lowercase().as_str() {
+                "avernic defender" | "dragon defender" => Some(item.clone()),
                 _ => None,
             }
         })

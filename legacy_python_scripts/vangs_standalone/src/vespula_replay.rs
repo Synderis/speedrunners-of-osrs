@@ -26,13 +26,13 @@ pub fn simulate_vespula_with_damage(payload_json: &str, damage_values: &[i32], h
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string(), "ranged".to_string()]);
     let attack_speed = best_style.attack_speed;
     let base_hp = monsters[0].skills.hp;
-    let hit_delay = if best_style.gear_type == "ranged" { 2 } else if best_style.gear_type == "magic" && player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 5 } else { 4 };
+    let hit_delay = if best_style.gear_type.eq_ignore_ascii_case("ranged") { 2 } else if best_style.gear_type.eq_ignore_ascii_case("magic") && player.gear_sets.mage.selected_weapon.as_ref().unwrap().name.eq_ignore_ascii_case("Tumeken's shadow") { 5 } else { 4 };
     let inventory_items: Vec<SelectedItem> = player
         .inventory
         .iter()
         .filter_map(|item| item.equipment.clone())
         .collect();
-    let zaryte_crossbow = inventory_items.iter().any(|item| item.name == "Zaryte crossbow");
+    let zaryte_crossbow = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Zaryte crossbow"));
 
     let mut tick = 0;
     let mut dmg_idx = 0;

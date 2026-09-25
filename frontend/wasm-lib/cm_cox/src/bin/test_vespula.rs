@@ -95,7 +95,7 @@ pub fn test_vespula_thresholds(payload_json: &str) -> String {
     // Add missing delays from main simulation
     let walk_delay = 32;
     let death_animation = 4;
-    let hit_delay = if best_style.gear_type == "ranged" { 2 } else if best_style.gear_type == "magic" && player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 5 } else { 4 };
+    let hit_delay = if best_style.gear_type.eq_ignore_ascii_case("ranged") { 2 } else if best_style.gear_type.eq_ignore_ascii_case("magic") && player.gear_sets.mage.selected_weapon.as_ref().unwrap().name.eq_ignore_ascii_case("Tumeken's shadow") { 5 } else { 4 };
 
     // Detect Zaryte Crossbow in inventory
     let inventory_items: Vec<SelectedItem> = player
@@ -103,7 +103,7 @@ pub fn test_vespula_thresholds(payload_json: &str) -> String {
         .iter()
         .filter_map(|item| item.equipment.clone())
         .collect();
-    let zaryte_crossbow = inventory_items.iter().any(|item| item.name == "Zaryte crossbow");
+    let zaryte_crossbow = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Zaryte crossbow"));
 
     // Debug print thresholds
     println!("=== THRESHOLD DEBUG INFO ===");

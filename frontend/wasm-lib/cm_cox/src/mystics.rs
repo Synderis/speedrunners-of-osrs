@@ -12,7 +12,7 @@ fn ensure_item_equipped(
     item_name: &str, // item_name is not needed anymore
 ) {
 
-    let item = match inventory.iter().find(|item| item.name == item_name) {
+    let item = match inventory.iter().find(|item| item.name.eq_ignore_ascii_case(item_name)) {
         Some(item) => item,
         None => return,
     };
@@ -129,9 +129,9 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
         ("ranged", &mut player.gear_sets.ranged),
         ("melee", &mut player.gear_sets.melee),
     ];
-    let salve_amulet = inventory_items.iter().any(|item| item.name == "Salve amulet(ei)");
-    let slayer_helm = inventory_items.iter().any(|item| item.name == "Slayer helmet (i)");
-    let slayer_task = if room_methods.len() > 0 && room_methods[0] == "Mystics Slayer Task" {
+    let salve_amulet = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Salve amulet(ei)"));
+    let slayer_helm = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Slayer helmet (i)"));
+    let slayer_task = if room_methods.len() > 0 && room_methods[0].eq_ignore_ascii_case("Mystics Slayer Task") {
         true
     } else {
         false
@@ -163,19 +163,19 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
     let attack_speed = best_style.attack_speed;
     let base_hp = monsters[0].skills.hp;
     let mut single_monster_ticks : Vec<f64> = Vec::new();
-    let hit_delay = if player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 2 } else { 1 };
+    let hit_delay = if player.gear_sets.mage.selected_weapon.as_ref().unwrap().name.eq_ignore_ascii_case("Tumeken's shadow") { 2 } else { 1 };
     let inventory_items: Vec<SelectedItem> = player
         .inventory
         .iter()
         .filter_map(|item| item.equipment.clone())
         .collect();
 
-    let voidwaker = inventory_items.iter().any(|item| item.name == "Voidwaker");
+    let voidwaker = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Voidwaker"));
 
     if voidwaker {
         spec_count_max = spec_count_dict
             .as_ref()
-            .and_then(|vec| vec.iter().find(|sa| sa.name == "Voidwaker").map(|sa| sa.count))
+            .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Voidwaker")).map(|sa| sa.count))
             .unwrap_or(1);
         let defender = match find_defender(&inventory_items) {
             Some(def) => def,

@@ -291,8 +291,8 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
         .filter_map(|item| item.equipment.clone())
         .collect();
 
-    let emberlight = inventory_items.iter().any(|item| item.name == "Emberlight");
-    let burning_claws = inventory_items.iter().any(|item| item.name == "Burning claws");
+    let emberlight = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Emberlight"));
+    let burning_claws = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Burning claws"));
 
     let mut emberlight_accuracy: Vec<f64> = Vec::new();
     let best_style: StyleResult;
@@ -304,7 +304,7 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
     if emberlight {
         spec_count_max = spec_count_dict
             .as_ref()
-            .and_then(|vec| vec.iter().find(|sa| sa.name == "Emberlight").map(|sa| sa.count))
+            .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Emberlight")).map(|sa| sa.count))
             .unwrap_or(2);
 
         // Find Avernic defender in inventory items
@@ -335,7 +335,7 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
     } else if burning_claws {
         spec_count_max = spec_count_dict
             .as_ref()
-            .and_then(|vec| vec.iter().find(|sa| sa.name == "Burning claws").map(|sa| sa.count))
+            .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Burning claws")).map(|sa| sa.count))
             .unwrap_or(4);
         ensure_weapon_swap(&mut player, "Burning claws", None);
         best_style = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);

@@ -246,7 +246,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
     let vasa_max_hit = best_style_vasa.max_hit as usize;
     let vasa_accuracy = best_style_vasa.accuracy;
     let vasa_attack_speed = if let Some(weapon) = &player.gear_sets.ranged.selected_weapon {
-        if best_style_vasa.combat_style == "Aggressive" {
+        if best_style_vasa.combat_style.eq_ignore_ascii_case("Aggressive") {
             (weapon.speed - 1) as usize
         } else {
             5

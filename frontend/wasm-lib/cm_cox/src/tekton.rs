@@ -87,8 +87,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
 
     // Find and validate spec weapon
     let spec_weapon = match player.inventory.iter().find_map(|item| {
-        match item.name.as_str() {
-            "Elder maul" | "Dragon warhammer" => Some(item.name.clone()),
+        match item.name.to_lowercase().as_str() {
+            "elder maul" | "dragon warhammer" => Some(item.name.clone()),
             _ => None,
         }
     }) {
@@ -96,9 +96,9 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         None => return "{\"error\": \"Please select Elder maul or DWH\"}".to_string(),
     };
 
-    let def_reduction_mult = if spec_weapon == "Elder maul" { 0.65 } else { 0.7 };
+    let def_reduction_mult = if spec_weapon.eq_ignore_ascii_case("Elder maul") { 0.65 } else { 0.7 };
     // For DWH, find defender and swap with it; for Elder maul, swap without offhand
-    let defender = if spec_weapon == "Dragon warhammer" {
+    let defender = if spec_weapon.eq_ignore_ascii_case("Dragon warhammer") {
         match find_defender(&inventory_items) {
             Some(def) => Some(def),
             None => return "{\"error\": \"Please add a defender to the inventory items\"}".to_string(),
@@ -161,10 +161,10 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
     let mut hp_pre_anvil: Vec<i32> = vec![0; trials];
     let mut phase_results: Vec<i32> = vec![0; trials];
 
-    let pre_veng = if room_methods.contains(&"Pre-Veng".to_string()) { 1 } else { 0 };
+    let pre_veng = if room_methods.iter().any(|s| s.eq_ignore_ascii_case("Pre-Veng")) { 1 } else { 0 };
     let tekton_enraged_max_hit = monsters[1].max_hit.unwrap_or(0) as i32;
 
-    let (delay, attack_pattern): (i32, Vec<[usize; 2]>) = if room_methods.contains(&"Tekton Short Lure".to_string()) {
+    let (delay, attack_pattern): (i32, Vec<[usize; 2]>) = if room_methods.iter().any(|s| s.eq_ignore_ascii_case("Tekton Short Lure")) {
         (11, vec![[0, 4], [0, 3], [4, 10]])
     } else {
         (15, vec![[0, 5], [0, 3], [4, 11]])
@@ -183,7 +183,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
         let mut hp_pre_anvil_val: i32 = 0;
         let mut hit_count = 0usize;
         let mut current_phase_ticks = 0;
-        let death_animation = if player.gear_sets.melee.selected_weapon.as_ref().map(|w| w.name.as_str()) == Some("Scythe of vitur") { 3 } else { 4 };
+        let death_animation = if player.gear_sets.melee.selected_weapon.as_ref().is_some_and(|w| w.name.eq_ignore_ascii_case("Scythe of vitur")) { 3 } else { 4 };
+
         let mut veng_count = pre_veng;
 
         while tekton_hp > 0 {

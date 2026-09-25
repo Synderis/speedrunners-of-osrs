@@ -330,7 +330,7 @@ pub fn calculate_dps_with_objects_thieving(payload_json: &str) -> String {
     let mut rng = SmallRng::from_entropy();
 
     let thieving_level = player.combat_stats.thieving;
-    let lockpick = room_methods.contains(&"Lockpick".to_string());
+    let lockpick = room_methods.iter().any(|s| s.eq_ignore_ascii_case("Lockpick"));
 
     // Success rates
     let base_success_rate =

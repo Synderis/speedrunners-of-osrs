@@ -113,19 +113,19 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         .iter()
         .filter_map(|item| item.equipment.clone())
         .collect();
-    let zaryte_crossbow = inventory_items.iter().any(|item| item.name == "Zaryte crossbow");
-    let voidwaker = inventory_items.iter().any(|item| item.name == "Voidwaker");
+    let zaryte_crossbow = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Zaryte crossbow"));
+    let voidwaker = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Voidwaker"));
     if voidwaker {
         spec_count_max = spec_count_dict
             .as_ref()
-            .and_then(|vec| vec.iter().find(|sa| sa.name == "Voidwaker").map(|sa| sa.count))
+            .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Voidwaker")).map(|sa| sa.count))
             .unwrap_or(2);
         
         // If zaryte crossbow is present and has specs, disable voidwaker specs
         if zaryte_crossbow {
             let zaryte_spec_count = spec_count_dict
                 .as_ref()
-                .and_then(|vec| vec.iter().find(|sa| sa.name == "Zaryte crossbow").map(|sa| sa.count))
+                .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Zaryte crossbow")).map(|sa| sa.count))
                 .unwrap_or(0);
             
             if zaryte_spec_count > 0 {
@@ -140,7 +140,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
     }
     let best_style_spec = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
 
-    let initial_delay = if room_methods.len() > 0 && room_methods[0] == "Vasa Flame Skip" {
+    let initial_delay = if room_methods.len() > 0 && room_methods[0].eq_ignore_ascii_case("Vasa Flame Skip") {
         22
     } else {
         29
@@ -162,9 +162,9 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         let mut spec_count = spec_count_max;
         let mut pre_crystal_phase = true;
         let mut attack_pattern: Vec<i32>;
-        attack_pattern = if room_methods.len() > 0 && room_methods[0] == "Vasa Flame Skip" && voidwaker {
+        attack_pattern = if room_methods.len() > 0 && room_methods[0].eq_ignore_ascii_case("Vasa Flame Skip") && voidwaker {
             vec![20, 15, rng.gen_range(33..=36)]
-        } else if room_methods.len() > 0 && room_methods[0] == "Vasa Flame Skip" {
+        } else if room_methods.len() > 0 && room_methods[0].eq_ignore_ascii_case("Vasa Flame Skip") {
             vec![25, 15, rng.gen_range(33..=36)]
         } else {
             vec![20, 15, rng.gen_range(33..=36)]

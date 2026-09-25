@@ -240,7 +240,7 @@ fn calculate_accuracy(player: &Player, monster: &Monster, style: &WeaponStyle, g
     let void_bonus = 1.0; // No void for now
     let effective_attack = (((attack_level as f64 + potion_bonus) * prayer_attack_bonus + style_bonus + 8.0) * void_bonus).floor() as u32;
     let attack_type = style.attack_type.to_lowercase();
-    let equipment_bonus = match attack_type.as_str() {
+    let equipment_bonus = match attack_type.to_lowercase().as_str() {
         "stab" => gear.offensive.stab,
         "slash" => gear.offensive.slash,
         "crush" => gear.offensive.crush,
@@ -250,7 +250,7 @@ fn calculate_accuracy(player: &Player, monster: &Monster, style: &WeaponStyle, g
     } as f64;
     let attack_bonus = equipment_bonus;
     let max_attack_roll = effective_attack as u64 * (attack_bonus as u64 + 64);
-    let defence_bonus = match attack_type.as_str() {
+    let defence_bonus = match attack_type.to_lowercase().as_str() {
         "stab" => monster.defensive.stab,
         "slash" => monster.defensive.slash,
         "crush" => monster.defensive.crush,

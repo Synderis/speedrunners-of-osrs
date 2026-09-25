@@ -37,7 +37,7 @@ pub fn calculate_dps_with_objects_guardians(payload_json: &str) -> String {
     };
     let pickaxe = inventory_items.iter()
         .find_map(|item| {
-            if item.name == "Dragon pickaxe" || item.name == "Rune pickaxe" {
+            if item.name.eq_ignore_ascii_case("Dragon pickaxe") || item.name.eq_ignore_ascii_case("Rune pickaxe") {
                 Some(item.name.as_str())
             } else {
                 None

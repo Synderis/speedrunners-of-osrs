@@ -125,23 +125,23 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 		.iter()
 		.filter_map(|item| item.equipment.clone())
 		.collect();
-	let burning_claws = inventory_items.iter().any(|item| item.name == "Burning claws");
-	let voidwaker = inventory_items.iter().any(|item| item.name == "Voidwaker");
+	let burning_claws = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Burning claws"));
+	let voidwaker = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Voidwaker"));
 	let weapon_name = player.gear_sets.melee.selected_weapon.as_ref().unwrap().name.clone();
 
 	if burning_claws {
 		spec_count_max = spec_count_dict
 			.as_ref()
-			.and_then(|vec| vec.iter().find(|sa| sa.name == "Burning claws").map(|sa| sa.count))
+			.and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Burning claws")).map(|sa| sa.count))
 			.unwrap_or(3);
 		ensure_weapon_swap(&mut player, "Burning claws", None);
 	}
 	if voidwaker {
 		spec_count_max = spec_count_dict
 			.as_ref()
-			.and_then(|vec| vec.iter().find(|sa| sa.name == "Voidwaker").map(|sa| sa.count))
+			.and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Voidwaker")).map(|sa| sa.count))
 			.unwrap_or(2);
-		let avernic_defender = inventory_items.iter().find(|item| item.name == "Avernic defender").cloned();
+		let avernic_defender = inventory_items.iter().find(|item| item.name.eq_ignore_ascii_case("Avernic defender")).cloned();
 		ensure_weapon_swap(&mut player, "Voidwaker", avernic_defender);
 	}
 
@@ -152,7 +152,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 	let accuracies = [best_styles[0].accuracy, best_styles[1].accuracy, best_styles[2].accuracy, best_style_spec.accuracy];
 	let attack_speeds = [best_styles[0].attack_speed, best_styles[1].attack_speed, best_styles[2].attack_speed, best_style_spec.attack_speed];
 	let hit_delay_map = [
-		if player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow" { 2 } else { 1 },
+		if player.gear_sets.mage.selected_weapon.as_ref().unwrap().name.eq_ignore_ascii_case("Tumeken's shadow") { 2 } else { 1 },
 		0,
 		1,
 	];

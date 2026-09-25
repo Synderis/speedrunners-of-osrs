@@ -80,8 +80,8 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
 
     // Find and validate spec weapon (convert to String to avoid borrow conflict)
     let spec_weapon = match player.inventory.iter().find_map(|item| {
-        match item.name.as_str() {
-            "Elder maul" | "Dragon warhammer" => Some(item.name.clone()),
+        match item.name.to_lowercase().as_str() {
+            "elder maul" | "dragon warhammer" => Some(item.name.clone()),
             _ => None,
         }
     }) {
@@ -89,10 +89,10 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
         None => return "{\"error\": \"Please select Elder maul or DWH\"}".to_string(),
     };
 
-    let def_reduction_mult = if spec_weapon == "Elder maul" { 0.65 } else { 0.7 };
+    let def_reduction_mult = if spec_weapon.eq_ignore_ascii_case("Elder maul") { 0.65 } else { 0.7 };
     
     // For DWH, find defender and swap with it; for Elder maul, swap without offhand
-    let defender = if spec_weapon == "Dragon warhammer" {
+    let defender = if spec_weapon.eq_ignore_ascii_case("Dragon warhammer") {
         match find_defender(&inventory_items) {
             Some(def) => Some(def),
             None => return "{\"error\": \"Please add a defender to the inventory items\"}".to_string(),
@@ -118,8 +118,8 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     let mut olm_melee_hand_specced = monsters[1].clone();
     olm_melee_hand_specced.skills.def = (olm_melee_hand_specced.skills.def as f64 * def_reduction_mult).ceil() as i32;
     let best_style_specced = find_best_combat_style(&player, &olm_melee_hand_specced, vec!["melee".to_string()]);
-    let zaryte_crossbow = inventory_items.iter().any(|item| item.name == "Zaryte crossbow");
-    // let burning_claws = inventory_items.iter().any(|item| item.name == "Burning claws");
+    let zaryte_crossbow = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Zaryte crossbow"));
+    // let burning_claws = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Burning claws"));
 
     // --- Optimized stats building ---
     let passive_dmg = Uniform::new_inclusive(0, 3);

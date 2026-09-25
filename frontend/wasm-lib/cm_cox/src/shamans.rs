@@ -13,7 +13,7 @@ fn ensure_item_equipped(
     item_name: &str,
 ) {
     // Find the item in inventory (exact match)
-    let item = match inventory.iter().find(|item| item.name == item_name) {
+    let item = match inventory.iter().find(|item| item.name.eq_ignore_ascii_case(item_name)) {
         Some(item) => item,
         None => return,
     };
@@ -107,8 +107,8 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
         ("magic", &mut player.gear_sets.mage),
         ("ranged", &mut player.gear_sets.ranged),
     ];
-    let slayer_helm = inventory_items.iter().any(|item| item.name == "Slayer helmet (i)");
-    let slayer_task = !room_methods.is_empty() && room_methods[0] == "Shamans Slayer Task";
+    let slayer_helm = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Slayer helmet (i)"));
+    let slayer_task = !room_methods.is_empty() && room_methods[0].eq_ignore_ascii_case("Shamans Slayer Task");
     if slayer_helm && slayer_task {
         for (_, gear_set) in sets.iter_mut() {
             ensure_item_equipped(gear_set, &inventory_items, "Slayer helmet (i)");
@@ -129,10 +129,10 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string(), "ranged".to_string()]);
 
     // hit delay options (unchanged logic)
-    let hit_delay_vec = if best_style.gear_type == "ranged" {
+    let hit_delay_vec = if best_style.gear_type.eq_ignore_ascii_case("ranged") {
         vec![2]
-    } else if best_style.gear_type == "magic"
-        && player.gear_sets.mage.selected_weapon.as_ref().unwrap().name == "Tumeken's shadow"
+    } else if best_style.gear_type.eq_ignore_ascii_case("magic")
+        && player.gear_sets.mage.selected_weapon.as_ref().unwrap().name.eq_ignore_ascii_case("Tumeken's shadow")
     {
         vec![3, 4, 5]
     } else {

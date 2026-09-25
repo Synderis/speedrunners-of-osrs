@@ -626,7 +626,7 @@ pub fn test_mutta_thresholds(payload_json: &str) -> String {
             .as_ref()
             .unwrap()
             .name
-            == "Tumeken's shadow"
+            .eq_ignore_ascii_case("Tumeken's shadow")
         {
             2
         } else {

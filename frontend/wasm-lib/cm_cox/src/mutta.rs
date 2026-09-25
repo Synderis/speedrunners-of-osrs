@@ -409,7 +409,7 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
             .as_ref()
             .unwrap()
             .name
-            == "Tumeken's shadow"
+            .eq_ignore_ascii_case("Tumeken's shadow")
         {
             2
         } else {
