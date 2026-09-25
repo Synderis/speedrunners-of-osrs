@@ -1,9 +1,9 @@
 use osrs_shared_types::*;
 use rand::Rng;
-// #[macro_export]
-// macro_rules! console_log {
-//     ($($t:tt)*) => (web_sys::console::log_1(&format!($($t)*).into()))
-// }
+#[macro_export]
+macro_rules! console_log {
+    ($($t:tt)*) => (web_sys::console::log_1(&format!($($t)*).into()))
+}
 
 /// Helper struct for managing attack cooldowns in combat simulations
 #[derive(Clone, Copy)]
@@ -295,10 +295,10 @@ pub fn calculate_max_hit_for_style(
             max_hit = ((0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor() as i32) * inquisitor_bonus as i32;
         };
         if weapon.name.eq_ignore_ascii_case("Emberlight") && monster.attributes.as_ref().map_or(false, |attrs| attrs.iter().any(|s| s.eq_ignore_ascii_case("demon"))) {
-            max_hit = (max_hit as f64 * 1.805).floor() as i32;
+            max_hit = (max_hit as f64 * 1.80).floor() as i32;
         }
         if weapon.name.eq_ignore_ascii_case("Burning claws") && monster.attributes.as_ref().map_or(false, |attrs| attrs.iter().any(|s| s.eq_ignore_ascii_case("demon"))) {
-            max_hit = (max_hit as f64 * 1.0575).floor() as i32;
+            max_hit = (max_hit as f64 * 1.05).floor() as i32;
         };
         if weapon.name.eq_ignore_ascii_case("Zamorak godsword") && (style.combat_style.eq_ignore_ascii_case("Slash") || style.combat_style.eq_ignore_ascii_case("Crush")) {
             max_hit = (max_hit as f64 * 1.10).floor() as i32;
@@ -373,10 +373,10 @@ pub fn calculate_max_rolls_for_style(
 
     let weapon = selected_weapon.unwrap();
     if weapon.name.eq_ignore_ascii_case("Emberlight") && monster.attributes.as_ref().map_or(false, |attrs| attrs.iter().any(|s| s.eq_ignore_ascii_case("demon"))) {
-        max_attack_roll = (max_attack_roll as f64 * 1.805).floor() as u64;
+        max_attack_roll = (max_attack_roll as f64 * 1.80).floor() as u64;
     }
     if weapon.name.eq_ignore_ascii_case("Burning claws") && monster.attributes.as_ref().map_or(false, |attrs| attrs.iter().any(|s| s.eq_ignore_ascii_case("demon"))) {
-        max_attack_roll = (max_attack_roll as f64 * 1.0575).floor() as u64;
+        max_attack_roll = (max_attack_roll as f64 * 1.05).floor() as u64;
     }
     if weapon.name.eq_ignore_ascii_case("Tumeken's shadow") {
         bonus *= 3;
