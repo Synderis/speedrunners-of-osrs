@@ -784,6 +784,28 @@ pub fn find_defender(inventory_items: &[SelectedItem]) -> Option<SelectedItem> {
         })
 }
 
+/// Accuracy of the Zaryte crossbow spec against `monster`, if the crossbow is in the inventory.
+/// Rolled with the crossbow equipped in ranged gear, at double the attack roll.
+pub fn zcb_spec_accuracy(player: &Player, monster: &Monster, inventory_items: &[SelectedItem]) -> Option<f64> {
+    let zcb = inventory_items.iter().find(|item| item.name.eq_ignore_ascii_case("Zaryte crossbow"))?;
+    let mut zcb_player = player.clone();
+    zcb_player.gear_sets.ranged.selected_weapon = Some(zcb.clone());
+    let zcb_style = find_best_combat_style(&zcb_player, monster, vec!["ranged".to_string()]);
+    let att_roll = (zcb_style.max_attack_roll * 2) as f64;
+    let def_roll = zcb_style.max_defence_roll as f64;
+    let accuracy = if att_roll > def_roll {
+        1.0 - ((def_roll + 2.0) / (2.0 * (att_roll + 1.0)))
+    } else {
+        att_roll / (2.0 * (def_roll + 1.0))
+    };
+    Some(accuracy.clamp(0.0, 1.0))
+}
+
+/// Damage of a successful Zaryte crossbow spec: 22% of current hp, capped at 110
+pub fn zcb_spec_damage(hp: i32) -> i32 {
+    ((hp as f64 * 0.22).floor() as i32).min(110)
+}
+
 pub fn results_formatter(monsters: &[Monster], style_list: &[StyleResult], ticks: i64, tick_freq: Vec<usize>, trials: usize, phase_time_results: Vec<i32>, phase_results: Vec<i32>) -> String {
     let mean_ttk = ticks as f64 / trials as f64;
     let seconds_ttk = mean_ttk * 0.6; // 0.6 seconds per tick

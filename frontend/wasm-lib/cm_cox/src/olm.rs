@@ -123,7 +123,9 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
     let mut olm_melee_hand_specced = monsters[1].clone();
     olm_melee_hand_specced.skills.def = (olm_melee_hand_specced.skills.def as f64 * def_reduction_mult).ceil() as i32;
     let best_style_specced = find_best_combat_style(&player, &olm_melee_hand_specced, vec!["melee".to_string()]);
-    let zaryte_crossbow = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Zaryte crossbow"));
+    let zcb_accuracy = zcb_spec_accuracy(&player, &monsters[2], &inventory_items);
+    let zaryte_crossbow = zcb_accuracy.is_some();
+    let zcb_threshold = (zcb_accuracy.unwrap_or(0.0) * (u32::MAX as f64)) as u32;
     // let burning_claws = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Burning claws"));
 
     // --- Optimized stats building ---
@@ -195,8 +197,9 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
         };
 
         if zaryte_crossbow {
-            let spec_dmg = (ranged_hp as f64 * 0.22).floor() as i32;
-            ranged_hp -= spec_dmg;
+            if rng.next_u32() <= zcb_threshold {
+                ranged_hp -= zcb_spec_damage(ranged_hp);
+            }
             current_phase_ticks += 5;
         }
         let mut ranged_cooldown = AttackCooldown::new();

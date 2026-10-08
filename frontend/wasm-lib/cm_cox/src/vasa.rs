@@ -12,7 +12,7 @@ fn phase_loop(
     best_style: &StyleResult,
     attack_limit: &i32,
     mut total_ticks: i32,
-    zaryte_crossbow: bool,
+    zcb_accuracy: Option<f64>, // Some when the ZCB spec is used this phase
     rng: &mut SmallRng,
     thrall_dist: &Uniform<i32>,
 ) -> (i32, i32, i32) {
@@ -31,9 +31,10 @@ fn phase_loop(
     while vasa_attack_tick <= *attack_limit {
         vasa_attack_tick += 1;
         
-        if zaryte_crossbow && (vasa_attack_tick - 1) == best_style.attack_speed {
-            let spec_dmg = (vasa_hp as f64 * 0.22).floor() as i32;
-            vasa_hp = vasa_hp - spec_dmg;
+        if zcb_accuracy.is_some() && (vasa_attack_tick - 1) == best_style.attack_speed {
+            if rng.gen::<f64>() < zcb_accuracy.unwrap_or(0.0) {
+                vasa_hp = vasa_hp - zcb_spec_damage(vasa_hp);
+            }
         } else {
             if cooldown.is_ready() {
                 let mut hit = 0;
@@ -114,7 +115,8 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         .iter()
         .filter_map(|item| item.equipment.clone())
         .collect();
-    let zaryte_crossbow = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Zaryte crossbow"));
+    let zcb_accuracy = zcb_spec_accuracy(&player, vasa, &inventory_items);
+    let zaryte_crossbow = zcb_accuracy.is_some();
     let voidwaker = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Voidwaker"));
     if voidwaker {
         spec_count_max = spec_count_dict
@@ -179,7 +181,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
             crystal_hp = crystal_base_hp;
             if pre_crystal_phase == true {
                 let (new_vasa_hp, new_vasa_attack_tick, new_total_ticks) = phase_loop(
-                    vasa_hp, vasa_attack_tick, &best_style_vasa, &attack_pattern[0], total_ticks, zaryte_crossbow, &mut rng, &thrall_dmg
+                    vasa_hp, vasa_attack_tick, &best_style_vasa, &attack_pattern[0], total_ticks, zcb_accuracy, &mut rng, &thrall_dmg
                 );
                 let mut spec_dmg = 0;
                 let mut spec_ticks = 0;
@@ -219,7 +221,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                     vasa_hp = std::cmp::min(vasa_hp, vasa_base_hp);
                     // Pre teleport dmg phase
                     let (new_vasa_hp, new_vasa_attack_tick, new_total_ticks) = phase_loop(
-                        vasa_hp, vasa_attack_tick, &best_style_vasa, &attack_pattern[1], total_ticks, false, &mut rng, &thrall_dmg
+                        vasa_hp, vasa_attack_tick, &best_style_vasa, &attack_pattern[1], total_ticks, None, &mut rng, &thrall_dmg
                     );
                     vasa_hp = new_vasa_hp;
                     vasa_attack_tick = new_vasa_attack_tick;
@@ -245,7 +247,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
             }
             vasa_attack_tick = 0;
             let (new_vasa_hp, new_vasa_attack_tick, new_total_ticks) = phase_loop(
-                vasa_hp, vasa_attack_tick, &best_style_vasa, &attack_pattern[2], total_ticks, false, &mut rng, &thrall_dmg
+                vasa_hp, vasa_attack_tick, &best_style_vasa, &attack_pattern[2], total_ticks, None, &mut rng, &thrall_dmg
             );
             vasa_hp = new_vasa_hp;
             vasa_attack_tick = new_vasa_attack_tick;

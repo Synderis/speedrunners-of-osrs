@@ -116,7 +116,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 		let mut tick = 0;
 		let mut cooldown = AttackCooldown::new();
 		let mut immune_ticks_left = 0;
-		let mut next_teleport = 20;
+		let mut next_teleport = 15;
 		let mut teleport = 0;
 		let mut spec_count = spec_count_max;
 		let mut burns = Vec::new();
@@ -145,7 +145,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 				teleport += 1;
 				immune_ticks_left = 11;
 				current_attack_phase_tick = 0;
-				next_teleport += 11 + rng.gen_range(20..=36);
+				next_teleport += 11 + 20 + 4 * rng.gen_range(0..=4);
 				continue;
 			}
 

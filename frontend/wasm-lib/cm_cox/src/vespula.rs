@@ -38,7 +38,8 @@ pub fn simulate_vespula<R: rand::RngCore, F: FnMut(i32) -> i32>(
         .iter()
         .filter_map(|item| item.equipment.clone())
         .collect();
-    let zaryte_crossbow = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Zaryte crossbow"));
+    let zcb_accuracy = zcb_spec_accuracy(player, &monsters[0], &inventory_items);
+    let zaryte_crossbow = zcb_accuracy.is_some();
 
     for _ in 0..trials {
         let mut tick = 0;
@@ -50,8 +51,9 @@ pub fn simulate_vespula<R: rand::RngCore, F: FnMut(i32) -> i32>(
                 tick += 1;
                 ticks_this_monster += 1;
                 if zaryte_crossbow && tick == attack_speed + 1 {
-                    let spec_dmg = (base_hp as f64 * 0.22).floor() as i32;
-                    hp -= spec_dmg;
+                    if bypass_accuracy || rng.gen::<f64>() < zcb_accuracy.unwrap_or(0.0) {
+                        hp -= zcb_spec_damage(base_hp);
+                    }
                     cooldown.reset(attack_speed);
                 } else {
                     if cooldown.is_ready() {
