@@ -784,9 +784,10 @@ pub fn find_defender(inventory_items: &[SelectedItem]) -> Option<SelectedItem> {
         })
 }
 
-/// Accuracy of the Zaryte crossbow spec against `monster`, if the crossbow is in the inventory.
-/// Rolled with the crossbow equipped in ranged gear, at double the attack roll.
-pub fn zcb_spec_accuracy(player: &Player, monster: &Monster, inventory_items: &[SelectedItem]) -> Option<f64> {
+/// Chance the Zaryte crossbow spec procs the ruby bolt effect on `monster`, if the crossbow is in the inventory.
+/// Accuracy is rolled with the crossbow equipped in ranged gear, at double the attack roll;
+/// a missed roll still gets the natural 6.6% bolt proc chance.
+pub fn zcb_spec_proc_chance(player: &Player, monster: &Monster, inventory_items: &[SelectedItem]) -> Option<f64> {
     let zcb = inventory_items.iter().find(|item| item.name.eq_ignore_ascii_case("Zaryte crossbow"))?;
     let mut zcb_player = player.clone();
     zcb_player.gear_sets.ranged.selected_weapon = Some(zcb.clone());
@@ -798,7 +799,8 @@ pub fn zcb_spec_accuracy(player: &Player, monster: &Monster, inventory_items: &[
     } else {
         att_roll / (2.0 * (def_roll + 1.0))
     };
-    Some(accuracy.clamp(0.0, 1.0))
+    let accuracy = accuracy.clamp(0.0, 1.0);
+    Some(accuracy + 0.066 * (1.0 - accuracy))
 }
 
 /// Damage of a successful Zaryte crossbow spec: 22% of current hp, capped at 110

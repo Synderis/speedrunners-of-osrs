@@ -38,7 +38,7 @@ pub fn simulate_vespula<R: rand::RngCore, F: FnMut(i32) -> i32>(
         .iter()
         .filter_map(|item| item.equipment.clone())
         .collect();
-    let zcb_accuracy = zcb_spec_accuracy(player, &monsters[0], &inventory_items);
+    let zcb_accuracy = zcb_spec_proc_chance(player, &monsters[0], &inventory_items);
     let zaryte_crossbow = zcb_accuracy.is_some();
 
     for _ in 0..trials {

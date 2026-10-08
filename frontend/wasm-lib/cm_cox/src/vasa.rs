@@ -115,7 +115,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         .iter()
         .filter_map(|item| item.equipment.clone())
         .collect();
-    let zcb_accuracy = zcb_spec_accuracy(&player, vasa, &inventory_items);
+    let zcb_accuracy = zcb_spec_proc_chance(&player, vasa, &inventory_items);
     let zaryte_crossbow = zcb_accuracy.is_some();
     let voidwaker = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Voidwaker"));
     if voidwaker {
