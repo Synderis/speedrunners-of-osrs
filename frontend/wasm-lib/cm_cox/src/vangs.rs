@@ -45,7 +45,6 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 		find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]),
 		find_best_combat_style(&player, &monsters[2], vec!["ranged".to_string()]),
 	];
-	let best_style_spec = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
 	let inventory_items: Vec<SelectedItem> = player
 		.inventory
 		.iter()
@@ -78,6 +77,8 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 		};
 		ensure_weapon_swap(&mut player, "Voidwaker", Some(defender));
 	}
+	// After the swaps above, so these are the spec weapon's own max hit and accuracy
+	let best_style_spec = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
 
 	// Precompute per-vang arrays for hot loop
 	let max_hp = monsters[0].skills.hp;
