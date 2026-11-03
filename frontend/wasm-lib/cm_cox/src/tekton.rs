@@ -205,33 +205,37 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             }
 
             // Pre-anvil phase: (0, 5)
-            let (hp1, ticks1, _, died1) = phase_loop(
-                hit_count,
-                &attack_pattern[0],
-                &mut tekton_hp,
-                &mut current_phase_ticks,
-                best_styles_normal[specs_hit].attack_speed,
-                best_styles_normal[specs_hit].accuracy,
-                best_styles_normal[specs_hit].max_hit,
-                weapon_name,
-                ammo.as_deref(),
-                &best_styles_normal[specs_hit].gear_type,
-                &mut rng,
-                &thrall_dmg,
-                &mut cooldown,
-            );
-            tekton_hp = hp1;
-            current_phase_ticks = ticks1;
+            // Only on the first pass: This attack sequence happens once, before Tekton goes to the
+            // anvil for the first time. After the post-anvil attacks it goes straight back to the anvil.
+            if first_pass {
+                let (hp1, ticks1, _, died1) = phase_loop(
+                    hit_count,
+                    &attack_pattern[0],
+                    &mut tekton_hp,
+                    &mut current_phase_ticks,
+                    best_styles_normal[specs_hit].attack_speed,
+                    best_styles_normal[specs_hit].accuracy,
+                    best_styles_normal[specs_hit].max_hit,
+                    weapon_name,
+                    ammo.as_deref(),
+                    &best_styles_normal[specs_hit].gear_type,
+                    &mut rng,
+                    &thrall_dmg,
+                    &mut cooldown,
+                );
+                tekton_hp = hp1;
+                current_phase_ticks = ticks1;
 
-            // Save hp_pre_anvil_val at the end of pre-anvil phase
-            if tekton_hp > 0 && first_pass {
-                hp_pre_anvil_val = tekton_hp;
-                first_pass = false;
-                phase += 1;
-            }
-            if died1 || tekton_hp <= 0 {
-                total_ticks += current_phase_ticks;
-                break;
+                // Save hp_pre_anvil_val at the end of pre-anvil phase
+                if tekton_hp > 0 {
+                    hp_pre_anvil_val = tekton_hp;
+                    first_pass = false;
+                    phase += 1;
+                }
+                if died1 || tekton_hp <= 0 {
+                    total_ticks += current_phase_ticks;
+                    break;
+                }
             }
 
             let anvil_cycle = rng.gen_range(3..7);
