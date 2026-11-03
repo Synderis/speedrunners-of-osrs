@@ -198,7 +198,7 @@ pub fn calculate_max_hit_for_style(
         _ => (0.0, 0.0, &player.gear_sets.mage, 0.0, 0.0, None),
     };
 
-    let potion_bonus = if monster.name.eq_ignore_ascii_case("Tekton") {
+    let potion_bonus = if monster.name.to_lowercase().contains("tekton") {
         (level * 15.0 / 100.0).floor() as f64 + 5.0
     } else {
         (level * 16.0 / 100.0).floor() as f64 + 6.0
