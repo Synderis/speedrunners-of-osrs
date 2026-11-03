@@ -185,6 +185,7 @@ fn ember_light_kill<R: Rng>(
             hp -= hit;
             hit_count += 1;
             hp = thrall_hit(rng, hp);
+            cooldown.reset(attack_speed);
         } else {
             cooldown.tick();
         }
