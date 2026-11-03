@@ -294,6 +294,10 @@ pub fn calculate_max_hit_for_style(
         } else {
             max_hit = ((0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor() as i32) * inquisitor_bonus as i32;
         };
+        // Slayer helmet (i) on task: melee damage x7/6 (slayer_bonus above holds its ranged/magic value)
+        if slayer_bonus > 1.0 {
+            max_hit = (max_hit as f64 * 7.0 / 6.0).floor() as i32;
+        }
         if weapon.name.eq_ignore_ascii_case("Emberlight") && monster.attributes.as_ref().map_or(false, |attrs| attrs.iter().any(|s| s.eq_ignore_ascii_case("demon"))) {
             max_hit = (max_hit as f64 * 1.80).floor() as i32;
         }
