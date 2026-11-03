@@ -136,7 +136,13 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                         attack_speed: weapon.speed - style.att_spd_reduction,
                         att_spd_reduction: style.att_spd_reduction,
                     };
-                    if weapon.name.eq_ignore_ascii_case("Elder maul") || weapon.name.eq_ignore_ascii_case("Dragon warhammer") {
+                    if weapon.name.eq_ignore_ascii_case("Voidwaker") {
+                        // Only used for its spec, which can't miss and hits 50-150% of the max hit,
+                        // so the best style is the one with the highest max hit.
+                        if best_style.as_ref().map_or(true, |b| max_hit > b.max_hit) {
+                            best_style = Some(style_result);
+                        }
+                    } else if weapon.name.eq_ignore_ascii_case("Elder maul") || weapon.name.eq_ignore_ascii_case("Dragon warhammer") {
                         if accuracy > best_accuracy {
                             best_accuracy = accuracy;
                             best_style = Some(style_result);
