@@ -348,6 +348,7 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
 
     // ZGS setup (optional)
     let mut zgs_best_style: Option<StyleResult> = None;
+    let mut zgs_best_style_large: Option<StyleResult> = None;
     let has_zgs = player
         .inventory
         .iter()
@@ -364,6 +365,12 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
         zgs_best_style = Some(find_best_combat_style(
             &player,
             &monsters[0],
+            vec!["melee".to_string()],
+        ));
+        // The large Muttadile has its own (higher) defence, so its spec gets its own accuracy
+        zgs_best_style_large = Some(find_best_combat_style(
+            &player,
+            &monsters[1],
             vec!["melee".to_string()],
         ));
         // swap back
@@ -426,6 +433,10 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
         .as_ref()
         .map(|s| (s.accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32)
         .unwrap_or(0);
+    let zgs_thr_large = zgs_best_style_large
+        .as_ref()
+        .map(|s| (s.accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32)
+        .unwrap_or(0);
 
     // Build histogram + running sum instead of storing all tick counts
     let mut freq: Vec<usize> = Vec::new();
@@ -470,10 +481,10 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
                 hp_large_mutta,
                 &monsters[1],
                 &best_style_large_mutta,
-                zgs_best_style.as_ref().unwrap(),
+                zgs_best_style_large.as_ref().unwrap(),
                 &mut rng,
                 large_mutta_thr,
-                zgs_thr,
+                zgs_thr_large,
                 &thrall_dmg,
             );
             phase_results[i] = 0;
