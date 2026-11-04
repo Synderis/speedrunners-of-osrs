@@ -243,9 +243,14 @@ fn sim_chop_tree(
         current_ticks += 1;
         
         // tree roll (woodcutting every 5 ticks)
+        // A successful chop does floor(WC / 2) - 7 to floor(WC / 2) + 3 (no lower than 0)
         let tree_hit = if wc_cooldown.is_ready() {
             wc_cooldown.reset(5);
-            sample_hit_if(rng, tree_thr, player.combat_stats.woodcutting)
+            if rng.next_u32() <= tree_thr {
+                (player.combat_stats.woodcutting / 2 + rng.gen_range(-7..=3)).max(0)
+            } else {
+                0
+            }
         } else {
             wc_cooldown.tick();
             0
@@ -402,7 +407,7 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
             + 0.5))
             .floor())
         / 256.0;
-    let base_tree_hp = wc_level * 5;
+    let base_tree_hp = (wc_level * 5).max(100);
 
     let death_animation = 4;
     let post_room_delay = 4;
