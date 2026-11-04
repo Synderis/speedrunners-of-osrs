@@ -142,7 +142,9 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                         if best_style.as_ref().map_or(true, |b| max_hit > b.max_hit) {
                             best_style = Some(style_result);
                         }
-                    } else if weapon.name.eq_ignore_ascii_case("Elder maul") || weapon.name.eq_ignore_ascii_case("Dragon warhammer") {
+                    } else if weapon.name.eq_ignore_ascii_case("Elder maul") || weapon.name.eq_ignore_ascii_case("Dragon warhammer")
+                        // The ZGS is only used to freeze, so landing the spec matters more than its damage
+                        || weapon.name.eq_ignore_ascii_case("Zamorak godsword") {
                         if accuracy > best_accuracy {
                             best_accuracy = accuracy;
                             best_style = Some(style_result);
