@@ -1072,6 +1072,9 @@ export const ROOM_WEAPON_SPEC_DEFAULTS: { [roomId: string]: { [weaponName: strin
     'vespula': {
         "Zorya's tome": 2
     },
+    'mystics': {
+        "Zorya's tome": 2
+    },
     // Add other rooms as you implement them
     'tekton': {
     },
