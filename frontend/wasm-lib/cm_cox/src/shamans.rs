@@ -97,6 +97,7 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
         monster.skills = monster_stat_scaling(monster, player.combat_stats.hitpoints);
     }
     let room_methods = payload.room.methods;
+    let spec_count_dict = payload.room.special_attacks;
     let inventory_items: Vec<SelectedItem> = player
         .inventory
         .iter()
@@ -127,6 +128,17 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
 
     // best style across magic/ranged
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string(), "ranged".to_string()]);
+
+    // Zorya's tome: one spec as your first attack on each shaman, for as many shamans as the spec count
+    let zorya = zorya_style(&player, &monsters[0]);
+    let zorya_specs = if zorya.is_some() {
+        spec_count_dict
+            .as_ref()
+            .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Zorya's tome")).map(|sa| sa.count))
+            .unwrap_or(2)
+    } else {
+        0
+    };
 
     // hit delay options (unchanged logic)
     let hit_delay_vec = if best_style.gear_type.eq_ignore_ascii_case("ranged") {
@@ -160,11 +172,13 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
         let range_max = if attack_speed > 4 { 4 * attack_speed } else { 4 };
         let overkill = if rng.gen_range(1..=range_max) == 1 { 1 } else { 0 };
         let mut cooldown = AttackCooldown::new();
+        let mut zorya_pending: Vec<i32> = Vec::new();
 
-        for _monster in &monsters {
+        for (m_idx, _monster) in monsters.iter().enumerate() {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
             let mut passive_tick = 0;
+            let mut zorya_spec_due = (m_idx as i32) < zorya_specs;
 
             while hp > 0 {
                 tick += 1;
@@ -180,8 +194,20 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
                     break;
                 }
 
+                // Buffed tome attacks due this tick; any left when a shaman dies carry over to the next one
+                if let Some(z) = zorya.as_ref() {
+                    if zorya_buffed_attacks(&mut rng, z, tick, &mut hp, &mut zorya_pending) && hp <= 0 {
+                        cooldown.tick();
+                        break;
+                    }
+                }
+
                 // player attack using cooldown
-                if cooldown.is_ready() {
+                if cooldown.is_ready() && zorya_spec_due {
+                    zorya_spec_due = false;
+                    let next = zorya_spec(&mut rng, zorya.as_ref().unwrap(), tick, &mut hp, &mut zorya_pending);
+                    cooldown.reset(next);
+                } else if cooldown.is_ready() {
                     let hit = if rng.next_u32() <= acc_threshold {
                         rng.gen_range(0..=max_hit).max(1)
                     } else {

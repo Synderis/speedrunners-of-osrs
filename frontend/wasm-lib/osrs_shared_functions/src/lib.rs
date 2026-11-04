@@ -877,6 +877,23 @@ pub fn zorya_buffed_attacks(rng: &mut impl rand::Rng, style: &StyleResult, now: 
     due > 0
 }
 
+/// The tome's style against `monster`, with the tome wielded in the mage set (it's two-handed, so
+/// no off-hand). None if the tome isn't in the inventory.
+pub fn zorya_style(player: &Player, monster: &Monster) -> Option<StyleResult> {
+    let tome = player.inventory.iter()
+        .find(|item| item.name.eq_ignore_ascii_case("Zorya's tome"))?
+        .equipment.clone()?;
+    let mut tome_player = player.clone();
+    let mage = &mut tome_player.gear_sets.mage;
+    mage.gear_items.retain(|item| item.as_ref().map_or(true, |i| {
+        !i.slot.eq_ignore_ascii_case("weapon") && !i.slot.eq_ignore_ascii_case("shield")
+    }));
+    mage.gear_items.push(Some(tome.clone()));
+    mage.selected_weapon = Some(tome);
+    mage.selected_offhand = None;
+    Some(find_best_combat_style(&tome_player, monster, vec!["magic".to_string()]))
+}
+
 pub fn find_defender(inventory_items: &[SelectedItem]) -> Option<SelectedItem> {
     inventory_items.iter()
         .find_map(|item| {

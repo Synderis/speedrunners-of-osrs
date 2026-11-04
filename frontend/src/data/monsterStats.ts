@@ -1066,6 +1066,9 @@ export const ROOM_WEAPON_SPEC_DEFAULTS: { [roomId: string]: { [weaponName: strin
         'Voidwaker': 2,
         'Zaryte crossbow': 1
     },
+    'lizardman_shamans': {
+        "Zorya's tome": 2
+    },
     // Add other rooms as you implement them
     'tekton': {
     },
