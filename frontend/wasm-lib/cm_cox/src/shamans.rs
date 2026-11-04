@@ -130,7 +130,7 @@ pub fn calculate_dps_with_objects_shamans(payload_json: &str) -> String {
     let best_style = find_best_combat_style(&player, &monsters[0], vec!["magic".to_string(), "ranged".to_string()]);
 
     // Zorya's tome: one spec as your first attack on each shaman, for as many shamans as the spec count
-    let zorya = zorya_style(&player, &monsters[0]);
+    let zorya = zorya_style(&player, &monsters[0], false);
     let zorya_specs = if zorya.is_some() {
         spec_count_dict
             .as_ref()

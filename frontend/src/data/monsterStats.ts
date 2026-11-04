@@ -1069,6 +1069,9 @@ export const ROOM_WEAPON_SPEC_DEFAULTS: { [roomId: string]: { [weaponName: strin
     'lizardman_shamans': {
         "Zorya's tome": 2
     },
+    'vespula': {
+        "Zorya's tome": 2
+    },
     // Add other rooms as you implement them
     'tekton': {
     },
