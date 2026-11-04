@@ -240,6 +240,10 @@ pub fn calculate_max_hit_for_style(
     }) {
         slayer_bonus = 1.15;
     };
+    // The salve's undead bonus doesn't stack with the slayer helmet's; wearing both only applies the salve
+    if salve_bonus > 1.0 {
+        slayer_bonus = 1.0;
+    }
     let inquisitor_count = gear_set.gear_items.iter().filter(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name.to_lowercase().starts_with("inquisitor's") && !item.name.eq_ignore_ascii_case("Inquisitor's mace"))
     }).count();
@@ -302,8 +306,11 @@ pub fn calculate_max_hit_for_style(
         } else {
             max_hit = ((0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor() as i32) * inquisitor_bonus as i32;
         };
-        // Slayer helmet (i) on task: melee damage x7/6 (slayer_bonus above holds its ranged/magic value)
-        if slayer_bonus > 1.0 {
+        // Salve amulet(ei) against undead: melee damage x1.2. Otherwise Slayer helmet (i) on task:
+        // melee damage x7/6 (slayer_bonus above holds its ranged/magic value)
+        if salve_bonus > 1.0 {
+            max_hit = (max_hit as f64 * 1.2).floor() as i32;
+        } else if slayer_bonus > 1.0 {
             max_hit = (max_hit as f64 * 7.0 / 6.0).floor() as i32;
         }
         if weapon.name.eq_ignore_ascii_case("Emberlight") && monster.attributes.as_ref().map_or(false, |attrs| attrs.iter().any(|s| s.eq_ignore_ascii_case("demon"))) {
@@ -425,6 +432,10 @@ pub fn calculate_max_rolls_for_style(
         item_opt.as_ref().map_or(false, |item| item.name.eq_ignore_ascii_case("Slayer helmet (i)"))
     }) {
         slayer_bonus = 7.0 / 6.0;
+    }
+    // The salve's undead bonus doesn't stack with the slayer helmet's; wearing both only applies the salve
+    if salve_bonus > 1.0 {
+        slayer_bonus = 1.0;
     }
     let inquisitor_count = gear_set.gear_items.iter().filter(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name.to_lowercase().starts_with("inquisitor's") && !item.name.eq_ignore_ascii_case("Inquisitor's mace"))
