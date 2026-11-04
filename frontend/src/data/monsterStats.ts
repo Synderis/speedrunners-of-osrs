@@ -1079,6 +1079,7 @@ export const ROOM_WEAPON_SPEC_DEFAULTS: { [roomId: string]: { [weaponName: strin
     'tekton': {
     },
     'olm': {
+        "Zorya's tome": 4
     }
 };
 
