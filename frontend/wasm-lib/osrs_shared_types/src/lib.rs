@@ -99,6 +99,12 @@ pub struct GearSetData {
     pub gear_items: Vec<Option<SelectedItem>>,
 }
 
+/// Item data stores magic damage in tenths of a percent (15% is 150), while gear_stats holds percent,
+/// as the site sends it. Weapon and off-hand bonuses are converted the same way before they're added.
+fn percent_magic_str(bonuses: &GearBonuses) -> GearBonuses {
+    GearBonuses { magic_str: bonuses.magic_str / 10, ..bonuses.clone() }
+}
+
 impl GearSetData {
     /// The item equipped in the ammo slot, if any
     pub fn ammo(&self) -> Option<&SelectedItem> {
@@ -112,7 +118,7 @@ impl GearSetData {
         // Add weapon bonuses
         if let Some(weapon) = &self.selected_weapon {
             if let Some(bonuses) = &weapon.bonuses {
-                total.bonuses.add_assign(bonuses);
+                total.bonuses.add_assign(&percent_magic_str(bonuses));
             }
             if let Some(offensive) = &weapon.offensive {
                 total.offensive.add_assign(offensive);
@@ -125,7 +131,7 @@ impl GearSetData {
         // Add offhand bonuses
         if let Some(offhand) = &self.selected_offhand {
             if let Some(bonuses) = &offhand.bonuses {
-                total.bonuses.add_assign(bonuses);
+                total.bonuses.add_assign(&percent_magic_str(bonuses));
             }
             if let Some(offensive) = &offhand.offensive {
                 total.offensive.add_assign(offensive);
