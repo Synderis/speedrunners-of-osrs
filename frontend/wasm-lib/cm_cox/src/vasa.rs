@@ -165,10 +165,9 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         let mut spec_count = spec_count_max;
         let mut pre_crystal_phase = true;
         let mut attack_pattern: Vec<i32>;
-        attack_pattern = if room_methods.len() > 0 && room_methods[0].eq_ignore_ascii_case("Vasa Flame Skip") && voidwaker {
-            vec![20, 15, rng.gen_range(33..=36)]
-        } else if room_methods.len() > 0 && room_methods[0].eq_ignore_ascii_case("Vasa Flame Skip") {
-            vec![25, 15, rng.gen_range(33..=36)]
+        attack_pattern = if room_methods.len() > 0 && room_methods[0].eq_ignore_ascii_case("Vasa Flame Skip") {
+            // Vasa reaches the crystal 25 ticks in; any Voidwaker specs use part of that window
+            vec![(25 - spec_count_max * best_style_spec.attack_speed).max(0), 15, rng.gen_range(33..=36)]
         } else {
             vec![20, 15, rng.gen_range(33..=36)]
         };
@@ -197,7 +196,8 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                 vasa_hp = new_vasa_hp - spec_dmg;
                 vasa_attack_tick = new_vasa_attack_tick + spec_ticks;
                 pre_crystal_phase = false;
-                total_ticks = new_total_ticks + spec_ticks;
+                // The spec ticks are already in vasa_attack_tick, which is added to total_ticks after the crystal
+                total_ticks = new_total_ticks;
             }
             crystal_count += 1;
             healing_ticks = 0;
