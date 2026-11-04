@@ -293,11 +293,20 @@ pub fn calculate_max_hit_for_style(
             effective_level = (level + potion_bonus).floor();
             base_damage = ((effective_level / 3.0) + 1.0).floor();
         };
+        if weapon.name.eq_ignore_ascii_case("Zorya's tome") {
+            // Built-in spell: floor(magic level / 3) - 10 (a base of 18 at the 85 Magic requirement)
+            effective_level = (level + potion_bonus).floor();
+            base_damage = (effective_level / 3.0).floor() - 10.0;
+        };
         // For magic, prayer_bonus is a flat addition to the gear bonus, not a multiplier
         salve_bonus = (salve_bonus - 1.0) * 100.0;
         slayer_bonus = (slayer_bonus - 1.0) * 100.0;
         let magic_strength = (bonus * multiplier).min(100.0) + salve_bonus + slayer_bonus + prayer_bonus + void_bonus;
         max_hit = (base_damage * (1.0 + (magic_strength / 100.0))).floor() as i32;
+        // Zorya's tome is only used for its spec and the buffed attacks after it, which do 60% more damage
+        if weapon.name.eq_ignore_ascii_case("Zorya's tome") {
+            max_hit = (max_hit as f64 * 1.6).floor() as i32;
+        }
     } else if combat_type.eq_ignore_ascii_case("ranged") {
         let mut max_hit_multiplier = 1.0;
         if weapon.name.eq_ignore_ascii_case("Twisted bow") {
@@ -430,6 +439,10 @@ pub fn calculate_max_rolls_for_style(
     if weapon.name.eq_ignore_ascii_case("Tumeken's shadow") {
         bonus *= 3;
         max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
+    }
+    // Zorya's tome is only used for its spec and the buffed attacks after it, which have 150% more accuracy
+    if weapon.name.eq_ignore_ascii_case("Zorya's tome") {
+        max_attack_roll = (max_attack_roll as f64 * 2.5).floor() as u64;
     }
     if weapon.name.eq_ignore_ascii_case("Zamorak godsword") && (style.attack_type.eq_ignore_ascii_case("Slash") || style.attack_type.eq_ignore_ascii_case("Crush")) {
         max_attack_roll = max_attack_roll * 2;
@@ -828,6 +841,40 @@ pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64,
             0
         }
     }
+}
+
+/// Zorya's tome spec ("Zorya's flow"): one 3-tick attack that, if it hits, buffs the next three tome
+/// attacks, which come 2 ticks apart; your next action is 2 ticks after the last of them. The spec and the
+/// buffed attacks all use the tome's style (its accuracy and max hit include the spec's bonuses).
+pub const ZORYA_SPEC_SPEED: i32 = 3;
+pub const ZORYA_BUFFED_SPEED: i32 = 2;
+pub const ZORYA_BUFFED_ATTACKS: i32 = 3;
+
+/// Fires the tome spec at tick `now`: lands its hit on `hp`, puts the buffed attacks' ticks in `pending`
+/// and returns the ticks until your next action.
+pub fn zorya_spec(rng: &mut impl rand::Rng, style: &StyleResult, now: i32, hp: &mut i32, pending: &mut Vec<i32>) -> i32 {
+    let hit = dmg_modifier_check(rng, style.max_hit, style.accuracy, "Zorya's tome", None, &style.gear_type, style.damage_rolls);
+    if hit == 0 {
+        return ZORYA_SPEC_SPEED;
+    }
+    *hp -= hit;
+    for k in 0..ZORYA_BUFFED_ATTACKS {
+        pending.push(now + ZORYA_SPEC_SPEED + ZORYA_BUFFED_SPEED * k);
+    }
+    ZORYA_SPEC_SPEED + ZORYA_BUFFED_SPEED * ZORYA_BUFFED_ATTACKS
+}
+
+/// Lands any buffed tome attacks due at tick `now` on `hp` (each rolls its own accuracy and damage).
+/// Returns true if one was due.
+pub fn zorya_buffed_attacks(rng: &mut impl rand::Rng, style: &StyleResult, now: i32, hp: &mut i32, pending: &mut Vec<i32>) -> bool {
+    let due = pending.iter().filter(|&&t| t == now).count();
+    pending.retain(|&t| t != now);
+    for _ in 0..due {
+        if *hp > 0 {
+            *hp -= dmg_modifier_check(rng, style.max_hit, style.accuracy, "Zorya's tome", None, &style.gear_type, style.damage_rolls);
+        }
+    }
+    due > 0
 }
 
 pub fn find_defender(inventory_items: &[SelectedItem]) -> Option<SelectedItem> {
