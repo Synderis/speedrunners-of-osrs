@@ -188,7 +188,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                     if spec_count == 0 {
                         break;
                     }
-                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker", ammo.as_deref(), &best_style_spec.gear_type);
+                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker", ammo.as_deref(), &best_style_spec.gear_type, best_style_spec.damage_rolls);
                     spec_dmg += hit;
                     spec_count -= 1;
                     spec_ticks += best_style_spec.attack_speed;
@@ -208,7 +208,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                 healing_ticks += 1;
                 let mut hit_crystal = 0;
                 if (crystal_attack_tick - 1) % best_style_crystal.attack_speed == 0 {
-                    hit_crystal = dmg_modifier_check(&mut rng, best_style_crystal.max_hit, best_style_crystal.accuracy, &weapon_name, ammo.as_deref(), &best_style_crystal.gear_type);
+                    hit_crystal = dmg_modifier_check(&mut rng, best_style_crystal.max_hit, best_style_crystal.accuracy, &weapon_name, ammo.as_deref(), &best_style_crystal.gear_type, best_style_crystal.damage_rolls);
                 }
                 if (crystal_attack_tick - 1) % 4 == 0 {
                     hit_crystal += thrall_dmg.sample(&mut rng);

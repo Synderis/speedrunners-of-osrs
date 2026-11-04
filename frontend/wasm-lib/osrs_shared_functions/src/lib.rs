@@ -135,6 +135,7 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                         max_defence_roll,
                         attack_speed: weapon.speed - style.att_spd_reduction,
                         att_spd_reduction: style.att_spd_reduction,
+                        damage_rolls: 1,
                     };
                     if weapon.name.eq_ignore_ascii_case("Voidwaker") {
                         // Only used for its spec, which can't miss and hits 50-150% of the max hit,
@@ -754,7 +755,7 @@ pub fn apply_burns(hp: i32, burn_list: &mut Vec<i32>) -> i32 {
 //     hit
 // }
 
-pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64, weapon: &str, ammo: Option<&str>, attack_style: &str) -> i32 {
+pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64, weapon: &str, ammo: Option<&str>, attack_style: &str, damage_rolls: u32) -> i32 {
     // Convert accuracy in [0,1] to an inclusive u32 threshold.
     // Using <= preserves exact probability (no off-by-one bias).
     let acc_threshold: u32 = (accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
@@ -791,7 +792,9 @@ pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64,
         // Single-roll weapons
         let minimum_max = if attack_style.eq_ignore_ascii_case("ranged") && ammo.map_or(false, |a| a.to_lowercase().contains("seeking")) {3} else {1};
         if rng.next_u32() <= acc_threshold {
-            rng.gen_range(0..=max_hit).max(minimum_max)
+            // One accuracy roll; with more than one damage roll the best is kept
+            let best = (0..damage_rolls.max(1)).map(|_| rng.gen_range(0..=max_hit)).max().unwrap_or(0);
+            best.max(minimum_max)
         } else {
             0
         }

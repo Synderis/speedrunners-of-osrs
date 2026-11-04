@@ -238,6 +238,9 @@ pub struct StyleResult {
     pub max_defence_roll: u64,
     pub attack_speed: i32,
     pub att_spd_reduction: i32,
+    /// Damage rolls per hit, keeping the best (1 for most weapons)
+    #[serde(default)]
+    pub damage_rolls: u32,
 }
 
 #[derive(Deserialize)]

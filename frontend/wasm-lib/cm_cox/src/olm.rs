@@ -12,6 +12,7 @@ fn phase_loop(
     attack_speed: i32,
     accuracy: f64,
     max_hit: i32,
+    damage_rolls: u32,
     weapon_name: &str,
     ammo: Option<&str>,
     attack_style: &str,
@@ -25,7 +26,7 @@ fn phase_loop(
         *current_phase_ticks += 1;
 
         if cooldown.is_ready() {
-            let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name, ammo, attack_style);
+            let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name, ammo, attack_style, damage_rolls);
             *hp -= hit;
             cooldown.reset(attack_speed);
         } else {
@@ -160,6 +161,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                 best_style_mage.attack_speed,
                 best_style_mage.accuracy,
                 best_style_mage.max_hit,
+                best_style_mage.damage_rolls,
                 "Mage",
                 mage_ammo.as_deref(),
                 &best_style_mage.gear_type,
@@ -176,6 +178,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             let melee_accuracy = if spec_hit { best_style_specced.accuracy } else { best_style_melee.accuracy };
             let melee_max_hit = if spec_hit { best_style_specced.max_hit } else { best_style_melee.max_hit };
             let melee_attack_speed = if spec_hit { best_style_specced.attack_speed } else { best_style_melee.attack_speed };
+            let melee_damage_rolls = if spec_hit { best_style_specced.damage_rolls } else { best_style_melee.damage_rolls };
             let mut melee_cooldown = AttackCooldown::new();
             melee_ticks = phase_loop(
                 &mut melee_hp,
@@ -183,6 +186,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
                 melee_attack_speed, 
                 melee_accuracy, 
                 melee_max_hit, 
+                melee_damage_rolls,
                 weapon_name, 
                 melee_ammo.as_deref(),
                 &best_style_melee.gear_type,
@@ -209,6 +213,7 @@ pub fn calculate_dps_with_objects_olm(payload_json: &str) -> String {
             best_style_ranged.attack_speed,
             best_style_ranged.accuracy,
             best_style_ranged.max_hit,
+            best_style_ranged.damage_rolls,
             "Ranged",
             ranged_ammo.as_deref(),
             &best_style_ranged.gear_type,

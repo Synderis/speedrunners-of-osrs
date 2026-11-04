@@ -208,7 +208,7 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
                     break;
                 }
                 if spec_count > 0 {
-                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker", ammo.as_ref().map(|a| a.as_str()), &best_style_spec.gear_type);
+                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker", ammo.as_ref().map(|a| a.as_str()), &best_style_spec.gear_type, best_style_spec.damage_rolls);
                     hp -= hit;
                     spec_count -= 1;
                     tick += 4;
