@@ -71,6 +71,23 @@ fn tbow_scaling(magic: u32, mode: &str) -> f64 {
 }
 
 
+/// A charged Obligator attacking with one of its Thrust styles. Its passive (extra damage rolls and the
+/// size bonus) only applies to Thrust; the 3-tick Smash doesn't use charges.
+fn obligator_charged_thrust(weapon: &SelectedItem, style: &WeaponStyle) -> bool {
+    weapon.name.eq_ignore_ascii_case("Obligator") && style.name.eq_ignore_ascii_case("Thrust")
+}
+
+/// Damage rolls per hit, keeping the best. A charged Obligator Thrust rolls twice, plus once more for each
+/// of the target's stab and slash defence that is higher than its crush defence (up to 4).
+fn damage_rolls_for_style(weapon: &SelectedItem, style: &WeaponStyle, monster: &Monster) -> u32 {
+    if obligator_charged_thrust(weapon, style) {
+        let d = &monster.defensive;
+        2 + (d.stab > d.crush) as u32 + (d.slash > d.crush) as u32
+    } else {
+        1
+    }
+}
+
 pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: Vec<String>) -> StyleResult {
     let mut best_style: Option<StyleResult> = None;
     let mut best_dps = 0.0;
@@ -98,11 +115,14 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                 for style in styles {
                     let (max_hit, _effective_level) = calculate_max_hit_for_style(player, monster, &combat_type, style, &gear_stats);
                     let (accuracy, effective_level, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, &combat_type, style, &gear_stats);
+                    let damage_rolls = damage_rolls_for_style(weapon, style, monster);
                     let effective_dps = if weapon.name.eq_ignore_ascii_case("Scythe of vitur") {
                         let modified_max_hit = max_hit + (max_hit / 2) + (max_hit / 4);
                         (modified_max_hit as f64 * accuracy) / (weapon.speed as f64 - style.att_spd_reduction as f64)
                     } else {
-                        (max_hit as f64 * accuracy) / (weapon.speed as f64 - style.att_spd_reduction as f64)
+                        // The best of n rolls averages n/(n+1) of the max hit, against 1/2 for a single roll
+                        let n = damage_rolls as f64;
+                        (max_hit as f64 * accuracy * 2.0 * n / (n + 1.0)) / (weapon.speed as f64 - style.att_spd_reduction as f64)
                     };
                     let effective_strength = 0; // Not used for mage/ranged
                     let effective_attack = effective_level;
@@ -135,7 +155,7 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                         max_defence_roll,
                         attack_speed: weapon.speed - style.att_spd_reduction,
                         att_spd_reduction: style.att_spd_reduction,
-                        damage_rolls: 1,
+                        damage_rolls,
                     };
                     if weapon.name.eq_ignore_ascii_case("Voidwaker") {
                         // Only used for its spec, which can't miss and hits 50-150% of the max hit,
@@ -325,6 +345,15 @@ pub fn calculate_max_hit_for_style(
         };
         if weapon.name.eq_ignore_ascii_case("Dragon warhammer") {
             max_hit = (max_hit as f64 * 1.50).floor() as i32;
+        };
+        // Charged Obligator Thrust: +20% damage against 2x2 targets, +40% against 3x3 or bigger
+        if obligator_charged_thrust(weapon, style) {
+            let size_bonus = match monster.size.unwrap_or(1) {
+                0 | 1 => 1.0,
+                2 => 1.2,
+                _ => 1.4,
+            };
+            max_hit = (max_hit as f64 * size_bonus).floor() as i32;
         };
     };
     // console_log!("Gear items: {:?}", gear_set.gear_items);
