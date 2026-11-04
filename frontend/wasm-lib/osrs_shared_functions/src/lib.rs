@@ -431,7 +431,8 @@ pub fn calculate_max_rolls_for_style(
     if gear_set.gear_items.iter().any(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name.eq_ignore_ascii_case("Slayer helmet (i)"))
     }) {
-        slayer_bonus = 7.0 / 6.0;
+        // On task: x7/6 melee accuracy, x1.15 ranged and magic accuracy
+        slayer_bonus = if combat_type.eq_ignore_ascii_case("melee") { 7.0 / 6.0 } else { 1.15 };
     }
     // The salve's undead bonus doesn't stack with the slayer helmet's; wearing both only applies the salve
     if salve_bonus > 1.0 {
