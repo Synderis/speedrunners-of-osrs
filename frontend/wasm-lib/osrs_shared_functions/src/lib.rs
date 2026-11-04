@@ -300,9 +300,12 @@ pub fn calculate_max_hit_for_style(
         };
         // For magic, prayer_bonus is a flat addition to the gear bonus, not a multiplier
         salve_bonus = (salve_bonus - 1.0) * 100.0;
-        slayer_bonus = (slayer_bonus - 1.0) * 100.0;
-        let magic_strength = (bonus * multiplier).min(100.0) + salve_bonus + slayer_bonus + prayer_bonus + void_bonus;
+        let magic_strength = (bonus * multiplier).min(100.0) + salve_bonus + prayer_bonus + void_bonus;
         max_hit = (base_damage * (1.0 + (magic_strength / 100.0))).floor() as i32;
+        // The Slayer helmet (i) multiplies the max hit by 23/20 after the magic damage bonus, rather than adding to it
+        if slayer_bonus > 1.0 {
+            max_hit = max_hit * 23 / 20;
+        }
         // Zorya's tome is only used for its spec and the buffed attacks after it, which do 60% more damage
         if weapon.name.eq_ignore_ascii_case("Zorya's tome") {
             max_hit = (max_hit as f64 * 1.6).floor() as i32;
@@ -440,10 +443,6 @@ pub fn calculate_max_rolls_for_style(
         bonus *= 3;
         max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
     }
-    // Zorya's tome is only used for its spec and the buffed attacks after it, which have 150% more accuracy
-    if weapon.name.eq_ignore_ascii_case("Zorya's tome") {
-        max_attack_roll = (max_attack_roll as f64 * 2.5).floor() as u64;
-    }
     if weapon.name.eq_ignore_ascii_case("Zamorak godsword") && (style.attack_type.eq_ignore_ascii_case("Slash") || style.attack_type.eq_ignore_ascii_case("Crush")) {
         max_attack_roll = max_attack_roll * 2;
     }
@@ -497,6 +496,11 @@ pub fn calculate_max_rolls_for_style(
     };
     let elder_maul_bonus = if weapon.name.eq_ignore_ascii_case("Elder maul") { 1.25 } else { 1.0 };
     max_attack_roll = (max_attack_roll as f64 * slayer_bonus * salve_bonus * tbow_mult * inquisitor_bonus * crystal_mult * elder_maul_bonus).floor() as u64;
+    // Zorya's tome is only used for its spec and the buffed attacks after it, which have 150% more accuracy
+    // (applied after the slayer helmet and salve, as the DPS calculator does)
+    if weapon.name.eq_ignore_ascii_case("Zorya's tome") {
+        max_attack_roll = (max_attack_roll as f64 * 2.5).floor() as u64;
+    }
     // console_log!("Monster def: {}, monster def bonus: {}", monster.skills.def, defence_bonus);
     let max_defence_roll;
     if combat_type.eq_ignore_ascii_case("magic") {
