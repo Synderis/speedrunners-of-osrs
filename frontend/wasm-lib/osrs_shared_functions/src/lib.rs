@@ -310,7 +310,7 @@ pub fn calculate_max_hit_for_style(
         if weapon.name.eq_ignore_ascii_case("Burning claws") && monster.attributes.as_ref().map_or(false, |attrs| attrs.iter().any(|s| s.eq_ignore_ascii_case("demon"))) {
             max_hit = (max_hit as f64 * 1.05).floor() as i32;
         };
-        if weapon.name.eq_ignore_ascii_case("Zamorak godsword") && (style.combat_style.eq_ignore_ascii_case("Slash") || style.combat_style.eq_ignore_ascii_case("Crush")) {
+        if weapon.name.eq_ignore_ascii_case("Zamorak godsword") && (style.attack_type.eq_ignore_ascii_case("Slash") || style.attack_type.eq_ignore_ascii_case("Crush")) {
             max_hit = (max_hit as f64 * 1.10).floor() as i32;
         };
         if weapon.name.eq_ignore_ascii_case("Dragon warhammer") {
@@ -392,7 +392,7 @@ pub fn calculate_max_rolls_for_style(
         bonus *= 3;
         max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
     }
-    if weapon.name.eq_ignore_ascii_case("Zamorak godsword") && (style.combat_style.eq_ignore_ascii_case("Slash") || style.combat_style.eq_ignore_ascii_case("Crush")) {
+    if weapon.name.eq_ignore_ascii_case("Zamorak godsword") && (style.attack_type.eq_ignore_ascii_case("Slash") || style.attack_type.eq_ignore_ascii_case("Crush")) {
         max_attack_roll = max_attack_roll * 2;
     }
 
