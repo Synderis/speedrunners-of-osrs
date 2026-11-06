@@ -71,6 +71,23 @@ fn tbow_scaling(magic: u32, mode: &str) -> f64 {
 }
 
 
+/// A charged Obligator attacking with one of its Thrust styles. Its passive (extra damage rolls and the
+/// size bonus) only applies to Thrust; the 3-tick Smash doesn't use charges.
+fn obligator_charged_thrust(weapon: &SelectedItem, style: &WeaponStyle) -> bool {
+    weapon.name.eq_ignore_ascii_case("Obligator") && style.name.eq_ignore_ascii_case("Thrust")
+}
+
+/// Damage rolls per hit, keeping the best. A charged Obligator Thrust rolls twice, plus once more for each
+/// of the target's stab and slash defence that is higher than its crush defence (up to 4).
+fn damage_rolls_for_style(weapon: &SelectedItem, style: &WeaponStyle, monster: &Monster) -> u32 {
+    if obligator_charged_thrust(weapon, style) {
+        let d = &monster.defensive;
+        2 + (d.stab > d.crush) as u32 + (d.slash > d.crush) as u32
+    } else {
+        1
+    }
+}
+
 pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: Vec<String>) -> StyleResult {
     let mut best_style: Option<StyleResult> = None;
     let mut best_dps = 0.0;
@@ -98,11 +115,14 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                 for style in styles {
                     let (max_hit, _effective_level) = calculate_max_hit_for_style(player, monster, &combat_type, style, &gear_stats);
                     let (accuracy, effective_level, max_attack_roll, max_defence_roll) = calculate_accuracy_for_style(player, monster, &combat_type, style, &gear_stats);
+                    let damage_rolls = damage_rolls_for_style(weapon, style, monster);
                     let effective_dps = if weapon.name.eq_ignore_ascii_case("Scythe of vitur") {
                         let modified_max_hit = max_hit + (max_hit / 2) + (max_hit / 4);
                         (modified_max_hit as f64 * accuracy) / (weapon.speed as f64 - style.att_spd_reduction as f64)
                     } else {
-                        (max_hit as f64 * accuracy) / (weapon.speed as f64 - style.att_spd_reduction as f64)
+                        // The best of n rolls averages n/(n+1) of the max hit, against 1/2 for a single roll
+                        let n = damage_rolls as f64;
+                        (max_hit as f64 * accuracy * 2.0 * n / (n + 1.0)) / (weapon.speed as f64 - style.att_spd_reduction as f64)
                     };
                     let effective_strength = 0; // Not used for mage/ranged
                     let effective_attack = effective_level;
@@ -135,8 +155,17 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
                         max_defence_roll,
                         attack_speed: weapon.speed - style.att_spd_reduction,
                         att_spd_reduction: style.att_spd_reduction,
+                        damage_rolls,
                     };
-                    if weapon.name.eq_ignore_ascii_case("Elder maul") || weapon.name.eq_ignore_ascii_case("Dragon warhammer") {
+                    if weapon.name.eq_ignore_ascii_case("Voidwaker") {
+                        // Only used for its spec, which can't miss and hits 50-150% of the max hit,
+                        // so the best style is the one with the highest max hit.
+                        if best_style.as_ref().map_or(true, |b| max_hit > b.max_hit) {
+                            best_style = Some(style_result);
+                        }
+                    } else if weapon.name.eq_ignore_ascii_case("Elder maul") || weapon.name.eq_ignore_ascii_case("Dragon warhammer")
+                        // The ZGS is only used to freeze, so landing the spec matters more than its damage
+                        || weapon.name.eq_ignore_ascii_case("Zamorak godsword") {
                         if accuracy > best_accuracy {
                             best_accuracy = accuracy;
                             best_style = Some(style_result);
@@ -161,6 +190,12 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
     result
 }
 
+
+/// Melee prayer multipliers (accuracy, strength), as in the DPS calculator's prayer data.
+pub const PIETY: (f64, f64) = (1.20, 1.23);
+pub const ZEAL: (f64, f64) = (1.25, 1.28);
+/// The melee prayer the sim uses. Zeal is here to offer as a choice, or to replace Piety.
+pub const MELEE_PRAYER: (f64, f64) = PIETY;
 
 pub fn calculate_max_hit_for_style(
     player: &Player,
@@ -189,7 +224,7 @@ pub fn calculate_max_hit_for_style(
         ),
         "melee" => (
             player.combat_stats.strength as f64,
-            1.23,
+            MELEE_PRAYER.1,
             &player.gear_sets.melee,
             gear.bonuses.str as f64,
             style.str_ as f64,
@@ -198,7 +233,7 @@ pub fn calculate_max_hit_for_style(
         _ => (0.0, 0.0, &player.gear_sets.mage, 0.0, 0.0, None),
     };
 
-    let potion_bonus = if monster.name.eq_ignore_ascii_case("Tekton") {
+    let potion_bonus = if monster.name.to_lowercase().contains("tekton") {
         (level * 15.0 / 100.0).floor() as f64 + 5.0
     } else {
         (level * 16.0 / 100.0).floor() as f64 + 6.0
@@ -232,6 +267,10 @@ pub fn calculate_max_hit_for_style(
     }) {
         slayer_bonus = 1.15;
     };
+    // The salve's undead bonus doesn't stack with the slayer helmet's; wearing both only applies the salve
+    if salve_bonus > 1.0 {
+        slayer_bonus = 1.0;
+    }
     let inquisitor_count = gear_set.gear_items.iter().filter(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name.to_lowercase().starts_with("inquisitor's") && !item.name.eq_ignore_ascii_case("Inquisitor's mace"))
     }).count();
@@ -260,11 +299,23 @@ pub fn calculate_max_hit_for_style(
             effective_level = (level + potion_bonus).floor();
             base_damage = ((effective_level / 3.0) + 1.0).floor();
         };
+        if weapon.name.eq_ignore_ascii_case("Zorya's tome") {
+            // Built-in spell: floor(magic level / 3) - 10 (a base of 18 at the 85 Magic requirement)
+            effective_level = (level + potion_bonus).floor();
+            base_damage = (effective_level / 3.0).floor() - 10.0;
+        };
         // For magic, prayer_bonus is a flat addition to the gear bonus, not a multiplier
         salve_bonus = (salve_bonus - 1.0) * 100.0;
-        slayer_bonus = (slayer_bonus - 1.0) * 100.0;
-        let magic_strength = (bonus * multiplier).min(100.0) + salve_bonus + slayer_bonus + prayer_bonus + void_bonus;
+        let magic_strength = (bonus * multiplier).min(100.0) + salve_bonus + prayer_bonus + void_bonus;
         max_hit = (base_damage * (1.0 + (magic_strength / 100.0))).floor() as i32;
+        // The Slayer helmet (i) multiplies the max hit by 23/20 after the magic damage bonus, rather than adding to it
+        if slayer_bonus > 1.0 {
+            max_hit = max_hit * 23 / 20;
+        }
+        // Zorya's tome is only used for its spec and the buffed attacks after it, which do 60% more damage
+        if weapon.name.eq_ignore_ascii_case("Zorya's tome") {
+            max_hit = (max_hit as f64 * 1.6).floor() as i32;
+        }
     } else if combat_type.eq_ignore_ascii_case("ranged") {
         let mut max_hit_multiplier = 1.0;
         if weapon.name.eq_ignore_ascii_case("Twisted bow") {
@@ -294,17 +345,33 @@ pub fn calculate_max_hit_for_style(
         } else {
             max_hit = ((0.5 + (effective_level * (bonus + 64.0)) / 640.0).floor() as i32) * inquisitor_bonus as i32;
         };
+        // Salve amulet(ei) against undead: melee damage x1.2. Otherwise Slayer helmet (i) on task:
+        // melee damage x7/6 (slayer_bonus above holds its ranged/magic value)
+        if salve_bonus > 1.0 {
+            max_hit = (max_hit as f64 * 1.2).floor() as i32;
+        } else if slayer_bonus > 1.0 {
+            max_hit = (max_hit as f64 * 7.0 / 6.0).floor() as i32;
+        }
         if weapon.name.eq_ignore_ascii_case("Emberlight") && monster.attributes.as_ref().map_or(false, |attrs| attrs.iter().any(|s| s.eq_ignore_ascii_case("demon"))) {
             max_hit = (max_hit as f64 * 1.80).floor() as i32;
         }
         if weapon.name.eq_ignore_ascii_case("Burning claws") && monster.attributes.as_ref().map_or(false, |attrs| attrs.iter().any(|s| s.eq_ignore_ascii_case("demon"))) {
             max_hit = (max_hit as f64 * 1.05).floor() as i32;
         };
-        if weapon.name.eq_ignore_ascii_case("Zamorak godsword") && (style.combat_style.eq_ignore_ascii_case("Slash") || style.combat_style.eq_ignore_ascii_case("Crush")) {
+        if weapon.name.eq_ignore_ascii_case("Zamorak godsword") && (style.attack_type.eq_ignore_ascii_case("Slash") || style.attack_type.eq_ignore_ascii_case("Crush")) {
             max_hit = (max_hit as f64 * 1.10).floor() as i32;
         };
         if weapon.name.eq_ignore_ascii_case("Dragon warhammer") {
             max_hit = (max_hit as f64 * 1.50).floor() as i32;
+        };
+        // Charged Obligator Thrust: +20% damage against 2x2 targets, +40% against 3x3 or bigger
+        if obligator_charged_thrust(weapon, style) {
+            let size_bonus = match monster.size.unwrap_or(1) {
+                0 | 1 => 1.0,
+                2 => 1.2,
+                _ => 1.4,
+            };
+            max_hit = (max_hit as f64 * size_bonus).floor() as i32;
         };
     };
     // console_log!("Gear items: {:?}", gear_set.gear_items);
@@ -340,7 +407,7 @@ pub fn calculate_max_rolls_for_style(
             player.combat_stats.attack as f64,
             &player.gear_sets.melee,
             style.att as f64,
-            1.20,
+            MELEE_PRAYER.0,
             player.gear_sets.melee.selected_weapon.as_ref(),
         ),
         _ => (0.0, &player.gear_sets.mage, 0.0, 0.0, None),
@@ -382,7 +449,7 @@ pub fn calculate_max_rolls_for_style(
         bonus *= 3;
         max_attack_roll = effective_level as u64 * (bonus + 64) as u64;
     }
-    if weapon.name.eq_ignore_ascii_case("Zamorak godsword") && (style.combat_style.eq_ignore_ascii_case("Slash") || style.combat_style.eq_ignore_ascii_case("Crush")) {
+    if weapon.name.eq_ignore_ascii_case("Zamorak godsword") && (style.attack_type.eq_ignore_ascii_case("Slash") || style.attack_type.eq_ignore_ascii_case("Crush")) {
         max_attack_roll = max_attack_roll * 2;
     }
 
@@ -412,7 +479,12 @@ pub fn calculate_max_rolls_for_style(
     if gear_set.gear_items.iter().any(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name.eq_ignore_ascii_case("Slayer helmet (i)"))
     }) {
-        slayer_bonus = 7.0 / 6.0;
+        // On task: x7/6 melee accuracy, x1.15 ranged and magic accuracy
+        slayer_bonus = if combat_type.eq_ignore_ascii_case("melee") { 7.0 / 6.0 } else { 1.15 };
+    }
+    // The salve's undead bonus doesn't stack with the slayer helmet's; wearing both only applies the salve
+    if salve_bonus > 1.0 {
+        slayer_bonus = 1.0;
     }
     let inquisitor_count = gear_set.gear_items.iter().filter(|item_opt| {
         item_opt.as_ref().map_or(false, |item| item.name.to_lowercase().starts_with("inquisitor's") && !item.name.eq_ignore_ascii_case("Inquisitor's mace"))
@@ -430,6 +502,11 @@ pub fn calculate_max_rolls_for_style(
     };
     let elder_maul_bonus = if weapon.name.eq_ignore_ascii_case("Elder maul") { 1.25 } else { 1.0 };
     max_attack_roll = (max_attack_roll as f64 * slayer_bonus * salve_bonus * tbow_mult * inquisitor_bonus * crystal_mult * elder_maul_bonus).floor() as u64;
+    // Zorya's tome is only used for its spec and the buffed attacks after it, which have 150% more accuracy
+    // (applied after the slayer helmet and salve, as the DPS calculator does)
+    if weapon.name.eq_ignore_ascii_case("Zorya's tome") {
+        max_attack_roll = (max_attack_roll as f64 * 2.5).floor() as u64;
+    }
     // console_log!("Monster def: {}, monster def bonus: {}", monster.skills.def, defence_bonus);
     let max_defence_roll;
     if combat_type.eq_ignore_ascii_case("magic") {
@@ -730,7 +807,7 @@ pub fn apply_burns(hp: i32, burn_list: &mut Vec<i32>) -> i32 {
 //     hit
 // }
 
-pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64, weapon: &str, ammo: Option<&str>, attack_style: &str) -> i32 {
+pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64, weapon: &str, ammo: Option<&str>, attack_style: &str, damage_rolls: u32) -> i32 {
     // Convert accuracy in [0,1] to an inclusive u32 threshold.
     // Using <= preserves exact probability (no off-by-one bias).
     let acc_threshold: u32 = (accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
@@ -767,11 +844,69 @@ pub fn dmg_modifier_check(rng: &mut impl rand::Rng, max_hit: i32, accuracy: f64,
         // Single-roll weapons
         let minimum_max = if attack_style.eq_ignore_ascii_case("ranged") && ammo.map_or(false, |a| a.to_lowercase().contains("seeking")) {3} else {1};
         if rng.next_u32() <= acc_threshold {
-            rng.gen_range(0..=max_hit).max(minimum_max)
+            // One accuracy roll; with more than one damage roll the best is kept
+            let best = (0..damage_rolls.max(1)).map(|_| rng.gen_range(0..=max_hit)).max().unwrap_or(0);
+            best.max(minimum_max)
         } else {
             0
         }
     }
+}
+
+/// Zorya's tome spec ("Zorya's flow"): one 3-tick attack that, if it hits, buffs the next three tome
+/// attacks, which come 2 ticks apart; your next action is 2 ticks after the last of them. The spec and the
+/// buffed attacks all use the tome's style (its accuracy and max hit include the spec's bonuses).
+pub const ZORYA_SPEC_SPEED: i32 = 3;
+pub const ZORYA_BUFFED_SPEED: i32 = 2;
+pub const ZORYA_BUFFED_ATTACKS: i32 = 3;
+
+/// Fires the tome spec at tick `now`: lands its hit on `hp`, puts the buffed attacks' ticks in `pending`
+/// and returns the ticks until your next action.
+pub fn zorya_spec(rng: &mut impl rand::Rng, style: &StyleResult, now: i32, hp: &mut i32, pending: &mut Vec<i32>) -> i32 {
+    let hit = dmg_modifier_check(rng, style.max_hit, style.accuracy, "Zorya's tome", None, &style.gear_type, style.damage_rolls);
+    if hit == 0 {
+        return ZORYA_SPEC_SPEED;
+    }
+    *hp -= hit;
+    for k in 0..ZORYA_BUFFED_ATTACKS {
+        pending.push(now + ZORYA_SPEC_SPEED + ZORYA_BUFFED_SPEED * k);
+    }
+    ZORYA_SPEC_SPEED + ZORYA_BUFFED_SPEED * ZORYA_BUFFED_ATTACKS
+}
+
+/// Lands any buffed tome attacks due at tick `now` on `hp` (each rolls its own accuracy and damage).
+/// Returns true if one was due.
+pub fn zorya_buffed_attacks(rng: &mut impl rand::Rng, style: &StyleResult, now: i32, hp: &mut i32, pending: &mut Vec<i32>) -> bool {
+    let due = pending.iter().filter(|&&t| t == now).count();
+    pending.retain(|&t| t != now);
+    for _ in 0..due {
+        if *hp > 0 {
+            *hp -= dmg_modifier_check(rng, style.max_hit, style.accuracy, "Zorya's tome", None, &style.gear_type, style.damage_rolls);
+        }
+    }
+    due > 0
+}
+
+/// The tome's style against `monster`, with the tome wielded in the mage set (it's two-handed, so
+/// no off-hand), on Longrange only if `long_range`. None if the tome isn't in the inventory.
+pub fn zorya_style(player: &Player, monster: &Monster, long_range: bool) -> Option<StyleResult> {
+    let mut tome = player.inventory.iter()
+        .find(|item| item.name.eq_ignore_ascii_case("Zorya's tome"))?
+        .equipment.clone()?;
+    if long_range {
+        if let Some(styles) = tome.weapon_styles.as_mut() {
+            styles.retain(|style| style.combat_style.eq_ignore_ascii_case("Longrange"));
+        }
+    }
+    let mut tome_player = player.clone();
+    let mage = &mut tome_player.gear_sets.mage;
+    mage.gear_items.retain(|item| item.as_ref().map_or(true, |i| {
+        !i.slot.eq_ignore_ascii_case("weapon") && !i.slot.eq_ignore_ascii_case("shield")
+    }));
+    mage.gear_items.push(Some(tome.clone()));
+    mage.selected_weapon = Some(tome);
+    mage.selected_offhand = None;
+    Some(find_best_combat_style(&tome_player, monster, vec!["magic".to_string()]))
 }
 
 pub fn find_defender(inventory_items: &[SelectedItem]) -> Option<SelectedItem> {

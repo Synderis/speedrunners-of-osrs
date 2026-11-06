@@ -15,6 +15,7 @@ fn phase_loop(
     attack_speed: i32,
     accuracy: f64,
     max_hit: i32,
+    damage_rolls: u32,
     weapon_name: &str,
     ammo: Option<&str>,
     attack_style: &str,
@@ -33,7 +34,7 @@ fn phase_loop(
         }
 
         if cooldown.is_ready() {
-            let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name, ammo, attack_style);
+            let hit = dmg_modifier_check(rng, max_hit, accuracy, weapon_name, ammo, attack_style, damage_rolls);
             *tekton_hp -= hit;
             hit_count += 1;
             cooldown.reset(attack_speed);
@@ -194,8 +195,8 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             let mut cooldown = AttackCooldown::new();
             if spec_phase {
                 total_ticks += 6;
-                tekton_hp -= dmg_modifier_check(&mut rng, max_hit_spec, 1.0, &spec_weapon, ammo.as_ref().map(|a| a.as_str()), &best_style_spec.gear_type);
-                let hit = dmg_modifier_check(&mut rng, max_hit_spec, best_style_spec.accuracy, &spec_weapon, ammo.as_ref().map(|a| a.as_str()), &best_style_spec.gear_type);
+                tekton_hp -= dmg_modifier_check(&mut rng, max_hit_spec, 1.0, &spec_weapon, ammo.as_ref().map(|a| a.as_str()), &best_style_spec.gear_type, best_style_spec.damage_rolls);
+                let hit = dmg_modifier_check(&mut rng, max_hit_spec, best_style_spec.accuracy, &spec_weapon, ammo.as_ref().map(|a| a.as_str()), &best_style_spec.gear_type, best_style_spec.damage_rolls);
                 tekton_hp -= hit;
                 if hit > 0 {
                     specs_hit += 1;
@@ -205,33 +206,38 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
             }
 
             // Pre-anvil phase: (0, 5)
-            let (hp1, ticks1, _, died1) = phase_loop(
-                hit_count,
-                &attack_pattern[0],
-                &mut tekton_hp,
-                &mut current_phase_ticks,
-                best_styles_normal[specs_hit].attack_speed,
-                best_styles_normal[specs_hit].accuracy,
-                best_styles_normal[specs_hit].max_hit,
-                weapon_name,
-                ammo.as_deref(),
-                &best_styles_normal[specs_hit].gear_type,
-                &mut rng,
-                &thrall_dmg,
-                &mut cooldown,
-            );
-            tekton_hp = hp1;
-            current_phase_ticks = ticks1;
+            // Only on the first pass: This attack sequence happens once, before Tekton goes to the
+            // anvil for the first time. After the post-anvil attacks it goes straight back to the anvil.
+            if first_pass {
+                let (hp1, ticks1, _, died1) = phase_loop(
+                    hit_count,
+                    &attack_pattern[0],
+                    &mut tekton_hp,
+                    &mut current_phase_ticks,
+                    best_styles_normal[specs_hit].attack_speed,
+                    best_styles_normal[specs_hit].accuracy,
+                    best_styles_normal[specs_hit].max_hit,
+                    best_styles_normal[specs_hit].damage_rolls,
+                    weapon_name,
+                    ammo.as_deref(),
+                    &best_styles_normal[specs_hit].gear_type,
+                    &mut rng,
+                    &thrall_dmg,
+                    &mut cooldown,
+                );
+                tekton_hp = hp1;
+                current_phase_ticks = ticks1;
 
-            // Save hp_pre_anvil_val at the end of pre-anvil phase
-            if tekton_hp > 0 && first_pass {
-                hp_pre_anvil_val = tekton_hp;
-                first_pass = false;
-                phase += 1;
-            }
-            if died1 || tekton_hp <= 0 {
-                total_ticks += current_phase_ticks;
-                break;
+                // Save hp_pre_anvil_val at the end of pre-anvil phase
+                if tekton_hp > 0 {
+                    hp_pre_anvil_val = tekton_hp;
+                    first_pass = false;
+                    phase += 1;
+                }
+                if died1 || tekton_hp <= 0 {
+                    total_ticks += current_phase_ticks;
+                    break;
+                }
             }
 
             let anvil_cycle = rng.gen_range(3..7);
@@ -258,6 +264,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 best_styles_normal[specs_hit].attack_speed,
                 best_styles_normal[specs_hit].accuracy,
                 best_styles_normal[specs_hit].max_hit,
+                best_styles_normal[specs_hit].damage_rolls,
                 weapon_name,
                 ammo.as_deref(),
                 &best_styles_normal[specs_hit].gear_type,
@@ -284,6 +291,7 @@ pub fn calculate_dps_with_objects_tekton(payload_json: &str) -> String {
                 best_styles_enraged[specs_hit].attack_speed,
                 best_styles_enraged[specs_hit].accuracy,
                 best_styles_enraged[specs_hit].max_hit,
+                best_styles_enraged[specs_hit].damage_rolls,
                 weapon_name,
                 ammo.as_deref(),
                 &best_styles_enraged[specs_hit].gear_type,

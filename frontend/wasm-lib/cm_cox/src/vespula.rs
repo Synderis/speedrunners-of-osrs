@@ -39,10 +39,24 @@ pub fn simulate_vespula<R: rand::RngCore, F: FnMut(i32) -> i32>(
         .filter_map(|item| item.equipment.clone())
         .collect();
     let zcb_accuracy = zcb_spec_proc_chance(player, &monsters[0], &inventory_items);
-    let zaryte_crossbow = zcb_accuracy.is_some();
+    // Zorya's tome: specs after your first attack on the portal, as the ZCB spec, on Longrange (the only
+    // style that reaches)
+    let zorya = zorya_style(player, &monsters[0], true);
+    let zorya_specs = if zorya.is_some() {
+        payload.room.special_attacks
+            .as_ref()
+            .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Zorya's tome")).map(|sa| sa.count))
+            .unwrap_or(2)
+    } else {
+        0
+    };
+    // With tome specs here, the ZCB spec isn't used
+    let zaryte_crossbow = zcb_accuracy.is_some() && zorya_specs == 0;
 
     for _ in 0..trials {
         let mut tick = 0;
+        let mut zorya_specs_left = zorya_specs;
+        let mut zorya_pending: Vec<i32> = Vec::new();
         for _monster in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
@@ -50,7 +64,17 @@ pub fn simulate_vespula<R: rand::RngCore, F: FnMut(i32) -> i32>(
             while hp > 0 {
                 tick += 1;
                 ticks_this_monster += 1;
-                if zaryte_crossbow && tick == attack_speed + 1 {
+                // Buffed tome attacks due this tick
+                if let Some(z) = zorya.as_ref() {
+                    if zorya_buffed_attacks(&mut *rng, z, tick, &mut hp, &mut zorya_pending) && hp <= 0 {
+                        break;
+                    }
+                }
+                if zorya_specs_left > 0 && tick > 1 && cooldown.is_ready() {
+                    zorya_specs_left -= 1;
+                    let next = zorya_spec(&mut *rng, zorya.as_ref().unwrap(), tick, &mut hp, &mut zorya_pending);
+                    cooldown.reset(next);
+                } else if zaryte_crossbow && tick == attack_speed + 1 {
                     if bypass_accuracy || rng.gen::<f64>() < zcb_accuracy.unwrap_or(0.0) {
                         hp -= zcb_spec_damage(base_hp);
                     }

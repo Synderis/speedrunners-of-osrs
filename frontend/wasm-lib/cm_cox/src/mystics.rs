@@ -170,9 +170,21 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
         .filter_map(|item| item.equipment.clone())
         .collect();
 
+    // Zorya's tome: specs as your first mage attacks in the room (default 2)
+    let zorya = zorya_style(&player, &monsters[0], false);
+    let zorya_specs = if zorya.is_some() {
+        spec_count_dict
+            .as_ref()
+            .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Zorya's tome")).map(|sa| sa.count))
+            .unwrap_or(2)
+    } else {
+        0
+    };
+
     let voidwaker = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Voidwaker"));
 
-    if voidwaker {
+    // With tome specs here, the Voidwaker spec isn't used
+    if voidwaker && zorya_specs == 0 {
         spec_count_max = spec_count_dict
             .as_ref()
             .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Voidwaker")).map(|sa| sa.count))
@@ -192,6 +204,8 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
         let range_max = if attack_speed > 4 { 4 * attack_speed } else { 4 };
         let overkill = if rng.gen_range(1..=range_max) == 1 { 1 } else { 0 };
         let mut cooldown = AttackCooldown::new();
+        let mut zorya_specs_left = zorya_specs;
+        let mut zorya_pending: Vec<i32> = Vec::new();
         for _monster in &monsters {
             let mut hp = base_hp;
             let mut ticks_this_monster = 0;
@@ -207,15 +221,26 @@ pub fn calculate_dps_with_objects_mystics(payload_json: &str) -> String {
                 if hp <= 0 {
                     break;
                 }
+                // Buffed tome attacks due this tick; any left when a mystic dies carry over to the next one
+                if let Some(z) = zorya.as_ref() {
+                    if zorya_buffed_attacks(&mut rng, z, tick, &mut hp, &mut zorya_pending) && hp <= 0 {
+                        cooldown.tick();
+                        break;
+                    }
+                }
                 if spec_count > 0 {
-                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker", ammo.as_ref().map(|a| a.as_str()), &best_style_spec.gear_type);
+                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker", ammo.as_ref().map(|a| a.as_str()), &best_style_spec.gear_type, best_style_spec.damage_rolls);
                     hp -= hit;
                     spec_count -= 1;
                     tick += 4;
                     thrall_tick += 4;
                     continue;
                 }
-                if cooldown.is_ready() {
+                if cooldown.is_ready() && zorya_specs_left > 0 {
+                    zorya_specs_left -= 1;
+                    let next = zorya_spec(&mut rng, zorya.as_ref().unwrap(), tick, &mut hp, &mut zorya_pending);
+                    cooldown.reset(next);
+                } else if cooldown.is_ready() {
                     let hit = if rng.gen::<f64>() < accuracy {
                         rng.gen_range(0..=max_hit).max(1)
                     } else {

@@ -165,10 +165,9 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
         let mut spec_count = spec_count_max;
         let mut pre_crystal_phase = true;
         let mut attack_pattern: Vec<i32>;
-        attack_pattern = if room_methods.len() > 0 && room_methods[0].eq_ignore_ascii_case("Vasa Flame Skip") && voidwaker {
-            vec![20, 15, rng.gen_range(33..=36)]
-        } else if room_methods.len() > 0 && room_methods[0].eq_ignore_ascii_case("Vasa Flame Skip") {
-            vec![25, 15, rng.gen_range(33..=36)]
+        attack_pattern = if room_methods.len() > 0 && room_methods[0].eq_ignore_ascii_case("Vasa Flame Skip") {
+            // Vasa reaches the crystal 25 ticks in; any Voidwaker specs use part of that window
+            vec![(25 - spec_count_max * best_style_spec.attack_speed).max(0), 15, rng.gen_range(33..=36)]
         } else {
             vec![20, 15, rng.gen_range(33..=36)]
         };
@@ -189,7 +188,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                     if spec_count == 0 {
                         break;
                     }
-                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker", ammo.as_deref(), &best_style_spec.gear_type);
+                    let hit = dmg_modifier_check(&mut rng, best_style_spec.max_hit, best_style_spec.accuracy, "Voidwaker", ammo.as_deref(), &best_style_spec.gear_type, best_style_spec.damage_rolls);
                     spec_dmg += hit;
                     spec_count -= 1;
                     spec_ticks += best_style_spec.attack_speed;
@@ -197,7 +196,8 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                 vasa_hp = new_vasa_hp - spec_dmg;
                 vasa_attack_tick = new_vasa_attack_tick + spec_ticks;
                 pre_crystal_phase = false;
-                total_ticks = new_total_ticks + spec_ticks;
+                // The spec ticks are already in vasa_attack_tick, which is added to total_ticks after the crystal
+                total_ticks = new_total_ticks;
             }
             crystal_count += 1;
             healing_ticks = 0;
@@ -208,7 +208,7 @@ pub fn calculate_dps_with_objects_vasa(payload_json: &str) -> String {
                 healing_ticks += 1;
                 let mut hit_crystal = 0;
                 if (crystal_attack_tick - 1) % best_style_crystal.attack_speed == 0 {
-                    hit_crystal = dmg_modifier_check(&mut rng, best_style_crystal.max_hit, best_style_crystal.accuracy, &weapon_name, ammo.as_deref(), &best_style_crystal.gear_type);
+                    hit_crystal = dmg_modifier_check(&mut rng, best_style_crystal.max_hit, best_style_crystal.accuracy, &weapon_name, ammo.as_deref(), &best_style_crystal.gear_type, best_style_crystal.damage_rolls);
                 }
                 if (crystal_attack_tick - 1) % 4 == 0 {
                     hit_crystal += thrall_dmg.sample(&mut rng);

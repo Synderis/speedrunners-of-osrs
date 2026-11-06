@@ -45,7 +45,6 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 		find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]),
 		find_best_combat_style(&player, &monsters[2], vec!["ranged".to_string()]),
 	];
-	let best_style_spec = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
 	let inventory_items: Vec<SelectedItem> = player
 		.inventory
 		.iter()
@@ -78,6 +77,8 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 		};
 		ensure_weapon_swap(&mut player, "Voidwaker", Some(defender));
 	}
+	// After the swaps above, so these are the spec weapon's own max hit and accuracy
+	let best_style_spec = find_best_combat_style(&player, &monsters[1], vec!["melee".to_string()]);
 
 	// Precompute per-vang arrays for hot loop
 	let max_hp = monsters[0].skills.hp;
@@ -85,6 +86,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 	let max_hits = [best_styles[0].max_hit, best_styles[1].max_hit, best_styles[2].max_hit, best_style_spec.max_hit];
 	let accuracies = [best_styles[0].accuracy, best_styles[1].accuracy, best_styles[2].accuracy, best_style_spec.accuracy];
 	let attack_speeds = [best_styles[0].attack_speed, best_styles[1].attack_speed, best_styles[2].attack_speed, best_style_spec.attack_speed];
+	let damage_rolls = [best_styles[0].damage_rolls, best_styles[1].damage_rolls, best_styles[2].damage_rolls, best_style_spec.damage_rolls];
 	let hit_delay_map = [
 		if player.gear_sets.mage.selected_weapon.as_ref().unwrap().name.eq_ignore_ascii_case("Tumeken's shadow") { 2 } else { 1 },
 		0,
@@ -178,7 +180,7 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 						cooldown.reset(attack_speeds[3]);
 						spec_count -= 1;
 						if voidwaker {
-							dmg_modifier_check(&mut rng, max_hits[3], accuracies[3], "Voidwaker", ammo[1].as_deref(), &best_style_spec.gear_type)
+							dmg_modifier_check(&mut rng, max_hits[3], accuracies[3], "Voidwaker", ammo[1].as_deref(), &best_style_spec.gear_type, damage_rolls[3])
 						} else if burning_claws {
 							let (hits, new_burns) = burning_barrage_special(&mut rng, max_hits[3], accuracies[3]);
 							if initial_burn_tick == 0 && !new_burns.is_empty() && burns.is_empty() {
@@ -201,9 +203,9 @@ pub fn calculate_dps_with_objects_vangs(payload_json: &str) -> String {
 					} else {
 						cooldown.reset(attack_speeds[attack_idx]);
 						if attack_idx == 1 {
-							dmg_modifier_check(&mut rng, max_hits[attack_idx], accuracies[attack_idx], &weapon_name, ammo[attack_idx].as_deref(), &best_styles[attack_idx].gear_type)
+							dmg_modifier_check(&mut rng, max_hits[attack_idx], accuracies[attack_idx], &weapon_name, ammo[attack_idx].as_deref(), &best_styles[attack_idx].gear_type, damage_rolls[attack_idx])
 						} else {
-							dmg_modifier_check(&mut rng, max_hits[attack_idx], accuracies[attack_idx], "Other", ammo[attack_idx].as_deref(), &best_styles[attack_idx].gear_type)
+							dmg_modifier_check(&mut rng, max_hits[attack_idx], accuracies[attack_idx], "Other", ammo[attack_idx].as_deref(), &best_styles[attack_idx].gear_type, damage_rolls[attack_idx])
 						}
 					};
 					vang_hps_trial[attack_idx] = (vang_hps_trial[attack_idx] - hit).max(0);
