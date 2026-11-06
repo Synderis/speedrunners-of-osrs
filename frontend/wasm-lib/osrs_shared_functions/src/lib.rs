@@ -191,6 +191,12 @@ pub fn find_best_combat_style(player: &Player, monster: &Monster, combat_types: 
 }
 
 
+/// Melee prayer multipliers (accuracy, strength), as in the DPS calculator's prayer data.
+pub const PIETY: (f64, f64) = (1.20, 1.23);
+pub const ZEAL: (f64, f64) = (1.25, 1.28);
+/// The melee prayer the sim uses. Zeal is here to offer as a choice, or to replace Piety.
+pub const MELEE_PRAYER: (f64, f64) = PIETY;
+
 pub fn calculate_max_hit_for_style(
     player: &Player,
     monster: &Monster,
@@ -218,7 +224,7 @@ pub fn calculate_max_hit_for_style(
         ),
         "melee" => (
             player.combat_stats.strength as f64,
-            1.23,
+            MELEE_PRAYER.1,
             &player.gear_sets.melee,
             gear.bonuses.str as f64,
             style.str_ as f64,
@@ -401,7 +407,7 @@ pub fn calculate_max_rolls_for_style(
             player.combat_stats.attack as f64,
             &player.gear_sets.melee,
             style.att as f64,
-            1.20,
+            MELEE_PRAYER.0,
             player.gear_sets.melee.selected_weapon.as_ref(),
         ),
         _ => (0.0, &player.gear_sets.mage, 0.0, 0.0, None),
