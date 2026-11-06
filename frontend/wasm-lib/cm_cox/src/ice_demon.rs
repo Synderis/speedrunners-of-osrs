@@ -361,6 +361,9 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
 
     let emberlight = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Emberlight"));
     let burning_claws = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Burning claws"));
+    // With Zorya's tome carried, its specs at Shamans (the next room) need the spec energy, so by
+    // default there are no Emberlight or Burning claws specs here; an assigned count is still used.
+    let zorya_carried = inventory_items.iter().any(|item| item.name.eq_ignore_ascii_case("Zorya's tome"));
 
     let mut emberlight_accuracy: Vec<f64> = Vec::new();
     let best_style: StyleResult;
@@ -369,12 +372,16 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
     let mut accuracy = 0.0;
     let spec_count_max: i32;
 
-    // With both carried and Burning claws specs assigned, spec with the claws and finish with
-    // Emberlight's normal attacks (no Emberlight specs)
+    // With both carried, spec with the claws and finish with Emberlight's normal attacks (no
+    // Emberlight specs). By default the claws spec 3 times, or not at all with the tome carried or an
+    // Emberlight count assigned (Emberlight then kills on its own).
+    let emberlight_assigned = spec_count_dict
+        .as_ref()
+        .map_or(false, |vec| vec.iter().any(|sa| sa.name.eq_ignore_ascii_case("Emberlight")));
     let claws_specs = spec_count_dict
         .as_ref()
         .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Burning claws")).map(|sa| sa.count))
-        .unwrap_or(0);
+        .unwrap_or(if zorya_carried || emberlight_assigned { 0 } else { 3 });
     let claws_first = emberlight && burning_claws && claws_specs > 0;
     let claws_style = if claws_first {
         let mut claws_player = player.clone();
@@ -391,7 +398,7 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
             spec_count_dict
                 .as_ref()
                 .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Emberlight")).map(|sa| sa.count))
-                .unwrap_or(2)
+                .unwrap_or(if zorya_carried { 0 } else { 2 })
         };
 
         // Find Avernic defender in inventory items
@@ -423,7 +430,7 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
         spec_count_max = spec_count_dict
             .as_ref()
             .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Burning claws")).map(|sa| sa.count))
-            .unwrap_or(4);
+            .unwrap_or(if zorya_carried { 0 } else { 3 });
         ensure_weapon_swap(&mut player, "Burning claws", None);
         best_style = find_best_combat_style(&player, &monsters[0], vec!["melee".to_string()]);
         accuracy = best_style.accuracy;

@@ -1059,7 +1059,7 @@ export const ROOM_WEAPON_SPEC_DEFAULTS: { [roomId: string]: { [weaponName: strin
         'Voidwaker': 2
     },
     'ice_demon': {
-        'Burning claws': 4,
+        'Burning claws': 3,
         'Emberlight': 2
     },
     'vasa': {
