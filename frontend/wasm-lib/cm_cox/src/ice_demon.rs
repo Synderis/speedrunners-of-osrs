@@ -266,6 +266,73 @@ fn burning_claws_kill<R: Rng>(
     total_ticks
 }
 
+/// Burning claws specs, then Emberlight's normal attacks until the kill (no Emberlight specs). The
+/// claws' burns keep ticking during the Emberlight attacks.
+fn claws_then_emberlight_kill<R: Rng>(
+    rng: &mut R,
+    mut hp: i32,
+    claws_style: &StyleResult,
+    ember_max: i32,
+    ember_acc: f64,
+    ember_speed: i32,
+    mut total_ticks: i32,
+    claws_specs: i32,
+) -> i32 {
+    let ember_thr: u32 = (ember_acc.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32;
+    let mut cooldown = AttackCooldown::new();
+    let mut attack_tick = 0;
+    let mut hit_count = 0;
+    let mut burn_list: Vec<i32> = Vec::new();
+
+    // First phase: claws specs
+    while hit_count < claws_specs && hp > 0 {
+        attack_tick += 1;
+        if cooldown.is_ready() {
+            let (hits, burns) = burning_barrage_special(rng, claws_style.max_hit, claws_style.accuracy);
+            hp -= hits.iter().sum::<i32>();
+            for burn in burns {
+                if burn > 0 && burn_list.len() < 5 {
+                    burn_list.push(burn);
+                }
+            }
+            hp = apply_burns(hp, &mut burn_list);
+            hit_count += 1;
+            hp = thrall_hit(rng, hp);
+            cooldown.reset(claws_style.attack_speed);
+        } else {
+            cooldown.tick();
+        }
+    }
+    total_ticks += attack_tick;
+    if hp <= 0 {
+        return total_ticks;
+    }
+
+    // Second phase: Emberlight normal attacks
+    attack_tick = 0;
+    while hp > 0 {
+        attack_tick += 1;
+        if cooldown.is_ready() {
+            let hit = if rng.next_u32() <= ember_thr {
+                rng.gen_range(0..=ember_max).max(1)
+            } else {
+                0
+            };
+            hp = apply_burns(hp, &mut burn_list);
+            hp -= hit;
+            hp = thrall_hit(rng, hp);
+            cooldown.reset(ember_speed);
+        } else {
+            cooldown.tick();
+        }
+        if hp <= 0 {
+            total_ticks += attack_tick;
+            break;
+        }
+    }
+    total_ticks
+}
+
 #[wasm_bindgen]
 pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
     let payload: DPSRoomPayload = match serde_json::from_str(payload_json) {
@@ -302,11 +369,30 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
     let mut accuracy = 0.0;
     let spec_count_max: i32;
 
+    // With both carried and Burning claws specs assigned, spec with the claws and finish with
+    // Emberlight's normal attacks (no Emberlight specs)
+    let claws_specs = spec_count_dict
+        .as_ref()
+        .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Burning claws")).map(|sa| sa.count))
+        .unwrap_or(0);
+    let claws_first = emberlight && burning_claws && claws_specs > 0;
+    let claws_style = if claws_first {
+        let mut claws_player = player.clone();
+        ensure_weapon_swap(&mut claws_player, "Burning claws", None);
+        Some(find_best_combat_style(&claws_player, &monsters[0], vec!["melee".to_string()]))
+    } else {
+        None
+    };
+
     if emberlight {
-        spec_count_max = spec_count_dict
-            .as_ref()
-            .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Emberlight")).map(|sa| sa.count))
-            .unwrap_or(2);
+        spec_count_max = if claws_first {
+            claws_specs
+        } else {
+            spec_count_dict
+                .as_ref()
+                .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Emberlight")).map(|sa| sa.count))
+                .unwrap_or(2)
+        };
 
         // Find Avernic defender in inventory items
         let defender = match find_defender(&inventory_items) {
@@ -372,7 +458,18 @@ pub fn calculate_dps_with_objects_ice_demon(payload_json: &str) -> String {
 
         let overkill = if rng.gen_range(1..=4) == 1 { 1 } else { 0 };
 
-        if emberlight {
+        if let Some(claws) = claws_style.as_ref() {
+            total_ticks = claws_then_emberlight_kill(
+                &mut rng,
+                ice_demon_hp,
+                claws,
+                max_hit,
+                emberlight_accuracy[0],
+                attack_speed,
+                total_ticks,
+                spec_count_max,
+            );
+        } else if emberlight {
             total_ticks = ember_light_kill(
                 &mut rng,
                 ice_demon_hp,
