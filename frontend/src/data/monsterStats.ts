@@ -1059,17 +1059,30 @@ export const ROOM_WEAPON_SPEC_DEFAULTS: { [roomId: string]: { [weaponName: strin
         'Voidwaker': 2
     },
     'ice_demon': {
-        'Burning claws': 4,
+        'Burning claws': 3,
         'Emberlight': 2
     },
     'vasa': {
         'Voidwaker': 2,
         'Zaryte crossbow': 1
     },
+    'lizardman_shamans': {
+        "Zorya's tome": 2
+    },
+    'vespula': {
+        "Zorya's tome": 2
+    },
+    'muttadile': {
+        'Zamorak godsword': 3
+    },
+    'mystics': {
+        "Zorya's tome": 2
+    },
     // Add other rooms as you implement them
     'tekton': {
     },
     'olm': {
+        "Zorya's tome": 4
     }
 };
 

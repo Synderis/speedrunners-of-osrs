@@ -15,7 +15,8 @@ const INVENTORY_IDS = [
     12954, // Dragon defender
     26374, // Zaryte crossbow
     21003, // Elder maul
-    13576 // Dragon warhammer
+    13576, // Dragon warhammer
+    34725 // Zorya's tome
 ];
 //25975 Lightbearer removing for now
 //make sure to add lockpick somehow as its not technically an item so we will exclude it for now

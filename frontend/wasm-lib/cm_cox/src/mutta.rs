@@ -112,6 +112,12 @@ fn tick_until_dead<R: Rng>(
 // Phase sims
 // =========================
 
+/// ZGS freeze with the heal mechanic. DPS it down until your next normal attack could take it under
+/// 50%, then ZGS so the spec is what takes it under: a hit freezes it, and a miss leaves it above 50%,
+/// so you can spec again. If a normal or thrall hit takes it under 50% while it isn't frozen, it heads
+/// for the tree and you get one ZGS before it heals, if you have one left. A heal is 50% of its max HP
+/// (capped at full), up to 3 times; once it's frozen, or after the third heal, you just kill it.
+/// Returns the ticks and the ZGS specs used.
 fn sim_freeze_mutta(
     mut total_ticks: i32,
     mut hp_mutta: i32,
@@ -123,99 +129,84 @@ fn sim_freeze_mutta(
     best_thr_mutta: u32,
     zgs_thr: u32,
     thrall_dmg: &Uniform<i32>,
-) -> i32 {
+    zgs_specs: i32,
+) -> (i32, i32) {
     let mut current_ticks = 0;
 
-    let threshold_hp = (mutta.skills.hp as f64 * 0.5) as i32;
+    let max_hp = mutta.skills.hp;
+    let threshold_hp = (max_hp as f64 * 0.5) as i32;
+    let mut specs_left = zgs_specs;
+    let mut frozen = false;
+    let mut heals_left = 3;
+    // Under 50% and not frozen: it's heading for the tree
+    let mut heading_to_tree = false;
 
     // Cooldowns
     let mut atk_cd = AttackCooldown::new();
     let mut thrall_cd = AttackCooldown::new();
 
-    // =========================
-    // Phase 1: DPS down to threshold
-    // =========================
-    while hp_mutta > threshold_hp {
+    while hp_mutta > 0 {
         current_ticks += 1;
 
-        process_attack_tick(
-            rng,
-            &mut hp_mutta,
-            &mut atk_cd,
-            &mut thrall_cd,
-            best_thr_mutta,
-            best_style_mutta.max_hit,
-            best_style_mutta.attack_speed,
-            thrall_dmg,
-            4, // thrall interval is always 4 for mutta
-        );
-    }
-
-    // =========================
-    // Phase 2: wait until weapon is off CD, then ZGS spec
-    // =========================
-
-    // We keep ticking time with thralls only until atk_cd == 0,
-    // then on that tick we spend the attack on ZGS spec.
-    loop {
-        current_ticks += 1;
-        let mut total_hit = 0;
-
-        // Thrall can hit every tick (if off cooldown)
+        // thrall interval is always 4 for mutta
         if thrall_cd.is_ready() {
-            total_hit += thrall_dmg.sample(rng);
+            hp_mutta -= thrall_dmg.sample(rng);
             thrall_cd.reset(4);
         } else {
             thrall_cd.tick();
         }
-
-        if atk_cd.is_ready() {
-            // This tick is the ZGS spec tick
-            // ZGS freeze: on miss, heal; on hit, damage
-            if rng.next_u32() > zgs_thr {
-                // miss => heal up to 50% HP, but not above max
-                hp_mutta += (mutta.skills.hp / 2)
-                    .min(mutta.skills.hp - hp_mutta);
-            } else {
-                // hit with ZGS spec
-                let spec_hit = rng
-                    .gen_range(0..=zgs_best_style.max_hit)
-                    .max(1);
-                total_hit += spec_hit;
-            }
-
-            // ZGS spec imposes a 6-tick cooldown
-            atk_cd.reset(6);
-            hp_mutta -= total_hit;
-            break; // spec is done; move to finish phase
-        } else {
-            atk_cd.tick();
+        if hp_mutta <= 0 {
+            break;
+        }
+        if !frozen && heals_left > 0 && hp_mutta <= threshold_hp {
+            heading_to_tree = true;
         }
 
-        hp_mutta -= total_hit;
-    }
+        if !atk_cd.is_ready() {
+            atk_cd.tick();
+            continue;
+        }
 
-    // =========================
-    // Phase 3: finish it off (CDs persist from spec)
-    // =========================
-    while hp_mutta > 0 {
-        current_ticks += 1;
-
-        process_attack_tick(
-            rng,
-            &mut hp_mutta,
-            &mut atk_cd,
-            &mut thrall_cd,
-            best_thr_mutta,
-            best_style_mutta.max_hit,
-            best_style_mutta.attack_speed,
-            thrall_dmg,
-            4, // thrall interval is always 4 for mutta
-        );
+        if heading_to_tree {
+            heading_to_tree = false;
+            // One ZGS before it reaches the tree, if you have one left
+            let mut heals = true;
+            if specs_left > 0 {
+                specs_left -= 1;
+                if rng.next_u32() <= zgs_thr {
+                    frozen = true;
+                    heals = false;
+                    hp_mutta -= rng.gen_range(0..=zgs_best_style.max_hit).max(1);
+                }
+                // ZGS spec imposes a 6-tick cooldown
+                atk_cd.reset(6);
+            }
+            if heals {
+                hp_mutta = (hp_mutta + max_hp / 2).min(max_hp);
+                heals_left -= 1;
+            }
+            if atk_cd.is_ready() {
+                // No spec left: it heals, and this is a normal attack
+                hp_mutta -= sample_hit_if(rng, best_thr_mutta, best_style_mutta.max_hit);
+                atk_cd.reset(best_style_mutta.attack_speed);
+            }
+        } else if !frozen && heals_left > 0 && specs_left > 0
+            && hp_mutta > threshold_hp && hp_mutta - best_style_mutta.max_hit <= threshold_hp {
+            // ZGS so the spec is what takes it under 50%
+            specs_left -= 1;
+            if rng.next_u32() <= zgs_thr {
+                frozen = true;
+                hp_mutta -= rng.gen_range(0..=zgs_best_style.max_hit).max(1);
+            }
+            atk_cd.reset(6);
+        } else {
+            hp_mutta -= sample_hit_if(rng, best_thr_mutta, best_style_mutta.max_hit);
+            atk_cd.reset(best_style_mutta.attack_speed);
+        }
     }
 
     total_ticks += current_ticks - 3;
-    total_ticks
+    (total_ticks, zgs_specs - specs_left)
 }
 
 
@@ -243,9 +234,14 @@ fn sim_chop_tree(
         current_ticks += 1;
         
         // tree roll (woodcutting every 5 ticks)
+        // A successful chop does floor(WC / 2) - 7 to floor(WC / 2) + 3 (no lower than 0)
         let tree_hit = if wc_cooldown.is_ready() {
             wc_cooldown.reset(5);
-            sample_hit_if(rng, tree_thr, player.combat_stats.woodcutting)
+            if rng.next_u32() <= tree_thr {
+                (player.combat_stats.woodcutting / 2 + rng.gen_range(-7..=3)).max(0)
+            } else {
+                0
+            }
         } else {
             wc_cooldown.tick();
             0
@@ -328,6 +324,7 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
 
     let mut player = payload.player;
     let mut monsters = payload.room.monsters;
+    let spec_count_dict = payload.room.special_attacks;
     let trials = 100_000usize;
 
     // Fast RNG with variability
@@ -348,10 +345,23 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
 
     // ZGS setup (optional)
     let mut zgs_best_style: Option<StyleResult> = None;
+    let mut zgs_best_style_large: Option<StyleResult> = None;
     let has_zgs = player
         .inventory
         .iter()
         .any(|item| item.name.to_lowercase().contains("zamorak godsword"));
+
+    // ZGS specs for the room (default 3: one on entry at 100%, then a surge potion and Death charge),
+    // with at most 2 on either Muttadile. With none, the tree is chopped instead.
+    let zgs_specs = if has_zgs {
+        spec_count_dict
+            .as_ref()
+            .and_then(|vec| vec.iter().find(|sa| sa.name.eq_ignore_ascii_case("Zamorak godsword")).map(|sa| sa.count))
+            .unwrap_or(3)
+    } else {
+        0
+    };
+    let use_zgs = zgs_specs > 0;
 
     if has_zgs {
         let swap_result = ensure_weapon_swap(&mut player, "Zamorak godsword", None);
@@ -364,6 +374,12 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
         zgs_best_style = Some(find_best_combat_style(
             &player,
             &monsters[0],
+            vec!["melee".to_string()],
+        ));
+        // The large Muttadile has its own (higher) defence, so its spec gets its own accuracy
+        zgs_best_style_large = Some(find_best_combat_style(
+            &player,
+            &monsters[1],
             vec!["melee".to_string()],
         ));
         // swap back
@@ -395,7 +411,7 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
             + 0.5))
             .floor())
         / 256.0;
-    let base_tree_hp = wc_level * 5;
+    let base_tree_hp = (wc_level * 5).max(100);
 
     let death_animation = 4;
     let post_room_delay = 4;
@@ -426,6 +442,10 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
         .as_ref()
         .map(|s| (s.accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32)
         .unwrap_or(0);
+    let zgs_thr_large = zgs_best_style_large
+        .as_ref()
+        .map(|s| (s.accuracy.clamp(0.0, 1.0) * (u32::MAX as f64)) as u32)
+        .unwrap_or(0);
 
     // Build histogram + running sum instead of storing all tick counts
     let mut freq: Vec<usize> = Vec::new();
@@ -447,8 +467,8 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
         let overkill_large_mutta = if rng.gen_range(1..=range_max) == 1 { 1 } else { 0 };
         let tick_cycle_offset = rng.gen_range(0..=4);
 
-        if has_zgs {
-            total_ticks = sim_freeze_mutta(
+        if use_zgs {
+            let (new_total_ticks, small_specs_used) = sim_freeze_mutta(
                 total_ticks,
                 hp_small_mutta,
                 &monsters[0],
@@ -458,24 +478,29 @@ pub fn calculate_dps_with_objects_mutta(payload_json: &str) -> String {
                 small_mutta_thr,
                 zgs_thr,
                 &thrall_dmg,
+                zgs_specs.min(2),
             );
+            total_ticks = new_total_ticks;
             total_ticks += 1 + hit_delay_small_mutta + death_animation - overkill_large_mutta;
             total_ticks += tick_cycle_offset;
 
             // Large mutta leaving the lake
             total_ticks += 5;
 
-            total_ticks = sim_freeze_mutta(
+            // The large Muttadile gets the specs left, up to 2
+            let (new_total_ticks, _) = sim_freeze_mutta(
                 total_ticks,
                 hp_large_mutta,
                 &monsters[1],
                 &best_style_large_mutta,
-                zgs_best_style.as_ref().unwrap(),
+                zgs_best_style_large.as_ref().unwrap(),
                 &mut rng,
                 large_mutta_thr,
-                zgs_thr,
+                zgs_thr_large,
                 &thrall_dmg,
+                (zgs_specs - small_specs_used).min(2),
             );
+            total_ticks = new_total_ticks;
             phase_results[i] = 0;
         } else {
             let (new_total_ticks, phase_ticks) = sim_chop_tree(
